@@ -24,7 +24,19 @@ export default function CensusVersionHistory({ versions, onViewMembers }) {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-semibold">Import History</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Import History</h3>
+        {versions.length > 1 && (
+          <Button
+            size="sm"
+            variant={compareMode ? "default" : "outline"}
+            onClick={() => setCompareMode(!compareMode)}
+            className="text-xs"
+          >
+            <GitCompare className="w-3 h-3 mr-1" /> {compareMode ? "Done Comparing" : "Compare Versions"}
+          </Button>
+        )}
+      </div>
       <div className="space-y-2">
         {versions.map((version) => (
           <Card key={version.id} className="hover:shadow-sm transition-shadow">
