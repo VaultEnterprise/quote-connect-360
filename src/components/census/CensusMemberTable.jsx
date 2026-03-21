@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EmptyState from "@/components/shared/EmptyState";
 
-export default function CensusMemberTable({ censusVersionId, caseId }) {
+export default function CensusMemberTable({ censusVersionId, caseId, onSelectMember }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -69,7 +69,11 @@ export default function CensusMemberTable({ censusVersionId, caseId }) {
             </TableHeader>
             <TableBody>
               {filtered.map((m) => (
-                <TableRow key={m.id} className="text-xs">
+                <TableRow 
+                  key={m.id} 
+                  className="text-xs cursor-pointer hover:bg-muted/50"
+                  onClick={() => onSelectMember?.(m)}
+                >
                   <TableCell className="py-2">
                     <div className="font-medium">{m.first_name} {m.last_name}</div>
                     {m.email && <div className="text-muted-foreground">{m.email}</div>}
