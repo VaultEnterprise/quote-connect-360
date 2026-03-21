@@ -1,89 +1,156 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { ClipboardCheck, Calendar, Users, Percent, ChevronDown, ChevronRight } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ClipboardCheck, Plus, Search, Filter, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import PageHeader from "@/components/shared/PageHeader";
-import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import MetricCard from "@/components/shared/MetricCard";
-import EnrollmentMemberTable from "@/components/enrollment/EnrollmentMemberTable";
-import { format } from "date-fns";
+import EnrollmentKPIBar from "@/components/enrollment/EnrollmentKPIBar";
+import EnrollmentWindowCard from "@/components/enrollment/EnrollmentWindowCard";
+import CreateEnrollmentModal from "@/components/enrollment/CreateEnrollmentModal";
+import { parseISO, differenceInDays } from "date-fns";
+
+const STATUS_ORDER = { open: 0, closing_soon: 1, scheduled: 2, closed: 3, finalized: 4 };
 
 export default function Enrollment() {
-  const [expandedId, setExpandedId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("active");
+  const [showCreate, setShowCreate] = useState(false);
+  const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
-  const { data: enrollments = [] } = useQuery({
+  const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ["enrollments-all"],
-    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 50),
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
 
-  const openEnrollments = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
-  const totalEnrolled = enrollments.reduce((sum, e) => sum + (e.enrolled_count || 0), 0);
-  const totalEligible = enrollments.reduce((sum, e) => sum + (e.total_eligible || 0), 0);
-  const avgParticipation = totalEligible > 0 ? Math.round((totalEnrolled / totalEligible) * 100) : 0;
+  const now = new Date();
+
+  const closingSoon = useMemo(() => enrollments.filter(e => {
+    if (!e.end_date || !["open","closing_soon"].includes(e.status)) return false;
+    const d = differenceInDays(parseISO(e.end_date), now);
+    return d >= 0 && d <= 7;
+  }), [enrollments]);
+
+  const filtered = useMemo(() => {
+    let result = enrollments.filter(e => {
+      const matchSearch = !search ||
+        e.employer_name?.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === "all"
+        || (statusFilter === "active" && ["open","closing_soon","scheduled"].includes(e.status))
+        || e.status === statusFilter;
+      const matchUrgent = !showUrgentOnly || closingSoon.some(c => c.id === e.id);
+      return matchSearch && matchStatus && matchUrgent;
+    });
+
+    return [...result].sort((a, b) =>
+      (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
+    );
+  }, [enrollments, search, statusFilter, showUrgentOnly, closingSoon]);
 
   return (
-    <div>
-      <PageHeader title="Enrollment" description="Track enrollment windows and participation" />
+    <div className="space-y-6">
+      <PageHeader
+        title="Enrollment"
+        description="Track and manage open enrollment windows"
+        actions={
+          <div className="flex items-center gap-2">
+            {closingSoon.length > 0 && (
+              <button
+                onClick={() => setShowUrgentOnly(v => !v)}
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  showUrgentOnly
+                    ? "bg-amber-100 text-amber-700 border-amber-300"
+                    : "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100"
+                }`}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {closingSoon.length} closing ≤7 days
+              </button>
+            )}
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Enrollment Window
+            </Button>
+          </div>
+        }
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <MetricCard label="Open Enrollments" value={openEnrollments.length} icon={ClipboardCheck} />
-        <MetricCard label="Total Enrolled" value={totalEnrolled} icon={Users} />
-        <MetricCard label="Avg Participation" value={`${avgParticipation}%`} icon={Percent} />
+      {/* KPI Bar */}
+      <EnrollmentKPIBar enrollments={enrollments} />
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
+        <div className="relative flex-1 min-w-48 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by employer..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10 h-9"
+          />
+        </div>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40 h-9">
+            <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Active Windows</SelectItem>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="scheduled">Scheduled</SelectItem>
+            <SelectItem value="open">Open</SelectItem>
+            <SelectItem value="closing_soon">Closing Soon</SelectItem>
+            <SelectItem value="closed">Closed</SelectItem>
+            <SelectItem value="finalized">Finalized</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {(search || statusFilter !== "active" || showUrgentOnly) && (
+          <Button
+            variant="ghost" size="sm"
+            className="h-9 text-xs text-muted-foreground"
+            onClick={() => { setSearch(""); setStatusFilter("active"); setShowUrgentOnly(false); }}
+          >
+            Clear filters
+          </Button>
+        )}
+
+        <span className="text-xs text-muted-foreground ml-auto">
+          {filtered.length} window{filtered.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
-      {enrollments.length === 0 ? (
-        <EmptyState icon={ClipboardCheck} title="No Enrollment Windows" description="Enrollment windows will appear here when cases reach the enrollment stage" />
+      {/* Content */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-28 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={ClipboardCheck}
+          title={enrollments.length === 0 ? "No Enrollment Windows" : "No Windows Match"}
+          description={
+            enrollments.length === 0
+              ? "Create an enrollment window when a case is approved for enrollment"
+              : "Try adjusting your filters"
+          }
+          actionLabel={enrollments.length === 0 ? "New Enrollment Window" : undefined}
+          onAction={enrollments.length === 0 ? () => setShowCreate(true) : undefined}
+        />
       ) : (
         <div className="space-y-3">
-          {enrollments.map((e) => {
-            const total = e.total_eligible || 1;
-            const enrolled = e.enrolled_count || 0;
-            const waived = e.waived_count || 0;
-            const pct = Math.round((enrolled / total) * 100);
-            const isExpanded = expandedId === e.id;
-
-            return (
-              <Card key={e.id} className="overflow-hidden">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <Link to={`/cases/${e.case_id}`} className="text-sm font-semibold hover:text-primary transition-colors">{e.employer_name || "Unknown Employer"}</Link>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {e.start_date && format(new Date(e.start_date), "MMM d")} — {e.end_date && format(new Date(e.end_date), "MMM d, yyyy")}
-                        </span>
-                        {e.effective_date && <span>Eff. {format(new Date(e.effective_date), "MMM d, yyyy")}</span>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={e.status} />
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpandedId(isExpanded ? null : e.id)}>
-                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <Progress value={pct} className="h-2 mb-2" />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{enrolled} enrolled • {waived} waived • {Math.max(0, total - enrolled - waived)} pending</span>
-                    <span className="font-medium text-foreground">{pct}% participation</span>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t">
-                      <EnrollmentMemberTable enrollmentWindowId={e.id} caseId={e.case_id} />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+          {filtered.map(e => (
+            <EnrollmentWindowCard key={e.id} enrollment={e} />
+          ))}
         </div>
+      )}
+
+      {showCreate && (
+        <CreateEnrollmentModal open={showCreate} onClose={() => setShowCreate(false)} />
       )}
     </div>
   );

@@ -13,7 +13,7 @@ import CaseDetail from '@/pages/CaseDetail';
 import CaseNew from '@/pages/CaseNew';
 import Census from '@/pages/Census';
 import Quotes from '@/pages/Quotes.jsx';
-import Enrollment from '@/pages/Enrollment';
+import Enrollment from '@/pages/Enrollment.jsx';
 import Renewals from '@/pages/Renewals';
 import Tasks from '@/pages/Tasks';
 import Settings from '@/pages/Settings';

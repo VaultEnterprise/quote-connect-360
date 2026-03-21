@@ -67,7 +67,8 @@ export default function Dashboard() {
   const enrollmentOpen = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
   const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
   const openExceptions = exceptions.filter(e => !["resolved", "dismissed"].includes(e.status));
-  const totalPremium = scenarios.filter(s => s.total_monthly_premium).reduce((sum, s) => sum + s.total_monthly_premium, 0);
+  // Only aggregate completed scenarios — drafts and expired produce misleading totals
+  const totalPremium = scenarios.filter(s => s.status === "completed" && s.total_monthly_premium).reduce((sum, s) => sum + s.total_monthly_premium, 0);
 
   if (isLoading) return <DashboardSkeleton />;
 
