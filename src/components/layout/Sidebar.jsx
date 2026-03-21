@@ -15,7 +15,12 @@ import {
   ChevronRight,
   Zap,
   Building2,
-  BookOpen
+  BookOpen,
+  FileOutput,
+  TriangleAlert,
+  Calculator,
+  Heart,
+  Landmark
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +36,11 @@ const navItems = [
   { path: "/renewals", label: "Renewals", icon: RefreshCw },
   { path: "/tasks", label: "Tasks", icon: AlertCircle },
   { path: "/plans", label: "Plan Library", icon: BookOpen },
+  { path: "/proposals", label: "Proposals", icon: FileOutput },
+  { path: "/contributions", label: "Contributions", icon: Calculator },
+  { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
+  { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
+  { path: "/employee-portal", label: "Employee Portal", icon: Heart },
 ];
 
 const bottomItems = [
