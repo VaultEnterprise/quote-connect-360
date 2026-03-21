@@ -38,8 +38,23 @@ export default function CensusVersionHistory({ versions, onViewMembers }) {
         )}
       </div>
       <div className="space-y-2">
-        {versions.map((version) => (
-          <Card key={version.id} className="hover:shadow-sm transition-shadow">
+        {versions.map((version, idx) => (
+          <Card
+            key={version.id}
+            className={`hover:shadow-sm transition-all ${
+              compareMode
+                ? "cursor-pointer border-2 hover:border-primary"
+                : "hover:shadow-sm"
+            }`}
+            onClick={compareMode ? () => {
+              if (!version1Id) {
+                setVersion1Id(version.id);
+              } else if (!version2Id && version.id !== version1Id) {
+                handleCompare(versions.find(v => v.id === version1Id), version);
+                setCompareMode(false);
+              }
+            } : undefined}
+          >
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
