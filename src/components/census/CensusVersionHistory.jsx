@@ -115,6 +115,14 @@ export default function CensusVersionHistory({ versions, onViewMembers }) {
           </Card>
         ))}
       </div>
+
+      {/* Version Comparison */}
+      <CensusVersionComparison
+        version1Id={version1Id}
+        version2Id={version2Id}
+        open={showComparison}
+        onOpenChange={setShowComparison}
+      />
     </div>
   );
 }
