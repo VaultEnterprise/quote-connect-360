@@ -135,7 +135,11 @@ Be specific, data-driven, and realistic. If the group has favorable risk indicat
       value_score: result.value_score || 0,
       recommendation_summary: result.recommendation_summary || '',
       optimization_rationale: result.optimization_rationale || '',
-      status: result.auto_bindable ? 'optimized' : 'optimized',
+      broker_talking_points: result.broker_talking_points || [],
+      auto_bindable: result.auto_bindable || false,
+      member_count: memberCount,
+      avg_age: avgAge,
+      status: 'optimized',
       base_monthly_cost: 0,
       optimized_monthly_cost: 0,
     });
