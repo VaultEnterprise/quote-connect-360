@@ -32,6 +32,7 @@ export default function EmployerPortal() {
   const { user } = useAuth();
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const { data: cases = [] } = useQuery({
