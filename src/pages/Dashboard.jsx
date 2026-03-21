@@ -44,12 +44,14 @@ export default function Dashboard() {
 
   const { data: enrollments = [] } = useQuery({
     queryKey: ["enrollments"],
-    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 20),
+    // Raised from 20 → 100: truncated list silently understates open-enrollment KPI
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
 
   const { data: renewals = [] } = useQuery({
     queryKey: ["renewals"],
-    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 20),
+    // Raised from 20 → 100: truncated list silently understates 90-day renewal KPI
+    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
   });
 
   const { data: scenarios = [] } = useQuery({
@@ -65,6 +67,8 @@ export default function Dashboard() {
   const activeCases = cases.filter(c => !["closed", "renewed"].includes(c.stage));
   const quotingCases = cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage));
   const enrollmentOpen = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
+  // "pending" status filter on the query already scopes this correctly;
+  // overdue = pending + past due_date
   const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
   const openExceptions = exceptions.filter(e => !["resolved", "dismissed"].includes(e.status));
   // Only aggregate completed scenarios — drafts and expired produce misleading totals
@@ -114,7 +118,8 @@ export default function Dashboard() {
       name: format(month, "MMM"),
       cases: cases.filter(c => {
         const d = new Date(c.created_date);
-        return d >= start && d < end;
+        // Guard against malformed dates — isNaN check prevents silent filter failures
+        return !isNaN(d.getTime()) && d >= start && d < end;
       }).length,
     };
   });
@@ -165,9 +170,17 @@ export default function Dashboard() {
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1">Avg Enrollment Rate</p>
             <p className="text-xl font-bold text-green-600">
-              {enrollments.length > 0
-                ? `${Math.round(enrollments.reduce((s, e) => s + (e.participation_rate || 0), 0) / enrollments.length)}%`
-                : "—"}
+              {(() => {
+                  // Only average windows that have actual activity — zeros from
+                  // scheduled/not-started windows would pull the average down artificially
+                  const active = enrollments.filter(e => e.total_eligible > 0 && e.enrolled_count > 0);
+                  if (active.length === 0) return "—";
+                  const avg = Math.round(active.reduce((s, e) => {
+                    const rate = e.participation_rate ?? Math.round((e.enrolled_count / e.total_eligible) * 100);
+                    return s + rate;
+                  }, 0) / active.length);
+                  return `${avg}%`;
+                })()}
             </p>
           </CardContent>
         </Card>
