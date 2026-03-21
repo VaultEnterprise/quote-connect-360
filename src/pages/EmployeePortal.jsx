@@ -49,12 +49,16 @@ function EmployeePortalContent() {
   // ── No active enrollment — show past enrollments or empty state ──────────────
   if (hasNoWindow) {
     return (
-      <div className="max-w-2xl mx-auto py-16">
+      <div className="max-w-3xl mx-auto space-y-6 py-6 px-4">
         <EmptyState
           icon={Heart}
           title="No Active Enrollment"
           description="You don't have an active benefits enrollment window. Contact your HR administrator to get started."
         />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BenefitsGlossary />
+        </div>
       </div>
     );
   }
