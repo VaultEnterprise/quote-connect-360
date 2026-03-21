@@ -369,7 +369,7 @@ export default function PolicyMatchAIPage() {
         {[
           { icon: Target, label: "Low-Risk Groups", desc: "Automatically upgraded with enhanced coverage + ancillary bundles", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
           { icon: BarChart3, label: "Carrier Alignment", desc: "Improved loss ratios through intelligent risk segmentation", color: "text-blue-600 bg-blue-50 border-blue-200" },
-          { icon: Award, label: "Zero-Friction Close", desc: "Turn the purchase decision into: "Why wouldn't I take this?"", color: "text-purple-600 bg-purple-50 border-purple-200" },
+          { icon: Award, label: "Zero-Friction Close", desc: "Turn the purchase decision into: 'Why wouldn\'t I take this?'", color: "text-purple-600 bg-purple-50 border-purple-200" },
         ].map(v => (
           <div key={v.label} className={`flex items-start gap-3 p-4 rounded-xl border ${v.color}`}>
             <v.icon className="w-4 h-4 flex-shrink-0 mt-0.5" />
