@@ -16,9 +16,11 @@ import SessionTimeout from "@/components/employee/SessionTimeout";
 import BenefitsGlossary from "@/components/employee/BenefitsGlossary";
 import { useEnrollmentSave } from "@/components/employee/EnrollmentDataPersistence";
 
-export default function EmployeePortal() {
+function EmployeePortalContent() {
   const { user } = useAuth();
   const [showEnrollment, setShowEnrollment] = useState(false);
+  const [enrollmentState, setEnrollmentState] = useState(null);
+  const { save: saveEnrollment } = useEnrollmentSave("enrollment-draft", enrollmentState);
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const { data: myEnrollments = [] } = useQuery({
