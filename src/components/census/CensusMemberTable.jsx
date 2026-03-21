@@ -39,6 +39,15 @@ export default function CensusMemberTable({ censusVersionId, caseId }) {
 
   if (isLoading) return <div className="py-8 flex justify-center"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
+  const handleMemberClick = (member) => {
+    setSelectedMember(member);
+    setDrawerOpen(true);
+  };
+
+  const handleMemberUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["census-members", censusVersionId] });
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex gap-3">
