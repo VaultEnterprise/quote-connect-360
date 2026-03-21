@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 import {
   Zap, Brain, TrendingUp, Shield, Star, ChevronRight, Play,
   CheckCircle, XCircle, AlertTriangle, Sparkles, Target, DollarSign,
-  Users, ArrowRight, BarChart3, RefreshCw, Info, Award, Clock
+  Users, ArrowRight, BarChart3, RefreshCw, Info, Award, Clock,
+  MessageSquare, Filter, SortAsc, Mic2, Lightbulb, ArrowUpDown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,46 +16,39 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 const RISK_TIER_CONFIG = {
   preferred: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", label: "Preferred Risk", bar: "bg-emerald-500" },
-  standard: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", badge: "bg-blue-100 text-blue-700", label: "Standard Risk", bar: "bg-blue-500" },
-  elevated: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", label: "Elevated Risk", bar: "bg-amber-500" },
-  high: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", badge: "bg-red-100 text-red-700", label: "High Risk", bar: "bg-red-500" },
+  standard:  { color: "text-blue-600",    bg: "bg-blue-50",    border: "border-blue-200",    badge: "bg-blue-100 text-blue-700",    label: "Standard Risk",  bar: "bg-blue-500"  },
+  elevated:  { color: "text-amber-600",   bg: "bg-amber-50",   border: "border-amber-200",   badge: "bg-amber-100 text-amber-700",  label: "Elevated Risk",  bar: "bg-amber-500" },
+  high:      { color: "text-red-600",     bg: "bg-red-50",     border: "border-red-200",     badge: "bg-red-100 text-red-700",      label: "High Risk",      bar: "bg-red-500"   },
 };
 
 const IMPACT_COLORS = { positive: "text-emerald-600", negative: "text-red-500", neutral: "text-muted-foreground" };
-const IMPACT_ICONS = { positive: "↑", negative: "↓", neutral: "→" };
+const IMPACT_ICONS  = { positive: "↑", negative: "↓", neutral: "→" };
 
 const PLAN_TYPE_COLORS = {
-  dental: "bg-blue-100 text-blue-700",
-  vision: "bg-purple-100 text-purple-700",
-  life: "bg-green-100 text-green-700",
-  std: "bg-orange-100 text-orange-700",
-  ltd: "bg-red-100 text-red-700",
-  voluntary: "bg-pink-100 text-pink-700",
+  dental: "bg-blue-100 text-blue-700", vision: "bg-purple-100 text-purple-700",
+  life: "bg-green-100 text-green-700", std: "bg-orange-100 text-orange-700",
+  ltd: "bg-red-100 text-red-700", voluntary: "bg-pink-100 text-pink-700",
 };
 
 function RiskGauge({ score }) {
   const tier = score < 30 ? "preferred" : score < 55 ? "standard" : score < 75 ? "elevated" : "high";
   const cfg = RISK_TIER_CONFIG[tier];
-  const pct = score;
   return (
-    <div className="flex flex-col items-center gap-3 py-4">
-      <div className={`w-28 h-28 rounded-full border-4 ${cfg.border} flex items-center justify-center ${cfg.bg} relative`}>
+    <div className="flex flex-col items-center gap-3 py-2">
+      <div className={`w-24 h-24 rounded-full border-4 ${cfg.border} flex items-center justify-center ${cfg.bg}`}>
         <div className="text-center">
           <p className={`text-3xl font-black ${cfg.color}`}>{score}</p>
-          <p className="text-[10px] text-muted-foreground font-medium">Risk Score</p>
+          <p className="text-[9px] text-muted-foreground font-medium">Risk Score</p>
         </div>
       </div>
-      <Badge className={`${cfg.badge} font-semibold`}>{cfg.label}</Badge>
-      <div className="w-full max-w-48">
+      <Badge className={`${cfg.badge} font-semibold text-[10px]`}>{cfg.label}</Badge>
+      <div className="w-full max-w-40">
         <div className="h-2 bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500 rounded-full relative">
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-foreground rounded-full shadow-sm transition-all"
-            style={{ left: `calc(${pct}% - 6px)` }}
-          />
+          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-foreground rounded-full shadow-sm"
+            style={{ left: `calc(${score}% - 6px)` }} />
         </div>
         <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
           <span>Low Risk</span><span>High Risk</span>
@@ -65,10 +59,10 @@ function RiskGauge({ score }) {
 }
 
 function RunPanel({ cases, scenarios, onRun, isRunning }) {
-  const [caseId, setCaseId] = useState("");
+  const [caseId, setCaseId]     = useState("");
   const [scenarioId, setScenarioId] = useState("");
-  const [mode, setMode] = useState("guided");
-  const [stage, setStage] = useState("post_quote");
+  const [mode, setMode]         = useState("guided");
+  const [stage, setStage]       = useState("post_quote");
 
   const caseScenariosFiltered = scenarios.filter(s => !caseId || s.case_id === caseId);
 
@@ -129,37 +123,67 @@ function RunPanel({ cases, scenarios, onRun, isRunning }) {
           disabled={!caseId || isRunning}
           onClick={() => onRun({ case_id: caseId, scenario_id: scenarioId === "none" ? "" : scenarioId, mode, trigger_stage: stage })}
         >
-          {isRunning ? (
-            <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />Analyzing…</>
-          ) : (
-            <><Sparkles className="w-4 h-4 mr-2" />Run Optimization</>
-          )}
+          {isRunning
+            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />Analyzing…</>
+            : <><Sparkles className="w-4 h-4 mr-2" />Run Optimization</>}
         </Button>
       </CardContent>
     </Card>
   );
 }
 
+function PlanComparisonBar({ result }) {
+  const hasChange = result.base_plan_name && result.optimized_plan_name && result.base_plan_name !== result.optimized_plan_name;
+  if (!hasChange) return null;
+  const delta = result.cost_delta_pmpm || 0;
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl border bg-muted/30">
+      <div className="flex-1 min-w-0 text-center">
+        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-0.5">Base Plan</p>
+        <p className="text-xs font-semibold truncate">{result.base_plan_name}</p>
+      </div>
+      <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+        <ArrowRight className="w-4 h-4 text-primary" />
+        <span className={`text-[10px] font-bold ${delta <= 0 ? "text-emerald-600" : "text-amber-600"}`}>
+          {delta > 0 ? `+$${delta.toFixed(0)}/mo PMPM` : `-$${Math.abs(delta).toFixed(0)}/mo PMPM`}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0 text-center">
+        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mb-0.5">Optimized Plan</p>
+        <p className="text-xs font-semibold truncate text-primary">{result.optimized_plan_name}</p>
+        <Badge className="mt-0.5 text-[9px] py-0 bg-primary/10 text-primary border-primary/20 border">AI Selected</Badge>
+      </div>
+    </div>
+  );
+}
+
 function ResultCard({ result, onAccept, onDecline }) {
+  const [showTalkingPoints, setShowTalkingPoints] = useState(false);
   const tier = result.risk_tier || "standard";
-  const cfg = RISK_TIER_CONFIG[tier] || RISK_TIER_CONFIG.standard;
+  const cfg  = RISK_TIER_CONFIG[tier] || RISK_TIER_CONFIG.standard;
   const isAccepted = result.status === "accepted";
   const isDeclined = result.status === "declined";
-
-  const radarData = (result.risk_factors || []).slice(0, 6).map(f => ({
-    factor: f.factor?.split(" ").slice(0, 2).join(" ") || "Factor",
-    value: f.impact === "positive" ? Math.round((1 - f.weight) * 100) : Math.round(f.weight * 100),
-  }));
 
   return (
     <Card className={`border-2 ${cfg.border} overflow-hidden`}>
       {/* Header band */}
-      <div className={`px-5 py-3 ${cfg.bg} border-b ${cfg.border} flex items-center justify-between gap-3`}>
+      <div className={`px-5 py-3 ${cfg.bg} border-b ${cfg.border} flex items-center justify-between gap-3 flex-wrap`}>
         <div className="flex items-center gap-3">
           <Brain className={`w-5 h-5 ${cfg.color}`} />
           <div>
-            <p className="text-sm font-bold">{result.employer_name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{result.trigger_stage?.replace(/_/g, " ")} · {result.mode?.replace(/_/g, " ")} mode</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold">{result.employer_name}</p>
+              {result.auto_bindable && (
+                <Badge className="text-[10px] py-0 bg-emerald-200 text-emerald-800 border-emerald-300 border">
+                  <Zap className="w-2.5 h-2.5 mr-0.5" /> Auto-Bindable
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground capitalize">
+              {result.trigger_stage?.replace(/_/g, " ")} · {result.mode?.replace(/_/g, " ")} mode
+              {result.member_count ? ` · ${result.member_count} employees` : ""}
+              {result.avg_age ? ` · avg age ${result.avg_age}` : ""}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -172,23 +196,24 @@ function ResultCard({ result, onAccept, onDecline }) {
 
       <CardContent className="p-5">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Risk Score */}
+          {/* Left: Risk Score + Factors */}
           <div className="flex flex-col items-center">
             <RiskGauge score={result.risk_score || 50} />
-            <div className="w-full mt-3 space-y-1.5">
+            <div className="w-full mt-2 space-y-1.5">
               {(result.risk_factors || []).slice(0, 5).map((f, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
-                  <span className={`font-bold w-3 ${IMPACT_COLORS[f.impact]}`}>{IMPACT_ICONS[f.impact]}</span>
-                  <span className="flex-1 text-muted-foreground truncate">{f.factor}</span>
-                  <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${f.impact === "positive" ? "bg-emerald-500" : f.impact === "negative" ? "bg-red-400" : "bg-blue-400"}`} style={{ width: `${(f.weight || 0.5) * 100}%` }} />
+                  <span className={`font-bold w-3 flex-shrink-0 ${IMPACT_COLORS[f.impact]}`}>{IMPACT_ICONS[f.impact]}</span>
+                  <span className="flex-1 text-muted-foreground truncate" title={f.detail}>{f.factor}</span>
+                  <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden flex-shrink-0">
+                    <div className={`h-full rounded-full ${f.impact === "positive" ? "bg-emerald-500" : f.impact === "negative" ? "bg-red-400" : "bg-blue-400"}`}
+                      style={{ width: `${(f.weight || 0.5) * 100}%` }} />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Center: Optimization Output */}
+          {/* Right: Optimization Output */}
           <div className="lg:col-span-2 space-y-4">
             {/* Summary */}
             <div className="p-3 rounded-xl bg-muted/50 border">
@@ -196,15 +221,17 @@ function ResultCard({ result, onAccept, onDecline }) {
               <p className="text-sm leading-relaxed">{result.recommendation_summary}</p>
             </div>
 
-            {/* Key metrics row */}
+            {/* Key metrics */}
             <div className="grid grid-cols-3 gap-3">
               <div className={`text-center p-3 rounded-xl border ${cfg.bg} ${cfg.border}`}>
                 <p className={`text-xl font-black ${cfg.color}`}>{result.risk_score || "—"}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Risk Score</p>
               </div>
               <div className="text-center p-3 rounded-xl border bg-muted/30">
-                <p className={`text-xl font-black ${result.cost_delta_pmpm <= 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                  {result.cost_delta_pmpm != null ? `${result.cost_delta_pmpm > 0 ? "+" : ""}$${result.cost_delta_pmpm.toFixed(0)}` : "—"}
+                <p className={`text-xl font-black ${(result.cost_delta_pmpm || 0) <= 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                  {result.cost_delta_pmpm != null
+                    ? `${result.cost_delta_pmpm > 0 ? "+" : ""}$${result.cost_delta_pmpm.toFixed(0)}`
+                    : "—"}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">PMPM Delta</p>
               </div>
@@ -214,23 +241,14 @@ function ResultCard({ result, onAccept, onDecline }) {
               </div>
             </div>
 
-            {/* Optimized Plan */}
-            {result.optimized_plan_name && (
-              <div className="flex items-center gap-3 p-3 rounded-xl border-2 border-primary/20 bg-primary/5">
-                <Shield className="w-5 h-5 text-primary flex-shrink-0" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">Optimized Medical Plan</p>
-                  <p className="text-sm font-bold">{result.optimized_plan_name}</p>
-                </div>
-                <Award className="w-5 h-5 text-amber-500 ml-auto" />
-              </div>
-            )}
+            {/* Plan comparison */}
+            <PlanComparisonBar result={result} />
 
             {/* Enhancements */}
             {result.enhancements?.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" /> Automatic Enhancements
+                  <Sparkles className="w-3.5 h-3.5 text-primary" /> Recommended Enhancements ({result.enhancements.length})
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {result.enhancements.map((e, i) => (
@@ -240,7 +258,7 @@ function ResultCard({ result, onAccept, onDecline }) {
                         <p className="text-xs font-semibold truncate">{e.plan_name || e.plan_type}</p>
                         <p className="text-[10px] text-muted-foreground">{e.value_gain}</p>
                       </div>
-                      <span className={`text-[10px] font-bold flex-shrink-0 ${e.cost_delta_pmpm <= 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
+                      <span className={`text-[10px] font-bold flex-shrink-0 ${(e.cost_delta_pmpm || 0) <= 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
                         {e.cost_delta_pmpm != null ? `${e.cost_delta_pmpm > 0 ? "+" : ""}$${e.cost_delta_pmpm.toFixed(0)}/mo` : ""}
                       </span>
                     </div>
@@ -249,11 +267,43 @@ function ResultCard({ result, onAccept, onDecline }) {
               </div>
             )}
 
-            {/* Broker talking points */}
+            {result.enhancements?.length === 0 && (
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-amber-200 bg-amber-50/50">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-xs text-amber-800">No ancillary enhancements recommended — cost containment is the priority for this group.</p>
+              </div>
+            )}
+
+            {/* Broker Talking Points */}
+            {result.broker_talking_points?.length > 0 && (
+              <div>
+                <button
+                  className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground w-full"
+                  onClick={() => setShowTalkingPoints(!showTalkingPoints)}
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                  Broker Talking Points ({result.broker_talking_points.length})
+                  <ChevronRight className={`w-3 h-3 ml-auto transition-transform ${showTalkingPoints ? "rotate-90" : ""}`} />
+                </button>
+                {showTalkingPoints && (
+                  <div className="mt-2 space-y-2">
+                    {result.broker_talking_points.map((tp, i) => (
+                      <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-primary/5 border border-primary/15">
+                        <span className="text-[10px] font-black text-primary bg-primary/15 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">{i + 1}</span>
+                        <p className="text-xs text-foreground leading-relaxed">{tp}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Rationale */}
             {result.optimization_rationale && (
               <details className="group">
                 <summary className="text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1.5 list-none">
-                  <Info className="w-3.5 h-3.5" /> Optimization Rationale <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
+                  <Info className="w-3.5 h-3.5" /> Optimization Rationale
+                  <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
                 </summary>
                 <p className="text-xs text-muted-foreground leading-relaxed mt-2 pl-5">{result.optimization_rationale}</p>
               </details>
@@ -275,6 +325,15 @@ function ResultCard({ result, onAccept, onDecline }) {
                 </Link>
               </div>
             )}
+            {(isAccepted || isDeclined) && (
+              <div className="flex items-center gap-2 pt-1 border-t">
+                <Link to={`/cases/${result.case_id}`}>
+                  <Button size="sm" variant="ghost" className="text-xs">
+                    <ArrowRight className="w-3.5 h-3.5 mr-1" /> View Case
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -284,25 +343,16 @@ function ResultCard({ result, onAccept, onDecline }) {
 
 export default function PolicyMatchAIPage() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [activeResult, setActiveResult] = useState(null);
+  const { toast }   = useToast();
   const [isRunning, setIsRunning] = useState(false);
-  const [tab, setTab] = useState("run");
+  const [tab, setTab]             = useState("results");
+  const [filterTier, setFilterTier]     = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy]             = useState("newest");
 
-  const { data: cases = [] } = useQuery({
-    queryKey: ["cases"],
-    queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
-  });
-
-  const { data: scenarios = [] } = useQuery({
-    queryKey: ["scenarios-all"],
-    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100),
-  });
-
-  const { data: results = [], isLoading } = useQuery({
-    queryKey: ["policymatch-results"],
-    queryFn: () => base44.entities.PolicyMatchResult.list("-created_date", 50),
-  });
+  const { data: cases     = [] } = useQuery({ queryKey: ["cases"],        queryFn: () => base44.entities.BenefitCase.list("-created_date", 100) });
+  const { data: scenarios = [] } = useQuery({ queryKey: ["scenarios-all"],queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100) });
+  const { data: results   = [], isLoading } = useQuery({ queryKey: ["policymatch-results"], queryFn: () => base44.entities.PolicyMatchResult.list("-created_date", 100) });
 
   const updateResult = useMutation({
     mutationFn: ({ id, data }) => base44.entities.PolicyMatchResult.update(id, data),
@@ -316,11 +366,7 @@ export default function PolicyMatchAIPage() {
       const res = await base44.functions.invoke("policyMatchAI", params);
       if (res.data?.error) throw new Error(res.data.error);
       queryClient.invalidateQueries({ queryKey: ["policymatch-results"] });
-      setActiveResult(res.data);
-      toast({
-        title: "PolicyMatchAI Complete",
-        description: `${res.data.risk_tier?.toUpperCase()} risk profile — ${res.data.enhancements?.length || 0} enhancements identified`,
-      });
+      toast({ title: "PolicyMatchAI Complete", description: `${res.data.risk_tier?.toUpperCase()} risk — ${res.data.enhancements?.length || 0} enhancements identified` });
     } catch (e) {
       toast({ title: "Analysis Failed", description: e.message, variant: "destructive" });
       setTab("run");
@@ -333,16 +379,28 @@ export default function PolicyMatchAIPage() {
     updateResult.mutate({ id, data: { status: "accepted", accepted_at: new Date().toISOString() } });
     toast({ title: "Optimization Accepted", description: "The policy bundle has been applied." });
   };
-
   const handleDecline = (id) => {
     updateResult.mutate({ id, data: { status: "declined", declined_at: new Date().toISOString() } });
   };
 
-  // Stats
-  const totalRuns = results.length;
-  const accepted = results.filter(r => r.status === "accepted").length;
-  const preferred = results.filter(r => r.risk_tier === "preferred").length;
-  const avgValue = results.length > 0 ? Math.round(results.reduce((s, r) => s + (r.value_score || 0), 0) / results.length) : 0;
+  // Filtered + sorted results
+  const filteredResults = results
+    .filter(r => filterTier   === "all" || r.risk_tier === filterTier)
+    .filter(r => filterStatus === "all" || r.status    === filterStatus)
+    .sort((a, b) => {
+      if (sortBy === "newest")     return new Date(b.created_date) - new Date(a.created_date);
+      if (sortBy === "oldest")     return new Date(a.created_date) - new Date(b.created_date);
+      if (sortBy === "risk_asc")   return (a.risk_score || 0)  - (b.risk_score || 0);
+      if (sortBy === "risk_desc")  return (b.risk_score || 0)  - (a.risk_score || 0);
+      if (sortBy === "value_desc") return (b.value_score || 0) - (a.value_score || 0);
+      return 0;
+    });
+
+  const totalRuns  = results.length;
+  const accepted   = results.filter(r => r.status  === "accepted").length;
+  const preferred  = results.filter(r => r.risk_tier === "preferred").length;
+  const autoBindable = results.filter(r => r.auto_bindable).length;
+  const avgValue   = results.length > 0 ? Math.round(results.reduce((s, r) => s + (r.value_score || 0), 0) / results.length) : 0;
 
   return (
     <div className="space-y-6">
@@ -357,19 +415,17 @@ export default function PolicyMatchAIPage() {
             <p className="text-xs text-muted-foreground">Intelligent Risk-Based Policy Optimization Engine</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1">
-            <Zap className="w-3 h-3 mr-1.5" />Powered by AI
-          </Badge>
-        </div>
+        <Badge className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1 self-start sm:self-auto">
+          <Zap className="w-3 h-3 mr-1.5" />Powered by AI
+        </Badge>
       </div>
 
       {/* Value Prop Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: Target, label: "Low-Risk Groups", desc: "Automatically upgraded with enhanced coverage + ancillary bundles", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-          { icon: BarChart3, label: "Carrier Alignment", desc: "Improved loss ratios through intelligent risk segmentation", color: "text-blue-600 bg-blue-50 border-blue-200" },
-          { icon: Award, label: "Zero-Friction Close", desc: "Turn the purchase decision into: 'Why wouldn\'t I take this?'", color: "text-purple-600 bg-purple-50 border-purple-200" },
+          { icon: Target,   label: "Low-Risk Groups",  desc: "Automatically upgraded with enhanced coverage + ancillary bundles", color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+          { icon: BarChart3, label: "Carrier Alignment", desc: "Improved loss ratios through intelligent risk segmentation",        color: "text-blue-600 bg-blue-50 border-blue-200" },
+          { icon: Award,    label: "Zero-Friction Close", desc: "Turn the purchase decision into: 'Why wouldn\'t I take this?'",   color: "text-purple-600 bg-purple-50 border-purple-200" },
         ].map(v => (
           <div key={v.label} className={`flex items-start gap-3 p-4 rounded-xl border ${v.color}`}>
             <v.icon className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -383,12 +439,13 @@ export default function PolicyMatchAIPage() {
 
       {/* Metrics */}
       {totalRuns > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
-            { label: "Total Analyses", value: totalRuns, color: "text-foreground" },
-            { label: "Accepted", value: accepted, color: "text-emerald-600" },
-            { label: "Preferred Risk", value: preferred, color: "text-blue-600" },
-            { label: "Avg Value Score", value: `${avgValue}/100`, color: "text-primary" },
+            { label: "Total Analyses",   value: totalRuns,           color: "text-foreground" },
+            { label: "Accepted",         value: accepted,            color: "text-emerald-600" },
+            { label: "Preferred Risk",   value: preferred,           color: "text-blue-600" },
+            { label: "Auto-Bindable",    value: autoBindable,        color: "text-primary" },
+            { label: "Avg Value Score",  value: `${avgValue}/100`,   color: "text-purple-600" },
           ].map(m => (
             <Card key={m.label}>
               <CardContent className="p-4 text-center">
@@ -402,65 +459,60 @@ export default function PolicyMatchAIPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="run" className="flex items-center gap-1.5">
-            <Play className="w-3.5 h-3.5" /> Run Engine
-          </TabsTrigger>
           <TabsTrigger value="results" className="flex items-center gap-1.5">
             <Brain className="w-3.5 h-3.5" /> Results
             {results.length > 0 && <Badge className="ml-1 h-4 px-1.5 text-[10px] bg-primary text-white">{results.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="run" className="flex items-center gap-1.5">
+            <Play className="w-3.5 h-3.5" /> Run Engine
           </TabsTrigger>
           <TabsTrigger value="how" className="flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5" /> How It Works
           </TabsTrigger>
         </TabsList>
 
-        {/* Run Tab */}
-        <TabsContent value="run" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RunPanel cases={cases} scenarios={scenarios} onRun={handleRun} isRunning={isRunning} />
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" /> Recent Runs
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {results.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Brain className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm">No analyses yet. Run the engine to begin.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {results.slice(0, 6).map(r => {
-                      const cfg = RISK_TIER_CONFIG[r.risk_tier] || RISK_TIER_CONFIG.standard;
-                      return (
-                        <button key={r.id} onClick={() => { setActiveResult(r); setTab("results"); }}
-                          className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 text-left transition-colors">
-                          <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                            <span className={`text-xs font-black ${cfg.color}`}>{r.risk_score || "?"}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{r.employer_name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{r.trigger_stage?.replace(/_/g, " ")} · {format(new Date(r.created_date), "MMM d")}</p>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Badge className={`text-[10px] ${cfg.badge}`}>{cfg.label}</Badge>
-                            {r.status === "accepted" && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
         {/* Results Tab */}
         <TabsContent value="results" className="mt-4 space-y-4">
+          {/* Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            <Select value={filterTier} onValueChange={setFilterTier}>
+              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Risk Tier" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                <SelectItem value="preferred">Preferred</SelectItem>
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="elevated">Elevated</SelectItem>
+                <SelectItem value="high">High Risk</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="optimized">Optimized</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="declined">Declined</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="risk_asc">Risk Score ↑ (Best)</SelectItem>
+                <SelectItem value="risk_desc">Risk Score ↓ (Worst)</SelectItem>
+                <SelectItem value="value_desc">Value Score ↓</SelectItem>
+              </SelectContent>
+            </Select>
+            {(filterTier !== "all" || filterStatus !== "all") && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setFilterTier("all"); setFilterStatus("all"); }}>
+                Clear Filters
+              </Button>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">{filteredResults.length} result{filteredResults.length !== 1 ? "s" : ""}</span>
+          </div>
+
           {isRunning && (
             <Card className="border-primary/30 bg-primary/5">
               <CardContent className="p-6 flex items-center gap-4">
@@ -478,40 +530,77 @@ export default function PolicyMatchAIPage() {
             </Card>
           )}
 
-          {results.length === 0 && !isRunning ? (
+          {filteredResults.length === 0 && !isRunning ? (
             <div className="text-center py-16">
               <Brain className="w-14 h-14 mx-auto mb-4 text-muted-foreground/30" />
-              <p className="text-lg font-semibold">No optimization results yet</p>
-              <p className="text-sm text-muted-foreground mt-1 mb-5">Run the engine on a case to generate AI-powered policy optimization</p>
+              <p className="text-lg font-semibold">No results match your filters</p>
+              <p className="text-sm text-muted-foreground mt-1 mb-5">Try clearing filters or run the engine on a new case</p>
               <Button onClick={() => setTab("run")}><Play className="w-4 h-4 mr-2" />Run First Analysis</Button>
             </div>
           ) : (
-            results.map(r => (
+            filteredResults.map(r => (
               <ResultCard key={r.id} result={r} onAccept={handleAccept} onDecline={handleDecline} />
             ))
           )}
+        </TabsContent>
+
+        {/* Run Tab */}
+        <TabsContent value="run" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RunPanel cases={cases} scenarios={scenarios} onRun={handleRun} isRunning={isRunning} />
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" /> Recent Runs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {results.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Brain className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">No analyses yet. Run the engine to begin.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {results.slice(0, 6).map(r => {
+                      const cfg = RISK_TIER_CONFIG[r.risk_tier] || RISK_TIER_CONFIG.standard;
+                      return (
+                        <button key={r.id} onClick={() => setTab("results")}
+                          className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 text-left transition-colors">
+                          <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
+                            <span className={`text-xs font-black ${cfg.color}`}>{r.risk_score || "?"}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{r.employer_name}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{r.trigger_stage?.replace(/_/g, " ")} · {format(new Date(r.created_date), "MMM d")}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Badge className={`text-[10px] ${cfg.badge}`}>{cfg.label}</Badge>
+                            {r.status === "accepted" && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
+                            {r.auto_bindable && <Zap className="w-3.5 h-3.5 text-primary" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* How It Works Tab */}
         <TabsContent value="how" className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[
-              {
-                step: "1", title: "Multi-Source Risk Scoring", icon: Target, color: "bg-blue-100 text-blue-600",
-                items: ["Demographic & eligibility data", "Smoker/behavioral indicators", "Coverage tier distribution", "Employer group dynamics", "Census health profile signals"],
-              },
-              {
-                step: "2", title: "Policy Matching Engine", icon: Brain, color: "bg-purple-100 text-purple-600",
-                items: ["Evaluates all available medical plans", "Considers all ancillary products", "Analyzes contribution structures", "Checks participation constraints", "Computes optimal cost-value ratio"],
-              },
-              {
-                step: "3", title: "Automatic Enhancement", icon: Sparkles, color: "bg-emerald-100 text-emerald-600",
-                items: ["Low-risk groups automatically upgraded", "Dental, vision, life, LTD added", "$0–$10 PMPM net cost impact", "System-driven, not manual", "Documented rationale generated"],
-              },
-              {
-                step: "4", title: "Closed-Loop Outcome", icon: RefreshCw, color: "bg-amber-100 text-amber-600",
-                items: ["Broker reviews or auto-accepts", "Policy routes to Vault products", "Risk pools stay controlled", "Renewal re-optimization triggered", "Lifetime value per member increases"],
-              },
+              { step: "1", title: "Multi-Source Risk Scoring", icon: Target, color: "bg-blue-100 text-blue-600",
+                items: ["Demographic & eligibility data", "Smoker/behavioral indicators", "Coverage tier distribution", "Employer group dynamics", "Census health profile signals"] },
+              { step: "2", title: "Policy Matching Engine", icon: Brain, color: "bg-purple-100 text-purple-600",
+                items: ["Evaluates all available medical plans", "Considers all ancillary products", "Analyzes contribution structures", "Checks participation constraints", "Computes optimal cost-value ratio"] },
+              { step: "3", title: "Automatic Enhancement", icon: Sparkles, color: "bg-emerald-100 text-emerald-600",
+                items: ["Low-risk groups automatically upgraded", "Dental, vision, life, LTD added", "$0–$10 PMPM net cost impact", "System-driven, not manual", "Documented rationale generated"] },
+              { step: "4", title: "Closed-Loop Outcome", icon: RefreshCw, color: "bg-amber-100 text-amber-600",
+                items: ["Broker reviews or auto-accepts", "Policy routes to Vault products", "Risk pools stay controlled", "Renewal re-optimization triggered", "Lifetime value per member increases"] },
             ].map(s => (
               <Card key={s.step}>
                 <CardContent className="p-5">
@@ -534,15 +623,14 @@ export default function PolicyMatchAIPage() {
             ))}
           </div>
 
-          {/* Mode comparison */}
           <Card className="mt-6">
             <CardHeader className="pb-3"><CardTitle className="text-sm">Operational Modes</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { mode: "Full Auto", desc: "System selects and binds optimal policy automatically. Ideal for high-confidence, low-risk segments.", badge: "bg-emerald-100 text-emerald-700" },
-                  { mode: "Guided", desc: "System presents ranked options with clear advantages. Broker or employer selects from optimized set.", badge: "bg-blue-100 text-blue-700" },
-                  { mode: "Hybrid", desc: "Automatic upgrades applied. Final selection remains user-controlled. Best of both worlds.", badge: "bg-purple-100 text-purple-700" },
+                  { mode: "Full Auto",  desc: "System selects and binds optimal policy automatically. Ideal for high-confidence, low-risk segments.", badge: "bg-emerald-100 text-emerald-700" },
+                  { mode: "Guided",     desc: "System presents ranked options with clear advantages. Broker or employer selects from optimized set.", badge: "bg-blue-100 text-blue-700" },
+                  { mode: "Hybrid",     desc: "Automatic upgrades applied. Final selection remains user-controlled. Best of both worlds.",           badge: "bg-purple-100 text-purple-700" },
                 ].map(m => (
                   <div key={m.mode} className="p-4 rounded-xl border">
                     <Badge className={`${m.badge} mb-2`}>{m.mode}</Badge>
