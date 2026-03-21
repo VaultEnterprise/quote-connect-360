@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
   CheckCircle, Send, Eye, XCircle, Building2, Calendar, Users,
   DollarSign, FileText, Clock, Printer, ChevronRight, AlertTriangle
 } from "lucide-react";
 import { format, parseISO, isAfter, differenceInDays } from "date-fns";
+import SendProposalDialog from "@/components/proposals/SendProposalDialog";
 
 const STATUS_CONFIG = {
   draft:    { label: "Draft",    cls: "bg-gray-100 text-gray-600" },
@@ -19,8 +21,19 @@ const STATUS_CONFIG = {
   expired:  { label: "Expired",  cls: "bg-orange-100 text-orange-700" },
 };
 
+const PLAN_TYPE_COLORS = {
+  medical:   "bg-blue-50 text-blue-700 border-blue-200",
+  dental:    "bg-green-50 text-green-700 border-green-200",
+  vision:    "bg-purple-50 text-purple-700 border-purple-200",
+  life:      "bg-orange-50 text-orange-700 border-orange-200",
+  std:       "bg-yellow-50 text-yellow-700 border-yellow-200",
+  ltd:       "bg-red-50 text-red-700 border-red-200",
+  voluntary: "bg-pink-50 text-pink-700 border-pink-200",
+};
+
 export default function ProposalViewModal({ proposal, open, onClose, onEdit, onReject }) {
   const queryClient = useQueryClient();
+  const [showSendDialog, setShowSendDialog] = useState(false);
   if (!proposal) return null;
 
   const cfg = STATUS_CONFIG[proposal.status] || STATUS_CONFIG.draft;
@@ -46,6 +59,7 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
   const handlePrint = () => window.print();
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0">
         {/* Letterhead */}
@@ -187,34 +201,50 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
             </div>
           )}
 
-          {/* Plans */}
-          {proposal.plan_summary?.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary" />
-                Included Plans ({proposal.plan_summary.length})
-              </h3>
-              <div className="space-y-2">
-                {proposal.plan_summary.map((plan, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
-                        <FileText className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{plan.plan_name || plan.name}</p>
-                        {plan.carrier && <p className="text-xs text-muted-foreground">{plan.carrier}</p>}
+          {/* Plans — grouped by type */}
+          {proposal.plan_summary?.length > 0 && (() => {
+            const grouped = {};
+            proposal.plan_summary.forEach(p => {
+              const t = p.plan_type || "other";
+              if (!grouped[t]) grouped[t] = [];
+              grouped[t].push(p);
+            });
+            return (
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Included Plans ({proposal.plan_summary.length})
+                </h3>
+                <div className="space-y-3">
+                  {Object.entries(grouped).map(([type, plans]) => (
+                    <div key={type}>
+                      <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1.5 px-2 py-0.5 rounded-full inline-block border ${PLAN_TYPE_COLORS[type] || "bg-muted text-muted-foreground border-border"}`}>
+                        {type}
+                      </p>
+                      <div className="space-y-1.5">
+                        {plans.map((plan, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+                                <FileText className="w-3.5 h-3.5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{plan.plan_name || plan.name}</p>
+                                {plan.carrier && <p className="text-xs text-muted-foreground">{plan.carrier}</p>}
+                              </div>
+                            </div>
+                            {plan.network_type && (
+                              <Badge variant="outline" className="text-[10px]">{plan.network_type}</Badge>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {plan.plan_type && <Badge variant="outline" className="text-[10px] capitalize">{plan.plan_type}</Badge>}
-                      {plan.network_type && <Badge variant="outline" className="text-[10px]">{plan.network_type}</Badge>}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Contribution Summary */}
           {proposal.contribution_summary && (
@@ -279,8 +309,8 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
             </div>
             <div className="flex gap-2 flex-wrap">
               {proposal.status === "draft" && (
-                <Button size="sm" onClick={() => updateStatus.mutate({ status: "sent", sent_at: new Date().toISOString() })} disabled={updateStatus.isPending}>
-                  <Send className="w-3.5 h-3.5 mr-1.5" /> Mark as Sent
+                <Button size="sm" onClick={() => { onClose(); setShowSendDialog(true); }} disabled={updateStatus.isPending}>
+                  <Send className="w-3.5 h-3.5 mr-1.5" /> Send Proposal
                 </Button>
               )}
               {proposal.status === "sent" && (
@@ -301,14 +331,25 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
                 </>
               )}
               {proposal.status === "approved" && (
-                <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1">
-                  <ChevronRight className="w-3.5 h-3.5" /> Proceed to Enrollment
-                </Button>
+                <Link to="/enrollment" onClick={onClose}>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1">
+                    <ChevronRight className="w-3.5 h-3.5" /> Proceed to Enrollment
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+
+    {showSendDialog && (
+      <SendProposalDialog
+        proposal={proposal}
+        open={showSendDialog}
+        onClose={() => setShowSendDialog(false)}
+      />
+    )}
+    </>
   );
 }
