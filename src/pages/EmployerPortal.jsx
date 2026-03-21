@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, CheckCircle, Clock } from "lucide-react";
+import { Building2, CheckCircle, Clock, Menu, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,14 @@ import StatusTimeline       from "@/components/employer/StatusTimeline";
 import ProposalReviewPanel  from "@/components/employer/ProposalReviewPanel";
 import EnrollmentDrillDown  from "@/components/employer/EnrollmentDrillDown";
 import DocumentsPanel       from "@/components/employer/DocumentsPanel";
+import CaseLifecycleStatus  from "@/components/employer/CaseLifecycleStatus";
+import EnrollmentCountdown  from "@/components/employer/EnrollmentCountdown";
+import ProposalEnhanced     from "@/components/employer/ProposalEnhanced";
+import CommunicationHub     from "@/components/employer/CommunicationHub";
+import FinancialModeling    from "@/components/employer/FinancialModeling";
+import RenewalStatus        from "@/components/employer/RenewalStatus";
+import DocumentsCenter      from "@/components/employer/DocumentsCenter";
+import PlanExplainerModal   from "@/components/employer/PlanExplainerModal";
 
 export default function EmployerPortal() {
   const { user } = useAuth();
