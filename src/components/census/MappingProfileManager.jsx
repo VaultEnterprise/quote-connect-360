@@ -49,26 +49,28 @@ export default function MappingProfileManager({ mapping, headers, onLoadProfile 
           </CardHeader>
           <CardContent className="space-y-2">
             {profiles.map(profile => (
-              <div key={profile.name} className="flex items-center gap-2 p-2 bg-muted/50 rounded text-xs">
-                <div className="flex-1">
-                  <div className="font-medium">{profile.name}</div>
+              <div key={profile.name} className="flex items-center gap-2 p-2 bg-muted/50 rounded text-xs group hover:bg-muted transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{profile.name}</div>
                   <div className="text-muted-foreground text-[11px]">
-                    Saved {new Date(profile.savedAt).toLocaleDateString()}
+                    {Object.keys(profile.mapping).length} field(s) • {new Date(profile.savedAt).toLocaleDateString()}
                   </div>
                 </div>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => handleLoad(profile)}
-                  className="h-6 text-xs"
+                  className="h-6 text-xs whitespace-nowrap"
+                  title="Load this mapping template"
                 >
-                  <Download className="w-3 h-3 mr-1" /> Load
+                  <Copy className="w-3 h-3 mr-1" /> Load
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 text-destructive hover:text-destructive"
+                  className="h-6 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => handleDelete(profile.name)}
+                  title="Delete this mapping template"
                 >
                   <Trash2 className="w-3 h-3" />
                 </Button>
