@@ -7,7 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, RefreshCw, AlertTriangle, Download } from "lucide-react";
+import CensusQualityDashboard from "./CensusQualityDashboard";
+import DuplicateDetectionPanel from "./DuplicateDetectionPanel";
+import ErrorDetailPanel from "./ErrorDetailPanel";
+import TransformPreview from "./TransformPreview";
+import MappingProfileManager from "./MappingProfileManager";
+import { generateCensusTemplate, detectDuplicates, analyzeDataQuality } from "@/utils/censusHelpers";
 
 // ─── Field definitions ───────────────────────────────────────────────────────
 const CENSUS_FIELDS = [
@@ -177,6 +183,10 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
   const [mapping, setMapping] = useState({});
   const [validationSummary, setValidationSummary] = useState(null);
   const [importing, setImporting] = useState(false);
+  const [fieldStats, setFieldStats] = useState(null);
+  const [duplicates, setDuplicates] = useState([]);
+  const [skippedRows, setSkippedRows] = useState(new Set());
+  const [showTransformTab, setShowTransformTab] = useState(false);
 
   const handleFile = (f) => {
     setFile(f);
@@ -197,6 +207,15 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
       const issues = validateRow(row, mapping);
       issues.forEach(i => { if (i.type === "error") errors++; else warnings++; });
     });
+    
+    // Analyze data quality
+    const stats = analyzeDataQuality(rows, mapping);
+    setFieldStats(stats);
+    
+    // Detect duplicates
+    const dups = detectDuplicates(rows, mapping);
+    setDuplicates(dups);
+    
     setValidationSummary({ errors, warnings, total: rows.length });
     setStep("validate");
   };
@@ -204,26 +223,33 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
   const handleImport = async () => {
     setImporting(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    
+    // Filter out skipped rows
+    const rowsToImport = rows.filter((_, idx) => !skippedRows.has(idx));
+    
     const version = await base44.entities.CensusVersion.create({
       case_id: caseId,
       version_number: (currentVersionCount || 0) + 1,
       file_url,
       file_name: file.name,
       status: "validating",
-      total_employees: rows.length,
+      total_employees: rowsToImport.length,
       validation_errors: validationSummary?.errors || 0,
       validation_warnings: validationSummary?.warnings || 0,
       notes,
     });
 
-    const members = rows.map(row => ({
-      ...transformRow(row, mapping),
-      census_version_id: version.id,
-      case_id: caseId,
-      validation_issues: validateRow(row, mapping),
-      validation_status: validateRow(row, mapping).some(i => i.type === "error") ? "has_errors"
-        : validateRow(row, mapping).some(i => i.type === "warning") ? "has_warnings" : "valid",
-    }));
+    const members = rowsToImport.map((row, idx) => {
+      const issues = validateRow(row, mapping);
+      return {
+        ...transformRow(row, mapping),
+        census_version_id: version.id,
+        case_id: caseId,
+        validation_issues: issues,
+        validation_status: issues.some(i => i.type === "error") ? "has_errors"
+          : issues.some(i => i.type === "warning") ? "has_warnings" : "valid",
+      };
+    });
 
     // Bulk create in batches of 50
     for (let i = 0; i < members.length; i += 50) {
@@ -247,9 +273,30 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
     setStep("done");
   };
 
+  const downloadTemplate = () => {
+    const csv = generateCensusTemplate();
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "census-template.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleClose = () => {
-    setStep("upload"); setFile(null); setNotes(""); setHeaders([]); setRows([]);
-    setMapping({}); setValidationSummary(null); setImporting(false);
+    setStep("upload");
+    setFile(null);
+    setNotes("");
+    setHeaders([]);
+    setRows([]);
+    setMapping({});
+    setValidationSummary(null);
+    setImporting(false);
+    setFieldStats(null);
+    setDuplicates([]);
+    setSkippedRows(new Set());
+    setShowTransformTab(false);
     onClose();
   };
 
@@ -291,6 +338,9 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
               <p className="text-xs text-muted-foreground mt-1">CSV supported — columns will be auto-mapped</p>
               <input type="file" accept=".csv" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
             </label>
+            <Button variant="outline" size="sm" onClick={downloadTemplate} className="w-full text-xs">
+              <Download className="w-3.5 h-3.5 mr-2" /> Download Template
+            </Button>
             <div>
               <Label>Notes (optional)</Label>
               <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="mt-1.5" placeholder="Any notes about this census version..." />
@@ -316,6 +366,9 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
                 Required fields not mapped: {mappedRequired.map(f => f.label).join(", ")}
               </div>
             )}
+
+            {/* Mapping Profile Manager */}
+            <MappingProfileManager mapping={mapping} headers={headers} onLoadProfile={setMapping} />
 
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-muted/50 px-3 py-2 text-xs font-semibold text-muted-foreground grid grid-cols-2 gap-4">
@@ -372,7 +425,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
 
         {/* ── Step 3: Validate ── */}
         {step === "validate" && validationSummary && (
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 max-h-[calc(90vh-250px)] overflow-y-auto">
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-xl border p-4 text-center">
                 <p className="text-2xl font-bold">{validationSummary.total}</p>
@@ -404,6 +457,28 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
                 <p className="text-green-700 font-medium">All rows passed validation — ready to import!</p>
               </div>
             )}
+
+            {/* Data Quality Dashboard */}
+            <CensusQualityDashboard fieldStats={fieldStats} />
+
+            {/* Duplicate Detection */}
+            <DuplicateDetectionPanel duplicates={duplicates} rows={rows} onToggleSkip={setSkippedRows} />
+
+            {/* Error Details */}
+            <ErrorDetailPanel rows={rows} mapping={mapping} validateRow={validateRow} transformRow={transformRow} />
+
+            {/* Transform Preview */}
+            {showTransformTab && (
+              <TransformPreview rows={rows} mapping={mapping} transformRow={transformRow} />
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTransformTab(!showTransformTab)}
+              className="w-full text-xs"
+            >
+              {showTransformTab ? "Hide" : "Show"} Data Transform Preview
+            </Button>
 
             <p className="text-xs text-muted-foreground">
               Fields mapped: {Object.keys(mapping).filter(k => mapping[k]).length} of {CENSUS_FIELDS.length}
