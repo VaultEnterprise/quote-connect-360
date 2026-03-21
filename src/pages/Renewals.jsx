@@ -15,6 +15,7 @@ import RenewalCard from "@/components/renewals/RenewalCard";
 import RenewalPipelineView from "@/components/renewals/RenewalPipelineView";
 import RenewalDetailModal from "@/components/renewals/RenewalDetailModal";
 import CreateRenewalModal from "@/components/renewals/CreateRenewalModal";
+import RenewalRiskForecast from "@/components/renewals/RenewalRiskForecast";
 
 export default function Renewals() {
   const [selectedRenewal, setSelectedRenewal] = useState(null);
@@ -31,6 +32,16 @@ export default function Renewals() {
   const { data: renewals = [] } = useQuery({
     queryKey: ["renewals-all"],
     queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
+  });
+
+  // Fetch census data for risk forecasting (Phase 3)
+  const { data: censusMembers = [] } = useQuery({
+    queryKey: ["renewal-census", selectedRenewal?.id],
+    queryFn: () =>
+      selectedRenewal?.id
+        ? base44.entities.CensusMember.filter({}, '', 10000)
+        : Promise.resolve([]),
+    enabled: !!selectedRenewal?.id,
   });
 
   // ── Derived: unique assignees for filter ──────────────────────────────────────
@@ -248,13 +259,20 @@ export default function Renewals() {
       )}
 
       {/* Detail modal */}
-      {selectedRenewal && (
-        <RenewalDetailModal
-          renewal={selectedRenewal}
-          open={!!selectedRenewal}
-          onClose={() => setSelectedRenewal(null)}
-        />
-      )}
+       {selectedRenewal && (
+         <RenewalDetailModal
+           renewal={selectedRenewal}
+           open={!!selectedRenewal}
+           onClose={() => setSelectedRenewal(null)}
+         />
+       )}
+
+       {/* Risk Forecast (Phase 3) */}
+       {selectedRenewal && censusMembers.length > 0 && (
+         <div className="fixed bottom-6 right-6 w-96 max-h-96 overflow-hidden rounded-lg shadow-lg bg-background border">
+           <RenewalRiskForecast renewal={selectedRenewal} census={censusMembers} />
+         </div>
+       )}
 
       {/* Create modal */}
       <CreateRenewalModal
