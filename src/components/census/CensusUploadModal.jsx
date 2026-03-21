@@ -462,6 +462,9 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
             {/* Data Quality Dashboard */}
             <CensusQualityDashboard fieldStats={fieldStats} />
 
+            {/* Data Quality Insights */}
+            <DataQualityInsights fieldStats={fieldStats} rows={rows} />
+
             {/* Duplicate Detection */}
             <DuplicateDetectionPanel duplicates={duplicates} rows={rows} onToggleSkip={setSkippedRows} />
 
