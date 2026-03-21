@@ -145,9 +145,19 @@ export default function Sidebar({ collapsed, onToggle }) {
         </div>
 
         {/* Main Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavItem key={item.path} item={item} />
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+          {navGroups.map((group, gi) => (
+            <div key={group.label}>
+              {!collapsed && (
+                <p className="text-[9px] font-bold uppercase tracking-widest text-sidebar-foreground/30 px-3 mb-1.5">{group.label}</p>
+              )}
+              {collapsed && gi > 0 && <div className="border-t border-sidebar-border mb-2 mx-1" />}
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <NavItem key={item.path} item={item} />
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
