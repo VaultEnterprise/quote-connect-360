@@ -1,39 +1,23 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import {
-  AlertTriangle, AlertCircle, Info, Zap, Search, Filter,
-  CheckCircle, Clock, User, ExternalLink, Plus, RefreshCw
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { AlertTriangle, Search, Plus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
-import { format } from "date-fns";
+import { useAuth } from "@/lib/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { differenceInDays } from "date-fns";
 
-const SEVERITY_CONFIG = {
-  critical: { color: "bg-red-100 text-red-700 border-red-200", icon: Zap, border: "border-l-red-500" },
-  high: { color: "bg-orange-100 text-orange-700 border-orange-200", icon: AlertTriangle, border: "border-l-orange-400" },
-  medium: { color: "bg-amber-100 text-amber-700 border-amber-200", icon: AlertCircle, border: "border-l-amber-400" },
-  low: { color: "bg-blue-100 text-blue-700 border-blue-200", icon: Info, border: "border-l-blue-400" },
-};
-
-const CATEGORY_COLORS = {
-  census: "bg-purple-100 text-purple-700",
-  quote: "bg-blue-100 text-blue-700",
-  enrollment: "bg-emerald-100 text-emerald-700",
-  carrier: "bg-orange-100 text-orange-700",
-  document: "bg-gray-100 text-gray-700",
-  billing: "bg-red-100 text-red-700",
-  system: "bg-slate-100 text-slate-700",
-};
+// Exception components
+import ExceptionKPIBar from "@/components/exceptions/ExceptionKPIBar";
+import ExceptionCard from "@/components/exceptions/ExceptionCard";
+import ExceptionDetailDrawer from "@/components/exceptions/ExceptionDetailDrawer";
 
 function ResolveModal({ exception, open, onClose }) {
   const queryClient = useQueryClient();
@@ -51,7 +35,7 @@ function ResolveModal({ exception, open, onClose }) {
       <DialogContent>
         <DialogHeader><DialogTitle>Resolve Exception</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
-          <p className="text-sm font-medium">{exception.title}</p>
+          <p className="text-sm font-medium">{exception?.title}</p>
           <div>
             <Label>Resolution Notes</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="mt-1.5" placeholder="Describe how this was resolved..." rows={4} />
@@ -178,17 +162,24 @@ function CreateExceptionModal({ open, onClose, caseContext }) {
 }
 
 export default function ExceptionQueue() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("open");
+  const [sortBy, setSortBy] = useState("created"); // "created", "severity", "due_date"
+  const [showMyOnly, setShowMyOnly] = useState(false);
+
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [resolving, setResolving] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [detailException, setDetailException] = useState(null);
 
-  const { data: exceptions = [], isLoading } = useQuery({
+  const { data: exceptions = [] } = useQuery({
     queryKey: ["exceptions"],
-    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 200),
+    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
   });
 
   const dismiss = useMutation({
@@ -196,135 +187,221 @@ export default function ExceptionQueue() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["exceptions"] }),
   });
 
-  const filtered = exceptions.filter(e => {
-    const matchSearch = !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.employer_name?.toLowerCase().includes(search.toLowerCase());
-    const matchSev = severityFilter === "all" || e.severity === severityFilter;
-    const matchCat = categoryFilter === "all" || e.category === categoryFilter;
-    const matchStatus = statusFilter === "all" || (statusFilter === "open" && !["resolved","dismissed"].includes(e.status)) || e.status === statusFilter;
-    return matchSearch && matchSev && matchCat && matchStatus;
+  const assignToMe = useMutation({
+    mutationFn: (id) => base44.entities.ExceptionItem.update(id, { assigned_to: user?.email }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["exceptions"] }),
   });
 
-  const critical = exceptions.filter(e => e.severity === "critical" && !["resolved","dismissed"].includes(e.status));
+  const bulkResolve = useMutation({
+    mutationFn: () => Promise.all([...selectedIds].map(id => base44.entities.ExceptionItem.update(id, { status: "resolved", resolved_at: new Date().toISOString() }))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+      setSelectedIds(new Set());
+    },
+  });
+
+  const bulkDismiss = useMutation({
+    mutationFn: () => Promise.all([...selectedIds].map(id => base44.entities.ExceptionItem.update(id, { status: "dismissed" }))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+      setSelectedIds(new Set());
+    },
+  });
+
+  // ── Filtering ───────────────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    return exceptions.filter(e => {
+      const matchSearch = !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.employer_name?.toLowerCase().includes(search.toLowerCase());
+      const matchSev = severityFilter === "all" || e.severity === severityFilter;
+      const matchCat = categoryFilter === "all" || e.category === categoryFilter;
+      const matchStatus = statusFilter === "all" || (statusFilter === "open" && !["resolved","dismissed"].includes(e.status)) || e.status === statusFilter;
+      const matchMyOnly = !showMyOnly || e.assigned_to === user?.email;
+      return matchSearch && matchSev && matchCat && matchStatus && matchMyOnly;
+    });
+  }, [exceptions, search, severityFilter, categoryFilter, statusFilter, showMyOnly, user?.email]);
+
+  // ── Sorting ──────────────────────────────────────────────────────────────────
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    if (sortBy === "severity") {
+      const order = { critical: 0, high: 1, medium: 2, low: 3 };
+      arr.sort((a, b) => (order[a.severity] || 4) - (order[b.severity] || 4));
+    } else if (sortBy === "due_date") {
+      arr.sort((a, b) => {
+        if (!a.due_by) return 1;
+        if (!b.due_by) return -1;
+        return new Date(a.due_by) - new Date(b.due_by);
+      });
+    } else {
+      arr.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    }
+    return arr;
+  }, [filtered, sortBy]);
+
   const openCount = exceptions.filter(e => !["resolved","dismissed"].includes(e.status)).length;
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Exception Queue"
-        description={`${openCount} open exception${openCount !== 1 ? "s" : ""}${critical.length > 0 ? ` • ${critical.length} critical` : ""}`}
-        actions={
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Log Exception
-          </Button>
-        }
-      />
-
-      {/* Summary tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Critical", count: exceptions.filter(e => e.severity === "critical" && !["resolved","dismissed"].includes(e.status)).length, color: "text-red-600 bg-red-50 border-red-200" },
-          { label: "High", count: exceptions.filter(e => e.severity === "high" && !["resolved","dismissed"].includes(e.status)).length, color: "text-orange-600 bg-orange-50 border-orange-200" },
-          { label: "Medium", count: exceptions.filter(e => e.severity === "medium" && !["resolved","dismissed"].includes(e.status)).length, color: "text-amber-600 bg-amber-50 border-amber-200" },
-          { label: "Resolved Today", count: exceptions.filter(e => e.resolved_at && new Date(e.resolved_at).toDateString() === new Date().toDateString()).length, color: "text-green-600 bg-green-50 border-green-200" },
-        ].map(m => (
-          <Card key={m.label} className={`border ${m.color}`}>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{m.count}</p>
-              <p className="text-xs font-medium mt-1">{m.label}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader
+          title="Exception Queue"
+          description={`${openCount} open exception${openCount !== 1 ? "s" : ""}`}
+        />
+        <Button onClick={() => setShowCreate(true)}>
+          <Plus className="w-4 h-4 mr-2" /> Log Exception
+        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search exceptions..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
+      {/* KPI Bar */}
+      <ExceptionKPIBar exceptions={exceptions} />
+
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 flex-wrap bg-muted/30 p-3 rounded-lg">
+        <Input
+          placeholder="Search by title or employer..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-48 h-8"
+        />
+
+        {/* Category chips */}
+        <div className="flex items-center gap-1.5">
+          {["census", "quote", "enrollment", "carrier", "document", "billing", "system"].map(cat => (
+            <Button
+              key={cat}
+              variant={categoryFilter === cat ? "default" : "outline"}
+              size="sm"
+              className="h-7 px-2 text-xs capitalize"
+              onClick={() => setCategoryFilter(categoryFilter === cat ? "all" : cat)}
+            >
+              {cat}
+            </Button>
+          ))}
         </div>
+
+        <div className="flex-1" />
+
+        {/* Status, Severity, Sort dropdowns */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-36 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="open">Open</SelectItem>
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="new">New</SelectItem>
+            <SelectItem value="triaged">Triaged</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="waiting_external">Waiting External</SelectItem>
             <SelectItem value="resolved">Resolved</SelectItem>
             <SelectItem value="dismissed">Dismissed</SelectItem>
           </SelectContent>
         </Select>
+
         <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="w-36 h-9"><SelectValue placeholder="Severity" /></SelectTrigger>
+          <SelectTrigger className="w-32 h-8 text-xs">
+            <SelectValue placeholder="Severity" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Severity</SelectItem>
             {["critical","high","medium","low"].map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-36 h-9"><SelectValue placeholder="Category" /></SelectTrigger>
+
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-32 h-8 text-xs">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {["census","quote","enrollment","carrier","document","billing","system"].map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+            <SelectItem value="created">Newest</SelectItem>
+            <SelectItem value="severity">Severity</SelectItem>
+            <SelectItem value="due_date">Due Date</SelectItem>
           </SelectContent>
         </Select>
+
+        <Button
+          variant={showMyOnly ? "default" : "outline"}
+          size="sm"
+          className="h-8 text-xs"
+          onClick={() => setShowMyOnly(!showMyOnly)}
+        >
+          My Exceptions
+        </Button>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>
-      ) : filtered.length === 0 ? (
-        <EmptyState icon={CheckCircle} title={statusFilter === "open" ? "No Open Exceptions" : "No Exceptions Found"} description="All clear! No exceptions match your current filters." />
-      ) : (
-        <div className="space-y-2">
-          {filtered.map(ex => {
-            const sev = SEVERITY_CONFIG[ex.severity] || SEVERITY_CONFIG.medium;
-            const SevIcon = sev.icon;
-            return (
-              <Card key={ex.id} className={`border-l-4 ${sev.border}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <SevIcon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${ex.severity === "critical" ? "text-red-600" : ex.severity === "high" ? "text-orange-500" : ex.severity === "medium" ? "text-amber-500" : "text-blue-500"}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold">{ex.title}</p>
-                          <Badge className={`text-[10px] ${sev.color}`}>{ex.severity}</Badge>
-                          <Badge className={`text-[10px] ${CATEGORY_COLORS[ex.category] || "bg-gray-100 text-gray-700"}`}>{ex.category}</Badge>
-                          {ex.status !== "new" && <Badge variant="outline" className="text-[10px] capitalize">{ex.status?.replace(/_/g, " ")}</Badge>}
-                        </div>
-                        {ex.description && <p className="text-xs text-muted-foreground mt-1">{ex.description}</p>}
-                        {ex.suggested_action && (
-                          <p className="text-xs text-primary mt-1 font-medium">→ {ex.suggested_action}</p>
-                        )}
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
-                          {ex.employer_name && <span>{ex.employer_name}</span>}
-                          {ex.assigned_to && <span className="flex items-center gap-1"><User className="w-3 h-3" />{ex.assigned_to}</span>}
-                          {ex.due_by && <span className={`flex items-center gap-1 ${new Date(ex.due_by) < new Date() ? "text-destructive font-medium" : ""}`}><Clock className="w-3 h-3" />Due {format(new Date(ex.due_by), "MMM d")}</span>}
-                          <span>{format(new Date(ex.created_date), "MMM d, h:mm a")}</span>
-                          {ex.case_id && <Link to={`/cases/${ex.case_id}`} className="flex items-center gap-1 hover:text-primary"><ExternalLink className="w-3 h-3" />View Case</Link>}
-                        </div>
-                        {ex.resolution_notes && <p className="text-xs text-green-600 mt-1 font-medium">✓ {ex.resolution_notes}</p>}
-                      </div>
-                    </div>
-                    {!["resolved","dismissed"].includes(ex.status) && (
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setResolving(ex)}>
-                          <CheckCircle className="w-3 h-3 mr-1" /> Resolve
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-xs h-7 text-muted-foreground" onClick={() => dismiss.mutate(ex.id)}>
-                          Dismiss
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+      {/* Bulk actions */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
+          <span className="text-sm font-medium text-blue-900">{selectedIds.size} selected</span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => bulkResolve.mutate()}
+              disabled={bulkResolve.isPending}
+            >
+              Bulk Resolve
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => bulkDismiss.mutate()}
+              disabled={bulkDismiss.isPending}
+            >
+              Bulk Dismiss
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs h-7 text-muted-foreground"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Clear
+            </Button>
+          </div>
         </div>
       )}
 
+      {/* Exception list */}
+      {sorted.length === 0 ? (
+        <EmptyState
+          icon={CheckCircle}
+          title={statusFilter === "open" ? "No Open Exceptions" : "No Exceptions Found"}
+          description="All clear! No exceptions match your current filters."
+        />
+      ) : (
+        <div className="space-y-2">
+          {sorted.map(ex => (
+            <ExceptionCard
+              key={ex.id}
+              exception={ex}
+              selected={selectedIds.has(ex.id)}
+              onToggleSelect={toggleSelect}
+              onResolve={setResolving}
+              onDismiss={(id) => dismiss.mutate(id)}
+              onAssignToMe={(id) => assignToMe.mutate(id)}
+              onDetail={setDetailException}
+              currentUserEmail={user?.email}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Modals */}
       {resolving && <ResolveModal exception={resolving} open={!!resolving} onClose={() => setResolving(null)} />}
-      {showCreate && <CreateExceptionModal open={showCreate} onClose={() => setShowCreate(false)} />}
+      <CreateExceptionModal open={showCreate} onClose={() => setShowCreate(false)} />
+      {detailException && <ExceptionDetailDrawer exception={detailException} open={!!detailException} onClose={() => setDetailException(null)} />}
     </div>
   );
 }
