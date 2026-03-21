@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 import EnrollmentWizard from "@/components/employee/EnrollmentWizard";
 import EmptyState from "@/components/shared/EmptyState";
+import RiskAdjustedPlanRecommendation from "@/components/employee/RiskAdjustedPlanRecommendation";
 
 /**
  * EmployeeEnrollment
@@ -40,6 +41,18 @@ export default function EmployeeEnrollment() {
   });
 
   const activeEnrollment = enrollment?.[0];
+
+  // Fetch member risk data (Phase 3)
+  const { data: memberData } = useQuery({
+    queryKey: ["enrollment-member", activeEnrollment?.employee_email],
+    queryFn: () =>
+      activeEnrollment?.employee_email
+        ? base44.entities.CensusMember.filter({ email: activeEnrollment.employee_email }, '', 1)
+        : Promise.resolve([]),
+    enabled: !!activeEnrollment?.employee_email,
+  });
+
+  const member = memberData?.[0];
 
   const { data: enrollmentWindow, isLoading: loadingWindow } = useQuery({
     queryKey: ["portal-window", activeEnrollment?.enrollment_window_id],
@@ -102,16 +115,23 @@ export default function EmployeeEnrollment() {
         </div>
       </div>
 
-      {/* Enrollment wizard */}
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <EnrollmentWizard
-          enrollmentWindow={window}
-          user={{ email: session.employee_email, full_name: session.employee_name }}
-          activeEnrollment={activeEnrollment}
-          onComplete={() => navigate("/employee-benefits")}
-          onWaive={() => navigate("/employee-benefits")}
-        />
-      </div>
+      {/* Risk-adjusted recommendation (Phase 3) */}
+       {member && (
+         <div className="max-w-5xl mx-auto px-4 py-3">
+           <RiskAdjustedPlanRecommendation enrollment={activeEnrollment} member={member} />
+         </div>
+       )}
+
+       {/* Enrollment wizard */}
+       <div className="max-w-5xl mx-auto px-4 py-6">
+         <EnrollmentWizard
+           enrollmentWindow={window}
+           user={{ email: session.employee_email, full_name: session.employee_name }}
+           activeEnrollment={activeEnrollment}
+           onComplete={() => navigate("/employee-benefits")}
+           onWaive={() => navigate("/employee-benefits")}
+         />
+       </div>
     </div>
   );
 }
