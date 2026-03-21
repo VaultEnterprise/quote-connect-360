@@ -18,6 +18,7 @@ import Renewals from '@/pages/Renewals';
 import Tasks from '@/pages/Tasks';
 import Settings from '@/pages/Settings';
 import Employers from '@/pages/Employers';
+import PlanLibrary from '@/pages/PlanLibrary';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -51,6 +52,7 @@ const AuthenticatedApp = () => {
         <Route path="/renewals" element={<Renewals />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/employers" element={<Employers />} />
+        <Route path="/plans" element={<PlanLibrary />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
