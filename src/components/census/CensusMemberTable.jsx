@@ -83,15 +83,19 @@ export default function CensusMemberTable({ censusVersionId, caseId }) {
             </TableHeader>
             <TableBody>
               {filtered.map((m) => (
-                <TableRow key={m.id} className="text-xs">
+                <TableRow
+                  key={m.id}
+                  className="text-xs cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleMemberClick(m)}
+                >
                   <TableCell className="py-2">
                     <div className="font-medium">{m.first_name} {m.last_name}</div>
-                    {m.email && <div className="text-muted-foreground">{m.email}</div>}
+                    {m.email && <div className="text-muted-foreground text-[11px]">{m.email}</div>}
                   </TableCell>
                   <TableCell className="py-2">{m.date_of_birth || "—"}</TableCell>
                   <TableCell className="py-2">
                     <div className="capitalize">{m.employment_status || "active"}</div>
-                    <div className="text-muted-foreground capitalize">{m.employment_type?.replace(/_/g, " ")}</div>
+                    <div className="text-muted-foreground capitalize text-[11px]">{m.employment_type?.replace(/_/g, " ")}</div>
                   </TableCell>
                   <TableCell className="py-2 capitalize">{m.coverage_tier?.replace(/_/g, " ") || "—"}</TableCell>
                   <TableCell className="py-2">
@@ -100,8 +104,21 @@ export default function CensusMemberTable({ censusVersionId, caseId }) {
                       <span className="capitalize">{m.validation_status || "pending"}</span>
                     </div>
                     {m.validation_issues?.length > 0 && (
-                      <div className="text-destructive mt-0.5">{m.validation_issues.length} issue(s)</div>
+                      <div className="text-destructive text-[11px] mt-0.5">{m.validation_issues.length} issue(s)</div>
                     )}
+                  </TableCell>
+                  <TableCell className="py-2 text-right">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMemberClick(m);
+                      }}
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
