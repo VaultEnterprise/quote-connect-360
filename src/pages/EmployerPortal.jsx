@@ -109,40 +109,51 @@ export default function EmployerPortal() {
   return (
     <div className="space-y-6">
 
-      {/* ── Branded header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
+      {/* ── Branded header — responsive ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-primary" />
-            <h1 className="text-2xl font-bold">{activeCase?.employer_name || "Employer Portal"}</h1>
+            <Building2 className="w-5 h-5 text-primary flex-shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-bold truncate">{activeCase?.employer_name || "Employer Portal"}</h1>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Benefits portal · {activeCase?.case_number || `Case #${caseId?.slice(-6)}`}
             {activeCase?.effective_date && ` · Effective ${format(new Date(activeCase.effective_date), "MMM d, yyyy")}`}
           </p>
         </div>
 
-        {/* Case switcher — always visible */}
-        {cases.length > 1 ? (
-          <Select value={selectedCaseId || cases[0]?.id} onValueChange={setSelectedCaseId}>
-            <SelectTrigger className="w-60 flex-shrink-0">
-              <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {cases.map(c => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.employer_name} — {c.case_number || c.id.slice(-6)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="flex items-center gap-2">
-            <StatusBadge status={activeCase?.stage} />
-            {activeCase?.priority !== "normal" && <StatusBadge status={activeCase?.priority} />}
-          </div>
-        )}
+        {/* Case switcher — responsive */}
+        <div className="flex gap-2 flex-shrink-0">
+          {cases.length > 1 ? (
+            <Select value={selectedCaseId || cases[0]?.id} onValueChange={setSelectedCaseId}>
+              <SelectTrigger className="w-48 sm:w-60 text-xs sm:text-sm">
+                <Building2 className="w-4 h-4 mr-2 text-muted-foreground hidden sm:inline" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {cases.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.employer_name} — {c.case_number || c.id.slice(-6)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="flex items-center gap-2">
+              <StatusBadge status={activeCase?.stage} />
+              {activeCase?.priority !== "normal" && <StatusBadge status={activeCase?.priority} />}
+            </div>
+          )}
+          {/* Mobile sidebar toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden h-9 w-9"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </Button>
+        </div>
       </div>
 
       {/* ── Action Required hero ── */}
