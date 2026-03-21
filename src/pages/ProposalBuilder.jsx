@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Plus, LayoutGrid, List, Search, Filter, AlertTriangle } from "lucide-react";
+import { FileText, Plus, LayoutGrid, List, Search, Filter, AlertTriangle, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,7 @@ export default function ProposalBuilder() {
   const [viewing, setViewing] = useState(null);
   const [rejecting, setRejecting] = useState(null);
   const [showExpiringOnly, setShowExpiringOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("created_desc");
 
   const { data: proposals = [], isLoading } = useQuery({
     queryKey: ["proposals"],
@@ -45,7 +46,7 @@ export default function ProposalBuilder() {
   }, [proposals]);
 
   const filtered = useMemo(() => {
-    return proposals.filter(p => {
+    const result = proposals.filter(p => {
       const matchSearch = !search ||
         p.title?.toLowerCase().includes(search.toLowerCase()) ||
         p.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -55,7 +56,18 @@ export default function ProposalBuilder() {
       const matchExpiring = !showExpiringOnly || expiringSoon.some(e => e.id === p.id);
       return matchSearch && matchStatus && matchEmployer && matchExpiring;
     });
-  }, [proposals, search, statusFilter, employerFilter, showExpiringOnly, expiringSoon]);
+
+    return [...result].sort((a, b) => {
+      switch (sortBy) {
+        case "created_desc": return new Date(b.created_date) - new Date(a.created_date);
+        case "created_asc":  return new Date(a.created_date) - new Date(b.created_date);
+        case "expiry_asc":   return (a.expires_at ? new Date(a.expires_at) : Infinity) - (b.expires_at ? new Date(b.expires_at) : Infinity);
+        case "value_desc":   return (b.total_monthly_premium || 0) - (a.total_monthly_premium || 0);
+        case "sent_desc":    return new Date(b.sent_at || 0) - new Date(a.sent_at || 0);
+        default: return 0;
+      }
+    });
+  }, [proposals, search, statusFilter, employerFilter, showExpiringOnly, expiringSoon, sortBy]);
 
   const handleCloseEdit = () => { setEditing(null); setShowCreate(false); };
 
@@ -143,6 +155,19 @@ export default function ProposalBuilder() {
                 </SelectContent>
               </Select>
             )}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40 h-9">
+                <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" /><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">Newest First</SelectItem>
+                <SelectItem value="created_asc">Oldest First</SelectItem>
+                <SelectItem value="expiry_asc">Expiry (Soonest)</SelectItem>
+                <SelectItem value="value_desc">Value (Highest)</SelectItem>
+                <SelectItem value="sent_desc">Recently Sent</SelectItem>
+              </SelectContent>
+            </Select>
+
             {(search || statusFilter !== "all" || employerFilter !== "all" || showExpiringOnly) && (
               <Button
                 variant="ghost"
