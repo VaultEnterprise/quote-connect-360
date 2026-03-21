@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { saveMappingProfile, listMappingProfiles, deleteMappingProfile } from "@/utils/censusHelpers";
-import { Save, Trash2, Download } from "lucide-react";
+import { Save, Trash2, Download, Copy } from "lucide-react";
 
 export default function MappingProfileManager({ mapping, headers, onLoadProfile }) {
   const [profiles, setProfiles] = useState(() => listMappingProfiles());
