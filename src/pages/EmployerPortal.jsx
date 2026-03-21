@@ -67,6 +67,12 @@ export default function EmployerPortal() {
     enabled: !!caseId,
   });
 
+  const { data: renewalCycles = [] } = useQuery({
+    queryKey: ["renewals", caseId],
+    queryFn: () => base44.entities.RenewalCycle.filter({ case_id: caseId }),
+    enabled: !!caseId,
+  });
+
   // ── Derived ──────────────────────────────────────────────────────────────────
   const enrollment      = enrollments[0] || null;
   const pendingProposals = proposals.filter(p => ["sent", "viewed"].includes(p.status));
