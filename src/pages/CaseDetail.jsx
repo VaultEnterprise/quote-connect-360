@@ -24,6 +24,7 @@ import QuoteScenarioModal from "@/components/quotes/QuoteScenarioModal";
 import ScenarioCompare from "@/components/quotes/ScenarioCompare";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/AuthContext";
+import AIAssistant from "@/components/ai/AIAssistant";
 
 const STAGE_ORDER = [
   "draft", "census_in_progress", "census_validated", "ready_for_quote",
@@ -125,7 +126,22 @@ export default function CaseDetail() {
 
   const currentStageIndex = STAGE_ORDER.indexOf(caseData.stage);
   const nextStage = currentStageIndex >= 0 && currentStageIndex < STAGE_ORDER.length - 1 ? STAGE_ORDER[currentStageIndex + 1] : null;
-  const latestCensus = censusVersions[0];
+
+  const aiContext = {
+    employer: caseData.employer_name,
+    caseNumber: caseData.case_number,
+    caseType: caseData.case_type,
+    stage: caseData.stage,
+    effectiveDate: caseData.effective_date,
+    employeeCount: caseData.employee_count,
+    priority: caseData.priority,
+    censusStatus: caseData.census_status,
+    quoteStatus: caseData.quote_status,
+    enrollmentStatus: caseData.enrollment_status,
+    taskCount: tasks.length,
+    scenarioCount: scenarios.length,
+    censusVersions: censusVersions.length,
+  };
 
   return (
     <div className="space-y-6">
@@ -378,6 +394,7 @@ export default function CaseDetail() {
         <QuoteScenarioModal caseId={caseId} scenario={editingScenario}
           open={showQuoteModal} onClose={() => { setShowQuoteModal(false); setEditingScenario(null); }} />
       )}
+      <AIAssistant caseContext={aiContext} />
     </div>
   );
 }
