@@ -145,7 +145,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground mb-1">Monthly Premium (quoted)</p>
+            <p className="text-xs text-muted-foreground mb-1">Monthly Premium (completed)</p>
             <p className="text-xl font-bold text-primary">{totalPremium > 0 ? `$${(totalPremium / 1000).toFixed(0)}k` : "—"}</p>
           </CardContent>
         </Card>
