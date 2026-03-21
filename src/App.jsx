@@ -25,6 +25,7 @@ import ContributionModeling from '@/pages/ContributionModeling';
 import EmployeePortal from '@/pages/EmployeePortal';
 import EmployerPortal from '@/pages/EmployerPortal';
 import PolicyMatchAI from '@/pages/PolicyMatchAI';
+import IntegrationInfrastructure from '@/pages/IntegrationInfrastructure';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
         <Route path="/employee-portal" element={<EmployeePortal />} />
         <Route path="/employer-portal" element={<EmployerPortal />} />
         <Route path="/policymatch" element={<PolicyMatchAI />} />
+        <Route path="/integration-infra" element={<IntegrationInfrastructure />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
