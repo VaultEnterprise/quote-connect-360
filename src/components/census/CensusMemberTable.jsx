@@ -79,6 +79,7 @@ export default function CensusMemberTable({ censusVersionId, caseId }) {
                 <TableHead className="text-xs py-2">Employment</TableHead>
                 <TableHead className="text-xs py-2">Coverage</TableHead>
                 <TableHead className="text-xs py-2">Status</TableHead>
+                <TableHead className="text-xs py-2 text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
