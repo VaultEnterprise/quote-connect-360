@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import AIAssistant from "@/components/ai/AIAssistant";
@@ -25,7 +25,8 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <AIAssistant />
+      {/* Global AI assistant - not shown on case detail pages (they have their own with case context) */}
+      {!useLocation().pathname.match(/^\/cases\/[^/]+$/) && <AIAssistant />}
     </div>
   );
 }
