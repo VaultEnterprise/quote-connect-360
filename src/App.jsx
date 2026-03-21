@@ -9,7 +9,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppLayout from '@/components/layout/AppLayout';
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
-import CaseDetail from '@/pages/CaseDetail';
+import CaseDetail from '@/pages/CaseDetail.jsx';
 import CaseNew from '@/pages/CaseNew';
 import Census from '@/pages/Census';
 import Quotes from '@/pages/Quotes.jsx';
