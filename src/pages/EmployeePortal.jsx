@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, CheckCircle, AlertCircle } from "lucide-react";
+import { Heart, CheckCircle, AlertCircle, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,10 @@ import EmptyState from "@/components/shared/EmptyState";
 // Employee-specific components
 import EnrollmentWizard from "@/components/employee/EnrollmentWizard";
 import BenefitsDashboard from "@/components/employee/BenefitsDashboard";
+import EmployerCaseValidator from "@/components/employee/EmployerCaseValidator";
+import SessionTimeout from "@/components/employee/SessionTimeout";
+import BenefitsGlossary from "@/components/employee/BenefitsGlossary";
+import { useEnrollmentSave } from "@/components/employee/EnrollmentDataPersistence";
 
 export default function EmployeePortal() {
   const { user } = useAuth();
