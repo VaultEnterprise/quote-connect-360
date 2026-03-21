@@ -1,0 +1,309 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "description": "Centralized validation rules (copy-paste ready)",
+    "last_updated": "2026-03-21",
+    "format": "JSON Schema compatible"
+  },
+  "rules": {
+    "census_member": {
+      "first_name": {
+        "type": "string",
+        "required": true,
+        "minLength": 1,
+        "maxLength": 50,
+        "pattern": "^[a-zA-Z\\-'\\s]+$",
+        "error_code": "CENSUS_FNAME_INVALID",
+        "message": "First name must be 1-50 characters, letters/hyphens/apostrophes only"
+      },
+      "last_name": {
+        "type": "string",
+        "required": true,
+        "minLength": 1,
+        "maxLength": 50,
+        "pattern": "^[a-zA-Z\\-'\\s]+$",
+        "error_code": "CENSUS_LNAME_INVALID",
+        "message": "Last name must be 1-50 characters, letters/hyphens/apostrophes only"
+      },
+      "date_of_birth": {
+        "type": "string",
+        "format": "date",
+        "required": true,
+        "minAge": 18,
+        "maxAge": 120,
+        "error_code": "CENSUS_DOB_INVALID",
+        "message": "Age must be between 18 and 120"
+      },
+      "email": {
+        "type": "string",
+        "format": "email",
+        "required": false,
+        "error_code": "CENSUS_EMAIL_INVALID",
+        "message": "Must be valid email format"
+      },
+      "employee_id": {
+        "type": "string",
+        "required": true,
+        "minLength": 1,
+        "maxLength": 50,
+        "uniqueness": "per_census_version",
+        "error_code": "CENSUS_EMPID_DUPLICATE",
+        "message": "Employee ID must be unique within census version"
+      },
+      "employment_status": {
+        "type": "string",
+        "required": true,
+        "enum": ["active", "leave", "terminated"],
+        "error_code": "CENSUS_STATUS_INVALID",
+        "message": "Must be one of: active, leave, terminated"
+      },
+      "annual_salary": {
+        "type": "number",
+        "required": false,
+        "minimum": 0,
+        "maximum": 5000000,
+        "warning_if_below": 20000,
+        "warning_code": "CENSUS_SALARY_UNUSUALLY_LOW",
+        "error_code": "CENSUS_SALARY_INVALID",
+        "message": "Annual salary must be 0-5,000,000 USD"
+      },
+      "dependent_count": {
+        "type": "integer",
+        "required": false,
+        "minimum": 0,
+        "maximum": 20,
+        "error_code": "CENSUS_DEPCOUNT_INVALID",
+        "message": "Dependent count must be 0-20"
+      },
+      "coverage_tier": {
+        "type": "string",
+        "enum": ["employee_only", "employee_spouse", "employee_children", "family"],
+        "required_if": "is_eligible == true",
+        "error_code": "CENSUS_COVERAGE_MISSING",
+        "message": "Coverage tier required if eligible"
+      }
+    },
+    "quote_scenario": {
+      "case_id": {
+        "type": "string",
+        "pattern": "^cs_[0-9a-f]{32}$",
+        "required": true,
+        "must_exist_in": "benefit_case",
+        "error_code": "QUOTE_CASE_NOTFOUND",
+        "message": "Case not found"
+      },
+      "effective_date": {
+        "type": "string",
+        "format": "date",
+        "required": true,
+        "min_days_out": 30,
+        "max_days_out": 365,
+        "error_code": "QUOTE_EFFDATE_INVALID",
+        "message": "Effective date must be 30-365 days from now"
+      },
+      "contribution_strategy": {
+        "type": "string",
+        "enum": ["percentage", "flat_dollar", "defined_contribution", "custom"],
+        "required": true,
+        "error_code": "QUOTE_STRATEGY_INVALID",
+        "message": "Invalid contribution strategy"
+      },
+      "employer_contribution_ee": {
+        "type": "number",
+        "required": true,
+        "conditional": {
+          "if": "contribution_strategy == 'percentage'",
+          "then": "minimum: 0, maximum: 100",
+          "else": "minimum: 0, no maximum"
+        },
+        "error_code": "QUOTE_CONTRIB_EE_INVALID",
+        "message": "Employer contribution invalid for strategy"
+      },
+      "carriers_included": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "required": true,
+        "minItems": 1,
+        "error_code": "QUOTE_CARRIERS_EMPTY",
+        "message": "At least 1 carrier required"
+      },
+      "census_version_id": {
+        "type": "string",
+        "pattern": "^cv_[0-9a-f]{32}$",
+        "required": true,
+        "must_be_status": "validated",
+        "error_code": "QUOTE_CENSUS_NOT_VALIDATED",
+        "message": "Census must be validated before quoting"
+      }
+    },
+    "enrollment_window": {
+      "start_date": {
+        "type": "string",
+        "format": "date",
+        "required": true,
+        "must_be_before": "end_date",
+        "error_code": "ENROLL_START_INVALID",
+        "message": "Start date must be before end date"
+      },
+      "end_date": {
+        "type": "string",
+        "format": "date",
+        "required": true,
+        "must_be_after": "start_date",
+        "must_be_before": "effective_date",
+        "error_code": "ENROLL_END_INVALID",
+        "message": "End date must be after start and before effective"
+      },
+      "effective_date": {
+        "type": "string",
+        "format": "date",
+        "required": true,
+        "must_be_after": "end_date",
+        "error_code": "ENROLL_EFFECTIVE_INVALID",
+        "message": "Effective date must be after end date"
+      },
+      "total_eligible": {
+        "type": "integer",
+        "required": true,
+        "minimum": 1,
+        "error_code": "ENROLL_ELIGIBLE_INVALID",
+        "message": "At least 1 eligible member required"
+      }
+    },
+    "employee_enrollment": {
+      "status": {
+        "type": "string",
+        "enum": ["invited", "started", "completed", "waived"],
+        "required": true,
+        "error_code": "ENROLL_STATUS_INVALID",
+        "message": "Invalid enrollment status"
+      },
+      "selected_plan_id": {
+        "type": "string",
+        "required_if": "status == 'completed' && !waiver_reason",
+        "error_code": "ENROLL_PLAN_REQUIRED",
+        "message": "Plan required when completing without waiver"
+      },
+      "waiver_reason": {
+        "type": "string",
+        "required_if": "status == 'waived'",
+        "minLength": 1,
+        "maxLength": 500,
+        "error_code": "ENROLL_WAIVER_REQUIRED",
+        "message": "Waiver reason required when waiving"
+      },
+      "completion_validation": {
+        "rule": "status = 'completed' IMPLIES (selected_plan_id OR waiver_reason)",
+        "type": "constraint",
+        "enforcement": "database_check",
+        "error_code": "ENROLL_INCOMPLETE_DATA",
+        "message": "Enrollment must have plan selection or waiver reason"
+      }
+    },
+    "benefit_plan": {
+      "deductible_individual": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10000,
+        "error_code": "PLAN_DED_IND_INVALID",
+        "message": "Individual deductible must be 0-10000"
+      },
+      "deductible_family": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 20000,
+        "must_be_gte": "deductible_individual",
+        "error_code": "PLAN_DED_FAM_INVALID",
+        "message": "Family deductible must be >= individual"
+      },
+      "oop_max_individual": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 30000,
+        "must_be_gte": "deductible_individual",
+        "error_code": "PLAN_OOP_IND_INVALID",
+        "message": "OOP max must be >= deductible"
+      },
+      "rx_tier_order": {
+        "type": "array",
+        "items": ["rx_tier1", "rx_tier2", "rx_tier3", "rx_tier4"],
+        "rule": "tier1 <= tier2 <= tier3 <= tier4",
+        "error_code": "PLAN_RX_TIER_ORDER_INVALID",
+        "message": "Prescription tiers must be in ascending order"
+      }
+    },
+    "renewal_cycle": {
+      "renewal_date": {
+        "type": "string",
+        "format": "date",
+        "required": true,
+        "min_days_out": 0,
+        "max_days_out": 730,
+        "error_code": "RENEWAL_DATE_INVALID",
+        "message": "Renewal date must be within 2 years"
+      },
+      "rate_change_consistency": {
+        "rule": "(renewal_premium / current_premium - 1) * 100 == rate_change_percent ± 1",
+        "tolerance": 1,
+        "error_code": "RENEWAL_RATE_CHANGE_MISMATCH",
+        "message": "Rate change percentage doesn't match premium calculation"
+      },
+      "status_transition": {
+        "type": "state_machine",
+        "valid_transitions": {
+          "pre_renewal": ["marketed", "completed"],
+          "marketed": ["options_prepared", "completed"],
+          "options_prepared": ["employer_review", "completed"],
+          "employer_review": ["decision_made", "completed"],
+          "decision_made": ["install_renewal", "completed"],
+          "install_renewal": ["active_renewal", "completed"],
+          "active_renewal": ["completed"],
+          "completed": []
+        },
+        "error_code": "RENEWAL_STATUS_INVALID_TRANSITION",
+        "message": "Invalid status transition"
+      }
+    }
+  },
+  "severity_levels": {
+    "ERROR": {
+      "description": "Blocks operation, must be fixed",
+      "action": "Reject submission"
+    },
+    "WARNING": {
+      "description": "Unusual but allowed",
+      "action": "Log & proceed with flag"
+    },
+    "INFO": {
+      "description": "FYI only",
+      "action": "Log & proceed silently"
+    }
+  },
+  "cross_field_rules": {
+    "census_member": [
+      {
+        "name": "dependent_count_matches_tier",
+        "condition": "coverage_tier == 'employee_only'",
+        "requirement": "dependent_count == 0",
+        "severity": "ERROR",
+        "error_code": "CENSUS_DEPENDENT_TIER_MISMATCH"
+      },
+      {
+        "name": "eligible_requires_coverage_tier",
+        "condition": "is_eligible == true",
+        "requirement": "coverage_tier IS NOT NULL",
+        "severity": "ERROR",
+        "error_code": "CENSUS_COVERAGE_MISSING"
+      },
+      {
+        "name": "salary_warning_if_low_fulltime",
+        "condition": "employment_type == 'full_time'",
+        "requirement": "annual_salary >= 20000 OR log_warning",
+        "severity": "WARNING",
+        "error_code": "CENSUS_SALARY_UNUSUALLY_LOW"
+      }
+    ]
+  }
+}
