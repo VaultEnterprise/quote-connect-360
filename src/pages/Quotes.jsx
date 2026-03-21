@@ -1,32 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import {
-  FileText, DollarSign, Calendar, Star, Filter, Search,
-  Calculator, CheckCircle, Clock, XCircle, Zap, ArrowRight, Plus
+  FileText, Plus, Search, Filter, GitCompare, ChevronDown, ChevronUp,
+  AlertTriangle, SortAsc, X
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
-import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import { format } from "date-fns";
+import QuotesKPIBar from "@/components/quotes/QuotesKPIBar";
+import ScenarioCard from "@/components/quotes/ScenarioCard";
+import ScenarioCompare from "@/components/quotes/ScenarioCompare";
+import NewScenarioFromQuotes from "@/components/quotes/NewScenarioFromQuotes";
+import QuoteScenarioModal from "@/components/quotes/QuoteScenarioModal";
 import { useToast } from "@/components/ui/use-toast";
+import { parseISO, isAfter, addDays } from "date-fns";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [caseFilter, setCaseFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("created_date");
+  const [showExpiringOnly, setShowExpiringOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [compareMode, setCompareMode] = useState(false);
+  const [showNewScenario, setShowNewScenario] = useState(false);
+  const [editingScenario, setEditingScenario] = useState(null);
   const [calculating, setCalculating] = useState(null);
+  const [collapsedCases, setCollapsedCases] = useState({});
+  const [groupByCaseMode, setGroupByCaseMode] = useState(true);
 
   const { data: scenarios = [], isLoading } = useQuery({
     queryKey: ["scenarios-all"],
-    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100),
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 200),
   });
 
   const { data: cases = [] } = useQuery({
@@ -34,12 +46,70 @@ export default function Quotes() {
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
 
-  const caseMap = Object.fromEntries(cases.map(c => [c.id, c]));
+  const caseMap = useMemo(() => Object.fromEntries(cases.map(c => [c.id, c])), [cases]);
 
-  const updateScenario = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.QuoteScenario.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scenarios-all"] }),
-  });
+  const now = new Date();
+  const expiringSoon = useMemo(() => scenarios.filter(s => {
+    if (!s.expires_at || s.status === "expired") return false;
+    const exp = parseISO(s.expires_at);
+    return isAfter(exp, now) && !isAfter(exp, addDays(now, 14));
+  }), [scenarios]);
+
+  const employers = useMemo(() => {
+    const map = {};
+    scenarios.forEach(s => {
+      const c = caseMap[s.case_id];
+      if (c?.employer_name) map[s.case_id] = c.employer_name;
+    });
+    return Object.entries(map).map(([id, name]) => ({ id, name }));
+  }, [scenarios, caseMap]);
+
+  const filtered = useMemo(() => {
+    let result = scenarios.filter(s => {
+      const c = caseMap[s.case_id];
+      const q = search.toLowerCase();
+      const matchSearch = !search ||
+        s.name?.toLowerCase().includes(q) ||
+        c?.employer_name?.toLowerCase().includes(q);
+      const matchStatus = statusFilter === "all" || s.status === statusFilter;
+      const matchCase = caseFilter === "all" || s.case_id === caseFilter;
+      const matchExpiring = !showExpiringOnly || expiringSoon.some(e => e.id === s.id);
+      return matchSearch && matchStatus && matchCase && matchExpiring;
+    });
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (sortBy === "premium") return (b.total_monthly_premium || 0) - (a.total_monthly_premium || 0);
+      if (sortBy === "expiry") {
+        if (!a.expires_at && !b.expires_at) return 0;
+        if (!a.expires_at) return 1;
+        if (!b.expires_at) return -1;
+        return parseISO(a.expires_at) - parseISO(b.expires_at);
+      }
+      if (sortBy === "score") return (b.recommendation_score || 0) - (a.recommendation_score || 0);
+      // Default: created_date
+      return new Date(b.created_date) - new Date(a.created_date);
+    });
+
+    return result;
+  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon]);
+
+  // Group by case
+  const grouped = useMemo(() => {
+    const groups = {};
+    filtered.forEach(s => {
+      const key = s.case_id || "unknown";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+    return Object.entries(groups).map(([caseId, items]) => ({
+      caseId,
+      caseName: caseMap[caseId]?.employer_name || "Unknown Employer",
+      caseNumber: caseMap[caseId]?.case_number || caseId.slice(-6),
+      stage: caseMap[caseId]?.stage,
+      items,
+    }));
+  }, [filtered, caseMap]);
 
   const handleCalculate = async (scenario) => {
     setCalculating(scenario.id);
@@ -49,7 +119,10 @@ export default function Quotes() {
       const res = await base44.functions.invoke("calculateQuoteRates", { scenario_id: scenario.id });
       if (res.data?.error) throw new Error(res.data.error);
       queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
-      toast({ title: "Rates calculated", description: `$${res.data.total_monthly_premium?.toLocaleString()}/mo total premium across ${res.data.plan_results?.length} plans` });
+      toast({
+        title: "Rates calculated",
+        description: `$${res.data.total_monthly_premium?.toLocaleString()}/mo across ${res.data.plan_results?.length || 0} plans`,
+      });
     } catch (e) {
       await base44.entities.QuoteScenario.update(scenario.id, { status: "error" });
       queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
@@ -59,50 +132,98 @@ export default function Quotes() {
     }
   };
 
-  const filtered = scenarios.filter(s => {
-    const relatedCase = caseMap[s.case_id];
-    const q = search.toLowerCase();
-    const matchSearch = !search || s.name?.toLowerCase().includes(q) || relatedCase?.employer_name?.toLowerCase().includes(q);
-    const matchStatus = statusFilter === "all" || s.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const toggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 4 ? [...prev, id] : prev
+    );
+  };
 
-  // Metrics
-  const completed = scenarios.filter(s => s.status === "completed").length;
-  const totalPremium = scenarios.filter(s => s.total_monthly_premium).reduce((sum, s) => sum + (s.total_monthly_premium || 0), 0);
+  const selectedScenarios = scenarios.filter(s => selectedIds.includes(s.id));
+
+  const toggleCase = (caseId) => {
+    setCollapsedCases(prev => ({ ...prev, [caseId]: !prev[caseId] }));
+  };
+
+  const activeFilters = [
+    search && { label: `"${search}"`, clear: () => setSearch("") },
+    statusFilter !== "all" && { label: statusFilter, clear: () => setStatusFilter("all") },
+    caseFilter !== "all" && { label: employers.find(e => e.id === caseFilter)?.name, clear: () => setCaseFilter("all") },
+    showExpiringOnly && { label: "Expiring soon", clear: () => setShowExpiringOnly(false) },
+  ].filter(Boolean);
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Quotes"
-        description="View, calculate, and manage quote scenarios"
+        description="View, calculate, and compare quote scenarios"
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {expiringSoon.length > 0 && (
+              <button
+                onClick={() => setShowExpiringOnly(v => !v)}
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  showExpiringOnly
+                    ? "bg-orange-100 text-orange-700 border-orange-300"
+                    : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                }`}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {expiringSoon.length} expiring soon
+              </button>
+            )}
+            {selectedIds.length >= 2 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCompareMode(v => !v)}
+                className={compareMode ? "bg-primary text-white hover:bg-primary/90" : ""}
+              >
+                <GitCompare className="w-3.5 h-3.5 mr-1.5" />
+                Compare ({selectedIds.length})
+              </Button>
+            )}
+            <Button onClick={() => setShowNewScenario(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Scenario
+            </Button>
+          </div>
+        }
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Total Scenarios", value: scenarios.length, color: "text-foreground" },
-          { label: "Completed", value: completed, color: "text-green-600" },
-          { label: "Pending Calc", value: scenarios.filter(s => s.status === "draft").length, color: "text-amber-600" },
-          { label: "Total Premium/mo", value: totalPremium > 0 ? `$${(totalPremium / 1000).toFixed(0)}k` : "—", color: "text-primary" },
-        ].map(m => (
-          <Card key={m.label}>
-            <CardContent className="p-4 text-center">
-              <p className={`text-2xl font-bold ${m.color}`}>{m.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{m.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* KPI Bar */}
+      <QuotesKPIBar scenarios={scenarios} />
+
+      {/* Compare Panel */}
+      {compareMode && selectedScenarios.length >= 2 && (
+        <ScenarioCompare
+          scenarios={selectedScenarios}
+          onClose={() => { setCompareMode(false); setSelectedIds([]); }}
+        />
+      )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search scenarios or employers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
+        <div className="flex items-center border rounded-lg overflow-hidden">
+          <button
+            onClick={() => setGroupByCaseMode(true)}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${groupByCaseMode ? "bg-primary text-white" : "hover:bg-muted"}`}
+          >
+            By Case
+          </button>
+          <button
+            onClick={() => setGroupByCaseMode(false)}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${!groupByCaseMode ? "bg-primary text-white" : "hover:bg-muted"}`}
+          >
+            All
+          </button>
         </div>
+
+        <div className="relative flex-1 min-w-48 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search scenarios..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
+        </div>
+
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40 h-9">
+          <SelectTrigger className="w-36 h-9">
             <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" /><SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -114,105 +235,142 @@ export default function Quotes() {
             <SelectItem value="expired">Expired</SelectItem>
           </SelectContent>
         </Select>
+
+        {employers.length > 0 && (
+          <Select value={caseFilter} onValueChange={setCaseFilter}>
+            <SelectTrigger className="w-44 h-9"><SelectValue placeholder="All Employers" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Employers</SelectItem>
+              {employers.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-36 h-9">
+            <SortAsc className="w-3.5 h-3.5 mr-2 text-muted-foreground" /><SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="created_date">Newest First</SelectItem>
+            <SelectItem value="premium">Highest Premium</SelectItem>
+            <SelectItem value="expiry">Expiry Date</SelectItem>
+            <SelectItem value="score">Rec. Score</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {activeFilters.length > 0 && (
+          <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setCaseFilter("all"); setShowExpiringOnly(false); }}>
+            <X className="w-3.5 h-3.5 mr-1" /> Clear all
+          </Button>
+        )}
+
+        <span className="text-xs text-muted-foreground ml-auto">{filtered.length} scenario{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
+      {/* Active filter chips */}
+      {activeFilters.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap -mt-2">
+          {activeFilters.map((f, i) => (
+            <button
+              key={i}
+              onClick={f.clear}
+              className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            >
+              {f.label} <X className="w-3 h-3" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Compare hint */}
+      {!compareMode && selectedIds.length > 0 && selectedIds.length < 2 && (
+        <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
+          Select {2 - selectedIds.length} more scenario{2 - selectedIds.length !== 1 ? "s" : ""} to enable comparison (max 4).
+        </div>
+      )}
+
+      {/* Content */}
       {isLoading ? (
         <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon={FileText} title="No Quote Scenarios" description="Quote scenarios are created within individual cases" />
-      ) : (
-        <div className="space-y-2">
-          {filtered.map(s => {
-            const relatedCase = caseMap[s.case_id];
-            const isCalc = calculating === s.id;
-            return (
-              <Card key={s.id} className="hover:shadow-md transition-all">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <FileText className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold">{s.name}</p>
-                          <StatusBadge status={s.status} />
-                          {s.is_recommended && (
-                            <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
-                              <Star className="w-2.5 h-2.5 mr-0.5" /> Recommended
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                          <span className="font-medium text-foreground">{relatedCase?.employer_name || "Unknown"}</span>
-                          {s.total_monthly_premium && (
-                            <span className="flex items-center gap-0.5 text-primary font-semibold">
-                              <DollarSign className="w-3 h-3" />{s.total_monthly_premium.toLocaleString()}/mo total
-                            </span>
-                          )}
-                          {s.employer_monthly_cost && <span>${s.employer_monthly_cost.toLocaleString()}/mo employer</span>}
-                          {s.employee_monthly_cost_avg && <span>~${s.employee_monthly_cost_avg.toFixed(0)}/mo avg EE</span>}
-                          {s.plan_count && <span>{s.plan_count} plans</span>}
-                          {s.quoted_at && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {format(new Date(s.quoted_at), "MMM d, yyyy")}
-                            </span>
-                          )}
-                          {s.expires_at && <span className="text-orange-500">Exp. {format(new Date(s.expires_at), "MMM d")}</span>}
-                        </div>
-                        {s.carriers_included?.length > 0 && (
-                          <div className="flex gap-1 mt-1.5 flex-wrap">
-                            {s.carriers_included.map((c, i) => <Badge key={i} variant="outline" className="text-[10px]">{c}</Badge>)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+        <EmptyState
+          icon={FileText}
+          title="No Quote Scenarios"
+          description={scenarios.length === 0 ? "Create a new scenario to start quoting" : "No scenarios match your current filters"}
+          actionLabel={scenarios.length === 0 ? "New Scenario" : undefined}
+          onAction={scenarios.length === 0 ? () => setShowNewScenario(true) : undefined}
+        />
+      ) : groupByCaseMode ? (
+        // Grouped by case
+        <div className="space-y-4">
+          {grouped.map(group => (
+            <div key={group.caseId} className="border rounded-xl overflow-hidden">
+              {/* Case Header */}
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors"
+                onClick={() => toggleCase(group.caseId)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-sm font-semibold">{group.caseName}</span>
+                  <span className="text-xs text-muted-foreground"># {group.caseNumber}</span>
+                  {group.stage && (
+                    <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full capitalize">
+                      {group.stage.replace(/_/g, " ")}
+                    </span>
+                  )}
+                  <Badge variant="outline" className="text-[10px]">{group.items.length} scenario{group.items.length !== 1 ? "s" : ""}</Badge>
+                </div>
+                {collapsedCases[group.caseId] ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+              </button>
 
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {/* Mark Recommended */}
-                      <Button
-                        variant="ghost" size="icon" className={`h-7 w-7 ${s.is_recommended ? "text-amber-500" : "text-muted-foreground"}`}
-                        title={s.is_recommended ? "Remove recommendation" : "Mark as recommended"}
-                        onClick={() => updateScenario.mutate({ id: s.id, data: { is_recommended: !s.is_recommended } })}
-                      >
-                        <Star className="w-3.5 h-3.5" fill={s.is_recommended ? "currentColor" : "none"} />
-                      </Button>
-
-                      {/* Mark Expired */}
-                      {s.status !== "expired" && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-orange-500"
-                          title="Mark as expired"
-                          onClick={() => updateScenario.mutate({ id: s.id, data: { status: "expired" } })}
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
-
-                      {/* Calculate */}
-                      {["draft", "error"].includes(s.status) && (
-                        <Button size="sm" className="text-xs h-7" onClick={() => handleCalculate(s)} disabled={isCalc}>
-                          {isCalc ? (
-                            <><div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-1.5" />Calculating…</>
-                          ) : (
-                            <><Calculator className="w-3 h-3 mr-1.5" />Calculate Rates</>
-                          )}
-                        </Button>
-                      )}
-
-                      {/* Open Case */}
-                      <Link to={`/cases/${s.case_id}`}>
-                        <Button variant="outline" size="sm" className="text-xs h-7">
-                          <ArrowRight className="w-3 h-3 mr-1" /> Case
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+              {/* Scenarios */}
+              {!collapsedCases[group.caseId] && (
+                <div className="p-3 space-y-2 bg-card">
+                  {group.items.map(s => (
+                    <ScenarioCard
+                      key={s.id}
+                      scenario={s}
+                      isSelected={selectedIds.includes(s.id)}
+                      onToggleSelect={toggleSelect}
+                      onEdit={setEditingScenario}
+                      calculating={calculating}
+                      onCalculate={handleCalculate}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
+      ) : (
+        // Flat list
+        <div className="space-y-2">
+          {filtered.map(s => (
+            <ScenarioCard
+              key={s.id}
+              scenario={s}
+              isSelected={selectedIds.includes(s.id)}
+              onToggleSelect={toggleSelect}
+              onEdit={setEditingScenario}
+              calculating={calculating}
+              onCalculate={handleCalculate}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Modals */}
+      {showNewScenario && (
+        <NewScenarioFromQuotes open={showNewScenario} onClose={() => setShowNewScenario(false)} />
+      )}
+      {editingScenario && (
+        <QuoteScenarioModal
+          caseId={editingScenario.case_id}
+          scenario={editingScenario}
+          open={!!editingScenario}
+          onClose={() => setEditingScenario(null)}
+        />
       )}
     </div>
   );
