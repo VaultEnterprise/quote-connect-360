@@ -20,7 +20,8 @@ import {
   TriangleAlert,
   Calculator,
   Heart,
-  Landmark
+  Landmark,
+  Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const navItems = [
   { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
   { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
   { path: "/employee-portal", label: "Employee Portal", icon: Heart },
+  { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
 ];
 
 const bottomItems = [

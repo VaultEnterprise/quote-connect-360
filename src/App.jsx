@@ -24,6 +24,7 @@ import ExceptionQueue from '@/pages/ExceptionQueue';
 import ContributionModeling from '@/pages/ContributionModeling';
 import EmployeePortal from '@/pages/EmployeePortal';
 import EmployerPortal from '@/pages/EmployerPortal';
+import PolicyMatchAI from '@/pages/PolicyMatchAI';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -63,6 +64,7 @@ const AuthenticatedApp = () => {
         <Route path="/contributions" element={<ContributionModeling />} />
         <Route path="/employee-portal" element={<EmployeePortal />} />
         <Route path="/employer-portal" element={<EmployerPortal />} />
+        <Route path="/policymatch" element={<PolicyMatchAI />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
