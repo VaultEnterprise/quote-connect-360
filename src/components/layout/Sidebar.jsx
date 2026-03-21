@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
-  Building2
+  Building2,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const navItems = [
   { path: "/enrollment", label: "Enrollment", icon: ClipboardCheck },
   { path: "/renewals", label: "Renewals", icon: RefreshCw },
   { path: "/tasks", label: "Tasks", icon: AlertCircle },
+  { path: "/plans", label: "Plan Library", icon: BookOpen },
 ];
 
 const bottomItems = [
