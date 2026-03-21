@@ -183,13 +183,13 @@ export default function EmployerPortal() {
         ))}
       </div>
 
-      {/* ── Main content: tabs + right sidebar ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-muted/50 flex-wrap h-auto">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="proposals">
+      {/* ── Main content: tabs + right sidebar — responsive ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="bg-muted/50 flex-wrap h-auto justify-start gap-1 md:gap-2 w-full md:w-auto">
+              <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="proposals" className="text-xs md:text-sm">
                 Proposals
                 {pendingProposals.length > 0 && (
                   <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-primary text-white">
@@ -197,23 +197,30 @@ export default function EmployerPortal() {
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="enrollment">Enrollment</TabsTrigger>
-              <TabsTrigger value="tasks">
-                Action Items
+              <TabsTrigger value="enrollment" className="text-xs md:text-sm">Enrollment</TabsTrigger>
+              <TabsTrigger value="tasks" className="text-xs md:text-sm">
+                Tasks
                 {openTasks.length > 0 && (
                   <Badge className="ml-1.5 h-4 px-1 text-[10px] bg-amber-500 text-white">
                     {openTasks.length}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs md:text-sm">Docs</TabsTrigger>
             </TabsList>
 
-            {/* Overview — status timeline */}
-            <TabsContent value="overview" className="mt-4">
-              <StatusTimeline currentStage={activeCase?.stage || "draft"} />
+            {/* Overview — status timeline + lifecycle */}
+            <TabsContent value="overview" className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <StatusTimeline currentStage={activeCase?.stage || "draft"} />
+                </div>
+                <div>
+                  <CaseLifecycleStatus stage={activeCase?.stage} targetCloseDate={activeCase?.target_close_date} />
+                </div>
+              </div>
               {activeCase?.notes && (
-                <Card className="mt-4">
+                <Card>
                   <CardContent className="p-4">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Notes from your Broker</p>
                     <p className="text-sm leading-relaxed">{activeCase.notes}</p>
@@ -222,13 +229,27 @@ export default function EmployerPortal() {
               )}
             </TabsContent>
 
-            {/* Proposals */}
-            <TabsContent value="proposals" className="mt-4">
-              <ProposalReviewPanel proposals={proposals} caseId={caseId} />
+            {/* Proposals — enhanced with comparisons */}
+            <TabsContent value="proposals" className="mt-4 space-y-4">
+              {proposals.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <p className="text-muted-foreground">No proposals yet. Check back soon.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                proposals.map((proposal, idx) => (
+                  <div key={idx} className="space-y-3">
+                    <ProposalEnhanced proposal={proposal} priorProposal={idx > 0 ? proposals[idx - 1] : null} />
+                    <PlanExplainerModal plans={proposal.plan_summary || []} />
+                  </div>
+                ))
+              )}
             </TabsContent>
 
-            {/* Enrollment */}
-            <TabsContent value="enrollment" className="mt-4">
+            {/* Enrollment — with countdown */}
+            <TabsContent value="enrollment" className="mt-4 space-y-4">
+              {enrollment && <EnrollmentCountdown enrollment={enrollment} caseId={caseId} />}
               <EnrollmentDrillDown enrollment={enrollment} caseId={caseId} />
             </TabsContent>
 
@@ -239,8 +260,8 @@ export default function EmployerPortal() {
                   <CardContent className="p-5 flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-green-800">All clear!</p>
-                      <p className="text-sm text-green-700">No outstanding action items from your broker.</p>
+                      <p className="font-semibold text-green-800 text-sm">All clear!</p>
+                      <p className="text-xs text-green-700">No outstanding action items from your broker.</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -260,22 +281,39 @@ export default function EmployerPortal() {
                           </p>
                         )}
                       </div>
-                      <StatusBadge status={t.priority} />
+                      <StatusBadge status={t.priority} className="flex-shrink-0" />
                     </CardContent>
                   </Card>
                 );
               })}
             </TabsContent>
 
-            {/* Documents */}
+            {/* Documents — new center */}
             <TabsContent value="documents" className="mt-4">
-              <DocumentsPanel docs={docs} />
+              <DocumentsCenter docs={docs} />
             </TabsContent>
           </Tabs>
+
+          {/* Financial modeling & renewal (below tabs on mobile) */}
+          {proposals.length > 0 && (
+            <FinancialModeling proposal={proposals[0]} employeeCount={activeCase?.employee_count} />
+          )}
+
+          {renewalCycle && (
+            <RenewalStatus renewalCycle={renewalCycle} currentCaseExpiry={activeCase?.renewal_date} />
+          )}
         </div>
 
-        {/* ── Right sidebar ── */}
-        <div className="space-y-4">
+        {/* ── Right sidebar — mobile collapsible ── */}
+        <div
+          className={`space-y-4 ${sidebarOpen ? "block" : "hidden"} lg:block transition-all`}
+        >
+          <CommunicationHub
+            brokerName={activeCase?.assigned_to}
+            brokerEmail={activeCase?.assigned_to}
+            caseId={caseId}
+          />
+
           <BrokerContactCard
             brokerEmail={activeCase?.assigned_to}
             brokerName={activeCase?.assigned_to}
@@ -286,24 +324,24 @@ export default function EmployerPortal() {
           <Card>
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Case Details</p>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-xs md:text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Case #</span>
-                  <span className="font-medium">{activeCase?.case_number || caseId?.slice(-6)}</span>
+                  <span className="font-medium text-right">{activeCase?.case_number || caseId?.slice(-6)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Type</span>
-                  <span className="capitalize">{activeCase?.case_type?.replace(/_/g, " ") || "—"}</span>
+                  <span className="capitalize text-right">{activeCase?.case_type?.replace(/_/g, " ") || "—"}</span>
                 </div>
                 {activeCase?.effective_date && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Effective</span>
-                    <span>{format(new Date(activeCase.effective_date), "MMM d, yyyy")}</span>
+                    <span className="text-right">{format(new Date(activeCase.effective_date), "MMM d")}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Status</span>
-                  <StatusBadge status={activeCase?.stage} />
+                  <StatusBadge status={activeCase?.stage} className="text-xs" />
                 </div>
               </div>
             </CardContent>
