@@ -63,11 +63,17 @@ export default function PlanLibrary() {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowImport(true)}>
-              <Upload className="w-4 h-4 mr-2" /> Import CSV
+              <Upload className="w-4 h-4 mr-2" /> Import Plans
             </Button>
-            <Button onClick={handleNew}>
-              <Plus className="w-4 h-4 mr-2" /> Add Plan
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button><Plus className="w-4 h-4 mr-2" /> Add Plan</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => { setActiveTab("medical"); handleNew(); }}>Medical Plan</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setActiveTab("ancillary"); handleNew(); }}>Ancillary Plan</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       />
