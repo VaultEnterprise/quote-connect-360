@@ -135,34 +135,34 @@ export default function EnrollmentWizard({
          </p>
        </div>
 
-      {/* Step indicator — proper pill/dots */}
-      <div className="flex items-center justify-between gap-2 overflow-x-auto px-1">
-        {steps.map((step, i) => (
-          <div key={step.id} className="flex items-center gap-2 flex-shrink-0">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                i === currentStepIndex
-                  ? "bg-primary text-white shadow-sm"
-                  : i < currentStepIndex
-                  ? "bg-green-100 text-green-700"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {i < currentStepIndex ? "✓" : i + 1}
-            </div>
-            <span
-              className={`text-xs font-medium whitespace-nowrap ${
-                i === currentStepIndex ? "text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {step.label}
-            </span>
-            {i < steps.length - 1 && (
-              <div className={`w-8 h-0.5 ${i < currentStepIndex ? "bg-green-100" : "bg-border"}`} />
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Step indicator — responsive pill/dots */}
+       <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto px-1 -mx-4 px-4">
+         {steps.map((step, i) => (
+           <div key={step.id} className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+             <div
+               className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-semibold transition-all ${
+                 i === currentStepIndex
+                   ? "bg-primary text-white shadow-sm"
+                   : i < currentStepIndex
+                   ? "bg-green-100 text-green-700"
+                   : "bg-muted text-muted-foreground"
+               }`}
+             >
+               {i < currentStepIndex ? "✓" : i + 1}
+             </div>
+             <span
+               className={`text-[10px] sm:text-xs font-medium whitespace-nowrap hidden sm:inline ${
+                 i === currentStepIndex ? "text-foreground" : "text-muted-foreground"
+               }`}
+             >
+               {step.label}
+             </span>
+             {i < steps.length - 1 && (
+               <div className={`w-1 sm:w-2 h-0.5 ${i < currentStepIndex ? "bg-green-100" : "bg-border"}`} />
+             )}
+           </div>
+         ))}
+       </div>
 
       {/* Progress bar */}
       <Progress value={progress} className="h-1" />
