@@ -90,14 +90,26 @@ export default function CensusVersionHistory({ versions, onViewMembers }) {
                     <p className="text-xs text-muted-foreground mt-2 italic">{version.notes}</p>
                   )}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewMembers?.(version)}
-                  className="text-xs"
-                >
-                  View Members
-                </Button>
+                <div className="flex gap-2">
+                   {compareMode && (
+                     <Badge
+                       variant={version1Id === version.id ? "default" : "outline"}
+                       className="cursor-pointer text-xs"
+                     >
+                       {version1Id === version.id ? "✓ Selected" : "Select"}
+                     </Badge>
+                   )}
+                   {!compareMode && (
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => onViewMembers?.(version)}
+                       className="text-xs"
+                     >
+                       View Members
+                     </Button>
+                   )}
+                 </div>
               </div>
             </CardContent>
           </Card>
