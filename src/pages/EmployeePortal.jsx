@@ -109,24 +109,36 @@ function EmployeePortalContent() {
   // ── Enrollment wizard ────────────────────────────────────────────────────────
   if (isEnrolling || showEnrollment) {
     return (
-      <EnrollmentWizard
-        enrollmentWindow={activeWindow}
-        user={user}
-        activeEnrollment={activeEnrollment}
-        onComplete={() => window.location.reload()}
-        onWaive={() => window.location.reload()}
-      />
+      <SessionTimeout onSave={saveEnrollment}>
+        <EnrollmentWizard
+          enrollmentWindow={activeWindow}
+          user={user}
+          activeEnrollment={activeEnrollment}
+          onComplete={() => window.location.reload()}
+          onWaive={() => window.location.reload()}
+        />
+      </SessionTimeout>
     );
   }
 
   // Fallback
   return (
-    <div className="max-w-2xl mx-auto py-16">
+    <div className="max-w-2xl mx-auto py-16 px-4">
       <EmptyState
         icon={Heart}
         title="Employee Benefits Portal"
         description="No active enrollment window found for your account."
       />
     </div>
+  );
+}
+
+export default function EmployeePortal() {
+  return (
+    <EmployerCaseValidator>
+      <SessionTimeout>
+        <EmployeePortalContent />
+      </SessionTimeout>
+    </EmployerCaseValidator>
   );
 }
