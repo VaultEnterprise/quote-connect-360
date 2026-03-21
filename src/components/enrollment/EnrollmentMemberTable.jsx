@@ -1,0 +1,116 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Plus, Mail } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import EmptyState from "@/components/shared/EmptyState";
+import { format } from "date-fns";
+
+const STATUS_COLORS = {
+  pending: "bg-amber-100 text-amber-700",
+  invited: "bg-blue-100 text-blue-700",
+  enrolled: "bg-green-100 text-green-700",
+  waived: "bg-gray-100 text-gray-500",
+  terminated: "bg-red-100 text-red-700",
+};
+
+export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const queryClient = useQueryClient();
+
+  const { data: members = [], isLoading } = useQuery({
+    queryKey: ["enrollment-members", enrollmentWindowId],
+    queryFn: () => base44.entities.EnrollmentMember.filter({ enrollment_window_id: enrollmentWindowId }),
+    enabled: !!enrollmentWindowId,
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status }) => base44.entities.EnrollmentMember.update(id, {
+      status,
+      enrolled_at: status === "enrolled" ? new Date().toISOString() : undefined,
+      invited_at: status === "invited" ? new Date().toISOString() : undefined,
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["enrollment-members", enrollmentWindowId] }),
+  });
+
+  const filtered = members.filter(m => {
+    const name = `${m.first_name} ${m.last_name}`.toLowerCase();
+    const matchSearch = !search || name.includes(search.toLowerCase()) || m.email?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === "all" || m.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  if (isLoading) return <div className="py-8 flex justify-center"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+
+  if (members.length === 0) return (
+    <EmptyState icon={Mail} title="No Enrollment Records" description="No members have been added to this enrollment window yet" />
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input placeholder="Search members..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-8 text-xs" />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="invited">Invited</SelectItem>
+            <SelectItem value="enrolled">Enrolled</SelectItem>
+            <SelectItem value="waived">Waived</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-xs py-2">Name</TableHead>
+              <TableHead className="text-xs py-2">Coverage</TableHead>
+              <TableHead className="text-xs py-2">Status</TableHead>
+              <TableHead className="text-xs py-2">Updated</TableHead>
+              <TableHead className="text-xs py-2">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map(m => (
+              <TableRow key={m.id} className="text-xs">
+                <TableCell className="py-2">
+                  <div className="font-medium">{m.first_name} {m.last_name}</div>
+                  {m.email && <div className="text-muted-foreground">{m.email}</div>}
+                </TableCell>
+                <TableCell className="py-2 capitalize">{m.coverage_tier?.replace(/_/g, " ") || "—"}</TableCell>
+                <TableCell className="py-2">
+                  <Badge className={`text-[10px] ${STATUS_COLORS[m.status] || ""}`}>{m.status}</Badge>
+                  {m.waiver_reason && <div className="text-muted-foreground mt-0.5">{m.waiver_reason}</div>}
+                </TableCell>
+                <TableCell className="py-2 text-muted-foreground">{format(new Date(m.updated_date), "MMM d")}</TableCell>
+                <TableCell className="py-2">
+                  <Select value={m.status} onValueChange={v => updateStatus.mutate({ id: m.id, status: v })}>
+                    <SelectTrigger className="h-6 w-24 text-[10px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="invited">Invited</SelectItem>
+                      <SelectItem value="enrolled">Enrolled</SelectItem>
+                      <SelectItem value="waived">Waived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="text-xs text-muted-foreground">{filtered.length} of {members.length} members</p>
+    </div>
+  );
+}
