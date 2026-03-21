@@ -136,6 +136,8 @@ function PlanCard({ plan, selected, onSelect, onCompare, monthly_cost, isMedical
  *   effectiveDate — string | null
  */
 export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, effectiveDate }) {
+  const [detailPlan, setDetailPlan] = useState(null);
+
   const { data: allPlans = [] } = useQuery({
     queryKey: ["plans-active-all"],
     queryFn: () => base44.entities.BenefitPlan.filter({ status: "active" }, "-created_date", 100),
