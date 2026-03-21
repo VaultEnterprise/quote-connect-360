@@ -325,12 +325,19 @@ export default function EnrollmentWizard({
             </CardHeader>
             <CardContent className="space-y-4">
               {isWaiving ? (
-                <div className="p-4 rounded-xl bg-orange-50 border border-orange-200">
-                  <p className="font-semibold text-orange-800">Waiving Coverage</p>
-                  <p className="text-sm text-orange-700 mt-1">
-                    Reason: {waiverReason?.replace(/_/g, " ")}
-                  </p>
-                </div>
+                <>
+                  <div className="p-4 rounded-xl bg-orange-50 border border-orange-200">
+                    <p className="font-semibold text-orange-800">Waiving Coverage</p>
+                    <p className="text-sm text-orange-700 mt-1">
+                      Reason: {waiverReason?.replace(/_/g, " ")}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                    <p className="text-xs text-red-700">
+                      <strong>Important:</strong> By confirming this waiver, you will not have coverage under this plan for the upcoming year. This action cannot be undone unless you experience a qualifying life event.
+                    </p>
+                  </div>
+                </>
               ) : (
                 <div className="space-y-3">
                   {coverageTier && (
