@@ -50,21 +50,29 @@ export default function CensusQualityDashboard({ fieldStats }) {
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Field Completeness</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {fields.slice(0, 8).map(([field, data]) => (
-            <div key={field}>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-medium capitalize">{field.replace(/_/g, " ")}</span>
-                <span className="text-muted-foreground">{data.completeness}% ({data.populated}/{data.total})</span>
-              </div>
-              <Progress value={data.completeness} className="h-1.5" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+         <CardHeader className="pb-3">
+           <CardTitle className="text-sm">Field Completeness</CardTitle>
+         </CardHeader>
+         <CardContent className="space-y-2">
+           {fields.slice(0, 8).map(([field, data]) => {
+             const isCritical = criticalFields.includes(field);
+             return (
+               <div key={field}>
+                 <div className="flex items-center justify-between text-xs mb-1">
+                   <div className="flex items-center gap-1.5">
+                     <span className="font-medium capitalize">{field.replace(/_/g, " ")}</span>
+                     {isCritical && <Badge className="bg-red-100 text-red-700 text-[10px] py-0">Required</Badge>}
+                   </div>
+                   <span className={`${data.completeness === 100 ? "text-green-600 font-semibold" : "text-muted-foreground"}`}>
+                     {data.completeness}%
+                   </span>
+                 </div>
+                 <Progress value={data.completeness} className="h-1.5" />
+               </div>
+             );
+           })}
+         </CardContent>
+       </Card>
     </div>
   );
 }
