@@ -28,23 +28,38 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
-const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/cases", label: "Cases", icon: Briefcase },
-  { path: "/employers", label: "Employers", icon: Building2 },
-  { path: "/census", label: "Census", icon: Users },
-  { path: "/quotes", label: "Quotes", icon: FileText },
-  { path: "/enrollment", label: "Enrollment", icon: ClipboardCheck },
-  { path: "/renewals", label: "Renewals", icon: RefreshCw },
-  { path: "/tasks", label: "Tasks", icon: AlertCircle },
-  { path: "/plans", label: "Plan Library", icon: BookOpen },
-  { path: "/proposals", label: "Proposals", icon: FileOutput },
-  { path: "/contributions", label: "Contributions", icon: Calculator },
-  { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
-  { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
-  { path: "/employee-portal", label: "Employee Portal", icon: Heart },
-  { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
-  { path: "/integration-infra", label: "Integration Infra", icon: ServerCog },
+const navGroups = [
+  {
+    label: "Core Workflow",
+    items: [
+      { path: "/", label: "Dashboard", icon: LayoutDashboard },
+      { path: "/cases", label: "Cases", icon: Briefcase },
+      { path: "/employers", label: "Employers", icon: Building2 },
+      { path: "/census", label: "Census", icon: Users },
+      { path: "/quotes", label: "Quotes", icon: FileText },
+      { path: "/contributions", label: "Contributions", icon: Calculator },
+      { path: "/proposals", label: "Proposals", icon: FileOutput },
+      { path: "/enrollment", label: "Enrollment", icon: ClipboardCheck },
+      { path: "/renewals", label: "Renewals", icon: RefreshCw },
+    ],
+  },
+  {
+    label: "Tools & Reference",
+    items: [
+      { path: "/plans", label: "Plan Library", icon: BookOpen },
+      { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
+      { path: "/tasks", label: "Tasks", icon: AlertCircle },
+      { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
+      { path: "/integration-infra", label: "Integration Infra", icon: ServerCog },
+    ],
+  },
+  {
+    label: "Portals",
+    items: [
+      { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
+      { path: "/employee-portal", label: "Employee Portal", icon: Heart },
+    ],
+  },
 ];
 
 const bottomItems = [
