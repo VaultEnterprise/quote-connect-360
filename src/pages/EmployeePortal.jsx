@@ -66,10 +66,10 @@ function EmployeePortalContent() {
   // ── Show completed enrollments dashboard ──────────────────────────────────────
   if (isCompleted && !showEnrollment) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 py-6">
+      <div className="max-w-4xl mx-auto space-y-6 py-6 px-4">
         <div>
-          <h1 className="text-2xl font-bold">My Benefits</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage your benefit elections</p>
+          <h1 className="text-xl sm:text-2xl font-bold">My Benefits</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage your benefit elections</p>
         </div>
 
         {completedEnrollments.map(enrollment => (
@@ -84,19 +84,24 @@ function EmployeePortalContent() {
         {/* Link to enroll if new window opens */}
         {activeWindow && (
           <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4 flex items-start justify-between gap-4">
+            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-blue-900">New Enrollment Available</p>
-                <p className="text-sm text-blue-700 mt-0.5">
+                <p className="font-semibold text-blue-900 text-sm sm:text-base">New Enrollment Available</p>
+                <p className="text-xs sm:text-sm text-blue-700 mt-0.5">
                   A new enrollment window has opened for {activeWindow.employer_name || "your organization"}.
                 </p>
               </div>
-              <Button onClick={() => setShowEnrollment(true)} className="flex-shrink-0">
+              <Button onClick={() => setShowEnrollment(true)} className="w-full sm:w-auto flex-shrink-0 text-xs sm:text-sm">
                 Enroll Now
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* FAQ Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BenefitsGlossary />
+        </div>
       </div>
     );
   }
