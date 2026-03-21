@@ -18,7 +18,7 @@ const PLAN_TYPE_INFO = {
   voluntary: { icon: Zap,     label: "Voluntary", color: "text-pink-600" },
 };
 
-function PlanCard({ plan, selected, onSelect, onCompare, monthly_cost, isMedical }) {
+function PlanCard({ plan, selected, onSelect, onCompare, monthly_cost, isMedical, onDetail }) {
   const TypeIcon = PLAN_TYPE_INFO[plan.plan_type]?.icon || Zap;
 
   return (
@@ -109,17 +109,27 @@ function PlanCard({ plan, selected, onSelect, onCompare, monthly_cost, isMedical
           </div>
         )}
 
-        {/* Compare button (medical only) */}
-        {isMedical && selected && (
+        {/* Action buttons */}
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="w-full text-xs"
-            onClick={e => { e.stopPropagation(); onCompare?.(plan); }}
+            className="flex-1 text-xs"
+            onClick={e => { e.stopPropagation(); onDetail?.(plan); }}
           >
-            Compare with another plan
+            View Details
           </Button>
-        )}
+          {isMedical && selected && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs"
+              onClick={e => { e.stopPropagation(); onCompare?.(plan); }}
+            >
+              Compare
+            </Button>
+          )}
+        </div>
       </div>
     </button>
   );
