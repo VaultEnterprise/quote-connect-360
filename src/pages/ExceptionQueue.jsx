@@ -68,20 +68,45 @@ function ResolveModal({ exception, open, onClose }) {
   );
 }
 
-function CreateExceptionModal({ open, onClose }) {
+function CreateExceptionModal({ open, onClose, caseContext }) {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ title: "", description: "", category: "system", severity: "medium", suggested_action: "" });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "system",
+    severity: "medium",
+    suggested_action: "",
+    case_id: caseContext?.case_id || "",
+    employer_name: caseContext?.employer_name || "",
+    assigned_to: "",
+    due_by: "",
+    entity_type: "",
+    entity_id: "",
+  });
+
+  const { data: activeCases = [] } = useQuery({
+    queryKey: ["active-cases-for-exception"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 50),
+    enabled: open,
+  });
+
   const create = useMutation({
     mutationFn: () => base44.entities.ExceptionItem.create(form),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["exceptions"] }); onClose(); },
   });
+
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Log Exception</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
-          <div><Label>Title <span className="text-destructive">*</span></Label><Input value={form.title} onChange={e => set("title", e.target.value)} className="mt-1.5" /></div>
+          <div>
+            <Label>Title <span className="text-destructive">*</span></Label>
+            <Input value={form.title} onChange={e => set("title", e.target.value)} className="mt-1.5" />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Category</Label>
@@ -98,8 +123,50 @@ function CreateExceptionModal({ open, onClose }) {
               </Select>
             </div>
           </div>
-          <div><Label>Description</Label><Textarea value={form.description} onChange={e => set("description", e.target.value)} className="mt-1.5" rows={3} /></div>
-          <div><Label>Suggested Action</Label><Input value={form.suggested_action} onChange={e => set("suggested_action", e.target.value)} className="mt-1.5" /></div>
+
+          <div>
+            <Label>Related Case (optional)</Label>
+            <Select value={form.case_id} onValueChange={v => {
+              const c = activeCases.find(x => x.id === v);
+              set("case_id", v);
+              if (c) set("employer_name", c.employer_name);
+            }}>
+              <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select case..." /></SelectTrigger>
+              <SelectContent>{activeCases.map(c => <SelectItem key={c.id} value={c.id}>{c.employer_name} • {c.case_number || c.id.slice(-6)}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Description</Label>
+            <Textarea value={form.description} onChange={e => set("description", e.target.value)} className="mt-1.5" rows={3} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Assigned To (email)</Label>
+              <Input type="email" value={form.assigned_to} onChange={e => set("assigned_to", e.target.value)} className="mt-1.5" placeholder="user@example.com" />
+            </div>
+            <div>
+              <Label>Due By</Label>
+              <Input type="date" value={form.due_by} onChange={e => set("due_by", e.target.value)} className="mt-1.5" />
+            </div>
+          </div>
+
+          <div>
+            <Label>Suggested Action</Label>
+            <Input value={form.suggested_action} onChange={e => set("suggested_action", e.target.value)} className="mt-1.5" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Entity Type (optional)</Label>
+              <Input value={form.entity_type} onChange={e => set("entity_type", e.target.value)} className="mt-1.5" placeholder="e.g., QuoteScenario" />
+            </div>
+            <div>
+              <Label>Entity ID</Label>
+              <Input value={form.entity_id} onChange={e => set("entity_id", e.target.value)} className="mt-1.5" placeholder="ID of related entity" />
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
