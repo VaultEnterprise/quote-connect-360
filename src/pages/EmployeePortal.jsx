@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Heart, Shield, Eye, CheckCircle, Clock, User, Users,
-  ChevronRight, AlertCircle, FileText, Star, DollarSign
+  ChevronRight, AlertCircle, FileText, Star, DollarSign, Plus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -348,8 +348,4 @@ export default function EmployeePortal() {
       )}
     </div>
   );
-}
-
-function Plus({ className }) {
-  return <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5v14"/></svg>;
 }
