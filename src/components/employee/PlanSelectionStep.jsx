@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Heart, Shield, Eye, Zap, DollarSign } from "lucide-react";
 import { format } from "date-fns";
+import PlanDetailView from "./PlanDetailView";
 
 const PLAN_TYPE_INFO = {
   medical:   { icon: Heart,   label: "Medical",  color: "text-blue-600" },
@@ -222,6 +223,7 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
                   selected={selectedPlans[type]?.id === plan.id}
                   onSelect={() => onSelect(plan)}
                   onCompare={onCompare}
+                  onDetail={setDetailPlan}
                   monthly_cost={type === "medical" ? getEmployeeCost(plan) : undefined}
                   isMedical={type === "medical"}
                 />
@@ -243,12 +245,23 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
                 selected={selectedPlans[activeTab]?.id === plan.id}
                 onSelect={() => onSelect(plan)}
                 onCompare={onCompare}
+                onDetail={setDetailPlan}
                 monthly_cost={getEmployeeCost(plan)}
                 isMedical={true}
               />
             )) || <p className="text-sm text-muted-foreground">No plans available.</p>}
           </CardContent>
         </Card>
+      )}
+
+      {/* Plan detail modal */}
+      {detailPlan && (
+        <PlanDetailView
+          plan={detailPlan}
+          monthlyCost={detailPlan.plan_type === "medical" ? getEmployeeCost(detailPlan) : undefined}
+          onClose={() => setDetailPlan(null)}
+          onSelect={(plan) => { onSelect(plan); setDetailPlan(null); }}
+        />
       )}
     </div>
   );
