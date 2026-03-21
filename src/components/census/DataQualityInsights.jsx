@@ -121,7 +121,7 @@ export default function DataQualityInsights({ fieldStats, rows }) {
                 </div>
               </div>
               {ageOutliers.length > 0 && (
-                <p className="text-amber-600 pt-1">⚠️ {ageOutliers.length} unusual age(s) (<20 or >70)</p>
+                <p className="text-amber-600 pt-1">⚠️ {ageOutliers.length} unusual age(s) ({'<'}20 or {'>'}70)</p>
               )}
             </div>
           )}
