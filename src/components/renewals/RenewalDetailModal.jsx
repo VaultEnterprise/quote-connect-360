@@ -1,144 +1,326 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, Trash2, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
+import StatusBadge from "@/components/shared/StatusBadge";
 
-const STATUSES = [
-  { value: "pre_renewal", label: "Pre-Renewal" },
-  { value: "marketed", label: "Marketed" },
-  { value: "options_prepared", label: "Options Prepared" },
-  { value: "employer_review", label: "Employer Review" },
-  { value: "decision_made", label: "Decision Made" },
-  { value: "install_renewal", label: "Installing Renewal" },
-  { value: "active_renewal", label: "Active Renewal" },
-  { value: "completed", label: "Completed" },
-];
-
+/**
+ * RenewalDetailModal
+ * Rich detail view: full renewal info, rate comparison with auto-calc, disruption score visual,
+ * recommendation CTAs, decision capture workflow, optional notes history.
+ *
+ * Props:
+ *   renewal  — RenewalCycle
+ *   open     — boolean
+ *   onClose  — () => void
+ */
 export default function RenewalDetailModal({ renewal, open, onClose }) {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({
-    status: renewal?.status || "pre_renewal",
-    renewal_premium: renewal?.renewal_premium || "",
-    rate_change_percent: renewal?.rate_change_percent || "",
-    disruption_score: renewal?.disruption_score || "",
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    current_premium: renewal?.current_premium || 0,
+    renewal_premium: renewal?.renewal_premium || 0,
+    rate_change_percent: renewal?.rate_change_percent || 0,
+    disruption_score: renewal?.disruption_score || 0,
     recommendation: renewal?.recommendation || "",
     decision: renewal?.decision || "",
-    decision_date: renewal?.decision_date || "",
     notes: renewal?.notes || "",
-    assigned_to: renewal?.assigned_to || "",
   });
 
-  const save = useMutation({
-    mutationFn: () => base44.entities.RenewalCycle.update(renewal.id, {
-      ...form,
-      renewal_premium: form.renewal_premium ? Number(form.renewal_premium) : undefined,
-      rate_change_percent: form.rate_change_percent ? Number(form.rate_change_percent) : undefined,
-      disruption_score: form.disruption_score ? Number(form.disruption_score) : undefined,
-    }),
+  const { data: linkedCase } = useQuery({
+    queryKey: ["renewal-case", renewal?.case_id],
+    queryFn: () => renewal?.case_id ? base44.entities.BenefitCase.filter({ id: renewal.case_id }) : Promise.resolve([]),
+    enabled: open && !!renewal?.case_id,
+  });
+
+  const update = useMutation({
+    mutationFn: () => base44.entities.RenewalCycle.update(renewal.id, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
+      setIsEditing(false);
+    },
+  });
+
+  const deleteRenewal = useMutation({
+    mutationFn: () => base44.entities.RenewalCycle.delete(renewal.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
       onClose();
     },
   });
 
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const rateChange = Number(form.rate_change_percent);
+  const handleCalcRateChange = (currentPrem, renewalPrem) => {
+    if (currentPrem && renewalPrem && currentPrem > 0) {
+      const pct = ((renewalPrem - currentPrem) / currentPrem * 100).toFixed(1);
+      setFormData(f => ({ ...f, rate_change_percent: parseFloat(pct) }));
+    }
+  };
+
+  const caseLink = linkedCase?.[0];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Renewal — {renewal?.employer_name}</DialogTitle>
+          <DialogTitle>{renewal?.employer_name || "Renewal Details"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          {/* Rate comparison */}
-          <div className="grid grid-cols-3 gap-3 p-4 bg-muted/50 rounded-lg">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Current Premium</p>
-              <p className="text-lg font-bold">{renewal?.current_premium ? `$${renewal.current_premium.toLocaleString()}` : "—"}</p>
+
+        <div className="space-y-5">
+          {/* Linked case */}
+          {caseLink && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Linked Case</p>
+                  <p className="text-sm font-medium text-blue-900 mt-0.5">{caseLink.employer_name} • {caseLink.case_number || caseLink.id.slice(-6)}</p>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`/cases/${caseLink.id}`} target="_blank" rel="noreferrer">
+                    <ExternalLink className="w-3.5 h-3.5 mr-1" /> View Case
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Status and dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Status</Label>
+              <div className="mt-1.5">
+                <StatusBadge status={renewal?.status} />
+              </div>
             </div>
-            <div className="text-center flex flex-col items-center justify-center">
-              {rateChange > 0 ? <TrendingUp className="w-6 h-6 text-destructive" /> : rateChange < 0 ? <TrendingDown className="w-6 h-6 text-green-500" /> : <Minus className="w-5 h-5 text-muted-foreground" />}
-              <p className={`text-sm font-semibold mt-1 ${rateChange > 0 ? "text-destructive" : rateChange < 0 ? "text-green-600" : "text-muted-foreground"}`}>
-                {rateChange > 0 ? "+" : ""}{rateChange || "—"}%
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Renewal Premium</p>
-              <p className="text-lg font-bold">{form.renewal_premium ? `$${Number(form.renewal_premium).toLocaleString()}` : "—"}</p>
-            </div>
+            {renewal?.renewal_date && (
+              <div>
+                <Label className="text-xs">Renewal Date</Label>
+                <p className="text-sm font-medium mt-1.5">{format(new Date(renewal.renewal_date), "MMM d, yyyy")}</p>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={v => set("status", v)}>
-                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-                <SelectContent>{STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Recommendation</Label>
-              <Select value={form.recommendation} onValueChange={v => set("recommendation", v)}>
-                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="renew_as_is">Renew As-Is</SelectItem>
-                  <SelectItem value="renew_with_changes">Renew With Changes</SelectItem>
-                  <SelectItem value="market">Market</SelectItem>
-                  <SelectItem value="terminate">Terminate</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {/* Premium section with auto-calc */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Premium & Rate Change</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="currentPrem" className="text-xs">Current Premium/mo ($)</Label>
+                  <Input
+                    id="currentPrem"
+                    type="number"
+                    step="0.01"
+                    value={formData.current_premium}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setFormData(f => ({ ...f, current_premium: val }));
+                      handleCalcRateChange(val, formData.renewal_premium);
+                    }}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="renewalPrem" className="text-xs">Renewal Premium/mo ($)</Label>
+                  <Input
+                    id="renewalPrem"
+                    type="number"
+                    step="0.01"
+                    value={formData.renewal_premium}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setFormData(f => ({ ...f, renewal_premium: val }));
+                      handleCalcRateChange(formData.current_premium, val);
+                    }}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label>Renewal Premium ($)</Label>
-              <Input type="number" value={form.renewal_premium} onChange={e => set("renewal_premium", e.target.value)} className="mt-1.5" />
-            </div>
-            <div>
-              <Label>Rate Change (%)</Label>
-              <Input type="number" step="0.1" value={form.rate_change_percent} onChange={e => set("rate_change_percent", e.target.value)} className="mt-1.5" />
-            </div>
-            <div>
-              <Label>Disruption Score</Label>
-              <Input type="number" min="0" max="100" value={form.disruption_score} onChange={e => set("disruption_score", e.target.value)} className="mt-1.5" placeholder="0–100" />
-            </div>
-          </div>
+              <div>
+                <Label htmlFor="rateChange" className="text-xs">Rate Change (%)</Label>
+                <Input
+                  id="rateChange"
+                  type="number"
+                  step="0.1"
+                  value={formData.rate_change_percent}
+                  onChange={(e) => setFormData(f => ({ ...f, rate_change_percent: parseFloat(e.target.value) }))}
+                  disabled={!isEditing}
+                  className="mt-1"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Auto-calculates when you update premiums above.</p>
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Decision</Label>
-              <Input value={form.decision} onChange={e => set("decision", e.target.value)} className="mt-1.5" placeholder="Employer's decision" />
-            </div>
-            <div>
-              <Label>Decision Date</Label>
-              <Input type="date" value={form.decision_date} onChange={e => set("decision_date", e.target.value)} className="mt-1.5" />
-            </div>
-          </div>
+              {formData.current_premium && formData.renewal_premium && (
+                <div className="p-3 rounded-lg bg-muted/40 text-sm">
+                  <p className="text-muted-foreground text-xs">Monthly difference:</p>
+                  <p className={`font-semibold ${formData.renewal_premium > formData.current_premium ? "text-destructive" : "text-green-600"}`}>
+                    {formData.renewal_premium > formData.current_premium ? "+" : ""}${(formData.renewal_premium - formData.current_premium).toFixed(2)}/month
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <div>
-            <Label>Assigned To</Label>
-            <Input value={form.assigned_to} onChange={e => set("assigned_to", e.target.value)} placeholder="Email" className="mt-1.5" />
-          </div>
+          {/* Disruption score visual */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Disruption Risk Score</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Risk Level</span>
+                <span className={`text-lg font-bold ${
+                  formData.disruption_score >= 70 ? "text-destructive" :
+                  formData.disruption_score >= 40 ? "text-amber-600" :
+                  "text-green-600"
+                }`}>
+                  {formData.disruption_score}/100
+                </span>
+              </div>
+              <Progress value={formData.disruption_score} className="h-2" />
+              {!isEditing ? (
+                <p className="text-xs text-muted-foreground">
+                  {formData.disruption_score >= 70 ? "High risk of employer dissatisfaction" :
+                   formData.disruption_score >= 40 ? "Moderate risk, recommend clear communication" :
+                   "Low risk, good renewal opportunity"}
+                </p>
+              ) : (
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.disruption_score}
+                  onChange={(e) => setFormData(f => ({ ...f, disruption_score: parseInt(e.target.value) }))}
+                />
+              )}
+            </CardContent>
+          </Card>
 
-          <div>
-            <Label>Notes</Label>
-            <Textarea value={form.notes} onChange={e => set("notes", e.target.value)} rows={3} className="mt-1.5" />
+          {/* Recommendation and decision workflow */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Recommendation & Decision</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label htmlFor="rec" className="text-xs">Recommendation</Label>
+                <Select
+                  value={formData.recommendation}
+                  onValueChange={(v) => setFormData(f => ({ ...f, recommendation: v }))}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger id="rec" className="mt-1">
+                    <SelectValue placeholder="Select recommendation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="renew_as_is">Renew As-Is</SelectItem>
+                    <SelectItem value="renew_with_changes">Renew with Changes</SelectItem>
+                    <SelectItem value="market">Market</SelectItem>
+                    <SelectItem value="terminate">Terminate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="decision" className="text-xs">Employer Decision</Label>
+                <Select
+                  value={formData.decision}
+                  onValueChange={(v) => setFormData(f => ({ ...f, decision: v }))}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger id="decision" className="mt-1">
+                    <SelectValue placeholder="Select employer decision" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>— Pending —</SelectItem>
+                    <SelectItem value="accepted_renewal">Accepted Renewal</SelectItem>
+                    <SelectItem value="requests_changes">Requests Changes</SelectItem>
+                    <SelectItem value="accepted_new_quote">Accepted New Quote</SelectItem>
+                    <SelectItem value="declined">Declined / Terminated</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Recommendation CTAs */}
+              {!isEditing && (
+                <div className="pt-2 border-t space-y-2">
+                  {formData.recommendation === "market" && (
+                    <Button variant="outline" size="sm" className="w-full text-xs">
+                      Create Quote Case
+                    </Button>
+                  )}
+                  {formData.recommendation === "renew_as_is" && formData.decision === "accepted_renewal" && (
+                    <Button variant="outline" size="sm" className="w-full text-xs">
+                      Advance to Install
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Internal notes about this renewal..."
+                disabled={!isEditing}
+                rows={3}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            {!isEditing ? (
+              <>
+                <Button variant="outline" className="flex-1" onClick={onClose}>
+                  Close
+                </Button>
+                <Button className="flex-1" onClick={() => setIsEditing(true)}>
+                  Edit
+                </Button>
+                <Button variant="destructive" size="icon" onClick={() => {
+                  if (confirm("Are you sure? This will delete the renewal cycle.")) {
+                    deleteRenewal.mutate();
+                  }
+                }} disabled={deleteRenewal.isPending}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={() => update.mutate()} disabled={update.isPending}>
+                  {update.isPending ? "Saving..." : "Save"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => save.mutate()} disabled={save.isPending}>
-            {save.isPending ? "Saving..." : "Save Changes"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
