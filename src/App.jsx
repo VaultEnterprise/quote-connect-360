@@ -19,6 +19,11 @@ import Tasks from '@/pages/Tasks';
 import Settings from '@/pages/Settings';
 import Employers from '@/pages/Employers';
 import PlanLibrary from '@/pages/PlanLibrary';
+import ProposalBuilder from '@/pages/ProposalBuilder';
+import ExceptionQueue from '@/pages/ExceptionQueue';
+import ContributionModeling from '@/pages/ContributionModeling';
+import EmployeePortal from '@/pages/EmployeePortal';
+import EmployerPortal from '@/pages/EmployerPortal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +58,11 @@ const AuthenticatedApp = () => {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/employers" element={<Employers />} />
         <Route path="/plans" element={<PlanLibrary />} />
+        <Route path="/proposals" element={<ProposalBuilder />} />
+        <Route path="/exceptions" element={<ExceptionQueue />} />
+        <Route path="/contributions" element={<ContributionModeling />} />
+        <Route path="/employee-portal" element={<EmployeePortal />} />
+        <Route path="/employer-portal" element={<EmployerPortal />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
