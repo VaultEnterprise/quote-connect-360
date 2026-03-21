@@ -13,6 +13,7 @@ import DuplicateDetectionPanel from "./DuplicateDetectionPanel";
 import ErrorDetailPanel from "./ErrorDetailPanel";
 import TransformPreview from "./TransformPreview";
 import MappingProfileManager from "./MappingProfileManager";
+import DataQualityInsights from "./DataQualityInsights";
 import { generateCensusTemplate, detectDuplicates, analyzeDataQuality } from "@/utils/censusHelpers";
 
 // ─── Field definitions ───────────────────────────────────────────────────────
