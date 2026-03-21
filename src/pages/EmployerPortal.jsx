@@ -77,6 +77,7 @@ export default function EmployerPortal() {
   const enrollment      = enrollments[0] || null;
   const pendingProposals = proposals.filter(p => ["sent", "viewed"].includes(p.status));
   const openTasks       = tasks.filter(t => !["completed", "cancelled"].includes(t.status));
+  const renewalCycle    = renewalCycles[0] || null;
 
   // ── Empty state ──────────────────────────────────────────────────────────────
   if (cases.length === 0) {
