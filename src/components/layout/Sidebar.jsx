@@ -74,6 +74,20 @@ export default function Sidebar({ collapsed, onToggle }) {
     refetchInterval: 60000,
   });
 
+  const { data: openExceptions = [] } = useQuery({
+    queryKey: ["exceptions-open-count"],
+    queryFn: () => base44.entities.ExceptionItem.filter({ status: "new" }, "-created_date", 50),
+    refetchInterval: 120000,
+    select: (data) => data.filter(e => !["resolved","dismissed"].includes(e.status)),
+  });
+
+  const { data: activeEnrollments = [] } = useQuery({
+    queryKey: ["enrollments-active-count"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 30),
+    refetchInterval: 120000,
+    select: (data) => data.filter(e => ["open","closing_soon"].includes(e.status)),
+  });
+
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
@@ -102,6 +116,22 @@ export default function Sidebar({ collapsed, onToggle }) {
         )}
         {item.path === "/tasks" && pendingTasks.length > 0 && collapsed && (
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-destructive rounded-full border-2 border-sidebar" />
+        )}
+        {item.path === "/exceptions" && openExceptions.length > 0 && !collapsed && (
+          <span className="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+            {openExceptions.length > 99 ? "99+" : openExceptions.length}
+          </span>
+        )}
+        {item.path === "/exceptions" && openExceptions.length > 0 && collapsed && (
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-sidebar" />
+        )}
+        {item.path === "/enrollment" && activeEnrollments.length > 0 && !collapsed && (
+          <span className="ml-auto text-[10px] font-bold bg-blue-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+            {activeEnrollments.length}
+          </span>
+        )}
+        {item.path === "/enrollment" && activeEnrollments.length > 0 && collapsed && (
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-sidebar" />
         )}
         {active && !collapsed && pendingTasks.length === 0 && (
           <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-sidebar-primary-foreground/80" />
