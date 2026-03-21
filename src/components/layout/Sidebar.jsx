@@ -1,5 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import {
   LayoutDashboard,
   Briefcase,
@@ -35,6 +37,11 @@ const bottomItems = [
 
 export default function Sidebar({ collapsed, onToggle }) {
   const location = useLocation();
+  const { data: pendingTasks = [] } = useQuery({
+    queryKey: ["tasks-pending"],
+    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 50),
+    refetchInterval: 60000,
+  });
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
@@ -55,9 +62,17 @@ export default function Sidebar({ collapsed, onToggle }) {
       >
         <item.icon className={cn("w-5 h-5 flex-shrink-0", active && "drop-shadow-sm")} />
         {!collapsed && (
-          <span className="text-sm font-medium truncate">{item.label}</span>
+          <span className="text-sm font-medium truncate flex-1">{item.label}</span>
         )}
-        {active && !collapsed && (
+        {item.path === "/tasks" && pendingTasks.length > 0 && !collapsed && (
+          <span className="ml-auto text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+            {pendingTasks.length > 99 ? "99+" : pendingTasks.length}
+          </span>
+        )}
+        {item.path === "/tasks" && pendingTasks.length > 0 && collapsed && (
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-destructive rounded-full border-2 border-sidebar" />
+        )}
+        {active && !collapsed && pendingTasks.length === 0 && (
           <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-sidebar-primary-foreground/80" />
         )}
       </Link>

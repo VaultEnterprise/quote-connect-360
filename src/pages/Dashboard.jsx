@@ -19,9 +19,10 @@ import MetricCard from "@/components/shared/MetricCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import PageHeader from "@/components/shared/PageHeader";
 import { format } from "date-fns";
+import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
 
 export default function Dashboard() {
-  const { data: cases = [] } = useQuery({
+  const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 50),
   });
@@ -44,6 +45,27 @@ export default function Dashboard() {
   const activeCases = cases.filter(c => !["closed", "renewed"].includes(c.stage));
   const quotingCases = cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage));
   const enrollmentOpen = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
+
+  if (isLoading) return <DashboardSkeleton />;
+
+  // Onboarding empty state
+  if (cases.length === 0 && !isLoading) return (
+    <div className="space-y-6">
+      <PageHeader title="Dashboard" description="Overview of your benefits operations"
+        actions={<Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>} />
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6">
+          <Briefcase className="w-9 h-9 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">Welcome to Connect Quote 360</h2>
+        <p className="text-sm text-muted-foreground max-w-md mb-8">Your benefits operating platform is ready. Start by creating your first benefit case or importing employer data.</p>
+        <div className="flex gap-3">
+          <Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> Create First Case</Button></Link>
+          <Link to="/employers"><Button variant="outline">Add Employer Groups</Button></Link>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">

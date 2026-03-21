@@ -84,31 +84,34 @@ export default function CaseNew() {
             <CardTitle className="text-base">Case Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {employers.length > 0 ? (
-              <div>
-                <Label>Employer Group</Label>
-                <Select value={form.employer_group_id} onValueChange={(v) => updateField("employer_group_id", v)}>
+            <div>
+              <Label>Employer Group</Label>
+              {employers.length > 0 ? (
+                <Select value={form.employer_group_id} onValueChange={(v) => {
+                  const emp = employers.find(e => e.id === v);
+                  updateField("employer_group_id", v);
+                  if (emp) {
+                    updateField("employer_name", emp.name);
+                    if (emp.employee_count) updateField("employee_count", String(emp.employee_count));
+                  }
+                }}>
                   <SelectTrigger className="mt-1.5">
-                    <SelectValue placeholder="Select employer group" />
+                    <SelectValue placeholder="Select existing employer group..." />
                   </SelectTrigger>
                   <SelectContent>
                     {employers.map((eg) => (
-                      <SelectItem key={eg.id} value={eg.id}>{eg.name}</SelectItem>
+                      <SelectItem key={eg.id} value={eg.id}>{eg.name} {eg.city ? `— ${eg.city}, ${eg.state}` : ""}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            ) : (
-              <div>
-                <Label>Employer Name</Label>
-                <Input
-                  value={form.employer_name}
-                  onChange={(e) => updateField("employer_name", e.target.value)}
-                  placeholder="Enter employer name"
-                  className="mt-1.5"
-                />
-              </div>
-            )}
+              ) : null}
+              <Input
+                value={form.employer_name}
+                onChange={(e) => { updateField("employer_name", e.target.value); updateField("employer_group_id", ""); }}
+                placeholder={employers.length > 0 ? "Or type a new employer name..." : "Enter employer name"}
+                className="mt-1.5"
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
