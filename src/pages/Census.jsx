@@ -13,20 +13,12 @@ import CensusVersionHistory from "@/components/census/CensusVersionHistory";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import RiskDashboard from "@/components/census/RiskDashboard";
 import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel";
-import DuplicateMemberHandler from "@/components/census/DuplicateMemberHandler";
-import VersionComparison from "@/components/census/VersionComparison";
-import DataQualityInsights from "@/components/census/DataQualityInsights";
-import MemberDetailModal from "@/components/census/MemberDetailModal";
-import VersionRollback from "@/components/census/VersionRollback";
 
 export default function Census() {
   const [search, setSearch] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState("");
   const [showUpload, setShowUpload] = useState(false);
   const [viewingVersionId, setViewingVersionId] = useState(null);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [showMemberModal, setShowMemberModal] = useState(false);
-  const [showVersionComparison, setShowVersionComparison] = useState(false);
 
   // Fetch all cases
   const { data: cases = [] } = useQuery({
@@ -135,88 +127,45 @@ export default function Census() {
         />
       ) : (
         <div className="space-y-6">
-         {/* Version Actions */}
-         {viewingVersionId && (
-           <div className="flex gap-2">
-             <DuplicateMemberHandler 
-               censusVersionId={viewingVersionId}
-               caseId={selectedCaseId}
-             />
-             <Button
-               variant="outline"
-               size="sm"
-               onClick={() => setShowVersionComparison(!showVersionComparison)}
-               className="text-xs"
-             >
-               Compare Versions
-             </Button>
-             <VersionRollback
-               currentVersionId={viewingVersionId}
-               caseId={selectedCaseId}
-               versions={filteredVersions}
-             />
-           </div>
-         )}
+          {/* Version History */}
+          <CensusVersionHistory
+            versions={filteredVersions}
+            onViewMembers={version => setViewingVersionId(version.id)}
+          />
 
-         {/* Version History */}
-         <CensusVersionHistory
-           versions={filteredVersions}
-           onViewMembers={version => setViewingVersionId(version.id)}
-         />
+          {/* Risk Dashboard */}
+          {viewingVersionId && (
+            <RiskDashboard censusVersionId={viewingVersionId} caseId={selectedCaseId} />
+          )}
 
-         {/* Version Comparison */}
-         {showVersionComparison && viewingVersionId && (
-           <VersionComparison
-             caseId={selectedCaseId}
-             currentVersionId={viewingVersionId}
-           />
-         )}
+          {/* GradientAI Analysis */}
+          {viewingVersionId && (
+            <GradientAIAnalysisPanel 
+              censusVersionId={viewingVersionId} 
+              caseId={selectedCaseId}
+              onAnalysisComplete={() => {
+                // Refetch members to show updated gradient data
+              }}
+            />
+          )}
 
-         {/* Risk Dashboard */}
-         {viewingVersionId && (
-           <RiskDashboard censusVersionId={viewingVersionId} caseId={selectedCaseId} />
-         )}
-
-         {/* GradientAI Analysis */}
-         {viewingVersionId && (
-           <GradientAIAnalysisPanel 
-             censusVersionId={viewingVersionId} 
-             caseId={selectedCaseId}
-             onAnalysisComplete={() => {
-               // Refetch members to show updated gradient data
-             }}
-           />
-         )}
-
-         {/* Data Quality Insights */}
-         {viewingVersionId && (
-           <DataQualityInsights members={[]} />
-         )}
-
-         {/* Member Table */}
-         {viewingVersionId && (
-           <div className="border rounded-lg p-4">
-             <div className="mb-3 flex items-center justify-between">
-               <h3 className="font-semibold text-sm">Census Members</h3>
-               <Button
-                 variant="ghost"
-                 size="sm"
-                 onClick={() => setViewingVersionId(null)}
-                 className="text-xs"
-               >
-                 Hide
-               </Button>
-             </div>
-             <CensusMemberTable 
-               censusVersionId={viewingVersionId} 
-               caseId={selectedCaseId}
-               onSelectMember={(member) => {
-                 setSelectedMember(member);
-                 setShowMemberModal(true);
-               }}
-             />
-           </div>
-         )}
+          {/* Member Table */}
+          {viewingVersionId && (
+            <div className="border rounded-lg p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Census Members</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewingVersionId(null)}
+                  className="text-xs"
+                >
+                  Hide
+                </Button>
+              </div>
+              <CensusMemberTable censusVersionId={viewingVersionId} caseId={selectedCaseId} />
+            </div>
+          )}
         </div>
       )}
 
@@ -229,21 +178,6 @@ export default function Census() {
           onClose={() => {
             setShowUpload(false);
             // Refetch versions to see new upload
-          }}
-        />
-      )}
-
-      {/* Member Detail Modal */}
-      {selectedMember && (
-        <MemberDetailModal
-          member={selectedMember}
-          open={showMemberModal}
-          onClose={() => {
-            setShowMemberModal(false);
-            setSelectedMember(null);
-          }}
-          onUpdate={(updatedMember) => {
-            setSelectedMember(updatedMember);
           }}
         />
       )}

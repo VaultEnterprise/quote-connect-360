@@ -7,14 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, RefreshCw, AlertTriangle, Download, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, ArrowRight, RefreshCw, AlertTriangle, Download } from "lucide-react";
 import CensusQualityDashboard from "./CensusQualityDashboard";
 import DuplicateDetectionPanel from "./DuplicateDetectionPanel";
 import ErrorDetailPanel from "./ErrorDetailPanel";
 import TransformPreview from "./TransformPreview";
 import MappingProfileManager from "./MappingProfileManager";
-import MappingTemplateManager from "./MappingTemplateManager";
-import CensusImportProgress from "./CensusImportProgress";
 import { generateCensusTemplate, detectDuplicates, analyzeDataQuality } from "@/utils/censusHelpers";
 
 // ─── Field definitions ───────────────────────────────────────────────────────
@@ -173,12 +171,11 @@ function transformRow(row, mapping) {
 }
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
-const STEPS = ["upload", "mapping", "validate", "import_progress", "done"];
+const STEPS = ["upload", "mapping", "validate", "done"];
 
 export default function CensusUploadModal({ caseId, currentVersionCount, open, onClose }) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState("upload");
-  const [importingWithProgress, setImportingWithProgress] = useState(false);
   const [file, setFile] = useState(null);
   const [notes, setNotes] = useState("");
   const [headers, setHeaders] = useState([]);
@@ -313,7 +310,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
           <DialogTitle>Upload Census File</DialogTitle>
           {/* Step indicator */}
           <div className="flex items-center gap-2 pt-2">
-            {["Upload", "Map Fields", "Validate", "Importing", "Done"].map((label, i) => {
+            {["Upload", "Map Fields", "Validate", "Done"].map((label, i) => {
               const stepKey = STEPS[i];
               const active = step === stepKey;
               const done = STEPS.indexOf(step) > i;
@@ -369,13 +366,6 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
                 Required fields not mapped: {mappedRequired.map(f => f.label).join(", ")}
               </div>
             )}
-
-            {/* Mapping Templates */}
-            <MappingTemplateManager 
-              mapping={mapping} 
-              headers={headers} 
-              onLoadTemplate={(template) => setMapping(template)}
-            />
 
             {/* Mapping Profile Manager */}
             <MappingProfileManager mapping={mapping} headers={headers} onLoadProfile={setMapping} />
@@ -496,23 +486,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
           </div>
         )}
 
-        {/* ── Step 4: Import Progress ── */}
-        {step === "import_progress" && (
-          <CensusImportProgress
-            caseId={caseId}
-            censusVersionId=""
-            membersData={rows.map(row => transformRow(row, mapping))}
-            mapping={mapping}
-            onComplete={(result) => {
-              setImportingWithProgress(false);
-              setStep("done");
-              queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] });
-              queryClient.invalidateQueries({ queryKey: ["census-members"] });
-            }}
-          />
-        )}
-
-        {/* ── Step 5: Done ── */}
+        {/* ── Step 4: Done ── */}
         {step === "done" && (
           <div className="py-10 flex flex-col items-center gap-3">
             <CheckCircle2 className="w-14 h-14 text-green-500" />
@@ -529,17 +503,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
             </Button>
           )}
           {step === "validate" && (
-            <Button onClick={() => {
-              setImportingWithProgress(true);
-              setStep("import_progress");
-              handleImport();
-            }} disabled={importing || importingWithProgress}>
-              {importing || importingWithProgress ? "Importing..." : `Import ${rows.length} Members`}
-            </Button>
-          )}
-          {step === "import_progress" && (
-            <Button disabled>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importing...
+            <Button onClick={handleImport} disabled={importing}>
+              {importing ? "Importing..." : `Import ${rows.length} Members`}
             </Button>
           )}
         </DialogFooter>
