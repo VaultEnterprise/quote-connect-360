@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 
 export default function CensusQualityDashboard({ fieldStats }) {
   if (!fieldStats || Object.keys(fieldStats).length === 0) {
