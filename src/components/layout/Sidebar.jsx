@@ -11,7 +11,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 const navItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/cases", label: "Cases", icon: Briefcase },
+  { path: "/employers", label: "Employers", icon: Building2 },
   { path: "/census", label: "Census", icon: Users },
   { path: "/quotes", label: "Quotes", icon: FileText },
   { path: "/enrollment", label: "Enrollment", icon: ClipboardCheck },

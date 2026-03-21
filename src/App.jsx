@@ -17,6 +17,7 @@ import Enrollment from '@/pages/Enrollment';
 import Renewals from '@/pages/Renewals';
 import Tasks from '@/pages/Tasks';
 import Settings from '@/pages/Settings';
+import Employers from '@/pages/Employers';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,12 +34,8 @@ const AuthenticatedApp = () => {
   }
 
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
 
   return (
@@ -53,13 +50,13 @@ const AuthenticatedApp = () => {
         <Route path="/enrollment" element={<Enrollment />} />
         <Route path="/renewals" element={<Renewals />} />
         <Route path="/tasks" element={<Tasks />} />
+        <Route path="/employers" element={<Employers />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
-
 
 function App() {
   return (
