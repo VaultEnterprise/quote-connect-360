@@ -12,7 +12,7 @@ import Cases from '@/pages/Cases';
 import CaseDetail from '@/pages/CaseDetail';
 import CaseNew from '@/pages/CaseNew';
 import Census from '@/pages/Census';
-import Quotes from '@/pages/Quotes';
+import Quotes from '@/pages/Quotes.jsx';
 import Enrollment from '@/pages/Enrollment';
 import Renewals from '@/pages/Renewals';
 import Tasks from '@/pages/Tasks';
