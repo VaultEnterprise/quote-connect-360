@@ -128,6 +128,14 @@ export default function CensusMemberTable({ censusVersionId, caseId }) {
         </div>
       )}
       <p className="text-xs text-muted-foreground">{filtered.length} of {members.length} members</p>
+
+      {/* Member Detail Drawer */}
+      <MemberDetailDrawer
+        member={selectedMember}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onMemberUpdate={handleMemberUpdate}
+      />
     </div>
   );
 }
