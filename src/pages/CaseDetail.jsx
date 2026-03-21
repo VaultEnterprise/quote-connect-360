@@ -211,20 +211,52 @@ export default function CaseDetail() {
 
         {/* Overview */}
         <TabsContent value="overview" className="mt-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <InfoCard label="Employee Count" value={caseData.employee_count || "—"} icon={Users} />
-            <InfoCard label="Census Status" value={<StatusBadge status={caseData.census_status || "not_started"} />} icon={FileCheck} />
-            <InfoCard label="Quote Status" value={<StatusBadge status={caseData.quote_status || "not_started"} />} icon={FileText} />
-            <InfoCard label="Enrollment Status" value={<StatusBadge status={caseData.enrollment_status || "not_started"} />} icon={ClipboardCheck} />
-            <InfoCard label="Priority" value={<StatusBadge status={caseData.priority || "normal"} />} icon={AlertTriangle} />
-            <InfoCard label="Assigned To" value={caseData.assigned_to || "Unassigned"} icon={Briefcase} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left: Key Metrics */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <InfoCard label="Employee Count"    value={caseData.employee_count || "—"}                               icon={Users} />
+                <InfoCard label="Census Status"     value={<StatusBadge status={caseData.census_status || "not_started"} />}   icon={FileCheck} />
+                <InfoCard label="Quote Status"      value={<StatusBadge status={caseData.quote_status || "not_started"} />}    icon={FileText} />
+                <InfoCard label="Enrollment Status" value={<StatusBadge status={caseData.enrollment_status || "not_started"} />} icon={ClipboardCheck} />
+                <InfoCard label="Priority"          value={<StatusBadge status={caseData.priority || "normal"} />}             icon={AlertTriangle} />
+                <InfoCard label="Assigned To"       value={caseData.assigned_to || "Unassigned"}                              icon={Briefcase} />
+              </div>
+
+              {/* Products Requested */}
+              {caseData.products_requested?.length > 0 && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Products Requested</p>
+                    <div className="flex flex-wrap gap-2">
+                      {caseData.products_requested.map(p => (
+                        <Badge key={p} variant="secondary" className="capitalize text-sm px-3 py-1">{p}</Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {caseData.notes && (
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Notes</p>
+                    <p className="text-sm leading-relaxed">{caseData.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Right: Lifecycle Checklist */}
+            <div>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Lifecycle Checklist</p>
+                  <LifecycleChecklist caseData={caseData} censusCount={censusVersions.length} scenarioCount={scenarios.length} taskCount={tasks.length} docCount={docs.length} />
+                </CardContent>
+              </Card>
+            </div>
           </div>
-          {caseData.notes && (
-            <Card className="mt-4">
-              <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Notes</CardTitle></CardHeader>
-              <CardContent><p className="text-sm">{caseData.notes}</p></CardContent>
-            </Card>
-          )}
         </TabsContent>
 
         {/* Census */}
