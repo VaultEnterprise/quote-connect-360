@@ -11,6 +11,8 @@ import EmptyState from "@/components/shared/EmptyState";
 import CensusUploadModal from "@/components/census/CensusUploadModal";
 import CensusVersionHistory from "@/components/census/CensusVersionHistory";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
+import RiskDashboard from "@/components/census/RiskDashboard";
+import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel";
 
 export default function Census() {
   const [search, setSearch] = useState("");
@@ -130,6 +132,22 @@ export default function Census() {
             versions={filteredVersions}
             onViewMembers={version => setViewingVersionId(version.id)}
           />
+
+          {/* Risk Dashboard */}
+          {viewingVersionId && (
+            <RiskDashboard censusVersionId={viewingVersionId} caseId={selectedCaseId} />
+          )}
+
+          {/* GradientAI Analysis */}
+          {viewingVersionId && (
+            <GradientAIAnalysisPanel 
+              censusVersionId={viewingVersionId} 
+              caseId={selectedCaseId}
+              onAnalysisComplete={() => {
+                // Refetch members to show updated gradient data
+              }}
+            />
+          )}
 
           {/* Member Table */}
           {viewingVersionId && (
