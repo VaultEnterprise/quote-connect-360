@@ -1,12 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Calendar, Users, AlertCircle, CheckCircle2, GitCompare } from "lucide-react";
 import { format } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
+import CensusVersionComparison from "./CensusVersionComparison";
 
 export default function CensusVersionHistory({ versions, onViewMembers }) {
+  const [compareMode, setCompareMode] = useState(false);
+  const [version1Id, setVersion1Id] = useState(null);
+  const [version2Id, setVersion2Id] = useState(null);
+  const [showComparison, setShowComparison] = useState(false);
+
+  const handleCompare = (v1, v2) => {
+    setVersion1Id(v1.id);
+    setVersion2Id(v2.id);
+    setShowComparison(true);
+  };
   if (!versions || versions.length === 0) {
     return null;
   }
