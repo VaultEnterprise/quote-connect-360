@@ -31,6 +31,10 @@ export default function DependentForm({ dependents, onAdd, onRemove, canAddMore,
     else {
       const dob = new Date(form.dob);
       if (dob > new Date()) err.dob = "Date of birth must be in the past";
+      const age = new Date().getFullYear() - dob.getFullYear();
+      if (form.relationship === "child" && age > 26) {
+        err.dob = "Children must be under 26 years old";
+      }
     }
     setErrors(err);
     return Object.keys(err).length === 0;
