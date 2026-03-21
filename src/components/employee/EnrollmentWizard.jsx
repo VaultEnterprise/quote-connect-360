@@ -122,18 +122,18 @@ export default function EnrollmentWizard({
       {/* Deadline banner — always shown */}
       {enrollmentWindow && <EnrollmentDeadlineBanner enrollmentWindow={enrollmentWindow} />}
 
-      {/* Enrollment context header */}
-      <div className="space-y-1">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          {enrollmentWindow?.employer_name || "Enrollment"}
-        </p>
-        <h1 className="text-2xl font-bold">{isWaiving ? "Waive Coverage" : "Enroll in Benefits"}</h1>
-        <p className="text-sm text-muted-foreground">
-          {isWaiving
-            ? "Let us know why you're declining coverage."
-            : `Complete your benefit elections by ${format(new Date(enrollmentWindow?.end_date || ""), "MMMM d, yyyy")}`}
-        </p>
-      </div>
+      {/* Enrollment context header — responsive */}
+       <div className="space-y-1">
+         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+           {enrollmentWindow?.employer_name || "Enrollment"}
+         </p>
+         <h1 className="text-xl sm:text-2xl font-bold">{isWaiving ? "Waive Coverage" : "Enroll in Benefits"}</h1>
+         <p className="text-xs sm:text-sm text-muted-foreground">
+           {isWaiving
+             ? "Let us know why you're declining coverage."
+             : `Complete your benefit elections by ${format(new Date(enrollmentWindow?.end_date || ""), "MMMM d, yyyy")}`}
+         </p>
+       </div>
 
       {/* Step indicator — proper pill/dots */}
       <div className="flex items-center justify-between gap-2 overflow-x-auto px-1">
