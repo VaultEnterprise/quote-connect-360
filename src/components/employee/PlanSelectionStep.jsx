@@ -232,27 +232,27 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
           ))}
         </Tabs>
       ) : (
-        /* Single product — no tabs needed */
-        <Card>
-          <CardHeader>
-            <CardTitle>Choose Your Plan</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {grouped[activeTab]?.map(plan => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                selected={selectedPlans[activeTab]?.id === plan.id}
-                onSelect={() => onSelect(plan)}
-                onCompare={onCompare}
-                onDetail={setDetailPlan}
-                monthly_cost={getEmployeeCost(plan)}
-                isMedical={true}
-              />
-            )) || <p className="text-sm text-muted-foreground">No plans available.</p>}
-          </CardContent>
-        </Card>
-      )}
+         /* Single product — no tabs needed */
+         <Card>
+           <CardHeader>
+             <CardTitle>Choose Your Plan</CardTitle>
+           </CardHeader>
+           <CardContent className="space-y-3">
+             {grouped[activeTab]?.map(plan => (
+               <PlanCard
+                 key={plan.id}
+                 plan={plan}
+                 selected={selectedPlans[activeTab]?.id === plan.id}
+                 onSelect={() => onSelect(plan)}
+                 onCompare={onCompare}
+                 onDetail={setDetailPlan}
+                 monthly_cost={getEmployeeCost(plan)}
+                 isMedical={true}
+               />
+             )) || <p className="text-sm text-muted-foreground">No plans available.</p>}
+           </CardContent>
+         </Card>
+       )}
 
       {/* Plan detail modal */}
       {detailPlan && (
