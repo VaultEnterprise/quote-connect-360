@@ -1,0 +1,268 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  FileText, DollarSign, Calendar, Star, Calculator, XCircle,
+  ArrowRight, ChevronDown, ChevronUp, AlertTriangle, Pencil,
+  Trash2, CheckSquare, Square, MoreHorizontal
+} from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { format, parseISO, differenceInDays, isAfter } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
+
+const PRODUCT_COLORS = {
+  medical: "bg-blue-100 text-blue-700",
+  dental: "bg-emerald-100 text-emerald-700",
+  vision: "bg-purple-100 text-purple-700",
+  life: "bg-amber-100 text-amber-700",
+  std: "bg-orange-100 text-orange-700",
+  ltd: "bg-red-100 text-red-700",
+  accident: "bg-pink-100 text-pink-700",
+  critical_illness: "bg-rose-100 text-rose-700",
+};
+
+const TYPE_COLORS = {
+  medical: "bg-blue-100 text-blue-700",
+  dental: "bg-emerald-100 text-emerald-700",
+  vision: "bg-purple-100 text-purple-700",
+  life: "bg-amber-100 text-amber-700",
+  std: "bg-orange-100 text-orange-700",
+  ltd: "bg-red-100 text-red-700",
+  voluntary: "bg-pink-100 text-pink-700",
+};
+
+export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [expanded, setExpanded] = useState(false);
+
+  const now = new Date();
+  const expiresAt = scenario.expires_at ? parseISO(scenario.expires_at) : null;
+  const daysUntilExpiry = expiresAt ? differenceInDays(expiresAt, now) : null;
+  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 14;
+  const isExpired = expiresAt && !isAfter(expiresAt, now);
+
+  const { data: scenarioPlans = [] } = useQuery({
+    queryKey: ["scenario-plans", scenario.id],
+    queryFn: () => base44.entities.ScenarioPlan.filter({ scenario_id: scenario.id }),
+    enabled: expanded,
+  });
+
+  const updateScenario = useMutation({
+    mutationFn: (data) => base44.entities.QuoteScenario.update(scenario.id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scenarios-all"] }),
+  });
+
+  const deleteScenario = useMutation({
+    mutationFn: () => base44.entities.QuoteScenario.delete(scenario.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scenarios-all"] }),
+  });
+
+  const totalPremium = scenario.total_monthly_premium || 0;
+  const employerCost = scenario.employer_monthly_cost || 0;
+  const eeCost = scenario.employee_monthly_cost_avg || 0;
+  const employerPct = totalPremium > 0 ? Math.round((employerCost / totalPremium) * 100) : 0;
+
+  const isCalc = calculating === scenario.id;
+
+  const STATUS_BORDER = {
+    draft: "border-l-gray-300",
+    running: "border-l-blue-400",
+    completed: "border-l-green-500",
+    error: "border-l-destructive",
+    expired: "border-l-orange-400",
+  };
+
+  return (
+    <Card className={`border-l-4 ${STATUS_BORDER[scenario.status] || "border-l-gray-300"} transition-all ${isSelected ? "ring-2 ring-primary/30 bg-primary/5" : "hover:shadow-md"}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          {/* Select checkbox */}
+          <button
+            className="mt-1 flex-shrink-0 text-muted-foreground hover:text-primary transition-colors"
+            onClick={() => onToggleSelect(scenario.id)}
+          >
+            {isSelected ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4" />}
+          </button>
+
+          <div className="flex-1 min-w-0">
+            {/* Top Row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-semibold">{scenario.name}</p>
+              <StatusBadge status={scenario.status} />
+              {scenario.is_recommended && (
+                <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
+                  <Star className="w-2.5 h-2.5 mr-0.5" fill="currentColor" /> Recommended
+                </Badge>
+              )}
+              {scenario.recommendation_score != null && (
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-medium">
+                  Score: {scenario.recommendation_score}/100
+                </span>
+              )}
+              {isExpiringSoon && !isExpired && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-200">
+                  <AlertTriangle className="w-2.5 h-2.5" /> Exp. in {daysUntilExpiry}d
+                </span>
+              )}
+              {isExpired && scenario.status !== "expired" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                  <AlertTriangle className="w-2.5 h-2.5" /> Expired
+                </span>
+              )}
+            </div>
+
+            {/* Products */}
+            {scenario.products_included?.length > 0 && (
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                {scenario.products_included.map(p => (
+                  <span key={p} className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${PRODUCT_COLORS[p] || "bg-gray-100 text-gray-700"}`}>
+                    {p.replace(/_/g, " ")}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Financial row */}
+            <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
+              {totalPremium > 0 && (
+                <span className="flex items-center gap-0.5 text-primary font-semibold">
+                  <DollarSign className="w-3 h-3" />{totalPremium.toLocaleString()}/mo total
+                </span>
+              )}
+              {employerCost > 0 && <span>${employerCost.toLocaleString()}/mo employer</span>}
+              {eeCost > 0 && <span>~${eeCost.toFixed(0)}/mo avg EE</span>}
+              {scenario.plan_count > 0 && <span>{scenario.plan_count} plans</span>}
+              {scenario.carriers_included?.length > 0 && (
+                <span>{scenario.carriers_included.join(", ")}</span>
+              )}
+              {scenario.effective_date && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Eff. {format(parseISO(scenario.effective_date), "MMM d, yyyy")}
+                </span>
+              )}
+              {scenario.quoted_at && (
+                <span>Quoted {format(parseISO(scenario.quoted_at), "MMM d")}</span>
+              )}
+            </div>
+
+            {/* Cost share bar */}
+            {totalPremium > 0 && employerCost > 0 && (
+              <div className="mt-2">
+                <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5">
+                  <span>Employer {employerPct}%</span>
+                  <span>Employee {100 - employerPct}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
+                  <div className="bg-primary rounded-l-full" style={{ width: `${employerPct}%` }} />
+                  <div className="bg-muted-foreground/30 rounded-r-full flex-1" />
+                </div>
+              </div>
+            )}
+
+            {/* Expanded plan list */}
+            {expanded && (
+              <div className="mt-3 border-t pt-3 space-y-1.5">
+                {scenarioPlans.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No plans added to this scenario yet.</p>
+                ) : (
+                  <>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{scenarioPlans.length} plan(s)</p>
+                    {scenarioPlans.map(sp => (
+                      <div key={sp.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 border">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-semibold">{sp.plan_name}</span>
+                            {sp.plan_type && (
+                              <Badge className={`text-[9px] py-0 ${TYPE_COLORS[sp.plan_type] || "bg-gray-100 text-gray-700"}`}>
+                                {sp.plan_type.toUpperCase()}
+                              </Badge>
+                            )}
+                            {sp.network_type && (
+                              <Badge variant="outline" className="text-[9px] py-0">{sp.network_type}</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{sp.carrier}</p>
+                        </div>
+                        <div className="text-right text-[10px] text-muted-foreground flex-shrink-0">
+                          <p>EE: {sp.employer_contribution_ee ?? "—"}{sp.contribution_type === "flat_dollar" ? "$" : "%"}</p>
+                          <p>Dep: {sp.employer_contribution_dep ?? "—"}{sp.contribution_type === "flat_dollar" ? "$" : "%"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {["draft", "error"].includes(scenario.status) && (
+              <Button size="sm" className="text-xs h-7" onClick={() => onCalculate(scenario)} disabled={isCalc}>
+                {isCalc ? (
+                  <><div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-1.5" />Calculating…</>
+                ) : (
+                  <><Calculator className="w-3 h-3 mr-1.5" />Calculate</>
+                )}
+              </Button>
+            )}
+
+            <Button
+              variant="ghost" size="icon"
+              className="h-7 w-7"
+              title="Expand plans"
+              onClick={() => setExpanded(v => !v)}
+            >
+              {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={() => updateScenario.mutate({ is_recommended: !scenario.is_recommended })}>
+                  <Star className="w-3.5 h-3.5 mr-2" />
+                  {scenario.is_recommended ? "Remove Recommendation" : "Mark Recommended"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(scenario)}>
+                  <Pencil className="w-3.5 h-3.5 mr-2" /> Edit Scenario
+                </DropdownMenuItem>
+                {scenario.status !== "expired" && (
+                  <DropdownMenuItem onClick={() => updateScenario.mutate({ status: "expired" })}>
+                    <XCircle className="w-3.5 h-3.5 mr-2" /> Mark Expired
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to={`/cases/${scenario.case_id}`} className="flex items-center">
+                    <ArrowRight className="w-3.5 h-3.5 mr-2" /> Open Case
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => deleteScenario.mutate()}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
