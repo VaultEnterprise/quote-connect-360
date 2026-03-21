@@ -64,6 +64,9 @@ const AuthenticatedApp = () => {
         <Route path="/exceptions" element={<ExceptionQueue />} />
         <Route path="/contributions" element={<ContributionModeling />} />
         <Route path="/employee-portal" element={<EmployeePortal />} />
+        <Route path="/employee-portal-login" element={<EmployeePortalLogin />} />
+        <Route path="/employee-enrollment" element={<EmployeeEnrollment />} />
+        <Route path="/employee-benefits" element={<EmployeeBenefits />} />
         <Route path="/employer-portal" element={<EmployerPortal />} />
         <Route path="/policymatch" element={<PolicyMatchAI />} />
         <Route path="/integration-infra" element={<IntegrationInfrastructure />} />
