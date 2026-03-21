@@ -22,6 +22,8 @@ import CensusUploadModal from "@/components/census/CensusUploadModal";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import QuoteScenarioModal from "@/components/quotes/QuoteScenarioModal";
 import ScenarioCompare from "@/components/quotes/ScenarioCompare";
+import PlanPickerModal from "@/components/plans/PlanPickerModal";
+import ScenarioPlanList from "@/components/plans/ScenarioPlanList";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/AuthContext";
 import AIAssistant from "@/components/ai/AIAssistant";
@@ -55,6 +57,8 @@ export default function CaseDetail() {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [editingScenario, setEditingScenario] = useState(null);
   const [compareMode, setCompareMode] = useState(false);
+  const [showPlanPicker, setShowPlanPicker] = useState(false);
+  const [planPickerScenarioId, setPlanPickerScenarioId] = useState(null);
 
   const { data: caseData, isLoading } = useQuery({
     queryKey: ["case", caseId],
@@ -304,19 +308,23 @@ export default function CaseDetail() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <StatusBadge status={s.status} />
-                      <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setEditingScenario(s); setShowQuoteModal(true); }}>
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                    </div>
+                       <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPlanPickerScenarioId(s.id); setShowPlanPicker(true); }}>
+                         + Plans
+                       </Button>
+                       <StatusBadge status={s.status} />
+                       <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setEditingScenario(s); setShowQuoteModal(true); }}>
+                         <Pencil className="w-3 h-3" />
+                       </Button>
+                     </div>
+                  <ScenarioPlanList scenarioId={s.id} caseId={caseId} />
                   </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+                  </Card>
+                  ))}
+                  </div>
+                  )}
+                  </TabsContent>
 
-        {/* Tasks */}
+                  {/* Tasks */}
         <TabsContent value="tasks" className="mt-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-muted-foreground">{tasks.length} task(s)</h3>
@@ -393,6 +401,14 @@ export default function CaseDetail() {
       {showQuoteModal && (
         <QuoteScenarioModal caseId={caseId} scenario={editingScenario}
           open={showQuoteModal} onClose={() => { setShowQuoteModal(false); setEditingScenario(null); }} />
+      )}
+      {showPlanPicker && (
+        <PlanPickerModal
+          open={showPlanPicker}
+          scenarioId={planPickerScenarioId}
+          caseId={caseId}
+          onClose={() => { setShowPlanPicker(false); setPlanPickerScenarioId(null); }}
+        />
       )}
       <AIAssistant caseContext={aiContext} />
     </div>
