@@ -372,30 +372,32 @@ export default function EnrollmentWizard({
         )}
       </div>
 
-      {/* Navigation buttons */}
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          className="flex-1"
-          onClick={handleBack}
-          disabled={currentStepIndex === 0}
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" /> Back
-        </Button>
-        <Button
-          className="flex-1"
-          onClick={currentStep.id === "review" ? () => completeEnrollment.mutate() : handleNext}
-          disabled={!canProceed() || completeEnrollment.isPending}
-        >
-          {currentStep.id === "review" ? (
-            completeEnrollment.isPending ? "Submitting..." : "Submit"
-          ) : (
-            <>
-              Next <ChevronRight className="w-4 h-4 ml-1" />
-            </>
-          )}
-        </Button>
-      </div>
+      {/* Navigation buttons — responsive */}
+       <div className="flex gap-2 sm:gap-3">
+         <Button
+           variant="outline"
+           className="flex-1 text-xs sm:text-sm"
+           onClick={handleBack}
+           disabled={currentStepIndex === 0}
+         >
+           <ChevronLeft className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-0.5 sm:mr-1" /> 
+           <span className="hidden sm:inline">Back</span>
+         </Button>
+         <Button
+           className="flex-1 text-xs sm:text-sm"
+           onClick={currentStep.id === "review" ? () => completeEnrollment.mutate() : handleNext}
+           disabled={!canProceed() || completeEnrollment.isPending}
+         >
+           {currentStep.id === "review" ? (
+             completeEnrollment.isPending ? "Submitting..." : "Submit"
+           ) : (
+             <>
+               <span className="hidden sm:inline">Next</span>
+               <ChevronRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 sm:ml-1" />
+             </>
+           )}
+         </Button>
+       </div>
     </div>
   );
 }
