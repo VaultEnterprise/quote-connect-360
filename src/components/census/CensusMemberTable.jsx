@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
-import { Search, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, AlertCircle, CheckCircle2, AlertTriangle, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EmptyState from "@/components/shared/EmptyState";
+import MemberDetailDrawer from "./MemberDetailDrawer";
 
 export default function CensusMemberTable({ censusVersionId, caseId }) {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["census-members", censusVersionId],
