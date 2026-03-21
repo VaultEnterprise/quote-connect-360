@@ -1,75 +1,167 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { Users, FileUp, Calendar } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Users, FileUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
-import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import { format } from "date-fns";
+import CensusUploadModal from "@/components/census/CensusUploadModal";
+import CensusVersionHistory from "@/components/census/CensusVersionHistory";
+import CensusMemberTable from "@/components/census/CensusMemberTable";
 
 export default function Census() {
-  const { data: versions = [] } = useQuery({
-    queryKey: ["census-all"],
-    queryFn: () => base44.entities.CensusVersion.list("-created_date", 50),
-  });
+  const [search, setSearch] = useState("");
+  const [selectedCaseId, setSelectedCaseId] = useState("");
+  const [showUpload, setShowUpload] = useState(false);
+  const [viewingVersionId, setViewingVersionId] = useState(null);
 
+  // Fetch all cases
   const { data: cases = [] } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
 
-  const caseMap = Object.fromEntries(cases.map(c => [c.id, c]));
+  // Fetch all versions
+  const { data: allVersions = [] } = useQuery({
+    queryKey: ["census-all"],
+    queryFn: () => base44.entities.CensusVersion.list("-created_date", 100),
+  });
+
+  // Filter versions by selected case
+  const filteredVersions = selectedCaseId
+    ? allVersions.filter(v => v.case_id === selectedCaseId)
+    : allVersions;
+
+  // Filter cases by search
+  const filteredCases = cases.filter(c =>
+    c.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
+    c.case_number?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedCase = cases.find(c => c.id === selectedCaseId);
+  const selectedVersionCount = filteredVersions.length;
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
-        title="Census"
-        description="Manage employee census data across all cases"
+        title="Census Management"
+        description="Import, validate, and manage employee census data"
+        actionLabel={selectedCaseId ? "Upload Census" : undefined}
+        onAction={selectedCaseId ? () => setShowUpload(true) : undefined}
       />
 
-      {versions.length === 0 ? (
+      {/* Case Selector */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search cases..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9 text-sm"
+              />
+            </div>
+            <Select value={selectedCaseId} onValueChange={setSelectedCaseId}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a case..." />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredCases.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.employer_name} {c.case_number && `(${c.case_number})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={() => { setSelectedCaseId(""); setSearch(""); }}
+              className="text-xs"
+            >
+              Clear
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Selected Case Info */}
+      {selectedCase && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-sm">{selectedCase.employer_name}</h3>
+                <p className="text-xs text-muted-foreground">
+                  Case: {selectedCase.case_number} • Stage: {selectedCase.stage}
+                </p>
+              </div>
+              <Button onClick={() => setShowUpload(true)} size="sm">
+                <FileUp className="w-4 h-4 mr-2" /> Upload Census
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Content */}
+      {!selectedCaseId ? (
         <EmptyState
           icon={Users}
+          title="Select a Case"
+          description="Choose a case from the list above to view and manage its census data"
+        />
+      ) : filteredVersions.length === 0 ? (
+        <EmptyState
+          icon={FileUp}
           title="No Census Data"
-          description="Census data will appear here when uploaded to cases"
+          description="This case has no census data yet"
+          actionLabel="Upload Census"
+          onAction={() => setShowUpload(true)}
         />
       ) : (
-        <div className="space-y-2">
-          {versions.map((cv) => {
-            const relatedCase = caseMap[cv.case_id];
-            return (
-              <Link key={cv.id} to={`/cases/${cv.case_id}`}>
-                <Card className="hover:shadow-md transition-all cursor-pointer">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{relatedCase?.employer_name || "Unknown Employer"} — v{cv.version_number}</p>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                          <span>{cv.total_employees || 0} employees</span>
-                          <span>{cv.total_dependents || 0} dependents</span>
-                          {cv.validation_errors > 0 && (
-                            <span className="text-destructive">{cv.validation_errors} errors</span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {format(new Date(cv.created_date), "MMM d, yyyy")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <StatusBadge status={cv.status} />
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+        <div className="space-y-6">
+          {/* Version History */}
+          <CensusVersionHistory
+            versions={filteredVersions}
+            onViewMembers={version => setViewingVersionId(version.id)}
+          />
+
+          {/* Member Table */}
+          {viewingVersionId && (
+            <div className="border rounded-lg p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Census Members</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewingVersionId(null)}
+                  className="text-xs"
+                >
+                  Hide
+                </Button>
+              </div>
+              <CensusMemberTable censusVersionId={viewingVersionId} caseId={selectedCaseId} />
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Upload Modal */}
+      {selectedCaseId && (
+        <CensusUploadModal
+          caseId={selectedCaseId}
+          currentVersionCount={selectedVersionCount}
+          open={showUpload}
+          onClose={() => {
+            setShowUpload(false);
+            // Refetch versions to see new upload
+          }}
+        />
       )}
     </div>
   );
