@@ -9,19 +9,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Users } from 'lucide-react';
 
-interface Duplicate {
+// TypeScript types for JSX
+type Duplicate = {
   type: 'same_person' | 'similar_name' | 'same_ssn';
   confidence: number;
   member1: any;
   member2: any;
   reason: string;
-}
+};
 
-interface DuplicateMemberHandlerProps {
+type DuplicateMemberHandlerProps = {
   censusVersionId: string;
   caseId: string;
   onResolved?: () => void;
-}
+};
 
 export default function DuplicateMemberHandler({
   censusVersionId,

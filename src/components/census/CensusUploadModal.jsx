@@ -16,7 +16,6 @@ import MappingProfileManager from "./MappingProfileManager";
 import MappingTemplateManager from "./MappingTemplateManager";
 import CensusImportProgress from "./CensusImportProgress";
 import { generateCensusTemplate, detectDuplicates, analyzeDataQuality } from "@/utils/censusHelpers";
-import { useQueryClient } from "@tanstack/react-query";
 
 // ─── Field definitions ───────────────────────────────────────────────────────
 const CENSUS_FIELDS = [

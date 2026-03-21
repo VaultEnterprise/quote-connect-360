@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, TrendingUp, TrendingDown, Plus, Minus } from 'lucide-react';
 
-interface VersionComparisonProps {
+type VersionComparisonProps = {
   caseId: string;
   currentVersionId: string;
-}
+};
 
 export default function VersionComparison({
   caseId,
