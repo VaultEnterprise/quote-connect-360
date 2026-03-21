@@ -291,38 +291,40 @@ export default function CaseDetail() {
           ) : compareMode ? (
             <ScenarioCompare scenarios={scenarios} />
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {scenarios.map((s) => (
                 <Card key={s.id}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{s.name}</p>
-                        {s.is_recommended && <Badge className="bg-primary/10 text-primary text-[10px]">Recommended</Badge>}
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{s.name}</p>
+                          {s.is_recommended && <Badge className="bg-primary/10 text-primary text-[10px]">Recommended</Badge>}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                          {s.total_monthly_premium && <span>${s.total_monthly_premium.toLocaleString()}/mo total</span>}
+                          {s.employer_monthly_cost && <span>${s.employer_monthly_cost.toLocaleString()}/mo employer</span>}
+                          {s.plan_count && <span>{s.plan_count} plans</span>}
+                          {s.carriers_included?.length > 0 && <span>{s.carriers_included.join(", ")}</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                        {s.total_monthly_premium && <span>${s.total_monthly_premium.toLocaleString()}/mo total</span>}
-                        {s.employer_monthly_cost && <span>${s.employer_monthly_cost.toLocaleString()}/mo employer</span>}
-                        {s.plan_count && <span>{s.plan_count} plans</span>}
-                        {s.carriers_included?.length > 0 && <span>{s.carriers_included.join(", ")}</span>}
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPlanPickerScenarioId(s.id); setShowPlanPicker(true); }}>
+                          + Plans
+                        </Button>
+                        <StatusBadge status={s.status} />
+                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setEditingScenario(s); setShowQuoteModal(true); }}>
+                          <Pencil className="w-3 h-3" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                       <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPlanPickerScenarioId(s.id); setShowPlanPicker(true); }}>
-                         + Plans
-                       </Button>
-                       <StatusBadge status={s.status} />
-                       <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setEditingScenario(s); setShowQuoteModal(true); }}>
-                         <Pencil className="w-3 h-3" />
-                       </Button>
-                     </div>
-                  <ScenarioPlanList scenarioId={s.id} caseId={caseId} />
+                    <ScenarioPlanList scenarioId={s.id} caseId={caseId} />
                   </CardContent>
-                  </Card>
-                  ))}
-                  </div>
-                  )}
-                  </TabsContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
                   {/* Tasks */}
         <TabsContent value="tasks" className="mt-4">
