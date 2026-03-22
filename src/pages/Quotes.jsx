@@ -159,7 +159,44 @@ export default function Quotes() {
     statusFilter !== "all" && { label: statusFilter, clear: () => setStatusFilter("all") },
     caseFilter !== "all" && { label: employers.find(e => e.id === caseFilter)?.name, clear: () => setCaseFilter("all") },
     showExpiringOnly && { label: "Expiring soon", clear: () => setShowExpiringOnly(false) },
+    carrierFilter !== "all" && { label: carrierFilter, clear: () => setCarrierFilter("all") },
   ].filter(Boolean);
+
+  const draftScenarios = filtered.filter(s => s.status === "draft");
+
+  const handleCalculateAllDrafts = async () => {
+    if (!draftScenarios.length) return;
+    setBulkCalculating(true);
+    let success = 0, fail = 0;
+    for (const s of draftScenarios) {
+      try {
+        await base44.entities.QuoteScenario.update(s.id, { status: "running" });
+        const res = await base44.functions.invoke("calculateQuoteRates", { scenario_id: s.id });
+        if (res.data?.error) throw new Error(res.data.error);
+        success++;
+      } catch {
+        await base44.entities.QuoteScenario.update(s.id, { status: "error" });
+        fail++;
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
+    setBulkCalculating(false);
+    toast?.({ title: `Bulk calculation complete`, description: `${success} succeeded, ${fail} failed.` });
+  };
+
+  const handleBulkExpire = async () => {
+    await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.update(id, { status: "expired" })));
+    queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
+    setSelectedIds([]);
+    toast?.({ title: `${selectedIds.length} scenarios marked expired` });
+  };
+
+  const handleBulkDelete = async () => {
+    await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.delete(id)));
+    queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
+    setSelectedIds([]);
+    toast?.({ title: `${selectedIds.length} scenarios deleted` });
+  };
 
   return (
     <div className="space-y-6">
