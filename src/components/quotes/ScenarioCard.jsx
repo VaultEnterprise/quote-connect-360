@@ -20,7 +20,6 @@ import { format, parseISO, differenceInDays, isAfter, differenceInCalendarDays }
 import { useToast } from "@/components/ui/use-toast";
 import CloneScenarioDialog from "./CloneScenarioDialog";
 import CreateProposalFromScenario from "./CreateProposalFromScenario";
-import { Link } from "react-router-dom";
 
 const PRODUCT_COLORS = {
   medical: "bg-blue-100 text-blue-700",
