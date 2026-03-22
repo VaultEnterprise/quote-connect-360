@@ -101,21 +101,39 @@ export default function BenefitsDashboard({ enrollment, onPrint }) {
       <div>
         <h2 className="text-sm font-semibold mb-3">Your Elected Plans</h2>
         <div className="space-y-2">
-          {enrollment.selected_plan_name && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-sm">{enrollment.selected_plan_name}</p>
-                    {enrollment.selected_plan_id && (
-                      <p className="text-xs text-muted-foreground mt-0.5">Plan ID: {enrollment.selected_plan_id}</p>
-                    )}
-                  </div>
-                  <Badge className="bg-primary/10 text-primary flex-shrink-0">Active</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Multi-plan support: render all plan types if stored as array, else fall back to single */}
+          {Array.isArray(enrollment.plan_elections) && enrollment.plan_elections.length > 0
+            ? enrollment.plan_elections.map((plan, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-sm">{plan.plan_name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+                          {plan.plan_type} · {plan.carrier || ""}
+                        </p>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary flex-shrink-0 capitalize">{plan.plan_type || "Active"}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            : enrollment.selected_plan_name && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-sm">{enrollment.selected_plan_name}</p>
+                        {enrollment.selected_plan_id && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Plan ID: {enrollment.selected_plan_id}</p>
+                        )}
+                      </div>
+                      <Badge className="bg-primary/10 text-primary flex-shrink-0">Active</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+          }
           {enrollment.dependents?.length > 0 && (
             <Card className="border-muted">
               <CardContent className="p-3">

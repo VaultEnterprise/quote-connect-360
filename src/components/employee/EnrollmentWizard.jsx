@@ -422,6 +422,9 @@ export default function EnrollmentWizard({
         )}
       </div>
 
+      {/* Help card */}
+      <HelpContactCard />
+
       {/* Navigation buttons — responsive */}
        <div className="flex gap-2 sm:gap-3">
          <Button
