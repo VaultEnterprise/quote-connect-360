@@ -74,7 +74,10 @@ export default function CaseCensusTab({ caseId, censusVersions }) {
                   </div>
                 </div>
                 {selectedVersionId === cv.id && (
-                  <CensusMemberTable censusVersionId={cv.id} caseId={caseId} />
+                  <div className="space-y-4 mt-2">
+                    <GradientAIAnalysisPanel censusVersionId={cv.id} caseId={caseId} />
+                    <CensusMemberTable censusVersionId={cv.id} caseId={caseId} />
+                  </div>
                 )}
               </CardContent>
             </Card>
