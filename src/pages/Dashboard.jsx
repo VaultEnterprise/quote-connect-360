@@ -16,6 +16,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { format, differenceInDays, subMonths, startOfMonth } from "date-fns";
 import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
 import TodaysPriorities from "@/components/dashboard/TodaysPriorities";
+import InteractivePipeline from "@/components/dashboard/InteractivePipeline";
 import EnrollmentCountdowns from "@/components/dashboard/EnrollmentCountdowns";
 import StalledCases from "@/components/dashboard/StalledCases";
 import QuickActions from "@/components/dashboard/QuickActions";
