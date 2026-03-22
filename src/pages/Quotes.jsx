@@ -305,8 +305,18 @@ export default function Quotes() {
           </SelectContent>
         </Select>
 
+        {allCarriers.length > 0 && (
+          <Select value={carrierFilter} onValueChange={setCarrierFilter}>
+            <SelectTrigger className="w-40 h-9"><SelectValue placeholder="All Carriers" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Carriers</SelectItem>
+              {allCarriers.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+
         {activeFilters.length > 0 && (
-          <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setCaseFilter("all"); setShowExpiringOnly(false); }}>
+          <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setCaseFilter("all"); setShowExpiringOnly(false); setCarrierFilter("all"); }}>
             <X className="w-3.5 h-3.5 mr-1" /> Clear all
           </Button>
         )}
