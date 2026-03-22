@@ -84,9 +84,15 @@ export default function EnrollmentWizard({
         acknowledged_at: new Date().toISOString(),
         completed_at: new Date().toISOString(),
       }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["my-enrollments"] });
       setSubmittedEnrollment(data);
+      // Auto-trigger DocuSign envelope send (non-blocking — errors handled in pane)
+      if (!isWaiving) {
+        try {
+          await base44.functions.invoke("sendDocuSignEnvelope", { enrollment_id: data?.id || activeEnrollment.id });
+        } catch (_) {}
+      }
       setShowConfirmation(true);
     },
   });
