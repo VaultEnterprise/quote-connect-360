@@ -67,6 +67,12 @@ export default function Quotes() {
     return Object.entries(map).map(([id, name]) => ({ id, name }));
   }, [scenarios, caseMap]);
 
+  const allCarriers = useMemo(() => {
+    const set = new Set();
+    scenarios.forEach(s => s.carriers_included?.forEach(c => set.add(c)));
+    return Array.from(set).sort();
+  }, [scenarios]);
+
   const filtered = useMemo(() => {
     let result = scenarios.filter(s => {
       const c = caseMap[s.case_id];
