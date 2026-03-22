@@ -196,30 +196,7 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pipeline Bar Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" /> Case Pipeline
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={pipelineData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }}
-                  cursor={{ fill: "hsl(var(--muted))" }}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {pipelineData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <InteractivePipeline cases={cases} />
 
         {/* Case Type Pie */}
         <Card>
