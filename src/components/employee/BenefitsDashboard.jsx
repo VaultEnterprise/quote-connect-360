@@ -196,9 +196,9 @@ export default function BenefitsDashboard({ enrollment, onPrint }) {
         </div>
       )}
 
-      {/* ID Cards / Important Info */}
+      {/* Plan documents & carrier contacts */}
       <div>
-        <h2 className="text-sm font-semibold mb-3">Important Information</h2>
+        <h2 className="text-sm font-semibold mb-3">Plan Documents & Carrier</h2>
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="p-3 rounded-lg bg-muted/40">
@@ -211,13 +211,19 @@ export default function BenefitsDashboard({ enrollment, onPrint }) {
             </div>
             <div className="p-3 rounded-lg bg-muted/40">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                Confirmation Email
+                Summary of Benefits & Coverage (SBC)
               </p>
-              <p className="text-sm">Check your email for ID cards, plan documents, and coverage details.</p>
+              <p className="text-xs text-muted-foreground mb-2">Your SBC document is available from your carrier's member portal or via your HR department.</p>
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => window.print()}>
+                <Download className="w-3.5 h-3.5 mr-1" /> Download ID Cards & Summary
+              </Button>
             </div>
-            <Button variant="outline" size="sm" className="w-full text-xs mt-2">
-              Download ID Cards & Documents
-            </Button>
+            <div className="p-3 rounded-lg bg-muted/40">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Member Services
+              </p>
+              <p className="text-xs text-muted-foreground">Call the member services number on the back of your insurance card for claims, authorizations, and provider searches.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
