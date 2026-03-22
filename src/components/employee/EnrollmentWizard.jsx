@@ -387,13 +387,25 @@ export default function EnrollmentWizard({
                   {Object.values(selectedPlans).map(plan => (
                     <div key={plan.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
                       <span className="text-sm text-muted-foreground capitalize">{plan.plan_type}</span>
-                      <span className="text-sm font-medium">{plan.plan_name}</span>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{plan.plan_name}</p>
+                        <p className="text-xs text-muted-foreground">{plan.carrier}</p>
+                      </div>
                     </div>
                   ))}
                   {dependents.length > 0 && (
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
                       <span className="text-sm text-muted-foreground">Dependents</span>
                       <span className="text-sm font-medium">{dependents.length} added</span>
+                    </div>
+                  )}
+                  {/* Paycheck impact callout */}
+                  {Object.values(selectedPlans).length > 0 && (
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                      <p className="text-xs font-semibold text-primary mb-1">Estimated Paycheck Impact</p>
+                      <p className="text-xs text-muted-foreground">
+                        Your exact deduction will be confirmed by your employer. Review your first paycheck after your effective date. Contact HR with any discrepancies.
+                      </p>
                     </div>
                   )}
                 </div>
