@@ -43,10 +43,20 @@ const TYPE_COLORS = {
   voluntary: "bg-pink-100 text-pink-700",
 };
 
+// Carrier initials avatar color
+function carrierColor(name) {
+  const colors = ["bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700", "bg-violet-100 text-violet-700", "bg-amber-100 text-amber-700", "bg-rose-100 text-rose-700", "bg-cyan-100 text-cyan-700", "bg-orange-100 text-orange-700"];
+  if (!name) return colors[0];
+  return colors[name.charCodeAt(0) % colors.length];
+}
+
 export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
+  const [showClone, setShowClone] = useState(false);
+  const [showProposal, setShowProposal] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   const now = new Date();
   const expiresAt = scenario.expires_at ? parseISO(scenario.expires_at) : null;
