@@ -15,6 +15,8 @@ import EmployerCaseValidator from "@/components/employee/EmployerCaseValidator";
 import SessionTimeout from "@/components/employee/SessionTimeout";
 import BenefitsGlossary from "@/components/employee/BenefitsGlossary";
 import { useEnrollmentSave } from "@/components/employee/EnrollmentDataPersistence";
+import LifeEventCard from "@/components/employee/LifeEventCard";
+import HelpContactCard from "@/components/employee/HelpContactCard";
 
 function EmployeePortalContent() {
   const { user } = useAuth();
