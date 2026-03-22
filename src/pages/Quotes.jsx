@@ -18,7 +18,6 @@ import NewScenarioFromQuotes from "@/components/quotes/NewScenarioFromQuotes";
 import QuoteScenarioModal from "@/components/quotes/QuoteScenarioModal";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
