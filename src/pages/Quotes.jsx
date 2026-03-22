@@ -339,6 +339,39 @@ export default function Quotes() {
         </div>
       )}
 
+      {/* Bulk actions bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+          <span className="text-xs font-medium text-primary">{selectedIds.length} selected</span>
+          <div className="flex items-center gap-1.5 ml-auto">
+            {selectedIds.length >= 2 && (
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setCompareMode(v => !v)}>
+                <GitCompare className="w-3.5 h-3.5 mr-1.5" /> Compare
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="h-7 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={handleBulkExpire}>
+              <XCircle className="w-3.5 h-3.5 mr-1.5" /> Mark Expired
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20 hover:bg-destructive/5" onClick={handleBulkDelete}>
+              Delete Selected
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds([])}>
+              <X className="w-3.5 h-3.5 mr-1" /> Clear
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Calculate all drafts */}
+      {draftScenarios.length > 1 && (
+        <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+          <span className="text-xs text-amber-800 font-medium">{draftScenarios.length} scenarios waiting to be calculated</span>
+          <Button size="sm" className="h-7 text-xs bg-amber-600 hover:bg-amber-700" onClick={handleCalculateAllDrafts} disabled={bulkCalculating}>
+            {bulkCalculating ? "Calculating all…" : `Calculate All (${draftScenarios.length})`}
+          </Button>
+        </div>
+      )}
+
       {/* Compare hint */}
       {!compareMode && selectedIds.length > 0 && selectedIds.length < 2 && (
         <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
