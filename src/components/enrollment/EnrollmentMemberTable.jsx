@@ -34,6 +34,19 @@ export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
     enabled: !!enrollmentWindowId,
   });
 
+  const handleResendDocuSign = async (ee) => {
+    setSendingId(`ds-${ee.id}`);
+    try {
+      await base44.functions.invoke("sendDocuSignEnvelope", { enrollment_id: ee.id, resend: true });
+      toast({ title: "DocuSign re-sent!", description: `Signing request sent to ${ee.employee_email}` });
+      queryClient.invalidateQueries({ queryKey: ["employee-enrollments-window", enrollmentWindowId] });
+    } catch (err) {
+      toast({ title: "Resend failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingId(null);
+    }
+  };
+
   const handleSendInvite = async (member) => {
     // Find the corresponding EmployeeEnrollment
     const ee = employeeEnrollments.find(e => e.employee_email === member.email);
