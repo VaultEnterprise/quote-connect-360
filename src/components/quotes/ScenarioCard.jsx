@@ -266,6 +266,17 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
               </Button>
             )}
 
+            {scenario.notes && (
+              <Button
+                variant="ghost" size="icon"
+                className={`h-7 w-7 ${showNotes ? "text-amber-600" : ""}`}
+                title="Toggle notes"
+                onClick={() => setShowNotes(v => !v)}
+              >
+                <StickyNote className="w-3.5 h-3.5" />
+              </Button>
+            )}
+
             <Button
               variant="ghost" size="icon"
               className="h-7 w-7"
@@ -281,7 +292,16 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                   <MoreHorizontal className="w-3.5 h-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem onClick={() => setShowClone(true)}>
+                  <Copy className="w-3.5 h-3.5 mr-2" /> Clone Scenario
+                </DropdownMenuItem>
+                {scenario.status === "completed" && (
+                  <DropdownMenuItem onClick={() => setShowProposal(true)}>
+                    <Send className="w-3.5 h-3.5 mr-2" /> Create Proposal
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => updateScenario.mutate({ is_recommended: !scenario.is_recommended })}>
                   <Star className="w-3.5 h-3.5 mr-2" />
                   {scenario.is_recommended ? "Remove Recommendation" : "Mark Recommended"}
