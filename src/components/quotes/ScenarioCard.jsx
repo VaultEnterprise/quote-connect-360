@@ -153,16 +153,19 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
               )}
             </div>
 
-            {/* Products */}
-            {scenario.products_included?.length > 0 && (
-              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-                {scenario.products_included.map(p => (
-                  <span key={p} className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${PRODUCT_COLORS[p] || "bg-gray-100 text-gray-700"}`}>
-                    {p.replace(/_/g, " ")}
-                  </span>
-                ))}
-              </div>
-            )}
+            {/* Products + Carrier Avatars */}
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {scenario.products_included?.map(p => (
+                <span key={p} className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${PRODUCT_COLORS[p] || "bg-gray-100 text-gray-700"}`}>
+                  {p.replace(/_/g, " ")}
+                </span>
+              ))}
+              {scenario.carriers_included?.map(c => (
+                <span key={c} title={c} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${carrierColor(c)}`}>
+                  {c.substring(0, 3).toUpperCase()}
+                </span>
+              ))}
+            </div>
 
             {/* Financial row */}
             <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground flex-wrap">
