@@ -8,15 +8,27 @@ import { Link } from "react-router-dom";
 import GlobalSearch from "@/components/shared/GlobalSearch";
 import NotificationBell from "@/components/shared/NotificationBell";
 
-export default function TopBar() {
+export default function TopBar({ onMobileMenuClick }) {
   const { user } = useAuth();
   const initials = user?.full_name
     ? user.full_name.split(" ").map(n => n[0]).join("").toUpperCase()
     : "U";
 
   return (
-    <header className="h-16 border-b border-border bg-card/80 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-30">
-      <GlobalSearch />
+    <header className="h-16 border-b border-border bg-card/80 backdrop-blur-sm flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button
+          onClick={onMobileMenuClick}
+          className="lg:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          aria-label="Open menu"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <GlobalSearch />
+      </div>
 
       <div className="flex items-center gap-2">
         <NotificationBell />

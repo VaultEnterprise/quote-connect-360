@@ -4,29 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Send, Copy, CheckCircle, Mail } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Send, Copy, CheckCircle, Mail, Download, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SendProposalDialog({ proposal, open, onClose }) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [emailTo, setEmailTo] = useState(proposal?.broker_email || "");
+  const [sending, setSending] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
-  // Construct a sharable link (points to the employer portal with proposal ID as param)
   const shareLink = proposal
     ? `${window.location.origin}/employer-portal?proposal=${proposal.id}`
     : "";
-
-  const markSent = useMutation({
-    mutationFn: () => base44.entities.Proposal.update(proposal.id, {
-      status: "sent",
-      sent_at: new Date().toISOString(),
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["proposals"] });
-      onClose();
-    },
-  });
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareLink);
@@ -34,14 +26,44 @@ export default function SendProposalDialog({ proposal, open, onClose }) {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleEmailCopy = () => {
-    const subject = encodeURIComponent(`Benefits Proposal: ${proposal?.title}`);
-    const body = encodeURIComponent(
-      `Dear ${proposal?.employer_name || "Team"},\n\n` +
-      `Please find your benefit proposal here:\n${shareLink}\n\n` +
-      `Best regards,\n${proposal?.broker_name || "Your Broker"}`
-    );
-    window.open(`mailto:${emailTo}?subject=${subject}&body=${body}`);
+  const handleSendEmail = async () => {
+    if (!emailTo || !proposal) return;
+    setSending(true);
+    try {
+      const res = await base44.functions.invoke("sendProposalEmail", {
+        proposal_id: proposal.id,
+        to_email: emailTo,
+      });
+      if (res.data?.error) throw new Error(res.data.error);
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      toast({ title: "Proposal sent!", description: `Email delivered to ${emailTo}` });
+      onClose();
+    } catch (err) {
+      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!proposal) return;
+    setExporting(true);
+    try {
+      const response = await base44.functions.invoke("exportProposalPDF", { proposal_id: proposal.id });
+      // response.data is the raw PDF blob from axios
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `proposal-${(proposal.employer_name || "proposal").replace(/\s+/g, "-")}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "PDF exported", description: "Proposal downloaded successfully." });
+    } catch (err) {
+      toast({ title: "Export failed", description: err.message, variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -67,7 +89,7 @@ export default function SendProposalDialog({ proposal, open, onClose }) {
                 {copied ? <CheckCircle className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
-            {copied && <p className="text-xs text-green-600 mt-1">Link copied to clipboard!</p>}
+            {copied && <p className="text-xs text-green-600 mt-1">Link copied!</p>}
           </div>
 
           {/* Email */}
@@ -80,24 +102,28 @@ export default function SendProposalDialog({ proposal, open, onClose }) {
                 value={emailTo}
                 onChange={e => setEmailTo(e.target.value)}
               />
-              <Button variant="outline" onClick={handleEmailCopy} disabled={!emailTo} className="flex-shrink-0 gap-1.5">
-                <Mail className="w-4 h-4" /> Open
+              <Button onClick={handleSendEmail} disabled={!emailTo || sending} className="flex-shrink-0 gap-1.5">
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                {sending ? "Sending..." : "Send"}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Opens your email client with a pre-filled message.</p>
+            <p className="text-xs text-muted-foreground mt-1">Sends a branded email with a link to the employer portal.</p>
           </div>
 
-          <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
-            Clicking "Mark as Sent" will update the proposal status to <span className="font-medium text-foreground">Sent</span> and record the sent timestamp.
+          {/* PDF Export */}
+          <div>
+            <Label>Export as PDF</Label>
+            <div className="mt-1.5">
+              <Button variant="outline" onClick={handleExportPDF} disabled={exporting} className="gap-1.5 w-full">
+                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {exporting ? "Generating PDF..." : "Download PDF"}
+              </Button>
+            </div>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => markSent.mutate()} disabled={markSent.isPending} className="gap-1.5">
-            <Send className="w-3.5 h-3.5" />
-            {markSent.isPending ? "Marking..." : "Mark as Sent"}
-          </Button>
+          <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

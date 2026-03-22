@@ -7,26 +7,48 @@ import { cn } from "@/lib/utils";
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  // Close mobile sidebar on route change
+  React.useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — hidden on mobile unless open */}
+      <div className={cn(
+        "fixed left-0 top-0 h-full z-40 transition-transform duration-300",
+        "lg:translate-x-0",
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+      </div>
+
       <div
         className={cn(
           "transition-all duration-300",
-          sidebarCollapsed ? "ml-[68px]" : "ml-[240px]"
+          "lg:ml-[240px]",
+          sidebarCollapsed && "lg:ml-[68px]"
         )}
       >
-        <TopBar />
-        <main className="p-6">
+        <TopBar onMobileMenuClick={() => setMobileOpen(true)} />
+        <main className="p-4 md:p-6">
           <Outlet />
         </main>
       </div>
-      {/* Global AI assistant - not shown on case detail pages (they have their own with case context) */}
-      {!useLocation().pathname.match(/^\/cases\/[^/]+$/) && <AIAssistant />}
+
+      {!location.pathname.match(/^\/cases\/[^/]+$/) && <AIAssistant />}
     </div>
   );
 }

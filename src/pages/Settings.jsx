@@ -15,6 +15,10 @@ import { useToast } from "@/components/ui/use-toast";
 export default function Settings() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("user");
+  const [inviting, setInviting] = useState(false);
 
   const { data: agencies = [] } = useQuery({
     queryKey: ["agencies"],
@@ -48,7 +52,21 @@ export default function Settings() {
 
   const setA = (k, v) => setAgencyForm(p => ({ ...p, [k]: v }));
 
-  const [users, setUsers] = useState([]);
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    setInviting(true);
+    try {
+      await base44.users.inviteUser(inviteEmail, inviteRole);
+      toast({ title: "Invitation sent", description: `${inviteEmail} has been invited as ${inviteRole}.` });
+      setInviteEmail("");
+    } catch (err) {
+      toast({ title: "Invite failed", description: err.message, variant: "destructive" });
+    } finally {
+      setInviting(false);
+    }
+  };
+
   const { data: userList = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
@@ -121,7 +139,44 @@ export default function Settings() {
         </TabsContent>
 
         {user?.role === "admin" && (
-          <TabsContent value="team" className="mt-4">
+          <TabsContent value="team" className="mt-4 space-y-4">
+            {/* Invite */}
+            <Card>
+              <CardHeader><CardTitle className="text-base flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> Invite Team Member</CardTitle></CardHeader>
+              <CardContent>
+                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1 block">Email Address</Label>
+                    <Input
+                      type="email"
+                      placeholder="colleague@agency.com"
+                      value={inviteEmail}
+                      onChange={e => setInviteEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1 block">Role</Label>
+                    <Select value={inviteRole} onValueChange={setInviteRole}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button type="submit" disabled={inviting || !inviteEmail} className="gap-1.5">
+                      <Mail className="w-4 h-4" />
+                      {inviting ? "Inviting..." : "Send Invite"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+            {/* Members list */}
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Team Members</CardTitle></CardHeader>
               <CardContent>
@@ -135,7 +190,7 @@ export default function Settings() {
                           <p className="text-sm font-medium">{u.full_name}</p>
                           <p className="text-xs text-muted-foreground">{u.email}</p>
                         </div>
-                        <span className="text-xs capitalize text-muted-foreground">{u.role}</span>
+                        <span className="text-xs capitalize text-muted-foreground bg-muted px-2 py-0.5 rounded">{u.role}</span>
                       </div>
                     ))}
                   </div>
