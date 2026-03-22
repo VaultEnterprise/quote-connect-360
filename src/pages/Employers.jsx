@@ -1,18 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Plus, Search, MapPin, Phone, Mail, Users, Pencil } from "lucide-react";
+import {
+  Building2, Plus, Search, MapPin, Phone, Mail, Users,
+  Pencil, AlertTriangle, Briefcase, Filter, X
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
+import { differenceInDays, parseISO, isAfter } from "date-fns";
 
-function EmployerModal({ employer, open, onClose, agencyId }) {
+const INDUSTRIES = [
+  "Accommodation & Food Services",
+  "Agriculture, Forestry & Fishing",
+  "Arts, Entertainment & Recreation",
+  "Construction",
+  "Education",
+  "Finance & Insurance",
+  "Government",
+  "Healthcare & Social Assistance",
+  "Information Technology",
+  "Legal Services",
+  "Manufacturing",
+  "Non-Profit",
+  "Professional, Scientific & Technical",
+  "Real Estate",
+  "Retail Trade",
+  "Transportation & Warehousing",
+  "Utilities",
+  "Wholesale Trade",
+  "Other",
+];
+
+function EmployerModal({ employer, open, onClose, agencies }) {
   const queryClient = useQueryClient();
   const isEdit = !!employer;
   const [form, setForm] = useState({
@@ -20,6 +48,7 @@ function EmployerModal({ employer, open, onClose, agencyId }) {
     dba_name: employer?.dba_name || "",
     ein: employer?.ein || "",
     industry: employer?.industry || "",
+    sic_code: employer?.sic_code || "",
     address: employer?.address || "",
     city: employer?.city || "",
     state: employer?.state || "",
@@ -31,15 +60,23 @@ function EmployerModal({ employer, open, onClose, agencyId }) {
     effective_date: employer?.effective_date || "",
     renewal_date: employer?.renewal_date || "",
     status: employer?.status || "prospect",
+    agency_id: employer?.agency_id || agencies[0]?.id || "",
     primary_contact_name: employer?.primary_contact_name || "",
     primary_contact_email: employer?.primary_contact_email || "",
     primary_contact_phone: employer?.primary_contact_phone || "",
   });
 
   const save = useMutation({
-    mutationFn: () => isEdit
-      ? base44.entities.EmployerGroup.update(employer.id, { ...form, employee_count: Number(form.employee_count) || undefined, eligible_count: Number(form.eligible_count) || undefined })
-      : base44.entities.EmployerGroup.create({ ...form, agency_id: agencyId || "default", employee_count: Number(form.employee_count) || undefined, eligible_count: Number(form.eligible_count) || undefined }),
+    mutationFn: () => {
+      const payload = {
+        ...form,
+        employee_count: Number(form.employee_count) || undefined,
+        eligible_count: Number(form.eligible_count) || undefined,
+      };
+      return isEdit
+        ? base44.entities.EmployerGroup.update(employer.id, payload)
+        : base44.entities.EmployerGroup.create(payload);
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["employers"] }); onClose(); },
   });
 
@@ -50,24 +87,52 @@ function EmployerModal({ employer, open, onClose, agencyId }) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? "Edit Employer" : "New Employer Group"}</DialogTitle></DialogHeader>
         <div className="space-y-4 py-2">
+
+          {/* Agency picker */}
+          {agencies.length > 1 && (
+            <div>
+              <Label>Agency <span className="text-destructive">*</span></Label>
+              <Select value={form.agency_id} onValueChange={v => set("agency_id", v)}>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select agency..." /></SelectTrigger>
+                <SelectContent>
+                  {agencies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Legal Name <span className="text-destructive">*</span></Label><Input value={form.name} onChange={e => set("name", e.target.value)} className="mt-1.5" /></div>
             <div><Label>DBA Name</Label><Input value={form.dba_name} onChange={e => set("dba_name", e.target.value)} className="mt-1.5" /></div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div><Label>EIN</Label><Input value={form.ein} onChange={e => set("ein", e.target.value)} className="mt-1.5" placeholder="XX-XXXXXXX" /></div>
-            <div><Label>Industry</Label><Input value={form.industry} onChange={e => set("industry", e.target.value)} className="mt-1.5" /></div>
+            <div><Label>SIC Code</Label><Input value={form.sic_code} onChange={e => set("sic_code", e.target.value)} className="mt-1.5" placeholder="e.g. 7372" /></div>
           </div>
+
+          <div>
+            <Label>Industry</Label>
+            <Select value={form.industry} onValueChange={v => set("industry", v)}>
+              <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select industry..." /></SelectTrigger>
+              <SelectContent>
+                {INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div><Label>Address</Label><Input value={form.address} onChange={e => set("address", e.target.value)} className="mt-1.5" /></div>
           <div className="grid grid-cols-3 gap-4">
             <div><Label>City</Label><Input value={form.city} onChange={e => set("city", e.target.value)} className="mt-1.5" /></div>
             <div><Label>State</Label><Input value={form.state} onChange={e => set("state", e.target.value)} className="mt-1.5" maxLength={2} /></div>
             <div><Label>ZIP</Label><Input value={form.zip} onChange={e => set("zip", e.target.value)} className="mt-1.5" /></div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Phone</Label><Input value={form.phone} onChange={e => set("phone", e.target.value)} className="mt-1.5" /></div>
             <div><Label>Website</Label><Input value={form.website} onChange={e => set("website", e.target.value)} className="mt-1.5" /></div>
           </div>
+
           <div className="grid grid-cols-3 gap-4">
             <div><Label>Total Employees</Label><Input type="number" value={form.employee_count} onChange={e => set("employee_count", e.target.value)} className="mt-1.5" /></div>
             <div><Label>Eligible Employees</Label><Input type="number" value={form.eligible_count} onChange={e => set("eligible_count", e.target.value)} className="mt-1.5" /></div>
@@ -84,10 +149,12 @@ function EmployerModal({ employer, open, onClose, agencyId }) {
               </Select>
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Effective Date</Label><Input type="date" value={form.effective_date} onChange={e => set("effective_date", e.target.value)} className="mt-1.5" /></div>
             <div><Label>Renewal Date</Label><Input type="date" value={form.renewal_date} onChange={e => set("renewal_date", e.target.value)} className="mt-1.5" /></div>
           </div>
+
           <div className="border-t pt-4 space-y-3">
             <p className="text-sm font-medium">Primary Contact</p>
             <div className="grid grid-cols-3 gap-4">
@@ -99,7 +166,9 @@ function EmployerModal({ employer, open, onClose, agencyId }) {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>{save.isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Employer"}</Button>
+          <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>
+            {save.isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Employer"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -108,6 +177,7 @@ function EmployerModal({ employer, open, onClose, agencyId }) {
 
 export default function Employers() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [editingEmployer, setEditingEmployer] = useState(null);
 
@@ -121,9 +191,50 @@ export default function Employers() {
     queryFn: () => base44.entities.Agency.list(),
   });
 
-  const filtered = employers.filter(e =>
-    !search || e.name?.toLowerCase().includes(search.toLowerCase()) || e.city?.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: cases = [] } = useQuery({
+    queryKey: ["cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
+  });
+
+  // Build case count map per employer group
+  const caseCountMap = useMemo(() => {
+    const map = {};
+    cases.forEach(c => {
+      if (c.employer_group_id) {
+        map[c.employer_group_id] = (map[c.employer_group_id] || 0) + 1;
+      }
+    });
+    return map;
+  }, [cases]);
+
+  // Build active case ID map for linking
+  const activeCaseMap = useMemo(() => {
+    const map = {};
+    cases.forEach(c => {
+      if (c.employer_group_id && !map[c.employer_group_id]) {
+        map[c.employer_group_id] = c.id;
+      }
+    });
+    return map;
+  }, [cases]);
+
+  const now = new Date();
+
+  const filtered = useMemo(() => employers.filter(e => {
+    const matchSearch = !search ||
+      e.name?.toLowerCase().includes(search.toLowerCase()) ||
+      e.city?.toLowerCase().includes(search.toLowerCase()) ||
+      e.industry?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilter === "all" || e.status === statusFilter;
+    return matchSearch && matchStatus;
+  }), [employers, search, statusFilter]);
+
+  const renewingSoon = useMemo(() => employers.filter(e => {
+    if (!e.renewal_date) return false;
+    const rd = parseISO(e.renewal_date);
+    const days = differenceInDays(rd, now);
+    return days >= 0 && days <= 60;
+  }), [employers]);
 
   return (
     <div>
@@ -137,9 +248,38 @@ export default function Employers() {
         }
       />
 
-      <div className="relative max-w-md mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Search employers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
+      {/* Renewal warning banner */}
+      {renewingSoon.length > 0 && (
+        <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+          <span><strong>{renewingSoon.length}</strong> employer group{renewingSoon.length !== 1 ? "s" : ""} renewing within 60 days</span>
+        </div>
+      )}
+
+      {/* Search + Filter */}
+      <div className="flex gap-3 mb-6 flex-wrap">
+        <div className="relative flex-1 min-w-48 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search employers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-36 h-9">
+            <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" /><SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="prospect">Prospect</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="terminated">Terminated</SelectItem>
+          </SelectContent>
+        </Select>
+        {(search || statusFilter !== "all") && (
+          <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setSearch(""); setStatusFilter("all"); }}>
+            <X className="w-3.5 h-3.5 mr-1" /> Clear
+          </Button>
+        )}
+        <span className="text-xs text-muted-foreground self-center ml-auto">{filtered.length} employer{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
       {filtered.length === 0 ? (
@@ -147,48 +287,72 @@ export default function Employers() {
           actionLabel="New Employer" onAction={() => setShowModal(true)} />
       ) : (
         <div className="space-y-2">
-          {filtered.map(eg => (
-            <Card key={eg.id} className="hover:shadow-md transition-all">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-5 h-5 text-primary" />
+          {filtered.map(eg => {
+            const daysToRenewal = eg.renewal_date ? differenceInDays(parseISO(eg.renewal_date), now) : null;
+            const isRenewing = daysToRenewal !== null && daysToRenewal >= 0 && daysToRenewal <= 60;
+            const caseCount = caseCountMap[eg.id] || 0;
+            const firstCaseId = activeCaseMap[eg.id];
+
+            return (
+              <Card key={eg.id} className={`hover:shadow-md transition-all ${isRenewing ? "border-amber-300" : ""}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold">{eg.name}</p>
+                          {eg.dba_name && <span className="text-xs text-muted-foreground">dba {eg.dba_name}</span>}
+                          {isRenewing && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
+                              <AlertTriangle className="w-2.5 h-2.5" /> Renews in {daysToRenewal}d
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
+                          {eg.industry && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{eg.industry}</span>}
+                          {(eg.city || eg.state) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[eg.city, eg.state].filter(Boolean).join(", ")}</span>}
+                          {eg.employee_count && <span className="flex items-center gap-1"><Users className="w-3 h-3" />{eg.employee_count} employees</span>}
+                          {eg.primary_contact_email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{eg.primary_contact_email}</span>}
+                          {eg.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{eg.phone}</span>}
+                          {eg.sic_code && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">SIC {eg.sic_code}</span>}
+                        </div>
+                        {eg.primary_contact_name && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Contact: {eg.primary_contact_name}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold">{eg.name}</p>
-                        {eg.dba_name && <span className="text-xs text-muted-foreground">dba {eg.dba_name}</span>}
-                      </div>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
-                        {eg.industry && <span>{eg.industry}</span>}
-                        {(eg.city || eg.state) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[eg.city, eg.state].filter(Boolean).join(", ")}</span>}
-                        {eg.employee_count && <span className="flex items-center gap-1"><Users className="w-3 h-3" />{eg.employee_count} employees</span>}
-                        {eg.primary_contact_email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{eg.primary_contact_email}</span>}
-                        {eg.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{eg.phone}</span>}
-                      </div>
-                      {eg.primary_contact_name && (
-                        <p className="text-xs text-muted-foreground mt-0.5">Contact: {eg.primary_contact_name}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {caseCount > 0 && (
+                        firstCaseId ? (
+                          <Link to={`/cases/${firstCaseId}`}>
+                            <Badge variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors">
+                              {caseCount} case{caseCount !== 1 ? "s" : ""} →
+                            </Badge>
+                          </Link>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">{caseCount} case{caseCount !== 1 ? "s" : ""}</Badge>
+                        )
                       )}
+                      <StatusBadge status={eg.status} />
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingEmployer(eg); setShowModal(true); }}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <StatusBadge status={eg.status} />
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingEmployer(eg); setShowModal(true); }}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {showModal && (
         <EmployerModal
           employer={editingEmployer}
-          agencyId={agencies[0]?.id}
+          agencies={agencies}
           open={showModal}
           onClose={() => { setShowModal(false); setEditingEmployer(null); }}
         />
