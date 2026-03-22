@@ -251,7 +251,7 @@ export default function EnrollmentWizard({
 
         {/* Plans step */}
         {currentStep.id === "plans" && !isWaiving && (
-          <div>
+          <div className="space-y-4">
             <PlanSelectionStep
               selectedPlans={selectedPlans}
               onSelect={handleSelectPlan}
@@ -264,6 +264,28 @@ export default function EnrollmentWizard({
               }}
               effectiveDate={enrollmentWindow?.effective_date}
             />
+
+            {/* HSA tip */}
+            {selectedPlans.medical?.hsa_eligible && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="p-3">
+                  <p className="text-sm font-semibold text-green-800">💡 HSA Eligible Plan Selected</p>
+                  <p className="text-xs text-green-700 mt-1">
+                    This HDHP qualifies you for a Health Savings Account (HSA). In 2026, you can contribute up to $4,300 (individual) or $8,550 (family) pre-tax. Funds roll over year to year.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Provider search */}
+            {selectedPlans.medical && (
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <p className="text-sm font-semibold">Check If Your Doctor Is In-Network</p>
+                  <ProviderSearch plan={selectedPlans.medical} />
+                </CardContent>
+              </Card>
+            )}
 
             {compareMode && comparePlans && (
               <PlanCompareModal
