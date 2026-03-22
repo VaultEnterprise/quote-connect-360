@@ -26,6 +26,7 @@ const ENROLLMENT_STEPS = [
   { id: "plans",     label: "Plans" },
   { id: "dependents",label: "Dependents" },
   { id: "review",    label: "Review" },
+  { id: "signature", label: "Sign" },
 ];
 
 const WAIVER_STEPS = [
