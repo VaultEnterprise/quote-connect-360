@@ -83,7 +83,8 @@ export default function Quotes() {
       const matchStatus = statusFilter === "all" || s.status === statusFilter;
       const matchCase = caseFilter === "all" || s.case_id === caseFilter;
       const matchExpiring = !showExpiringOnly || expiringSoon.some(e => e.id === s.id);
-      return matchSearch && matchStatus && matchCase && matchExpiring;
+      const matchCarrier = carrierFilter === "all" || s.carriers_included?.includes(carrierFilter);
+      return matchSearch && matchStatus && matchCase && matchExpiring && matchCarrier;
     });
 
     // Sort
