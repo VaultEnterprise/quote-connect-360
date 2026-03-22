@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Download, Mail, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
+import DocuSignSigningPane from "./DocuSignSigningPane";
+import DocuSignAuditTrail from "./DocuSignAuditTrail";
 
 /**
  * EnrollmentConfirmation
