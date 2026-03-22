@@ -64,6 +64,15 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
   const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 14;
   const isExpired = expiresAt && !isAfter(expiresAt, now);
 
+  // Stale rates warning: quoted > 45 days ago
+  const quotedDaysAgo = scenario.quoted_at ? differenceInCalendarDays(now, parseISO(scenario.quoted_at)) : null;
+  const isStale = quotedDaysAgo !== null && quotedDaysAgo > 45 && scenario.status === "completed";
+
+  // Effective date approaching warning: eff date within 14 days and status not completed
+  const effectiveDate = scenario.effective_date ? parseISO(scenario.effective_date) : null;
+  const daysToEffective = effectiveDate ? differenceInCalendarDays(effectiveDate, now) : null;
+  const effectiveApproaching = daysToEffective !== null && daysToEffective >= 0 && daysToEffective <= 14 && !["completed"].includes(scenario.status);
+
   const { data: scenarioPlans = [] } = useQuery({
     queryKey: ["scenario-plans", scenario.id],
     queryFn: () => base44.entities.ScenarioPlan.filter({ scenario_id: scenario.id }),
