@@ -18,7 +18,11 @@ import DocuSignAuditTrail from "./DocuSignAuditTrail";
  *   onPrint        — () => void (optional)
  */
 export default function BenefitsDashboard({ enrollment, onPrint }) {
+  const [showSigning, setShowSigning] = useState(false);
   if (!enrollment) return null;
+
+  const docuStatus = enrollment.docusign_status || "not_sent";
+  const needsSignature = enrollment.status === "completed" && docuStatus !== "completed";
 
   const coverageDate = enrollment.effective_date
     ? new Date(enrollment.effective_date)
