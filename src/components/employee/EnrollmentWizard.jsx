@@ -141,6 +141,29 @@ export default function EnrollmentWizard({
     );
   }
 
+  // Signing step — shown inline after review submission
+  if (currentStep?.id === "signature" && !isWaiving) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6 px-4">
+        {enrollmentWindow && <EnrollmentDeadlineBanner enrollmentWindow={enrollmentWindow} />}
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            {enrollmentWindow?.employer_name || "Enrollment"}
+          </p>
+          <h1 className="text-xl sm:text-2xl font-bold">Sign Your Enrollment Form</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            One last step — your signature is required to finalize your benefits.
+          </p>
+        </div>
+        <DocuSignSigningPane
+          enrollment={submittedEnrollment || activeEnrollment}
+          onSigned={() => setShowConfirmation(true)}
+          onSkip={() => setShowConfirmation(true)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6 px-4">
       {/* Deadline banner — always shown */}
