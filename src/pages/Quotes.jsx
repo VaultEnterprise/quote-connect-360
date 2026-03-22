@@ -21,7 +21,7 @@ import { parseISO, isAfter, addDays } from "date-fns";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
-  const { toast } = useToast() || {};
+  const { toast } = useToast();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
