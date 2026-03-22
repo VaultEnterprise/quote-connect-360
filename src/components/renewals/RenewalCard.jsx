@@ -1,22 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Calendar, TrendingUp, TrendingDown, Minus, Pencil, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar, TrendingUp, TrendingDown, Minus, Pencil, AlertTriangle, StickyNote, ChevronDown, ChevronUp, Building2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
 
 /**
  * RenewalCard
- * Rich renewal card with urgency badge, disruption score bar, rate change indicator, recommendation.
+ * Rich renewal card with urgency/overdue badge, inline quick actions, carrier, notes preview, bulk select.
  *
  * Props:
- *   renewal     — RenewalCycle
- *   onEdit      — () => void
- *   onClick     — () => void
+ *   renewal      — RenewalCycle
+ *   onEdit       — () => void
+ *   onClick      — () => void
+ *   isSelected   — boolean
+ *   onToggleSelect — (id) => void
  */
-export default function RenewalCard({ renewal, onEdit, onClick }) {
+export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onToggleSelect }) {
   const daysUntilRenewal = renewal.renewal_date
     ? differenceInDays(new Date(renewal.renewal_date), new Date())
     : null;
