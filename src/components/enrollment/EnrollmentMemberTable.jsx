@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Mail, Send, Loader2 } from "lucide-react";
+import { Search, Mail, Send, Loader2, FileSignature } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import EmptyState from "@/components/shared/EmptyState";
 import { format } from "date-fns";
+import DocuSignStatusBadge from "@/components/employee/DocuSignStatusBadge";
 
 const STATUS_COLORS = {
   pending: "bg-amber-100 text-amber-700",
