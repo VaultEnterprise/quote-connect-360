@@ -57,9 +57,10 @@ function EmployeePortalContent() {
           title="No Active Enrollment"
           description="You don't have an active benefits enrollment window. Contact your HR administrator to get started."
         />
-        
+        <LifeEventCard />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <BenefitsGlossary />
+          <HelpContactCard />
         </div>
       </div>
     );
