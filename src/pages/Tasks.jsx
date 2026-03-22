@@ -55,80 +55,112 @@ function dueDateLabel(dateStr) {
 }
 
 function TaskRow({ task, onEdit, onDelete, onStatusChange, selected, onSelect }) {
+  const [expanded, setExpanded] = useState(false);
   const isOverdue = task.due_date && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date)) && task.status !== "completed";
   const isDone = task.status === "completed" || task.status === "cancelled";
   const due = dueDateLabel(task.due_date);
+  const hasNotes = task.description && task.description.length > 60;
 
   return (
-    <div className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all hover:shadow-sm group ${isOverdue ? "border-destructive/30 bg-red-50/30" : "border-border bg-card"} ${isDone ? "opacity-60" : ""}`}>
-      {/* Select checkbox */}
-      <Checkbox checked={selected} onCheckedChange={onSelect} className="mt-0.5 shrink-0" />
+    <div className={`rounded-xl border transition-all hover:shadow-sm group ${isOverdue ? "border-destructive/30 bg-red-50/30" : "border-border bg-card"} ${isDone ? "opacity-60" : ""}`}>
+      <div className="flex items-start gap-3 p-3.5">
+        {/* Select checkbox */}
+        <Checkbox checked={selected} onCheckedChange={onSelect} className="mt-0.5 shrink-0" />
 
-      {/* Status toggle */}
-      <button
-        className="mt-0.5 shrink-0 hover:scale-110 transition-transform"
-        onClick={() => onStatusChange(task)}
-        title={`Mark as ${task.status === "completed" ? "pending" : "completed"}`}
-      >
-        {STATUS_ICON[task.status] || STATUS_ICON.pending}
-      </button>
+        {/* Status toggle */}
+        <button
+          className="mt-0.5 shrink-0 hover:scale-110 transition-transform"
+          onClick={() => onStatusChange(task)}
+          title={`Mark as ${task.status === "completed" ? "pending" : "completed"}`}
+        >
+          {STATUS_ICON[task.status] || STATUS_ICON.pending}
+        </button>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start gap-2 flex-wrap">
-          <p className={`text-sm font-medium leading-snug ${isDone ? "line-through text-muted-foreground" : ""}`}>
-            {task.title}
-          </p>
-          <Badge variant="outline" className={`text-[10px] py-0 px-1.5 border ${PRIORITY_COLOR[task.priority] || PRIORITY_COLOR.normal}`}>
-            {task.priority || "normal"}
-          </Badge>
-          {task.task_type && task.task_type !== "action_required" && (
-            <Badge variant="outline" className="text-[10px] py-0 px-1.5 text-muted-foreground">
-              {TYPE_LABELS[task.task_type] || task.task_type}
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2 flex-wrap">
+            <p className={`text-sm font-medium leading-snug ${isDone ? "line-through text-muted-foreground" : ""}`}>
+              {task.title}
+            </p>
+            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 border ${PRIORITY_COLOR[task.priority] || PRIORITY_COLOR.normal}`}>
+              {task.priority || "normal"}
             </Badge>
+            {task.task_type && task.task_type !== "action_required" && (
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 text-muted-foreground">
+                {TYPE_LABELS[task.task_type] || task.task_type}
+              </Badge>
+            )}
+          </div>
+
+          {/* Short description preview (collapsed) */}
+          {task.description && !expanded && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
           )}
+
+          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+            {task.employer_name && (
+              <Link
+                to={`/cases/${task.case_id}`}
+                className="flex items-center gap-1 text-xs text-primary hover:underline"
+                onClick={e => e.stopPropagation()}
+              >
+                <Briefcase className="w-3 h-3" />
+                {task.employer_name}
+                <ArrowUpRight className="w-2.5 h-2.5" />
+              </Link>
+            )}
+            {task.assigned_to && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <User className="w-3 h-3" />
+                {task.assigned_to}
+              </span>
+            )}
+            {due && (
+              <span className={`flex items-center gap-1 text-xs ${due.color}`}>
+                <Clock className="w-3 h-3" />
+                {due.label}
+              </span>
+            )}
+            {/* Expand notes toggle */}
+            {task.description && (
+              <button
+                onClick={() => setExpanded(v => !v)}
+                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors ml-auto"
+              >
+                {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                {expanded ? "Hide notes" : "Show notes"}
+              </button>
+            )}
+          </div>
         </div>
 
-        {task.description && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-        )}
-
-        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-          {task.employer_name && (
-            <Link
-              to={`/cases/${task.case_id}`}
-              className="flex items-center gap-1 text-xs text-primary hover:underline"
-              onClick={e => e.stopPropagation()}
-            >
-              <Briefcase className="w-3 h-3" />
-              {task.employer_name}
-              <ArrowUpRight className="w-2.5 h-2.5" />
-            </Link>
-          )}
-          {task.assigned_to && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <User className="w-3 h-3" />
-              {task.assigned_to}
-            </span>
-          )}
-          {due && (
-            <span className={`flex items-center gap-1 text-xs ${due.color}`}>
-              <Clock className="w-3 h-3" />
-              {due.label}
-            </span>
-          )}
+        {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(task)}>
+            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(task.id)}>
+            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+          </Button>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(task)}>
-          <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(task.id)}>
-          <Trash2 className="w-3.5 h-3.5 text-destructive" />
-        </Button>
-      </div>
+      {/* Expanded notes panel */}
+      {expanded && task.description && (
+        <div className="px-4 pb-3.5 pt-0 ml-10 border-t border-border/50">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 mt-2.5">Notes</p>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{task.description}</p>
+          {task.notes && (
+            <>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 mt-3">Additional Notes</p>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{task.notes}</p>
+            </>
+          )}
+          {task.completed_at && (
+            <p className="text-xs text-muted-foreground mt-2">Completed {format(new Date(task.completed_at), "MMM d, yyyy 'at' h:mm a")}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
