@@ -12,7 +12,8 @@ export default function SendProposalDialog({ proposal, open, onClose }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
-  const [emailTo, setEmailTo] = useState(proposal?.broker_email || "");
+  // Pre-fill employer contact email (not the broker's own email)
+  const [emailTo, setEmailTo] = useState(proposal?.primary_contact_email || "");
   const [sending, setSending] = useState(false);
   const [exporting, setExporting] = useState(false);
 
