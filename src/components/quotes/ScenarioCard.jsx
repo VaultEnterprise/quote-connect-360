@@ -333,5 +333,13 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
         </div>
       </CardContent>
     </Card>
+
+    {showClone && (
+      <CloneScenarioDialog scenario={scenario} open={showClone} onClose={() => setShowClone(false)} />
+    )}
+    {showProposal && (
+      <CreateProposalFromScenario scenario={scenario} open={showProposal} onClose={() => setShowProposal(false)} />
+    )}
+  </>
   );
 }
