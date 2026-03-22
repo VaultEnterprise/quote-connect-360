@@ -16,6 +16,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import PolicyMatchAnalyticsDashboard from "@/components/policymatch/PolicyMatchAnalyticsDashboard";
+import PolicyMatchFilterPresets from "@/components/policymatch/PolicyMatchFilterPresets";
+import PolicyMatchBulkActions from "@/components/policymatch/PolicyMatchBulkActions";
+import PolicyMatchModeGuide from "@/components/policymatch/PolicyMatchModeGuide";
+import PolicyMatchComparisonMatrix from "@/components/policymatch/PolicyMatchComparisonMatrix";
+import PolicyMatchQualityScore from "@/components/policymatch/PolicyMatchQualityScore";
+import PolicyMatchHistoryTimeline from "@/components/policymatch/PolicyMatchHistoryTimeline";
+import PolicyMatchDetailExpanded from "@/components/policymatch/PolicyMatchDetailExpanded";
 
 const RISK_TIER_CONFIG = {
   preferred: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", label: "Preferred Risk", bar: "bg-emerald-500" },
@@ -346,9 +354,11 @@ export default function PolicyMatchAIPage() {
   const { toast }   = useToast();
   const [isRunning, setIsRunning] = useState(false);
   const [tab, setTab]             = useState("results");
+  const [viewMode, setViewMode]   = useState("list"); // "list", "analytics", "guide"
   const [filterTier, setFilterTier]     = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy]             = useState("newest");
+  const [expandedResultId, setExpandedResultId] = useState(null);
 
   const { data: cases     = [] } = useQuery({ queryKey: ["cases"],        queryFn: () => base44.entities.BenefitCase.list("-created_date", 100) });
   const { data: scenarios = [] } = useQuery({ queryKey: ["scenarios-all"],queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100) });
@@ -473,45 +483,85 @@ export default function PolicyMatchAIPage() {
 
         {/* Results Tab */}
         <TabsContent value="results" className="mt-4 space-y-4">
-          {/* Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-            <Select value={filterTier} onValueChange={setFilterTier}>
-              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Risk Tier" /></SelectTrigger>
+          {/* View mode toggle */}
+          <div className="flex items-center gap-2">
+            <Select value={viewMode} onValueChange={setViewMode}>
+              <SelectTrigger className="w-40 h-9 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Tiers</SelectItem>
-                <SelectItem value="preferred">Preferred</SelectItem>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="elevated">Elevated</SelectItem>
-                <SelectItem value="high">High Risk</SelectItem>
+                <SelectItem value="list">List View</SelectItem>
+                <SelectItem value="analytics">Analytics</SelectItem>
+                <SelectItem value="guide">Guides & Tips</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="optimized">Optimized</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="declined">Declined</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="risk_asc">Risk Score ↑ (Best)</SelectItem>
-                <SelectItem value="risk_desc">Risk Score ↓ (Worst)</SelectItem>
-                <SelectItem value="value_desc">Value Score ↓</SelectItem>
-              </SelectContent>
-            </Select>
-            {(filterTier !== "all" || filterStatus !== "all") && (
-              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setFilterTier("all"); setFilterStatus("all"); }}>
-                Clear Filters
-              </Button>
-            )}
-            <span className="text-xs text-muted-foreground ml-auto">{filteredResults.length} result{filteredResults.length !== 1 ? "s" : ""}</span>
           </div>
+
+          {/* Analytics View */}
+          {viewMode === "analytics" && (
+            <div className="space-y-4">
+              <PolicyMatchAnalyticsDashboard results={results} />
+              <PolicyMatchQualityScore results={results} />
+              <PolicyMatchHistoryTimeline results={results} />
+            </div>
+          )}
+
+          {/* Guide View */}
+          {viewMode === "guide" && (
+            <div className="space-y-4">
+              <PolicyMatchModeGuide />
+              <PolicyMatchQualityScore results={results} />
+            </div>
+          )}
+
+          {/* List View */}
+          {viewMode === "list" && (
+            <>
+              {/* Quick filter presets */}
+              <PolicyMatchFilterPresets onSelectPreset={() => {}} />
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                <Select value={filterTier} onValueChange={setFilterTier}>
+                  <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Risk Tier" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tiers</SelectItem>
+                    <SelectItem value="preferred">Preferred</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="elevated">Elevated</SelectItem>
+                    <SelectItem value="high">High Risk</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="optimized">Optimized</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="declined">Declined</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-8 w-44 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="risk_asc">Risk Score ↑ (Best)</SelectItem>
+                    <SelectItem value="risk_desc">Risk Score ↓ (Worst)</SelectItem>
+                    <SelectItem value="value_desc">Value Score ↓</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(filterTier !== "all" || filterStatus !== "all") && (
+                  <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setFilterTier("all"); setFilterStatus("all"); }}>
+                    Clear Filters
+                  </Button>
+                )}
+                <span className="text-xs text-muted-foreground ml-auto">{filteredResults.length} result{filteredResults.length !== 1 ? "s" : ""}</span>
+              </div>
+
+              {/* Comparison matrix */}
+              <PolicyMatchComparisonMatrix results={filteredResults} />
+
+              {/* Quality score */}
+              <PolicyMatchQualityScore results={filteredResults} />
 
           {isRunning && (
             <Card className="border-primary/30 bg-primary/5">
@@ -530,17 +580,24 @@ export default function PolicyMatchAIPage() {
             </Card>
           )}
 
-          {filteredResults.length === 0 && !isRunning ? (
-            <div className="text-center py-16">
-              <Brain className="w-14 h-14 mx-auto mb-4 text-muted-foreground/30" />
-              <p className="text-lg font-semibold">No results match your filters</p>
-              <p className="text-sm text-muted-foreground mt-1 mb-5">Try clearing filters or run the engine on a new case</p>
-              <Button onClick={() => setTab("run")}><Play className="w-4 h-4 mr-2" />Run First Analysis</Button>
-            </div>
-          ) : (
-            filteredResults.map(r => (
-              <ResultCard key={r.id} result={r} onAccept={handleAccept} onDecline={handleDecline} />
-            ))
+              {filteredResults.length === 0 && !isRunning ? (
+                <div className="text-center py-16">
+                  <Brain className="w-14 h-14 mx-auto mb-4 text-muted-foreground/30" />
+                  <p className="text-lg font-semibold">No results match your filters</p>
+                  <p className="text-sm text-muted-foreground mt-1 mb-5">Try clearing filters or run the engine on a new case</p>
+                  <Button onClick={() => setTab("run")}><Play className="w-4 h-4 mr-2" />Run First Analysis</Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredResults.map(r => (
+                    <div key={r.id}>
+                      <ResultCard result={r} onAccept={handleAccept} onDecline={handleDecline} />
+                      {expandedResultId === r.id && <PolicyMatchDetailExpanded result={r} />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
 
