@@ -36,6 +36,8 @@ export default function Quotes() {
   const [calculating, setCalculating] = useState(null);
   const [collapsedCases, setCollapsedCases] = useState({});
   const [groupByCaseMode, setGroupByCaseMode] = useState(true);
+  const [carrierFilter, setCarrierFilter] = useState("all");
+  const [bulkCalculating, setBulkCalculating] = useState(false);
 
   const { data: scenarios = [], isLoading } = useQuery({
     queryKey: ["scenarios-all"],
