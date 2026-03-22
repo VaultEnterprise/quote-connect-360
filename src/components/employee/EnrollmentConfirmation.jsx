@@ -13,10 +13,13 @@ import DocuSignAuditTrail from "./DocuSignAuditTrail";
  *
  * Props:
  *   enrollment  — EmployeeEnrollment (freshly completed)
+ *   isWaived    — bool
  *   onDone      — () => void  (triggers actual page reload)
  */
 export default function EnrollmentConfirmation({ enrollment, isWaived, onDone }) {
   const confirmationNumber = `ENR-${Date.now().toString(36).toUpperCase().slice(-8)}`;
+  const docuStatus = enrollment?.docusign_status || "not_sent";
+  const needsSignature = !isWaived && !["completed"].includes(docuStatus);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 py-8 px-4">
