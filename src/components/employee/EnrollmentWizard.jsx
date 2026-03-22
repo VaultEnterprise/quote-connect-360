@@ -92,8 +92,11 @@ export default function EnrollmentWizard({
         try {
           await base44.functions.invoke("sendDocuSignEnvelope", { enrollment_id: data?.id || activeEnrollment.id });
         } catch (_) {}
+        // Advance to signature step instead of jumping straight to confirmation
+        setCurrentStepIndex(steps.findIndex(s => s.id === "signature"));
+      } else {
+        setShowConfirmation(true);
       }
-      setShowConfirmation(true);
     },
   });
 
