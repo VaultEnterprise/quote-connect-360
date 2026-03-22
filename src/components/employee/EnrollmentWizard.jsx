@@ -473,7 +473,7 @@ export default function EnrollmentWizard({
            disabled={!canProceed() || completeEnrollment.isPending}
          >
            {currentStep.id === "review" ? (
-             completeEnrollment.isPending ? "Submitting..." : "Submit"
+             completeEnrollment.isPending ? "Submitting..." : isWaiving ? "Confirm Waiver" : "Submit & Sign"
            ) : (
              <>
                <span className="hidden sm:inline">Next</span>
