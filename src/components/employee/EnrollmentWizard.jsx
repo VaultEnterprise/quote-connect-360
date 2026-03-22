@@ -15,6 +15,9 @@ import EnrollmentDeadlineBanner from "./EnrollmentDeadlineBanner";
 import DependentForm from "./DependentForm";
 import PlanSelectionStep from "./PlanSelectionStep";
 import PlanCompareModal from "./PlanCompareModal";
+import ProviderSearch from "./ProviderSearch";
+import EnrollmentConfirmation from "./EnrollmentConfirmation";
+import HelpContactCard from "./HelpContactCard";
 
 const ENROLLMENT_STEPS = [
   { id: "welcome",   label: "Welcome" },
@@ -51,6 +54,8 @@ export default function EnrollmentWizard({
   const queryClient = useQueryClient();
   const [isWaiving, setIsWaiving] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [submittedEnrollment, setSubmittedEnrollment] = useState(null);
 
   // Enrollment data
   const [coverageTier, setCoverageTier] = useState("employee_only");
