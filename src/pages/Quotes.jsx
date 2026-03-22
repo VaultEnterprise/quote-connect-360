@@ -22,7 +22,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { toast } = useToast() || {};
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
