@@ -78,12 +78,47 @@ export default function EnrollmentConfirmation({ enrollment, isWaived, onDone })
         </Card>
       )}
 
+      {/* DocuSign Signing — shown if not yet signed */}
+      {needsSignature && (
+        <DocuSignSigningPane
+          enrollment={enrollment}
+          onSigned={() => {}}
+          onSkip={() => {}}
+        />
+      )}
+
+      {/* DocuSign signed document download */}
+      {!isWaived && docuStatus === "completed" && enrollment?.docusign_document_url && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold text-green-900 text-sm">Enrollment Form Signed</p>
+              <p className="text-xs text-green-700 mt-0.5">Your signed document is available for download.</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-green-300 text-green-700 hover:bg-green-100 flex-shrink-0"
+              onClick={() => window.open(enrollment.docusign_document_url, "_blank")}
+            >
+              <Download className="w-4 h-4" /> Download
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* DocuSign audit trail */}
+      {!isWaived && enrollment?.docusign_envelope_id && (
+        <DocuSignAuditTrail enrollment={enrollment} />
+      )}
+
       {/* Next steps */}
       <Card className="border-blue-200 bg-blue-50">
         <CardContent className="p-4 space-y-2">
           <p className="font-semibold text-blue-900 text-sm">What happens next?</p>
           <ul className="text-xs text-blue-800 space-y-1.5 list-disc pl-4">
             <li>A confirmation email will be sent to your registered email address.</li>
+            {!isWaived && <li>Sign your enrollment form via DocuSign to finalize your elections.</li>}
             <li>Your ID cards and plan documents will be mailed within 7–10 business days.</li>
             <li>Coverage is effective on your plan's effective date.</li>
             {!isWaived && <li>Contact HR if you need to make changes due to a qualifying life event.</li>}
