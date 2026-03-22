@@ -10,6 +10,12 @@ import StructuredLoggerPanel from "@/components/infra/StructuredLoggerPanel";
 import SecretsProviderPanel from "@/components/infra/SecretsProviderPanel";
 import EndpointHealthPanel from "@/components/infra/EndpointHealthPanel";
 import PayloadValidatorPanel from "@/components/infra/PayloadValidatorPanel";
+import ApiReferencePanel from "@/components/infra/ApiReferencePanel";
+import AuthGuidePanel from "@/components/infra/AuthGuidePanel";
+import ApiKeysPanel from "@/components/infra/ApiKeysPanel";
+import WebhooksPanel from "@/components/infra/WebhooksPanel";
+import DataModelsPanel from "@/components/infra/DataModelsPanel";
+import EventLogPanel from "@/components/infra/EventLogPanel";
 import { RefreshCw, Shield, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 
 const LAYERS = [

@@ -52,10 +52,10 @@ export default function AuthGuidePanel() {
           <p>All API requests must be authenticated using a <strong className="text-foreground">Bearer token</strong> passed in the <code className="bg-muted px-1.5 py-0.5 rounded text-xs">Authorization</code> header.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
-              { label: "Token Type", value: "Bearer (JWT)", icon: Key },
-              { label: "Header Name", value: "Authorization", icon: Shield },
-              { label: "Token TTL", value: "24 hours", icon: CheckCircle2 },
-            ].map(({ label, value, icon: Icon }) => (
+              { label: "Token Type", value: "Bearer (JWT)", Icon: Key },
+              { label: "Header Name", value: "Authorization", Icon: Shield },
+              { label: "Token TTL", value: "24 hours", Icon: CheckCircle2 },
+            ].map(({ label, value, Icon }) => (
               <div key={label} className="p-3 rounded-lg bg-muted/40 text-center">
                 <Icon className="w-4 h-4 mx-auto text-primary mb-1" />
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
