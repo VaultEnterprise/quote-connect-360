@@ -410,6 +410,11 @@ export default function Quotes() {
                     </span>
                   )}
                   <Badge variant="outline" className="text-[10px]">{group.items.length} scenario{group.items.length !== 1 ? "s" : ""}</Badge>
+                  {group.items.some(s => s.is_recommended) && (
+                    <span className="text-[10px] bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                      ✓ {group.items.find(s => s.is_recommended)?.name}
+                    </span>
+                  )}
                 </div>
                 {collapsedCases[group.caseId] ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
               </button>
