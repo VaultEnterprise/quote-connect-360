@@ -230,6 +230,11 @@ export default function BenefitsDashboard({ enrollment, onPrint }) {
         </div>
       )}
 
+      {/* DocuSign audit trail */}
+      {enrollment.docusign_envelope_id && (
+        <DocuSignAuditTrail enrollment={enrollment} />
+      )}
+
       {/* Plan documents & carrier contacts */}
       <div>
         <h2 className="text-sm font-semibold mb-3">Plan Documents & Carrier</h2>
