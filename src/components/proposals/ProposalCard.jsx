@@ -5,25 +5,24 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   FileText, Send, Eye, CheckCircle, XCircle, Clock, AlertTriangle,
-  ExternalLink, Pencil, Trash2, Copy, MoreHorizontal, ChevronRight, Bell
+  ExternalLink, Pencil, Trash2, Copy, MoreHorizontal, ChevronRight
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { format, isAfter, differenceInDays, parseISO, subDays } from "date-fns";
+import { format, isAfter, differenceInDays, parseISO } from "date-fns";
 import SendProposalDialog from "@/components/proposals/SendProposalDialog";
 
 const STATUS_CONFIG = {
-  draft:    { label: "Draft",    icon: Clock,         cls: "bg-gray-100 text-gray-600 border-gray-200",       border: "border-l-gray-300" },
-  sent:     { label: "Sent",     icon: Send,          cls: "bg-blue-100 text-blue-700 border-blue-200",       border: "border-l-blue-400" },
-  viewed:   { label: "Viewed",   icon: Eye,           cls: "bg-purple-100 text-purple-700 border-purple-200", border: "border-l-purple-400" },
-  approved: { label: "Approved", icon: CheckCircle,   cls: "bg-green-100 text-green-700 border-green-200",    border: "border-l-green-500" },
-  rejected: { label: "Rejected", icon: XCircle,       cls: "bg-red-100 text-red-700 border-red-200",          border: "border-l-red-400" },
-  expired:  { label: "Expired",  icon: AlertTriangle, cls: "bg-orange-100 text-orange-700 border-orange-200", border: "border-l-orange-400" },
+  draft:    { label: "Draft",    icon: Clock,        cls: "bg-gray-100 text-gray-600 border-gray-200",       border: "border-l-gray-300" },
+  sent:     { label: "Sent",     icon: Send,         cls: "bg-blue-100 text-blue-700 border-blue-200",       border: "border-l-blue-400" },
+  viewed:   { label: "Viewed",   icon: Eye,          cls: "bg-purple-100 text-purple-700 border-purple-200", border: "border-l-purple-400" },
+  approved: { label: "Approved", icon: CheckCircle,  cls: "bg-green-100 text-green-700 border-green-200",   border: "border-l-green-500" },
+  rejected: { label: "Rejected", icon: XCircle,      cls: "bg-red-100 text-red-700 border-red-200",         border: "border-l-red-400" },
+  expired:  { label: "Expired",  icon: AlertTriangle,cls: "bg-orange-100 text-orange-700 border-orange-200",border: "border-l-orange-400" },
 };
 
 const PLAN_TYPE_COLORS = {
@@ -38,6 +37,7 @@ const PLAN_TYPE_COLORS = {
 
 function PlanChips({ plans }) {
   if (!plans?.length) return null;
+  // Group by type
   const grouped = {};
   plans.forEach(p => {
     const type = p.plan_type || "other";
@@ -47,7 +47,10 @@ function PlanChips({ plans }) {
   return (
     <div className="flex items-center gap-1 mt-2 flex-wrap">
       {Object.entries(grouped).map(([type, items]) => (
-        <span key={type} className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border ${PLAN_TYPE_COLORS[type] || "bg-muted text-muted-foreground border-border"}`}>
+        <span
+          key={type}
+          className={`inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full border ${PLAN_TYPE_COLORS[type] || "bg-muted text-muted-foreground border-border"}`}
+        >
           {type.charAt(0).toUpperCase() + type.slice(1)} ×{items.length}
         </span>
       ))}
@@ -55,10 +58,9 @@ function PlanChips({ plans }) {
   );
 }
 
-export default function ProposalCard({ proposal, onView, onEdit, onReject, isSelected, onToggleSelect, staleProposalIds = [] }) {
+export default function ProposalCard({ proposal, onView, onEdit, onReject }) {
   const queryClient = useQueryClient();
   const [showSendDialog, setShowSendDialog] = useState(false);
-  const [showReminder, setShowReminder] = useState(false);
   const cfg = STATUS_CONFIG[proposal.status] || STATUS_CONFIG.draft;
   const StatusIcon = cfg.icon;
 
@@ -67,12 +69,6 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
   const daysUntilExpiry = expiresAt ? differenceInDays(expiresAt, now) : null;
   const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
   const isExpired = expiresAt && !isAfter(expiresAt, now) && !["approved","rejected","expired"].includes(proposal.status);
-  const isStale = staleProposalIds.includes(proposal.id);
-
-  // How long since sent (for stale indicator)
-  const daysSinceSent = proposal.sent_at
-    ? differenceInDays(now, parseISO(proposal.sent_at))
-    : null;
 
   const updateStatus = useMutation({
     mutationFn: (payload) => base44.entities.Proposal.update(proposal.id, payload),
@@ -81,24 +77,17 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
 
   const cloneProposal = useMutation({
     mutationFn: () => base44.entities.Proposal.create({
-      ...proposal, id: undefined,
+      ...proposal,
+      id: undefined,
       title: `${proposal.title} (Copy)`,
-      status: "draft", version: 1,
-      sent_at: null, viewed_at: null, approved_at: null,
-      created_date: undefined, updated_date: undefined,
-    }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proposals"] }),
-  });
-
-  // New Version: increments version, links same case, status = draft
-  const newVersion = useMutation({
-    mutationFn: () => base44.entities.Proposal.create({
-      ...proposal, id: undefined,
-      title: proposal.title.replace(/ v\d+$/, "") + ` v${(proposal.version || 1) + 1}`,
       status: "draft",
-      version: (proposal.version || 1) + 1,
-      sent_at: null, viewed_at: null, approved_at: null,
-      created_date: undefined, updated_date: undefined,
+      // Clone is a fresh draft — version starts at 1
+      version: 1,
+      sent_at: null,
+      viewed_at: null,
+      approved_at: null,
+      created_date: undefined,
+      updated_date: undefined,
     }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proposals"] }),
   });
@@ -108,33 +97,24 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proposals"] }),
   });
 
-  const sendReminder = useMutation({
-    mutationFn: () => base44.integrations.Core.SendEmail({
-      to: proposal.broker_email || "",
-      subject: `Reminder: ${proposal.title} — Awaiting Employer Response`,
-      body: `This is a reminder that the proposal "${proposal.title}" for ${proposal.employer_name} has been awaiting a response for ${daysSinceSent} days. Consider following up with the employer.`,
-    }),
-    onSuccess: () => setShowReminder(false),
-  });
+  const handleMarkViewed = (e) => {
+    e.stopPropagation();
+    updateStatus.mutate({ status: "viewed", viewed_at: new Date().toISOString() });
+  };
+
+  const handleApprove = (e) => {
+    e.stopPropagation();
+    updateStatus.mutate({ status: "approved", approved_at: new Date().toISOString() });
+  };
 
   return (
     <>
       <Card
-        className={`border-l-4 ${cfg.border} hover:shadow-md transition-all cursor-pointer ${isSelected ? "ring-2 ring-primary/30 bg-primary/5" : ""} ${isStale ? "bg-amber-50/20" : ""}`}
+        className={`border-l-4 ${cfg.border} hover:shadow-md transition-all cursor-pointer`}
         onClick={() => onView(proposal)}
       >
         <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            {/* Checkbox */}
-            {onToggleSelect && (
-              <div onClick={e => e.stopPropagation()} className="flex-shrink-0 mt-0.5">
-                <Checkbox
-                  checked={!!isSelected}
-                  onCheckedChange={() => onToggleSelect(proposal.id)}
-                />
-              </div>
-            )}
-
+          <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <FileText className="w-4 h-4 text-primary" />
@@ -143,22 +123,19 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-sm font-semibold truncate">{proposal.title}</p>
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.cls}`}>
-                    <StatusIcon className="w-2.5 h-2.5" />{cfg.label}
+                    <StatusIcon className="w-2.5 h-2.5" />
+                    {cfg.label}
                   </span>
                   <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">v{proposal.version || 1}</span>
                   {isExpiringSoon && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                      <AlertTriangle className="w-2.5 h-2.5" /> Expires in {daysUntilExpiry}d
+                      <AlertTriangle className="w-2.5 h-2.5" />
+                      Expires in {daysUntilExpiry}d
                     </span>
                   )}
                   {isExpired && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-200">
                       <AlertTriangle className="w-2.5 h-2.5" /> Overdue
-                    </span>
-                  )}
-                  {isStale && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-                      <Clock className="w-2.5 h-2.5" /> Stale {daysSinceSent}d
                     </span>
                   )}
                 </div>
@@ -184,12 +161,13 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
                   )}
                 </div>
 
+                {/* Plan chips grouped by type */}
                 <PlanChips plans={proposal.plan_summary} />
 
                 {/* Approved CTA */}
                 {proposal.status === "approved" && (
                   <div className="flex items-center gap-2 mt-2">
-                    <Link to={`/enrollment?case_id=${proposal.case_id}`} onClick={e => e.stopPropagation()}>
+                    <Link to={`/enrollment`} onClick={e => e.stopPropagation()}>
                       <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1 text-green-700 border-green-200 bg-green-50 hover:bg-green-100">
                         <ChevronRight className="w-3 h-3" /> Go to Enrollment
                       </Button>
@@ -199,29 +177,6 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
                         <ExternalLink className="w-3 h-3" /> Open Case
                       </Button>
                     </Link>
-                  </div>
-                )}
-
-                {/* Stale reminder CTA */}
-                {isStale && !showReminder && (
-                  <div className="mt-2" onClick={e => e.stopPropagation()}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 text-[10px] gap-1 text-amber-700 border-amber-200 bg-amber-50 hover:bg-amber-100"
-                      onClick={() => setShowReminder(true)}
-                    >
-                      <Bell className="w-3 h-3" /> Send Reminder
-                    </Button>
-                  </div>
-                )}
-                {showReminder && (
-                  <div className="mt-2 flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                    <span className="text-xs text-muted-foreground">Send follow-up reminder?</span>
-                    <Button size="sm" className="h-6 text-[10px]" onClick={() => sendReminder.mutate()} disabled={sendReminder.isPending}>
-                      {sendReminder.isPending ? "Sending…" : "Yes, send"}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => setShowReminder(false)}>Cancel</Button>
                   </div>
                 )}
               </div>
@@ -236,18 +191,19 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
                   </Button>
                 </Link>
               )}
+
               {proposal.status === "draft" && (
-                <Button size="sm" className="h-7 text-xs gap-1" onClick={() => setShowSendDialog(true)}>
+                <Button size="sm" className="h-7 text-xs gap-1" onClick={e => { e.stopPropagation(); setShowSendDialog(true); }}>
                   <Send className="w-3 h-3" /> Send
                 </Button>
               )}
               {proposal.status === "sent" && (
-                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-purple-700 border-purple-200 hover:bg-purple-50" onClick={() => updateStatus.mutate({ status: "viewed", viewed_at: new Date().toISOString() })} disabled={updateStatus.isPending}>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-purple-700 border-purple-200 hover:bg-purple-50" onClick={handleMarkViewed} disabled={updateStatus.isPending}>
                   <Eye className="w-3 h-3" /> Mark Viewed
                 </Button>
               )}
-              {["sent","viewed"].includes(proposal.status) && (
-                <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={() => updateStatus.mutate({ status: "approved", approved_at: new Date().toISOString() })} disabled={updateStatus.isPending}>
+              {["sent", "viewed"].includes(proposal.status) && (
+                <Button size="sm" className="h-7 text-xs gap-1 bg-green-600 hover:bg-green-700" onClick={handleApprove} disabled={updateStatus.isPending}>
                   <CheckCircle className="w-3 h-3" /> Approve
                 </Button>
               )}
@@ -258,7 +214,7 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
                     <MoreHorizontal className="w-3.5 h-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem onClick={() => onView(proposal)}>
                     <Eye className="w-3.5 h-3.5 mr-2" /> View Details
                   </DropdownMenuItem>
@@ -266,19 +222,11 @@ export default function ProposalCard({ proposal, onView, onEdit, onReject, isSel
                     <Pencil className="w-3.5 h-3.5 mr-2" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => cloneProposal.mutate()}>
-                    <Copy className="w-3.5 h-3.5 mr-2" /> Clone as New Draft
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => newVersion.mutate()} disabled={newVersion.isPending}>
-                    <FileText className="w-3.5 h-3.5 mr-2" /> Create New Version (v{(proposal.version || 1) + 1})
+                    <Copy className="w-3.5 h-3.5 mr-2" /> Clone (New Draft)
                   </DropdownMenuItem>
                   {proposal.status === "draft" && (
                     <DropdownMenuItem onClick={() => setShowSendDialog(true)}>
                       <Send className="w-3.5 h-3.5 mr-2" /> Send / Share
-                    </DropdownMenuItem>
-                  )}
-                  {isStale && (
-                    <DropdownMenuItem onClick={() => setShowReminder(true)}>
-                      <Bell className="w-3.5 h-3.5 mr-2" /> Send Reminder
                     </DropdownMenuItem>
                   )}
                   {["sent","viewed"].includes(proposal.status) && (
