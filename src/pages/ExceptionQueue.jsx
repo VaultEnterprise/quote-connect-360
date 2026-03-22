@@ -180,6 +180,7 @@ export default function ExceptionQueue() {
   const [statusFilter, setStatusFilter] = useState("open");
   const [sortBy, setSortBy] = useState("created"); // "created", "severity", "due_date"
   const [showMyOnly, setShowMyOnly] = useState(false);
+  const [viewMode, setViewMode] = useState("list"); // "list", "board", "analytics", "settings"
 
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [resolving, setResolving] = useState(null);
@@ -257,8 +258,6 @@ export default function ExceptionQueue() {
       return next;
     });
   };
-
-  const [viewMode, setViewMode] = useState("list"); // "list", "board", "analytics", "settings"
 
   return (
     <div className="space-y-6">
