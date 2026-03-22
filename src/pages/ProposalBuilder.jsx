@@ -17,6 +17,15 @@ import ProposalCard from "@/components/proposals/ProposalCard";
 import ProposalKPIBar from "@/components/proposals/ProposalKPIBar";
 import ProposalPipelineView from "@/components/proposals/ProposalPipelineView";
 import RejectProposalModal from "@/components/proposals/RejectProposalModal";
+import ProposalAnalyticsDashboard from "@/components/proposals/ProposalAnalyticsDashboard";
+import ProposalFilterPresets from "@/components/proposals/ProposalFilterPresets";
+import ProposalBulkActions from "@/components/proposals/ProposalBulkActions";
+import ProposalQualityScore from "@/components/proposals/ProposalQualityScore";
+import ProposalComparisonMatrix from "@/components/proposals/ProposalComparisonMatrix";
+import ProposalHistoryTimeline from "@/components/proposals/ProposalHistoryTimeline";
+import ProposalApprovalTrend from "@/components/proposals/ProposalApprovalTrend";
+import ProposalWorkflowSuggestions from "@/components/proposals/ProposalWorkflowSuggestions";
+import ProposalDetailExpanded from "@/components/proposals/ProposalDetailExpanded";
 import { isAfter, addDays, parseISO, differenceInDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 const DATE_RANGE_OPTIONS = [
@@ -41,6 +50,8 @@ export default function ProposalBuilder() {
   const [rejecting, setRejecting] = useState(null);
   const [showExpiringOnly, setShowExpiringOnly] = useState(false);
   const [sortBy, setSortBy] = useState("created_desc");
+  const [viewMode2, setViewMode2] = useState("list"); // "list", "analytics", "guide"
+  const [expandedProposalId, setExpandedProposalId] = useState(null);
 
   // KPI click filter
   const [kpiFilter, setKpiFilter] = useState(null);
@@ -223,11 +234,54 @@ export default function ProposalBuilder() {
         </div>
       </div>
 
-      {/* KPI Bar — clickable */}
-      <ProposalKPIBar proposals={proposals} onFilterClick={handleKpiClick} activeFilter={kpiFilter} />
+      {/* View mode toggle */}
+      <div className="flex items-center gap-2">
+        <Select value={viewMode2} onValueChange={setViewMode2}>
+          <SelectTrigger className="w-40 h-9 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="list">List View</SelectItem>
+            <SelectItem value="analytics">Analytics</SelectItem>
+            <SelectItem value="guide">Workflow</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* View + Filter Bar */}
-      <div className="flex items-center gap-2 flex-wrap bg-muted/30 p-3 rounded-lg border">
+      {/* Analytics View */}
+      {viewMode2 === "analytics" && (
+        <div className="space-y-4">
+          <ProposalAnalyticsDashboard proposals={proposals} />
+          <ProposalApprovalTrend proposals={proposals} />
+          <ProposalQualityScore proposals={proposals} />
+          <ProposalHistoryTimeline proposals={proposals} />
+        </div>
+      )}
+
+      {/* Workflow View */}
+      {viewMode2 === "guide" && (
+        <div className="space-y-4">
+          <ProposalWorkflowSuggestions proposals={proposals} />
+          <ProposalQualityScore proposals={proposals} />
+          <ProposalComparisonMatrix proposals={proposals} />
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode2 === "list" && (
+        <>
+          {/* KPI Bar — clickable */}
+          <ProposalKPIBar proposals={proposals} onFilterClick={handleKpiClick} activeFilter={kpiFilter} />
+
+          {/* Quick filter presets */}
+          <ProposalFilterPresets onSelectPreset={() => {}} />
+
+          {/* Quality score */}
+          <ProposalQualityScore proposals={filtered} />
+
+          {/* Comparison matrix */}
+          <ProposalComparisonMatrix proposals={filtered} />
+
+          {/* View + Filter Bar */}
+          <div className="flex items-center gap-2 flex-wrap bg-muted/30 p-3 rounded-lg border">
         {/* View toggle */}
         <div className="flex items-center border rounded-md overflow-hidden">
           {[{ mode: "list", icon: List }, { mode: "pipeline", icon: LayoutGrid }].map(({ mode, icon: Icon }) => (
@@ -327,66 +381,46 @@ export default function ProposalBuilder() {
         </div>
       )}
 
-      {/* Bulk action bar */}
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20 flex-wrap">
-          <CheckSquare className="w-4 h-4 text-primary" />
-          <span className="text-xs font-medium text-primary">{selectedIds.length} selected</span>
-          <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-            <Select onValueChange={v => bulkStatusUpdate.mutate({ ids: selectedIds, status: v })}>
-              <SelectTrigger className="h-7 text-xs w-44"><SelectValue placeholder="Change status to…" /></SelectTrigger>
-              <SelectContent>
-                {["draft","sent","viewed","approved","rejected","expired"].map(s => (
-                  <SelectItem key={s} value={s} className="capitalize">{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20"
-              onClick={() => { if (confirm(`Delete ${selectedIds.length} proposals?`)) bulkDelete.mutate(selectedIds); }}
-            >
-              <XCircle className="w-3.5 h-3.5 mr-1" /> Delete
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={clearSelection}>
-              <X className="w-3.5 h-3.5 mr-1" /> Clear
-            </Button>
-          </div>
-        </div>
-      )}
+          {/* Bulk action bar */}
+          {selectedIds.length > 0 && <ProposalBulkActions selectedCount={selectedIds.length} proposals={filtered} />}
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}
-        </div>
-      ) : viewMode === "pipeline" ? (
-        proposals.length === 0 ? (
-          <EmptyState icon={FileText} title="No Proposals Yet" description="Create your first proposal to start tracking the pipeline" actionLabel="New Proposal" onAction={() => setShowCreate(true)} />
-        ) : (
-          <ProposalPipelineView proposals={proposals} onView={setViewing} />
-        )
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={FileText}
-          title={proposals.length === 0 ? "No Proposals Yet" : "No Proposals Match"}
-          description={proposals.length === 0 ? "Create your first proposal to send to an employer" : "Try adjusting your filters"}
-          actionLabel={proposals.length === 0 ? "New Proposal" : "Clear Filters"}
-          onAction={proposals.length === 0 ? () => setShowCreate(true) : clearAllFilters}
-        />
-      ) : (
-        <div className="space-y-2.5">
-          {filtered.map(p => (
-            <ProposalCard
-              key={p.id}
-              proposal={p}
-              onView={setViewing}
-              onEdit={setEditing}
-              onReject={setRejecting}
-              isSelected={selectedIds.includes(p.id)}
-              onToggleSelect={toggleSelect}
+          {/* Content */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}
+            </div>
+          ) : viewMode === "pipeline" ? (
+            proposals.length === 0 ? (
+              <EmptyState icon={FileText} title="No Proposals Yet" description="Create your first proposal to start tracking the pipeline" actionLabel="New Proposal" onAction={() => setShowCreate(true)} />
+            ) : (
+              <ProposalPipelineView proposals={proposals} onView={setViewing} />
+            )
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title={proposals.length === 0 ? "No Proposals Yet" : "No Proposals Match"}
+              description={proposals.length === 0 ? "Create your first proposal to send to an employer" : "Try adjusting your filters"}
+              actionLabel={proposals.length === 0 ? "New Proposal" : "Clear Filters"}
+              onAction={proposals.length === 0 ? () => setShowCreate(true) : clearAllFilters}
             />
-          ))}
-        </div>
+          ) : (
+            <div className="space-y-2.5">
+              {filtered.map(p => (
+                <div key={p.id}>
+                  <ProposalCard
+                    proposal={p}
+                    onView={setViewing}
+                    onEdit={setEditing}
+                    onReject={setRejecting}
+                    isSelected={selectedIds.includes(p.id)}
+                    onToggleSelect={toggleSelect}
+                  />
+                  {expandedProposalId === p.id && <ProposalDetailExpanded proposal={p} />}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Modals */}
