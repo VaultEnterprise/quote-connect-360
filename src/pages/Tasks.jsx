@@ -261,6 +261,12 @@ export default function Tasks() {
     },
   });
 
+  // ── Unique assignees for dropdown ──────────────────────────────────────────
+  const assignees = useMemo(() => {
+    const set = new Set(tasks.map(t => t.assigned_to).filter(Boolean));
+    return Array.from(set).sort();
+  }, [tasks]);
+
   // ── Filter ─────────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return tasks
@@ -274,10 +280,12 @@ export default function Tasks() {
           || t.status === statusFilter;
         const matchPriority = priorityFilter === "all" || t.priority === priorityFilter;
         const matchType = typeFilter === "all" || t.task_type === typeFilter;
-        return matchSearch && matchStatus && matchPriority && matchType;
+        const matchAssignee = assigneeFilter === "all" || t.assigned_to === assigneeFilter;
+        const matchMyTasks = !myTasksOnly || (currentUser && t.assigned_to === currentUser.email);
+        return matchSearch && matchStatus && matchPriority && matchType && matchAssignee && matchMyTasks;
       })
       .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
-  }, [tasks, search, statusFilter, priorityFilter, typeFilter]);
+  }, [tasks, search, statusFilter, priorityFilter, typeFilter, assigneeFilter, myTasksOnly, currentUser]);
 
   // ── Group ──────────────────────────────────────────────────────────────────
   const groups = useMemo(() => {
