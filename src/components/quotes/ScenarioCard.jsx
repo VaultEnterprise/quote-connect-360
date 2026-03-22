@@ -141,6 +141,16 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                   <AlertTriangle className="w-2.5 h-2.5" /> Expired
                 </span>
               )}
+              {isStale && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200">
+                  <Clock className="w-2.5 h-2.5" /> Rates {quotedDaysAgo}d old
+                </span>
+              )}
+              {effectiveApproaching && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                  <AlertTriangle className="w-2.5 h-2.5" /> Eff. date in {daysToEffective}d — not complete
+                </span>
+              )}
             </div>
 
             {/* Products */}
