@@ -71,23 +71,38 @@ export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onTo
       : "text-green-600";
 
   return (
-    <Card className="hover:shadow-md transition-all" onClick={onClick}>
+    <Card className={`hover:shadow-md transition-all ${isPastDue ? "border-red-300 bg-red-50/30" : ""} ${isSelected ? "ring-2 ring-primary/30 bg-primary/5" : ""}`} onClick={onClick}>
       <CardContent className="p-4 space-y-3">
         {/* Header: employer, status, urgency */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{renewal.employer_name || "Unknown Employer"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {renewal.renewal_date && `Renews ${format(new Date(renewal.renewal_date), "MMM d, yyyy")}`}
-              {daysUntilRenewal !== null && ` • ${daysUntilRenewal} days`}
-            </p>
+          {/* Bulk select checkbox */}
+          <div className="flex items-start gap-2 flex-1 min-w-0">
+            {onToggleSelect && (
+              <Checkbox
+                checked={!!isSelected}
+                onCheckedChange={() => onToggleSelect(renewal.id)}
+                onClick={e => e.stopPropagation()}
+                className="mt-0.5 flex-shrink-0"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{renewal.employer_name || "Unknown Employer"}</p>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <p className="text-xs text-muted-foreground">
+                  {renewal.renewal_date && `Renews ${format(new Date(renewal.renewal_date), "MMM d, yyyy")}`}
+                </p>
+                {renewal.assigned_to && (
+                  <span className="text-xs text-muted-foreground">• {renewal.assigned_to.split("@")[0]}</span>
+                )}
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <StatusBadge status={renewal.status} />
             {urgencyTier && (
               <Badge className={`text-[10px] font-semibold ${urgencyColor}`}>
-                <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />
-                {daysUntilRenewal}d
+                {isPastDue && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
+                {urgencyTier}
               </Badge>
             )}
           </div>
