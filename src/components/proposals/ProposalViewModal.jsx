@@ -295,6 +295,20 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
             </div>
           )}
 
+          {/* Link to originating scenario */}
+          {proposal.case_id && (
+            <div className="p-3 rounded-lg bg-muted/30 border flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Linked case & scenario</span>
+              <div className="flex gap-2">
+                <Link to={`/cases/${proposal.case_id}`} onClick={onClose}>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    <ExternalLink className="w-3 h-3" /> Open Case
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center justify-between pt-4 border-t gap-3 flex-wrap">
             <div className="flex gap-2">
