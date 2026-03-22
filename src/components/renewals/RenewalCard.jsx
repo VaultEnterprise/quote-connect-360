@@ -148,17 +148,60 @@ export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onTo
           </div>
         )}
 
-        {/* Recommendation and assigned broker */}
-        <div className="flex items-center justify-between gap-2 text-xs flex-wrap">
-          {renewal.recommendation && (
-            <Badge variant="outline" className="capitalize text-[10px]">
-              Rec: {renewal.recommendation.replace(/_/g, " ")}
-            </Badge>
-          )}
-          {renewal.assigned_to && (
-            <span className="text-muted-foreground">Assigned: {renewal.assigned_to}</span>
-          )}
+        {/* Recommendation + inline quick-action status changer */}
+        <div className="flex items-center justify-between gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {renewal.recommendation && (
+              <Badge variant="outline" className="capitalize text-[10px]">
+                Rec: {renewal.recommendation.replace(/_/g, " ")}
+              </Badge>
+            )}
+            {renewal.decision && (
+              <Badge className="bg-green-100 text-green-700 text-[10px]">
+                {renewal.decision.replace(/_/g, " ")}
+              </Badge>
+            )}
+          </div>
+
+          {/* Inline status quick-change */}
+          <Select
+            value={renewal.status}
+            onValueChange={(v) => updateStatus.mutate(v)}
+          >
+            <SelectTrigger className="h-6 text-[10px] w-36 border-dashed" onClick={e => e.stopPropagation()}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pre_renewal">Pre-Renewal</SelectItem>
+              <SelectItem value="marketed">Marketed</SelectItem>
+              <SelectItem value="options_prepared">Options Prepared</SelectItem>
+              <SelectItem value="employer_review">Employer Review</SelectItem>
+              <SelectItem value="decision_made">Decision Made</SelectItem>
+              <SelectItem value="install_renewal">Installing</SelectItem>
+              <SelectItem value="active_renewal">Active</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* Notes inline preview */}
+        {renewal.notes && (
+          <div onClick={e => e.stopPropagation()}>
+            <button
+              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setShowNotes(v => !v)}
+            >
+              <StickyNote className="w-3 h-3" />
+              {showNotes ? "Hide notes" : "Show notes"}
+              {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            {showNotes && (
+              <p className="mt-1.5 p-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-900 whitespace-pre-wrap">
+                {renewal.notes}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Action button */}
         <Button
@@ -167,7 +210,7 @@ export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onTo
           className="w-full text-xs"
           onClick={e => { e.stopPropagation(); onEdit?.(); }}
         >
-          <Pencil className="w-3 h-3 mr-1" /> Edit & View Details
+          <Pencil className="w-3 h-3 mr-1" /> View Full Details
         </Button>
       </CardContent>
     </Card>
