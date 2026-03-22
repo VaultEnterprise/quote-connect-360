@@ -205,11 +205,24 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
               </div>
             )}
 
+            {/* Inline Notes */}
+            {showNotes && scenario.notes && (
+              <div className="mt-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-1">Notes</p>
+                <p className="text-xs text-amber-900 leading-relaxed whitespace-pre-wrap">{scenario.notes}</p>
+              </div>
+            )}
+
             {/* Expanded plan list */}
             {expanded && (
               <div className="mt-3 border-t pt-3 space-y-1.5">
                 {scenarioPlans.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No plans added to this scenario yet.</p>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/40 border border-dashed">
+                    <p className="text-xs text-muted-foreground">No plans added to this scenario yet.</p>
+                    <Link to={`/cases/${scenario.case_id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+                      Add plans <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
                 ) : (
                   <>
                     <p className="text-xs font-medium text-muted-foreground mb-2">{scenarioPlans.length} plan(s)</p>
