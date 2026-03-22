@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Shield, User, Save, UserPlus, Mail } from "lucide-react";
+import { Building2, Shield, User, Save, UserPlus, Mail, AlertCircle, Zap, Lock, Bell, Palette } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/shared/PageHeader";
 import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+
+// Import new setting panels
+import APIIntegrationsPanel from "@/components/settings/APIIntegrationsPanel";
+import FeatureTogglesPanel from "@/components/settings/FeatureTogglesPanel";
+import BrandingPanel from "@/components/settings/BrandingPanel";
+import AuditLogPanel from "@/components/settings/AuditLogPanel";
+import WebhookConfigPanel from "@/components/settings/WebhookConfigPanel";
+import BillingUsagePanel from "@/components/settings/BillingUsagePanel";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -28,7 +36,7 @@ export default function Settings() {
   const agency = agencies[0];
   const [agencyForm, setAgencyForm] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (agency && !agencyForm) {
       setAgencyForm({
         name: agency.name || "",
@@ -73,50 +81,97 @@ export default function Settings() {
     enabled: user?.role === "admin",
   });
 
+  const isAdmin = user?.role === "admin";
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader title="Settings" description="Platform configuration and administration" />
 
-      <Tabs defaultValue="agency">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="agency">Agency</TabsTrigger>
-          <TabsTrigger value="account">My Account</TabsTrigger>
-          {user?.role === "admin" && <TabsTrigger value="team">Team</TabsTrigger>}
+      {!isAdmin && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4 flex gap-3">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-800">
+              <strong>Admin Only:</strong> Most settings are restricted to administrators. Contact your admin to manage integrations, features, and billing.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <Tabs defaultValue="organization" className="w-full">
+        <TabsList className="bg-muted/50 flex-wrap h-auto gap-1">
+          <TabsTrigger value="organization" className="flex items-center gap-2">
+            <Building2 className="w-4 h-4" /> Organization
+          </TabsTrigger>
+          <TabsTrigger value="account" className="flex items-center gap-2">
+            <User className="w-4 h-4" /> My Account
+          </TabsTrigger>
+          {isAdmin && (
+            <>
+              <TabsTrigger value="integrations" className="flex items-center gap-2">
+                <Zap className="w-4 h-4" /> Integrations
+              </TabsTrigger>
+              <TabsTrigger value="features" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" /> Features
+              </TabsTrigger>
+              <TabsTrigger value="webhooks" className="flex items-center gap-2">
+                <Bell className="w-4 h-4" /> Webhooks
+              </TabsTrigger>
+              <TabsTrigger value="branding" className="flex items-center gap-2">
+                <Palette className="w-4 h-4" /> Branding
+              </TabsTrigger>
+              <TabsTrigger value="team" className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4" /> Team
+              </TabsTrigger>
+              <TabsTrigger value="billing" className="flex items-center gap-2">
+                <Lock className="w-4 h-4" /> Billing
+              </TabsTrigger>
+              <TabsTrigger value="audit" className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" /> Audit Log
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
 
-        <TabsContent value="agency" className="mt-4">
+        {/* ─────────────────────────────────────────────────────────────────────────────── */}
+        {/* ORGANIZATION TAB */}
+        {/* ─────────────────────────────────────────────────────────────────────────────── */}
+        <TabsContent value="organization" className="mt-6">
           <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" /> Agency Information</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4 text-primary" /> Organization Information</CardTitle></CardHeader>
             <CardContent>
               {agencyForm ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><Label>Agency Name</Label><Input value={agencyForm.name} onChange={e => setA("name", e.target.value)} className="mt-1.5" /></div>
-                    <div><Label>Agency Code</Label><Input value={agencyForm.code} onChange={e => setA("code", e.target.value)} className="mt-1.5" /></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><Label>Organization Name</Label><Input value={agencyForm.name} onChange={e => setA("name", e.target.value)} className="mt-1.5" /></div>
+                    <div><Label>Organization Code</Label><Input value={agencyForm.code} onChange={e => setA("code", e.target.value)} className="mt-1.5" /></div>
                   </div>
                   <div><Label>Address</Label><Input value={agencyForm.address} onChange={e => setA("address", e.target.value)} className="mt-1.5" /></div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div><Label>City</Label><Input value={agencyForm.city} onChange={e => setA("city", e.target.value)} className="mt-1.5" /></div>
                     <div><Label>State</Label><Input value={agencyForm.state} onChange={e => setA("state", e.target.value)} className="mt-1.5" maxLength={2} /></div>
                     <div><Label>ZIP</Label><Input value={agencyForm.zip} onChange={e => setA("zip", e.target.value)} className="mt-1.5" /></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><Label>Phone</Label><Input value={agencyForm.phone} onChange={e => setA("phone", e.target.value)} className="mt-1.5" /></div>
                     <div><Label>Email</Label><Input value={agencyForm.email} onChange={e => setA("email", e.target.value)} className="mt-1.5" /></div>
                   </div>
                   <Button onClick={() => saveAgency.mutate()} disabled={saveAgency.isPending}>
-                    <Save className="w-4 h-4 mr-2" />{saveAgency.isPending ? "Saving..." : "Save Agency Info"}
+                    <Save className="w-4 h-4 mr-2" />{saveAgency.isPending ? "Saving..." : "Save Organization Info"}
                   </Button>
                   {saveAgency.isSuccess && <p className="text-sm text-green-600">Saved successfully.</p>}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Loading agency data...</p>
+                <p className="text-sm text-muted-foreground">Loading organization data...</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="account" className="mt-4">
+        {/* ─────────────────────────────────────────────────────────────────────────────── */}
+        {/* MY ACCOUNT TAB */}
+        {/* ─────────────────────────────────────────────────────────────────────────────── */}
+        <TabsContent value="account" className="mt-6">
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><User className="w-4 h-4 text-primary" /> My Account</CardTitle></CardHeader>
             <CardContent>
@@ -138,66 +193,104 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {user?.role === "admin" && (
-          <TabsContent value="team" className="mt-4 space-y-4">
-            {/* Invite */}
-            <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> Invite Team Member</CardTitle></CardHeader>
-              <CardContent>
-                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1">
-                    <Label className="text-xs mb-1 block">Email Address</Label>
-                    <Input
-                      type="email"
-                      placeholder="colleague@agency.com"
-                      value={inviteEmail}
-                      onChange={e => setInviteEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs mb-1 block">Role</Label>
-                    <Select value={inviteRole} onValueChange={setInviteRole}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-end">
-                    <Button type="submit" disabled={inviting || !inviteEmail} className="gap-1.5">
-                      <Mail className="w-4 h-4" />
-                      {inviting ? "Inviting..." : "Send Invite"}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-            {/* Members list */}
-            <Card>
-              <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Team Members</CardTitle></CardHeader>
-              <CardContent>
-                {userList.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No team members found.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {userList.map(u => (
-                      <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                        <div>
-                          <p className="text-sm font-medium">{u.full_name}</p>
-                          <p className="text-xs text-muted-foreground">{u.email}</p>
+        {/* ─────────────────────────────────────────────────────────────────────────────── */}
+        {/* ADMIN-ONLY TABS */}
+        {/* ─────────────────────────────────────────────────────────────────────────────── */}
+
+        {isAdmin && (
+          <>
+            {/* Integrations */}
+            <TabsContent value="integrations" className="mt-6">
+              <APIIntegrationsPanel />
+            </TabsContent>
+
+            {/* Features */}
+            <TabsContent value="features" className="mt-6">
+              <FeatureTogglesPanel />
+            </TabsContent>
+
+            {/* Webhooks */}
+            <TabsContent value="webhooks" className="mt-6">
+              <WebhookConfigPanel />
+            </TabsContent>
+
+            {/* Branding */}
+            <TabsContent value="branding" className="mt-6">
+              <BrandingPanel />
+            </TabsContent>
+
+            {/* Team */}
+            <TabsContent value="team" className="mt-6 space-y-4">
+              {/* Invite */}
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> Invite Team Member</CardTitle></CardHeader>
+                <CardContent>
+                  <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1">
+                      <Label className="text-xs mb-1 block">Email Address</Label>
+                      <Input
+                        type="email"
+                        placeholder="colleague@agency.com"
+                        value={inviteEmail}
+                        onChange={e => setInviteEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs mb-1 block">Role</Label>
+                      <Select value={inviteRole} onValueChange={setInviteRole}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button type="submit" disabled={inviting || !inviteEmail} className="gap-1.5">
+                        <Mail className="w-4 h-4" />
+                        {inviting ? "Inviting..." : "Send Invite"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Members list */}
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Team Members</CardTitle></CardHeader>
+                <CardContent>
+                  {userList.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No team members found.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {userList.map(u => (
+                        <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                          <div>
+                            <p className="text-sm font-medium">{u.full_name}</p>
+                            <p className="text-xs text-muted-foreground">{u.email}</p>
+                          </div>
+                          <span className="text-xs capitalize text-muted-foreground bg-muted px-2 py-0.5 rounded">{u.role}</span>
                         </div>
-                        <span className="text-xs capitalize text-muted-foreground bg-muted px-2 py-0.5 rounded">{u.role}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Billing */}
+            <TabsContent value="billing" className="mt-6">
+              <BillingUsagePanel />
+            </TabsContent>
+
+            {/* Audit Log */}
+            <TabsContent value="audit" className="mt-6">
+              <AuditLogPanel />
+            </TabsContent>
+          </>
         )}
       </Tabs>
     </div>
