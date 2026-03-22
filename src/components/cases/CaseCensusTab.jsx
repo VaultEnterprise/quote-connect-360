@@ -6,6 +6,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import CensusUploadModal from "@/components/census/CensusUploadModal";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
+import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel";
 
 /**
  * CaseCensusTab

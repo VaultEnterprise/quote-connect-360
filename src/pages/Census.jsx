@@ -138,14 +138,12 @@ export default function Census() {
             <RiskDashboard censusVersionId={viewingVersionId} caseId={selectedCaseId} />
           )}
 
-          {/* GradientAI Analysis */}
-          {viewingVersionId && (
+          {/* GradientAI Analysis — show for the latest version as soon as a case is selected */}
+          {filteredVersions.length > 0 && (
             <GradientAIAnalysisPanel 
-              censusVersionId={viewingVersionId} 
+              censusVersionId={viewingVersionId || filteredVersions[0].id} 
               caseId={selectedCaseId}
-              onAnalysisComplete={() => {
-                // Refetch members to show updated gradient data
-              }}
+              onAnalysisComplete={() => {}}
             />
           )}
 
