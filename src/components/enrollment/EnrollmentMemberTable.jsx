@@ -121,12 +121,15 @@ export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
               <TableHead className="text-xs py-2">Name</TableHead>
               <TableHead className="text-xs py-2">Coverage</TableHead>
               <TableHead className="text-xs py-2">Status</TableHead>
+              <TableHead className="text-xs py-2">DocuSign</TableHead>
               <TableHead className="text-xs py-2">Updated</TableHead>
               <TableHead className="text-xs py-2">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map(m => (
+            {filtered.map(m => {
+              const ee = employeeEnrollments.find(e => e.employee_email === m.email);
+              return (
               <TableRow key={m.id} className="text-xs">
                 <TableCell className="py-2">
                   <div className="font-medium">{m.first_name} {m.last_name}</div>
@@ -136,6 +139,16 @@ export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
                 <TableCell className="py-2">
                   <Badge className={`text-[10px] ${STATUS_COLORS[m.status] || ""}`}>{m.status}</Badge>
                   {m.waiver_reason && <div className="text-muted-foreground mt-0.5">{m.waiver_reason}</div>}
+                </TableCell>
+                <TableCell className="py-2">
+                  {ee ? (
+                    <DocuSignStatusBadge
+                      status={ee.docusign_status || "not_sent"}
+                      documentUrl={ee.docusign_document_url}
+                      showActions={true}
+                      onResend={() => handleResendDocuSign(ee)}
+                    />
+                  ) : <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell className="py-2 text-muted-foreground">{format(new Date(m.updated_date), "MMM d")}</TableCell>
                 <TableCell className="py-2">
@@ -163,10 +176,24 @@ export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
                           : <Send className="w-3 h-3" />}
                       </Button>
                     )}
+                    {ee && m.status === "enrolled" && (ee.docusign_status === "not_sent" || !ee.docusign_status) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        title="Send DocuSign"
+                        disabled={sendingId === `ds-${ee.id}`}
+                        onClick={() => handleResendDocuSign(ee)}
+                      >
+                        {sendingId === `ds-${ee.id}`
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <FileSignature className="w-3 h-3" />}
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </div>
