@@ -134,14 +134,16 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         description="Benefits operations overview"
-        actions={
-          <Link to="/cases/new">
-            <Button className="shadow-sm">
-              <Briefcase className="w-4 h-4 mr-2" /> New Case
-            </Button>
-          </Link>
-        }
       />
+
+      {/* Quick Actions */}
+      <QuickActions />
+
+      {/* Census gap alerts */}
+      <CensusGapAlert cases={cases} />
+
+      {/* Today's Priorities */}
+      <TodaysPriorities tasks={tasks} exceptions={exceptions} cases={cases} enrollments={enrollments} />
 
       {/* KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
