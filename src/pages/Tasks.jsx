@@ -389,6 +389,15 @@ export default function Tasks() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+        {/* My Tasks toggle */}
+        <button
+          onClick={() => { setMyTasksOnly(v => !v); setAssigneeFilter("all"); }}
+          className={`flex items-center gap-1.5 px-3 h-9 rounded-md border text-sm font-medium transition-colors shrink-0 ${myTasksOnly ? "bg-primary text-primary-foreground border-primary" : "bg-background border-input hover:bg-muted text-foreground"}`}
+        >
+          <Star className={`w-3.5 h-3.5 ${myTasksOnly ? "fill-current" : ""}`} />
+          My Tasks
+        </button>
+
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search tasks, employer, assignee..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
@@ -422,6 +431,16 @@ export default function Tasks() {
             {Object.entries(TYPE_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
           </SelectContent>
         </Select>
+        {/* Assignee filter — only show if there are multiple assignees */}
+        {assignees.length > 1 && !myTasksOnly && (
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger className="w-44 h-9"><SelectValue placeholder="All Assignees" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Assignees</SelectItem>
+              {assignees.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         <Select value={groupBy} onValueChange={setGroupBy}>
           <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
           <SelectContent>
