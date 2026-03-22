@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Mail } from "lucide-react";
+import { Search, Plus, Mail, Send, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,7 +22,36 @@ const STATUS_COLORS = {
 export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sendingId, setSendingId] = useState(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch EmployeeEnrollment records to get IDs for invite emails
+  const { data: employeeEnrollments = [] } = useQuery({
+    queryKey: ["employee-enrollments-window", enrollmentWindowId],
+    queryFn: () => base44.entities.EmployeeEnrollment.filter({ enrollment_window_id: enrollmentWindowId }),
+    enabled: !!enrollmentWindowId,
+  });
+
+  const handleSendInvite = async (member) => {
+    // Find the corresponding EmployeeEnrollment
+    const ee = employeeEnrollments.find(e => e.employee_email === member.email);
+    if (!ee) {
+      toast({ title: "No enrollment record", description: "This member doesn't have an EmployeeEnrollment record with an access token.", variant: "destructive" });
+      return;
+    }
+    setSendingId(member.id);
+    try {
+      const res = await base44.functions.invoke("sendEnrollmentInvite", { enrollment_id: ee.id });
+      if (res.data?.error) throw new Error(res.data.error);
+      toast({ title: "Invite sent!", description: `Email sent to ${member.email}` });
+      updateStatus.mutate({ id: member.id, status: "invited" });
+    } catch (err) {
+      toast({ title: "Send failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["enrollment-members", enrollmentWindowId],
@@ -95,15 +125,31 @@ export default function EnrollmentMemberTable({ enrollmentWindowId, caseId }) {
                 </TableCell>
                 <TableCell className="py-2 text-muted-foreground">{format(new Date(m.updated_date), "MMM d")}</TableCell>
                 <TableCell className="py-2">
-                  <Select value={m.status} onValueChange={v => updateStatus.mutate({ id: m.id, status: v })}>
-                    <SelectTrigger className="h-6 w-24 text-[10px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="invited">Invited</SelectItem>
-                      <SelectItem value="enrolled">Enrolled</SelectItem>
-                      <SelectItem value="waived">Waived</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1.5">
+                    <Select value={m.status} onValueChange={v => updateStatus.mutate({ id: m.id, status: v })}>
+                      <SelectTrigger className="h-6 w-24 text-[10px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="invited">Invited</SelectItem>
+                        <SelectItem value="enrolled">Enrolled</SelectItem>
+                        <SelectItem value="waived">Waived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {m.email && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        title="Send invite email"
+                        disabled={sendingId === m.id}
+                        onClick={() => handleSendInvite(m)}
+                      >
+                        {sendingId === m.id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <Send className="w-3 h-3" />}
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
