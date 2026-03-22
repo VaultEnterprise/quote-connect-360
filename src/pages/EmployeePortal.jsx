@@ -101,9 +101,11 @@ function EmployeePortalContent() {
           </Card>
         )}
 
-        {/* FAQ Section */}
+        {/* Life event + help */}
+        <LifeEventCard />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <BenefitsGlossary />
+          <HelpContactCard />
         </div>
       </div>
     );
