@@ -23,22 +23,35 @@ import StatusBadge from "@/components/shared/StatusBadge";
  *   onToggleSelect — (id) => void
  */
 export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onToggleSelect }) {
+  const queryClient = useQueryClient();
+  const [showNotes, setShowNotes] = useState(false);
+
+  const updateStatus = useMutation({
+    mutationFn: (status) => base44.entities.RenewalCycle.update(renewal.id, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["renewals-all"] }),
+  });
+
   const daysUntilRenewal = renewal.renewal_date
     ? differenceInDays(new Date(renewal.renewal_date), new Date())
     : null;
 
+  const isPastDue = daysUntilRenewal !== null && daysUntilRenewal < 0 && renewal.status !== "completed";
+
   // Urgency tier
   let urgencyTier = null;
   let urgencyColor = null;
-  if (daysUntilRenewal !== null) {
+  if (isPastDue) {
+    urgencyTier = `${Math.abs(daysUntilRenewal)}d overdue`;
+    urgencyColor = "bg-red-200 text-red-800";
+  } else if (daysUntilRenewal !== null) {
     if (daysUntilRenewal <= 30) {
-      urgencyTier = "Due within 30 days";
+      urgencyTier = `${daysUntilRenewal}d left`;
       urgencyColor = "bg-red-100 text-red-700";
     } else if (daysUntilRenewal <= 60) {
-      urgencyTier = "Due within 60 days";
+      urgencyTier = `${daysUntilRenewal}d left`;
       urgencyColor = "bg-amber-100 text-amber-700";
     } else if (daysUntilRenewal <= 90) {
-      urgencyTier = "Due within 90 days";
+      urgencyTier = `${daysUntilRenewal}d left`;
       urgencyColor = "bg-yellow-100 text-yellow-700";
     }
   }
