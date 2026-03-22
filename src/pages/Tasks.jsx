@@ -196,13 +196,20 @@ export default function Tasks() {
   const [statusFilter, setStatusFilter] = useState("active");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [assigneeFilter, setAssigneeFilter] = useState("all");
+  const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [groupBy, setGroupBy] = useState("due_date"); // due_date | priority | case | status
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [collapsed, setCollapsed] = useState({});
   const [selected, setSelected] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+  }, []);
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks-all"],
