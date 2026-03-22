@@ -82,9 +82,10 @@ export default function EnrollmentWizard({
         acknowledged_at: new Date().toISOString(),
         completed_at: new Date().toISOString(),
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["my-enrollments"] });
-      isWaiving ? onWaive() : onComplete();
+      setSubmittedEnrollment(data);
+      setShowConfirmation(true);
     },
   });
 
