@@ -105,6 +105,7 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
   };
 
   return (
+  <>
     <Card className={`border-l-4 ${STATUS_BORDER[scenario.status] || "border-l-gray-300"} transition-all ${isSelected ? "ring-2 ring-primary/30 bg-primary/5" : "hover:shadow-md"}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
