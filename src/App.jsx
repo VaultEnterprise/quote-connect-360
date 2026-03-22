@@ -28,7 +28,7 @@ import EmployeeEnrollment from '@/pages/EmployeeEnrollment';
 import EmployeeBenefits from '@/pages/EmployeeBenefits';
 import EmployerPortal from '@/pages/EmployerPortal';
 import PolicyMatchAI from '@/pages/PolicyMatchAI';
-import IntegrationInfrastructure from '@/pages/IntegrationInfrastructure';
+import IntegrationInfrastructure from '@/pages/IntegrationInfrastructure.jsx';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
