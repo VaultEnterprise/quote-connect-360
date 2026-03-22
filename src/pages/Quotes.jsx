@@ -217,17 +217,7 @@ export default function Quotes() {
                 {expiringSoon.length} expiring soon
               </button>
             )}
-            {selectedIds.length >= 2 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCompareMode(v => !v)}
-                className={compareMode ? "bg-primary text-white hover:bg-primary/90" : ""}
-              >
-                <GitCompare className="w-3.5 h-3.5 mr-1.5" />
-                Compare ({selectedIds.length})
-              </Button>
-            )}
+
             <Button onClick={() => setShowNewScenario(true)}>
               <Plus className="w-4 h-4 mr-2" /> New Scenario
             </Button>
