@@ -19,12 +19,18 @@ import EventLogPanel from "@/components/infra/EventLogPanel";
 import { RefreshCw, Shield, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 
 const LAYERS = [
-  { id: "health", label: "Endpoint Health", shortLabel: "Health" },
-  { id: "retry", label: "Retry Middleware", shortLabel: "Retry" },
-  { id: "idempotency", label: "Idempotency", shortLabel: "Idempotency" },
-  { id: "logger", label: "Structured Logger", shortLabel: "Logger" },
-  { id: "secrets", label: "Secrets Provider", shortLabel: "Secrets" },
-  { id: "validators", label: "Payload Validators", shortLabel: "Validators" },
+  { id: "reference", label: "API Reference", shortLabel: "API Ref", group: "developer" },
+  { id: "auth", label: "Authentication", shortLabel: "Auth", group: "developer" },
+  { id: "keys", label: "API Keys", shortLabel: "API Keys", group: "developer" },
+  { id: "webhooks", label: "Webhooks", shortLabel: "Webhooks", group: "developer" },
+  { id: "events", label: "Event Log", shortLabel: "Event Log", group: "developer" },
+  { id: "models", label: "Data Models", shortLabel: "Data Models", group: "developer" },
+  { id: "health", label: "Endpoint Health", shortLabel: "Health", group: "ops" },
+  { id: "retry", label: "Retry Middleware", shortLabel: "Retry", group: "ops" },
+  { id: "idempotency", label: "Idempotency", shortLabel: "Idempotency", group: "ops" },
+  { id: "logger", label: "Structured Logger", shortLabel: "Logger", group: "ops" },
+  { id: "secrets", label: "Secrets Provider", shortLabel: "Secrets", group: "ops" },
+  { id: "validators", label: "Payload Validators", shortLabel: "Validators", group: "ops" },
 ];
 
 function OverallStatusBadge({ status }) {

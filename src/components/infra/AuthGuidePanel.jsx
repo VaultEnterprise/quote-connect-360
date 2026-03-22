@@ -55,9 +55,9 @@ export default function AuthGuidePanel() {
               { label: "Token Type", value: "Bearer (JWT)", Icon: Key },
               { label: "Header Name", value: "Authorization", Icon: Shield },
               { label: "Token TTL", value: "24 hours", Icon: CheckCircle2 },
-            ].map(({ label, value, Icon }) => (
+            ].map(({ label, value, Icon: ItemIcon }) => (
               <div key={label} className="p-3 rounded-lg bg-muted/40 text-center">
-                <Icon className="w-4 h-4 mx-auto text-primary mb-1" />
+                <ItemIcon className="w-4 h-4 mx-auto text-primary mb-1" />
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
                 <p className="text-sm font-semibold text-foreground">{value}</p>
               </div>
