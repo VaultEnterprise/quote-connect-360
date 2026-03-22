@@ -343,6 +343,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Enrollment Countdowns + Stalled Cases */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EnrollmentCountdowns enrollments={enrollments} />
+        <StalledCases cases={cases} />
+      </div>
+
       {/* Renewals row */}
       {renewals.length > 0 && (
         <Card>
