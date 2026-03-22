@@ -62,8 +62,35 @@ export default function BenefitsDashboard({ enrollment, onPrint }) {
                   </p>
                 )}
               </div>
+              <DocuSignStatusBadge status={docuStatus} documentUrl={enrollment.docusign_document_url} />
             </CardContent>
           </Card>
+        )}
+
+        {/* DocuSign action banner — shown if enrollment complete but not signed */}
+        {needsSignature && !showSigning && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileSignature className="w-5 h-5 text-yellow-700 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-yellow-900">Signature Required</p>
+                  <p className="text-xs text-yellow-700">Your enrollment form needs to be signed to be finalized.</p>
+                </div>
+              </div>
+              <Button size="sm" className="flex-shrink-0 gap-1.5" onClick={() => setShowSigning(true)}>
+                <FileSignature className="w-4 h-4" /> Sign Now
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {showSigning && (
+          <DocuSignSigningPane
+            enrollment={enrollment}
+            onSigned={() => setShowSigning(false)}
+            onSkip={() => setShowSigning(false)}
+          />
         )}
       </div>
 
