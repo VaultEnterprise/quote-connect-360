@@ -64,31 +64,40 @@ export default function IntegrationInfrastructure() {
       {/* Stack diagram */}
       <StackDiagram />
 
-      <Tabs defaultValue="health">
-        <TabsList className="bg-muted/50 flex-wrap h-auto gap-1">
-          {LAYERS.map(l => (
-            <TabsTrigger key={l.id} value={l.id} className="text-xs">{l.shortLabel}</TabsTrigger>
-          ))}
-        </TabsList>
+      <Tabs defaultValue="reference">
+        {/* Developer tabs */}
+        <div className="mb-1">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Developer</p>
+          <TabsList className="bg-muted/50 flex-wrap h-auto gap-1">
+            {LAYERS.filter(l => l.group === "developer").map(l => (
+              <TabsTrigger key={l.id} value={l.id} className="text-xs">{l.shortLabel}</TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+        {/* Ops tabs */}
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Runtime / Ops</p>
+          <TabsList className="bg-muted/50 flex-wrap h-auto gap-1">
+            {LAYERS.filter(l => l.group === "ops").map(l => (
+              <TabsTrigger key={l.id} value={l.id} className="text-xs">{l.shortLabel}</TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
+        <TabsContent value="reference" className="mt-4"><ApiReferencePanel /></TabsContent>
+        <TabsContent value="auth" className="mt-4"><AuthGuidePanel /></TabsContent>
+        <TabsContent value="keys" className="mt-4"><ApiKeysPanel /></TabsContent>
+        <TabsContent value="webhooks" className="mt-4"><WebhooksPanel /></TabsContent>
+        <TabsContent value="events" className="mt-4"><EventLogPanel /></TabsContent>
+        <TabsContent value="models" className="mt-4"><DataModelsPanel /></TabsContent>
         <TabsContent value="health" className="mt-4">
           <EndpointHealthPanel lastRefresh={lastRefresh} onStatusChange={setOverallStatus} />
         </TabsContent>
-        <TabsContent value="retry" className="mt-4">
-          <RetryMiddlewarePanel />
-        </TabsContent>
-        <TabsContent value="idempotency" className="mt-4">
-          <IdempotencyPanel />
-        </TabsContent>
-        <TabsContent value="logger" className="mt-4">
-          <StructuredLoggerPanel />
-        </TabsContent>
-        <TabsContent value="secrets" className="mt-4">
-          <SecretsProviderPanel />
-        </TabsContent>
-        <TabsContent value="validators" className="mt-4">
-          <PayloadValidatorPanel />
-        </TabsContent>
+        <TabsContent value="retry" className="mt-4"><RetryMiddlewarePanel /></TabsContent>
+        <TabsContent value="idempotency" className="mt-4"><IdempotencyPanel /></TabsContent>
+        <TabsContent value="logger" className="mt-4"><StructuredLoggerPanel /></TabsContent>
+        <TabsContent value="secrets" className="mt-4"><SecretsProviderPanel /></TabsContent>
+        <TabsContent value="validators" className="mt-4"><PayloadValidatorPanel /></TabsContent>
       </Tabs>
     </div>
   );
