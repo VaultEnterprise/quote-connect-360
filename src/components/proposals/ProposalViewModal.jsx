@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   CheckCircle, Send, Eye, XCircle, Building2, Calendar, Users,
-  DollarSign, FileText, Clock, Printer, ChevronRight, AlertTriangle
+  DollarSign, FileText, Clock, Printer, ChevronRight, AlertTriangle, ExternalLink
 } from "lucide-react";
 import { format, parseISO, isAfter, differenceInDays } from "date-fns";
 import SendProposalDialog from "@/components/proposals/SendProposalDialog";
@@ -345,7 +345,7 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
                 </>
               )}
               {proposal.status === "approved" && (
-                <Link to="/enrollment" onClick={onClose}>
+                <Link to={`/enrollment?case_id=${proposal.case_id}`} onClick={onClose}>
                   <Button size="sm" className="bg-green-600 hover:bg-green-700 gap-1">
                     <ChevronRight className="w-3.5 h-3.5" /> Proceed to Enrollment
                   </Button>
