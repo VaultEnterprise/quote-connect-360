@@ -18,6 +18,15 @@ import { differenceInDays } from "date-fns";
 import ExceptionKPIBar from "@/components/exceptions/ExceptionKPIBar";
 import ExceptionCard from "@/components/exceptions/ExceptionCard";
 import ExceptionDetailDrawer from "@/components/exceptions/ExceptionDetailDrawer";
+import ExceptionAnalyticsDashboard from "@/components/exceptions/ExceptionAnalyticsDashboard";
+import ExceptionAutomationRules from "@/components/exceptions/ExceptionAutomationRules";
+import ExceptionTriageAssistant from "@/components/exceptions/ExceptionTriageAssistant";
+import ExceptionWorkflowBoard from "@/components/exceptions/ExceptionWorkflowBoard";
+import ExceptionCommentThread from "@/components/exceptions/ExceptionCommentThread";
+import ExceptionBulkActionsPanel from "@/components/exceptions/ExceptionBulkActionsPanel";
+import ExceptionNotificationSettings from "@/components/exceptions/ExceptionNotificationSettings";
+import ExceptionFilterPresets from "@/components/exceptions/ExceptionFilterPresets";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function ResolveModal({ exception, open, onClose }) {
   const queryClient = useQueryClient();
@@ -249,23 +258,44 @@ export default function ExceptionQueue() {
     });
   };
 
+  const [viewMode, setViewMode] = useState("list"); // "list", "board", "analytics", "settings"
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <PageHeader
           title="Exception Queue"
           description={`${openCount} open exception${openCount !== 1 ? "s" : ""}`}
         />
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Log Exception
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={viewMode} onValueChange={setViewMode}>
+            <SelectTrigger className="w-32 h-9 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="list">List View</SelectItem>
+              <SelectItem value="board">Workflow Board</SelectItem>
+              <SelectItem value="analytics">Analytics</SelectItem>
+              <SelectItem value="settings">Settings</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Log Exception
+          </Button>
+        </div>
       </div>
 
-      {/* KPI Bar */}
-      <ExceptionKPIBar exceptions={exceptions} />
+      {/* View-specific content */}
+      {viewMode === "list" && (
+        <>
+          {/* KPI Bar */}
+          <ExceptionKPIBar exceptions={exceptions} />
 
-      {/* Filter bar */}
-      <div className="flex items-center gap-2 flex-wrap bg-muted/30 p-3 rounded-lg">
+          {/* Quick filter presets */}
+          <ExceptionFilterPresets onSelectPreset={(filters) => {}} />
+
+          {/* Filter bar */}
+          <div className="flex items-center gap-2 flex-wrap bg-muted/30 p-3 rounded-lg">
         <Input
           placeholder="Search by title or employer..."
           value={search}
@@ -338,70 +368,88 @@ export default function ExceptionQueue() {
         </Button>
       </div>
 
-      {/* Bulk actions */}
-      {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
-          <span className="text-sm font-medium text-blue-900">{selectedIds.size} selected</span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => bulkResolve.mutate()}
-              disabled={bulkResolve.isPending}
-            >
-              Bulk Resolve
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => bulkDismiss.mutate()}
-              disabled={bulkDismiss.isPending}
-            >
-              Bulk Dismiss
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs h-7 text-muted-foreground"
-              onClick={() => setSelectedIds(new Set())}
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
-      )}
+          {/* Bulk actions */}
+          {selectedIds.size > 0 && <ExceptionBulkActionsPanel selectedCount={selectedIds.size} />}
 
-      {/* Exception list */}
-      {sorted.length === 0 ? (
-        <EmptyState
-          icon={CheckCircle}
-          title={statusFilter === "open" ? "No Open Exceptions" : "No Exceptions Found"}
-          description="All clear! No exceptions match your current filters."
-        />
-      ) : (
-        <div className="space-y-2">
-          {sorted.map(ex => (
-            <ExceptionCard
-              key={ex.id}
-              exception={ex}
-              selected={selectedIds.has(ex.id)}
-              onToggleSelect={toggleSelect}
-              onResolve={setResolving}
-              onDismiss={(id) => dismiss.mutate(id)}
-              onAssignToMe={(id) => assignToMe.mutate(id)}
-              onDetail={setDetailException}
-              currentUserEmail={user?.email}
+          {/* Exception list */}
+          {sorted.length === 0 ? (
+            <EmptyState
+              icon={CheckCircle}
+              title={statusFilter === "open" ? "No Open Exceptions" : "No Exceptions Found"}
+              description="All clear! No exceptions match your current filters."
             />
-          ))}
-        </div>
+          ) : (
+            <div className="space-y-2">
+              {sorted.map(ex => (
+                <ExceptionCard
+                  key={ex.id}
+                  exception={ex}
+                  selected={selectedIds.has(ex.id)}
+                  onToggleSelect={toggleSelect}
+                  onResolve={setResolving}
+                  onDismiss={(id) => dismiss.mutate(id)}
+                  onAssignToMe={(id) => assignToMe.mutate(id)}
+                  onDetail={setDetailException}
+                  currentUserEmail={user?.email}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Modals */}
+      {/* Workflow Board View */}
+      {viewMode === "board" && (
+        <>
+          <ExceptionWorkflowBoard exceptions={exceptions} />
+        </>
+      )}
+
+      {/* Analytics View */}
+      {viewMode === "analytics" && (
+        <>
+          <ExceptionAnalyticsDashboard exceptions={exceptions} />
+          <ExceptionAutomationRules />
+        </>
+      )}
+
+      {/* Settings View */}
+      {viewMode === "settings" && (
+        <>
+          <Tabs defaultValue="automation">
+            <TabsList>
+              <TabsTrigger value="automation">Automation Rules</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            </TabsList>
+            <TabsContent value="automation" className="mt-4">
+              <ExceptionAutomationRules />
+            </TabsContent>
+            <TabsContent value="notifications" className="mt-4">
+              <ExceptionNotificationSettings />
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
+
+      {/* Modals & Drawers */}
       {resolving && <ResolveModal exception={resolving} open={!!resolving} onClose={() => setResolving(null)} />}
       <CreateExceptionModal open={showCreate} onClose={() => setShowCreate(false)} />
-      {detailException && <ExceptionDetailDrawer exception={detailException} open={!!detailException} onClose={() => setDetailException(null)} />}
+      {detailException && (
+        <div className="fixed inset-0 z-50">
+          <ExceptionDetailDrawer
+            exception={detailException}
+            open={!!detailException}
+            onClose={() => setDetailException(null)}
+          />
+          {/* Additional panels in drawer */}
+          {detailException && (
+            <div className="fixed right-0 top-0 h-screen w-96 bg-white border-l border-border overflow-y-auto p-4 space-y-6 hidden lg:block">
+              <ExceptionTriageAssistant exception={detailException} />
+              <ExceptionCommentThread />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
