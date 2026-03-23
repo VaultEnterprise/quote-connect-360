@@ -376,6 +376,13 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Team + Enrollment Forecast + Cycle Timing */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TeamWorkload cases={cases} tasks={tasks} />
+        <EnrollmentForecast enrollments={enrollments} />
+        <CycleTiming cases={cases} />
+      </div>
+
       {/* Enrollment Countdowns + Stalled Cases */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <EnrollmentCountdowns enrollments={enrollments} />
