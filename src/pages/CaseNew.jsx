@@ -54,7 +54,7 @@ export default function CaseNew() {
 
   const createCase = useMutation({
     mutationFn: async (data) => {
-      const agencyId   = agencies[0]?.id || "default";
+      const agencyId   = agencies[0]?.id || "";
       const employer   = employers.find(e => e.id === data.employer_group_id);
       const caseNumber = `BC-${Date.now().toString(36).toUpperCase()}`;
       return base44.entities.BenefitCase.create({

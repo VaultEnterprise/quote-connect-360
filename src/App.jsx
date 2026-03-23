@@ -85,7 +85,7 @@ const AuthenticatedApp = () => {
         <Route path="/integration-infra" element={<IntegrationInfrastructure />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<HelpCenter />} />
-        <Route path="/help-admin" element={<HelpAdmin />} />
+        <Route path="/help-admin" element={user?.role === "admin" ? <HelpAdmin /> : <PageNotFound />} />
         <Route path="/help-dashboard" element={<HelpDashboard />} />
         <Route path="/help-coverage" element={<HelpCoverageReport />} />
         <Route path="/help-analytics" element={<HelpSearchAnalytics />} />
