@@ -11,9 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 import {
   Search, ChevronRight, ChevronDown, Edit2, Eye, EyeOff, Trash2,
-  Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, RefreshCw, Play
+  Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, RefreshCw, Play,
+  LayoutDashboard, FileBarChart, TrendingUp, BookOpen
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ReactMarkdown from "react-markdown";
@@ -211,6 +213,14 @@ export default function HelpAdmin() {
           </Button>
         }
       />
+
+      {/* Quick nav to other admin pages */}
+      <div className="flex flex-wrap gap-2">
+        <Link to="/help-dashboard"><Button size="sm" variant="outline" className="gap-1 text-xs"><LayoutDashboard className="w-3 h-3" /> Help Dashboard</Button></Link>
+        <Link to="/help-coverage"><Button size="sm" variant="outline" className="gap-1 text-xs"><FileBarChart className="w-3 h-3" /> Coverage Report</Button></Link>
+        <Link to="/help-analytics"><Button size="sm" variant="outline" className="gap-1 text-xs"><TrendingUp className="w-3 h-3" /> Search Analytics</Button></Link>
+        <Link to="/help-manual-manager"><Button size="sm" variant="outline" className="gap-1 text-xs"><BookOpen className="w-3 h-3" /> Manual Manager</Button></Link>
+      </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
