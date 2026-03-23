@@ -28,6 +28,10 @@ import CaseCloseModal    from "@/components/cases/CaseCloseModal";
 import StageAdvanceModal from "@/components/cases/StageAdvanceModal";
 import DocumentsTab      from "@/components/cases/DocumentsTab";
 import ActivityTab       from "@/components/cases/ActivityTab";
+import StageValidationWarnings from "@/components/cases/StageValidationWarnings";
+import DependencyCheckPanel from "@/components/cases/DependencyCheckPanel";
+import CloneCaseModal    from "@/components/cases/CloneCaseModal";
+import AuditTrailViewer  from "@/components/shared/AuditTrailViewer";
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 import AIAssistant from "@/components/ai/AIAssistant";
