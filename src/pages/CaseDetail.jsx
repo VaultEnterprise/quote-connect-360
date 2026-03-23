@@ -244,7 +244,25 @@ export default function CaseDetail() {
 
         {/* Overview */}
         <TabsContent value="overview" className="mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
+            {/* Validation warnings */}
+            {nextStage && (
+              <StageValidationWarnings
+                caseData={caseData}
+                nextStage={nextStage}
+                censusVersions={censusVersions}
+                scenarios={scenarios}
+                tasks={tasks}
+              />
+            )}
+
+            {/* Dependency check for closing */}
+            {caseData.stage !== "closed" && (
+              <DependencyCheckPanel tasks={tasks} caseData={caseData} />
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
             <div className="lg:col-span-2 space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <CaseInfoCard label="Employee Count"    value={caseData.employee_count || "—"}                                           icon={Users} />
