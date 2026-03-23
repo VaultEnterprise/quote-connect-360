@@ -216,7 +216,7 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
           </TabsList>
 
           {productTypes.map(type => (
-            <TabsContent key={type} value={type} className="mt-4 space-y-3">
+            <TabsContent key={type} value={type} className="mt-3 sm:mt-4 space-y-2 sm:space-y-3">
               {grouped[type].map(plan => (
                 <PlanCard
                   key={plan.id}
