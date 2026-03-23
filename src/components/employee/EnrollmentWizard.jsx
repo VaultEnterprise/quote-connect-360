@@ -220,7 +220,7 @@ export default function EnrollmentWizard({
       <Progress value={progress} className="h-1" />
 
       {/* Step content */}
-      <div className="min-h-[400px]">
+      <EnrollmentStepTransition stepId={currentStep.id}>
         {/* Welcome step */}
         {currentStep.id === "welcome" && (
           <Card>
