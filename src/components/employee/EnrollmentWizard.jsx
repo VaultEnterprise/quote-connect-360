@@ -232,7 +232,7 @@ export default function EnrollmentWizard({
         {/* Welcome step */}
         {currentStep.id === "welcome" && (
           <Card>
-            <CardContent className="p-6 text-center space-y-5">
+            <CardContent className="p-4 sm:p-6 text-center space-y-4 sm:space-y-5">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-8 h-8 text-primary" />
               </div>
