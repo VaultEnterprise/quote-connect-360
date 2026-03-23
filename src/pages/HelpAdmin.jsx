@@ -198,13 +198,17 @@ export default function HelpAdmin() {
   const runManualSeed = async () => {
     setSeedingManual(true);
     try {
-      const [r1, r2] = await Promise.all([
+      const [r1, r2, r3, r4, r5] = await Promise.all([
         base44.functions.invoke("seedApplicationManualPart1", {}),
         base44.functions.invoke("seedApplicationManualPart2", {}),
+        base44.functions.invoke("seedManualPageGuides", {}),
+        base44.functions.invoke("seedManualFAQBank", {}),
+        base44.functions.invoke("seedManualArchitectureDoc", {}),
       ]);
       queryClient.invalidateQueries({ queryKey: ["help-manual-topics"] });
-      const total = (r1.data?.created || 0) + (r2.data?.created || 0) + (r1.data?.updated || 0) + (r2.data?.updated || 0);
-      toast({ title: "Full Manual Seeded", description: `${total} chapters seeded (Parts 1 & 2 complete). HelpAI now has the full operations manual indexed.` });
+      const totalCreated = [r1,r2,r3,r4,r5].reduce((s,r) => s + (r.data?.created || 0), 0);
+      const totalUpdated = [r1,r2,r3,r4,r5].reduce((s,r) => s + (r.data?.updated || 0), 0);
+      toast({ title: "Full Manual Seeded ✓", description: `${totalCreated} created, ${totalUpdated} updated across all 5 seed packs. HelpAI knowledge base is fully indexed.` });
     } catch (e) {
       toast({ title: "Manual Seed Error", description: e.message, variant: "destructive" });
     } finally {
