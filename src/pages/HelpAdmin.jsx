@@ -49,6 +49,7 @@ export default function HelpAdmin() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [seedingDashboard, setSeedingDashboard] = useState(false);
   const [preview, setPreview] = useState(false);
 
   const { data: contents = [] } = useQuery({
