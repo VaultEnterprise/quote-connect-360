@@ -236,9 +236,9 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
          /* Single product — no tabs needed */
          <Card>
            <CardHeader>
-             <CardTitle>Choose Your Plan</CardTitle>
+             <CardTitle className="text-lg sm:text-xl">Choose Your Plan</CardTitle>
            </CardHeader>
-           <CardContent className="space-y-3">
+           <CardContent className="space-y-2 sm:space-y-3">
              {grouped[activeTab]?.map(plan => (
                <PlanCard
                  key={plan.id}
