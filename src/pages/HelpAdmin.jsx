@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +16,8 @@ import {
   Search, ChevronRight, ChevronDown, Edit2, Eye, EyeOff, Trash2,
   Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, Play,
   LayoutDashboard, FileBarChart, TrendingUp, BookOpen, Database,
-  X, Target, MessageSquare, Zap, Settings2, RefreshCw, Plus
+  X, Target, MessageSquare, Zap, Settings2, RefreshCw, Plus,
+  Activity, ShieldAlert
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ReactMarkdown from "react-markdown";
@@ -29,6 +30,10 @@ import BulkAIGeneratePanel from "@/components/help-admin/BulkAIGeneratePanel";
 import ManualTopicsTab from "@/components/help-admin/ManualTopicsTab";
 import TopicEditorModal from "@/components/help-admin/TopicEditorModal";
 import AIReviewTab from "@/components/help-admin/AIReviewTab";
+import HelpConsoleKPIBar from "@/components/help-admin/HelpConsoleKPIBar";
+import RecentActivityFeed from "@/components/help-admin/RecentActivityFeed";
+import OrphanedContentPanel from "@/components/help-admin/OrphanedContentPanel";
+import ContentQualityScore from "@/components/help-admin/ContentQualityScore";
 
 const MODULE_LABELS = {
   DASHBOARD:"Dashboard", CASES:"Cases", CENSUS:"Census", QUOTES:"Quotes",
@@ -58,6 +63,8 @@ export default function HelpAdmin() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
+  const [bulkAIModule, setBulkAIModule] = useState(null);
 
   // Manual topic editor modal
   const [topicEditorOpen, setTopicEditorOpen] = useState(false);
@@ -71,6 +78,16 @@ export default function HelpAdmin() {
   const { data: aiLogs = [] } = useQuery({
     queryKey: ["helpai-logs"],
     queryFn: () => base44.entities.HelpAIQuestionLog.filter({ requires_admin_review: true }, "-created_date", 50),
+  });
+
+  const { data: allAiLogs = [] } = useQuery({
+    queryKey: ["helpai-logs-kpi"],
+    queryFn: () => base44.entities.HelpAIQuestionLog.list("-created_date", 200),
+  });
+
+  const { data: topics = [] } = useQuery({
+    queryKey: ["help-manual-topics-kpi"],
+    queryFn: () => base44.entities.HelpManualTopic.list("sort_order", 300),
   });
 
   const contentMap = useMemo(() =>
@@ -96,6 +113,7 @@ export default function HelpAdmin() {
       queryClient.invalidateQueries({ queryKey: ["help-contents-all"] });
       toast({ title: "Saved", description: `Content for "${editingTarget.target_label}" saved.` });
       setEditingTarget(null);
+      setTab("coverage");
     },
   });
 
@@ -180,9 +198,12 @@ export default function HelpAdmin() {
     return HELP_TARGETS.filter(t =>
       t.target_label.toLowerCase().includes(q) ||
       t.target_code.toLowerCase().includes(q) ||
-      t.module_code.toLowerCase().includes(q)
-    ).slice(0, 30);
-  }, [search]);
+      t.module_code.toLowerCase().includes(q) ||
+      contentMap[t.target_code]?.help_title?.toLowerCase().includes(q) ||
+      contentMap[t.target_code]?.short_help_text?.toLowerCase().includes(q) ||
+      contentMap[t.target_code]?.search_keywords?.toLowerCase().includes(q)
+    ).slice(0, 40);
+  }, [search, contentMap]);
 
   const moduleGroups = useMemo(() => {
     if (!selectedModule) return {};
@@ -206,20 +227,48 @@ export default function HelpAdmin() {
   const openTopicEditor = (topic) => { setEditingTopic(topic || null); setTopicEditorOpen(true); };
   const closeTopicEditor = () => { setEditingTopic(null); setTopicEditorOpen(false); };
 
+  // When bulk AI module is set, navigate to bulk_ai tab with pre-set module
+  const handleBulkAIModule = (mod) => {
+    setBulkAIModule(mod);
+    setTab("bulk_ai");
+  };
+
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Help Management Console"
-        description="Manage all help content, manual topics, AI knowledge base, and documentation quality"
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <PageHeader
+          title="Help Management Console"
+          description="Manage all help content, manual topics, AI knowledge base, and documentation quality"
+        />
+        <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShowActivity(p => !p)}>
+          <Activity className="w-3.5 h-3.5" /> {showActivity ? "Hide" : "Activity"}
+        </Button>
+      </div>
+
+      {/* System health KPI bar */}
+      <HelpConsoleKPIBar
+        contentMap={contentMap}
+        aiLogs={allAiLogs}
+        topics={topics}
+        onNavigate={(t) => setTab(t)}
       />
+
+      {/* Activity feed (toggleable) */}
+      {showActivity && (
+        <RecentActivityFeed onClose={() => setShowActivity(false)} />
+      )}
+
+      {/* Orphaned content warning */}
+      <OrphanedContentPanel contentMap={contentMap} />
 
       {/* Navigation strip to related admin pages */}
       <div className="flex flex-wrap gap-2">
-        <Link to="/help-dashboard"><Button size="sm" variant="outline" className="gap-1 text-xs"><LayoutDashboard className="w-3 h-3" /> Help Dashboard</Button></Link>
-        <Link to="/help-coverage"><Button size="sm" variant="outline" className="gap-1 text-xs"><FileBarChart className="w-3 h-3" /> Coverage Report</Button></Link>
-        <Link to="/help-analytics"><Button size="sm" variant="outline" className="gap-1 text-xs"><TrendingUp className="w-3 h-3" /> Search Analytics</Button></Link>
-        <Link to="/help-target-registry"><Button size="sm" variant="outline" className="gap-1 text-xs"><BarChart2 className="w-3 h-3" /> Target Registry</Button></Link>
-        <Link to="/help"><Button size="sm" variant="outline" className="gap-1 text-xs"><Eye className="w-3 h-3" /> View Help Center</Button></Link>
+        <Link to="/help-dashboard"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><LayoutDashboard className="w-3 h-3" /> Help Dashboard</Button></Link>
+        <Link to="/help-coverage"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><FileBarChart className="w-3 h-3" /> Coverage Report</Button></Link>
+        <Link to="/help-analytics"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><TrendingUp className="w-3 h-3" /> Search Analytics</Button></Link>
+        <Link to="/help-target-registry"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><BarChart2 className="w-3 h-3" /> Target Registry</Button></Link>
+        <Link to="/help"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><Eye className="w-3 h-3" /> View Help Center</Button></Link>
+        <Link to="/help-manual-manager"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><BookOpen className="w-3 h-3" /> Manual Manager</Button></Link>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -244,6 +293,7 @@ export default function HelpAdmin() {
             contentMap={contentMap}
             onEditTarget={(t) => openEditor(t)}
             onBrowseModule={(mod) => { setSelectedModule(mod); setTab("browse"); }}
+            onBulkAIModule={handleBulkAIModule}
           />
         </TabsContent>
 
@@ -253,10 +303,16 @@ export default function HelpAdmin() {
             <>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Quick search targets by label, code, or module…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+                <Input
+                  placeholder="Search targets by label, code, module, or content text…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
               </div>
               {search ? (
                 <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">{searchFiltered.length} result{searchFiltered.length !== 1 ? "s" : ""} — searching labels, codes, titles, keywords and short help</p>
                   {searchFiltered.length === 0 && <p className="text-sm text-muted-foreground">No targets found.</p>}
                   {searchFiltered.map(t => {
                     const c = contentMap[t.target_code];
@@ -264,13 +320,15 @@ export default function HelpAdmin() {
                       <Card key={t.target_code} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-3 flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
+                            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                               <span className="text-sm font-medium">{t.target_label}</span>
                               <Badge variant="outline" className="text-[8px]">{t.module_code}</Badge>
                               <Badge variant="outline" className="text-[8px]">{t.component_type}</Badge>
                               {!c && <Badge className="text-[8px] bg-amber-100 text-amber-700">Missing</Badge>}
+                              {c?.content_status === "active" && <Badge className="text-[8px] bg-emerald-100 text-emerald-700">Active</Badge>}
                             </div>
                             <p className="text-[10px] font-mono text-muted-foreground">{t.target_code}</p>
+                            {c?.short_help_text && <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1 italic">{c.short_help_text}</p>}
                           </div>
                           <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openEditor(t)}>
                             <Edit2 className="w-3 h-3" /> {c ? "Edit" : "Add Help"}
@@ -288,7 +346,7 @@ export default function HelpAdmin() {
                     const modMissing = targets.filter(t => !contentMap[t.target_code]).length;
                     const pct = Math.round((modActive / targets.length) * 100);
                     return (
-                      <Card key={mod} className="cursor-pointer hover:border-primary/50 transition-all" onClick={() => setSelectedModule(mod)}>
+                      <Card key={mod} className="cursor-pointer hover:border-primary/50 transition-all group" onClick={() => setSelectedModule(mod)}>
                         <CardContent className="p-4">
                           <p className="font-semibold text-sm">{MODULE_LABELS[mod] || mod}</p>
                           <p className="text-[11px] text-muted-foreground">{targets.length} targets</p>
@@ -302,6 +360,12 @@ export default function HelpAdmin() {
                               : <Badge className="text-[8px] bg-emerald-100 text-emerald-700">Complete</Badge>
                             }
                           </div>
+                          {modMissing > 0 && (
+                            <Button size="sm" variant="ghost" className="w-full mt-2 h-6 text-[10px] gap-1 text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => { e.stopPropagation(); handleBulkAIModule(mod); }}>
+                              <Sparkles className="w-3 h-3" /> Generate {modMissing} missing
+                            </Button>
+                          )}
                         </CardContent>
                       </Card>
                     );
@@ -311,11 +375,17 @@ export default function HelpAdmin() {
             </>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button onClick={() => setSelectedModule(null)} className="text-primary hover:underline text-sm">← All Modules</button>
                 <span className="text-muted-foreground">/</span>
                 <span className="font-semibold text-sm">{MODULE_LABELS[selectedModule]}</span>
-                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 ml-auto" onClick={() => setSelectedModule(null)}><X className="w-3 h-3" /></Button>
+                <div className="ml-auto flex gap-2">
+                  <Button size="sm" variant="outline" className="h-7 gap-1 text-xs text-purple-600 border-purple-200"
+                    onClick={() => handleBulkAIModule(selectedModule)}>
+                    <Sparkles className="w-3 h-3" /> Generate Missing for Module
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setSelectedModule(null)}><X className="w-3 h-3" /></Button>
+                </div>
               </div>
               {Object.entries(moduleGroups).map(([pageCode, targets]) => {
                 const activeInPage = targets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
@@ -347,6 +417,9 @@ export default function HelpAdmin() {
                                 {c?.content_status === "draft" && <Badge className="text-[8px] bg-amber-100 text-amber-700 flex-shrink-0">Draft</Badge>}
                                 {c?.content_status === "active" && <Badge className="text-[8px] bg-emerald-100 text-emerald-700 flex-shrink-0">Active</Badge>}
                                 {c?.content_status === "review_required" && <Badge className="text-[8px] bg-orange-100 text-orange-700 flex-shrink-0">Review</Badge>}
+                                {c?.short_help_text && (
+                                  <span className="text-[9px] text-muted-foreground italic truncate hidden lg:block max-w-40">{c.short_help_text}</span>
+                                )}
                               </div>
                               <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Edit" onClick={() => openEditor(t)}>
@@ -387,7 +460,7 @@ export default function HelpAdmin() {
 
         {/* ── BULK AI GENERATE ────────────────────────────────────────────── */}
         <TabsContent value="bulk_ai" className="mt-5">
-          <BulkAIGeneratePanel contentMap={contentMap} />
+          <BulkAIGeneratePanel contentMap={contentMap} presetModule={bulkAIModule} />
         </TabsContent>
 
         {/* ── SEED DATA ───────────────────────────────────────────────────── */}
@@ -401,18 +474,19 @@ export default function HelpAdmin() {
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
-                  <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setEditingTarget(null)}>
+                  <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setTab("coverage")}>
                     <X className="w-3 h-3" /> Close Editor
                   </Button>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{editingTarget.target_label}</span>
                       <Badge variant="outline" className="text-[9px]">{editingTarget.component_type}</Badge>
+                      <Badge variant="outline" className="text-[9px]">{editingTarget.module_code}</Badge>
                     </div>
                     <code className="text-[10px] font-mono text-muted-foreground">{editingTarget.target_code}</code>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button size="sm" variant="outline" onClick={() => setPreview(!preview)} className="gap-1">
                     <Eye className="w-3.5 h-3.5" /> {preview ? "Edit" : "Preview"}
                   </Button>
@@ -425,6 +499,9 @@ export default function HelpAdmin() {
                 </div>
               </div>
 
+              {/* Quality score */}
+              <ContentQualityScore form={form} />
+
               {preview ? (
                 <Card className="max-w-xl">
                   <CardContent className="p-5 space-y-4">
@@ -433,6 +510,7 @@ export default function HelpAdmin() {
                     {form.detailed_help_text && <div className="prose prose-sm max-w-none text-sm"><ReactMarkdown>{form.detailed_help_text}</ReactMarkdown></div>}
                     {form.expected_user_action_text && <div className="rounded-lg border p-3"><p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">What to do</p><p className="text-sm">{form.expected_user_action_text}</p></div>}
                     {form.warnings_text && <div className="rounded-lg bg-amber-50 border border-amber-200 p-3"><p className="text-xs font-semibold text-amber-700 mb-1">⚠ Warning</p><p className="text-sm text-amber-800">{form.warnings_text}</p></div>}
+                    {form.examples_text && <div className="rounded-lg border p-3"><p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Examples</p><p className="text-sm">{form.examples_text}</p></div>}
                   </CardContent>
                 </Card>
               ) : (
@@ -459,15 +537,28 @@ export default function HelpAdmin() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div>
+                      <Label className="text-xs">Role Visibility</Label>
+                      <Select value={form.role_visibility} onValueChange={v => setForm(p => ({ ...p, role_visibility: v }))}>
+                        <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Users</SelectItem>
+                          <SelectItem value="admin">Admin Only</SelectItem>
+                          <SelectItem value="user">Regular Users</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="space-y-3">
-                    <div><Label className="text-xs">Detailed Help Text (Markdown) *</Label><Textarea value={form.detailed_help_text} onChange={e => setForm(p => ({ ...p, detailed_help_text: e.target.value }))} className="mt-1 text-xs h-56 font-mono" /></div>
+                    <div>
+                      <Label className="text-xs">Detailed Help Text (Markdown) *</Label>
+                      <Textarea value={form.detailed_help_text} onChange={e => setForm(p => ({ ...p, detailed_help_text: e.target.value }))} className="mt-1 text-xs h-56 font-mono" />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{form.detailed_help_text.length} chars</p>
+                    </div>
                     <div><Label className="text-xs">Feature Capabilities</Label><Textarea value={form.feature_capabilities_text} onChange={e => setForm(p => ({ ...p, feature_capabilities_text: e.target.value }))} className="mt-1 text-xs h-14" /></div>
                     <div><Label className="text-xs">Process Meaning</Label><Textarea value={form.process_meaning_text} onChange={e => setForm(p => ({ ...p, process_meaning_text: e.target.value }))} className="mt-1 text-xs h-14" /></div>
                     <div><Label className="text-xs">Related Topics (comma-separated)</Label><Input value={form.related_topics_text} onChange={e => setForm(p => ({ ...p, related_topics_text: e.target.value }))} className="mt-1 text-xs" /></div>
                     <div><Label className="text-xs">Search Keywords (comma-separated)</Label><Input value={form.search_keywords} onChange={e => setForm(p => ({ ...p, search_keywords: e.target.value }))} className="mt-1 text-xs" /></div>
-                    {/* Live char counts */}
-                    <p className="text-[10px] text-muted-foreground">{form.detailed_help_text.length} chars in detailed text</p>
                   </div>
                 </div>
               )}
