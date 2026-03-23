@@ -328,54 +328,75 @@ export default function Employers() {
             const isRenewing = daysToRenewal !== null && daysToRenewal >= 0 && daysToRenewal <= 60;
             const caseCount = caseCountMap[eg.id] || 0;
             const firstCaseId = activeCaseMap[eg.id];
+            const isSelected = selectedEmployers.some(e => e.id === eg.id);
 
             return (
-              <Card key={eg.id} className={`hover:shadow-md transition-all ${isRenewing ? "border-amber-300" : ""}`}>
+              <Card key={eg.id} className={`hover:shadow-md transition-all ${isRenewing ? "border-amber-300" : ""} ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}`}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold">{eg.name}</p>
-                          {eg.dba_name && <span className="text-xs text-muted-foreground">dba {eg.dba_name}</span>}
-                          {isRenewing && (
-                            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
-                              <AlertTriangle className="w-2.5 h-2.5" /> Renews in {daysToRenewal}d
-                            </span>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedEmployers(prev => [...prev, eg]);
+                        } else {
+                          setSelectedEmployers(prev => prev.filter(e => e.id !== eg.id));
+                        }
+                      }}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => setViewingEmployer(eg)}
+                              className="text-sm font-semibold text-left hover:underline flex items-center gap-2"
+                            >
+                              {eg.name}
+                              <Eye className="w-3 h-3 text-muted-foreground" />
+                            </button>
+                            {eg.dba_name && <span className="text-xs text-muted-foreground">dba {eg.dba_name}</span>}
+                            {isRenewing && (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
+                                <AlertTriangle className="w-2.5 h-2.5" /> Renews in {daysToRenewal}d
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
+                            {eg.industry && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{eg.industry}</span>}
+                            {(eg.city || eg.state) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[eg.city, eg.state].filter(Boolean).join(", ")}</span>}
+                            {eg.employee_count && <span className="flex items-center gap-1"><Users className="w-3 h-3" />{eg.employee_count} employees</span>}
+                            {eg.primary_contact_email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{eg.primary_contact_email}</span>}
+                            {eg.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{eg.phone}</span>}
+                            {eg.sic_code && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">SIC {eg.sic_code}</span>}
+                          </div>
+                          {eg.primary_contact_name && (
+                            <p className="text-xs text-muted-foreground mt-0.5">Contact: {eg.primary_contact_name}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
-                          {eg.industry && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{eg.industry}</span>}
-                          {(eg.city || eg.state) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{[eg.city, eg.state].filter(Boolean).join(", ")}</span>}
-                          {eg.employee_count && <span className="flex items-center gap-1"><Users className="w-3 h-3" />{eg.employee_count} employees</span>}
-                          {eg.primary_contact_email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{eg.primary_contact_email}</span>}
-                          {eg.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{eg.phone}</span>}
-                          {eg.sic_code && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">SIC {eg.sic_code}</span>}
-                        </div>
-                        {eg.primary_contact_name && (
-                          <p className="text-xs text-muted-foreground mt-0.5">Contact: {eg.primary_contact_name}</p>
-                        )}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {caseCount > 0 && (
-                        firstCaseId ? (
-                          <Link to={`/cases/${firstCaseId}`}>
-                            <Badge variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors">
-                              {caseCount} case{caseCount !== 1 ? "s" : ""} →
-                            </Badge>
-                          </Link>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px]">{caseCount} case{caseCount !== 1 ? "s" : ""}</Badge>
-                        )
-                      )}
-                      <StatusBadge status={eg.status} />
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingEmployer(eg); setShowModal(true); }}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <QuickCreateCase employer={eg} />
+                        {caseCount > 0 && (
+                          firstCaseId ? (
+                            <Link to={`/cases/${firstCaseId}`}>
+                              <Badge variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors">
+                                {caseCount} case{caseCount !== 1 ? "s" : ""} →
+                              </Badge>
+                            </Link>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px]">{caseCount} case{caseCount !== 1 ? "s" : ""}</Badge>
+                          )
+                        )}
+                        <StatusBadge status={eg.status} />
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingEmployer(eg); setShowModal(true); }}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
