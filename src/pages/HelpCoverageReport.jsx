@@ -26,35 +26,31 @@ export default function HelpCoverageReport() {
     queryFn: () => base44.entities.HelpContent.list("-updated_date", 500),
   });
 
-  // dummy to satisfy syntax — already declared above
-  const _ = null; void _;
-  });
-
   if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
 
   const contentMap = useMemo(() => contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}), [contents]);
 
   const total = HELP_TARGETS.length;
-  const activeCount = HELP_TARGETS.filter(t => contentMap[t.target_code]?.status === "active").length;
+  const activeCount = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "active").length;
   const missingTargets = HELP_TARGETS.filter(t => !contentMap[t.target_code]);
-  const draftTargets = HELP_TARGETS.filter(t => contentMap[t.target_code]?.status === "draft");
-  const shortHelpTargets = contents.filter(c => c.status === "active" && (c.short_help || "").length < 30);
-  const noKeywordTargets = contents.filter(c => c.status === "active" && (!c.search_keywords || c.search_keywords.length === 0));
+  const draftTargets = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "draft");
+  const shortHelpTargets = contents.filter(c => c.content_status === "active" && (c.short_help_text || "").length < 30);
+  const noKeywordTargets = contents.filter(c => c.content_status === "active" && (!c.search_keywords || c.search_keywords.length === 0));
 
   const modStats = MODULES.map(mod => {
     const targets = HELP_TARGETS.filter(t => t.module_code === mod);
-    const active = targets.filter(t => contentMap[t.target_code]?.status === "active").length;
+    const active = targets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
     const missing = targets.filter(t => !contentMap[t.target_code]).length;
-    const draft = targets.filter(t => contentMap[t.target_code]?.status === "draft").length;
+    const draft = targets.filter(t => contentMap[t.target_code]?.content_status === "draft").length;
     const pct = Math.round((active / targets.length) * 100);
     return { mod, total: targets.length, active, missing, draft, pct };
   });
 
   const typeStats = {};
   for (const t of HELP_TARGETS) {
-    if (!typeStats[t.component_type]) typeStats[t.component_type] = { total: 0, active: 0 };
-    typeStats[t.component_type].total++;
-    if (contentMap[t.target_code]?.status === "active") typeStats[t.component_type].active++;
+    if (!typeStats[t.target_type]) typeStats[t.target_type] = { total: 0, active: 0 };
+    typeStats[t.target_type].total++;
+    if (contentMap[t.target_code]?.content_status === "active") typeStats[t.target_type].active++;
   }
 
   const exportCSV = () => {
@@ -183,7 +179,7 @@ export default function HelpCoverageReport() {
                 <div key={c.id} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-muted/50">
                   <span className="text-xs">{c.help_title}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground italic">"{c.short_help}"</span>
+                    <span className="text-[10px] text-muted-foreground italic">"{c.short_help_text}"</span>
                     <code className="text-[9px] font-mono text-muted-foreground">{c.help_target_code}</code>
                   </div>
                 </div>
