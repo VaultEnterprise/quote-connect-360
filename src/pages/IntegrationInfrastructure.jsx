@@ -129,9 +129,12 @@ export default function IntegrationInfrastructure() {
       )}
 
       {/* Stack diagram */}
-      <StackDiagram />
+      <StackDiagram activeTab={tab} onNavigate={(t) => {
+        // find the tab element and click it via state
+        setTab(t);
+      }} />
 
-      <Tabs defaultValue="playground">
+      <Tabs value={tab} onValueChange={setTab}>
         {TAB_GROUPS.map(group => (
           <div key={group.label} className="mb-1">
             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
