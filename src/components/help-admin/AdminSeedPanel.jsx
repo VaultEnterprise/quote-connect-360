@@ -119,20 +119,19 @@ export default function AdminSeedPanel() {
           const res = results[pack.key];
           const isLoading = loading[pack.key];
           return (
-            <Card key={pack.key} className={res?.ok ? "border-emerald-200" : res?.ok === false ? "border-red-200" : ""}>
+            <Card key={pack.key}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-sm">{pack.label}</CardTitle>
-                  {res?.ok === true && <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
-                  {res?.ok === false && <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                  {isLoading && <Loader2 className="w-4 h-4 text-primary animate-spin flex-shrink-0" />}
                 </div>
                 <p className="text-xs text-muted-foreground">{pack.description}</p>
               </CardHeader>
               <CardContent className="pt-0 space-y-2">
-                {res && resultsVisible === pack.key && (
+                {res && (
                   <div className="flex items-start justify-between gap-2 p-2 rounded-md bg-muted/50">
                     <p className={`text-xs ${res.ok ? "text-emerald-700" : "text-red-600"}`}>{res.msg}</p>
-                    <button onClick={() => clearResult(pack.key)} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                    <button onClick={() => clearResult(pack.key)} className="text-muted-foreground hover:text-foreground flex-shrink-0 pt-0.5">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
