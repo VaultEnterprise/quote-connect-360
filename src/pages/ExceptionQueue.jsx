@@ -370,6 +370,31 @@ export default function ExceptionQueue() {
         >
           My Exceptions
         </Button>
+
+        {/* Export button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1.5"
+          onClick={() => {
+            exportToCSV(
+              sorted.map(e => ({
+                Title: e.title,
+                Category: e.category,
+                Severity: e.severity,
+                Status: e.status,
+                Employer: e.employer_name || "",
+                "Assigned To": e.assigned_to || "",
+                "Due By": e.due_by || "",
+                "Created Date": e.created_date,
+                Description: e.description || "",
+              })),
+              generateFilename("exceptions_export")
+            );
+          }}
+        >
+          <Download className="w-3.5 h-3.5" /> Export
+        </Button>
       </div>
 
           {/* Bulk actions */}
