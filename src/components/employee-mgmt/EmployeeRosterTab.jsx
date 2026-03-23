@@ -4,8 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search, Filter, Plus, Mail, CheckCircle2, Clock, AlertTriangle,
   UserX, RefreshCw, Download, Pencil, Trash2, ChevronDown, ChevronUp,
-  Send, X, Eye, User
+  Send, X, Eye, User, ExternalLink, Users
 } from "lucide-react";
+import EmployeeDetailDrawer from "@/components/employee-mgmt/EmployeeDetailDrawer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
