@@ -18,7 +18,8 @@ export default function EnrollmentForecast({ enrollments = [] }) {
     if (e.status !== "closed" && e.end_date) {
       const daysLeft = differenceInDays(new Date(e.end_date), now);
       if (daysLeft >= 0) {
-        forecastData.find(f => daysLeft >= f.range[0] && daysLeft <= f.range[1])?.count++;
+        const item = forecastData.find(f => daysLeft >= f.range[0] && daysLeft <= f.range[1]);
+        if (item) item.count++;
       }
     }
   });
