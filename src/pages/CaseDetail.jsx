@@ -355,6 +355,9 @@ export default function CaseDetail() {
       {showEdit && (
         <CaseEditModal caseData={caseData} open={showEdit} onClose={() => setShowEdit(false)} />
       )}
+      {showClone && (
+        <CloneCaseModal caseData={caseData} isOpen={showClone} onClose={() => setShowClone(false)} />
+      )}
       {showClose && (
         <CaseCloseModal caseData={caseData} open={showClose} onClose={() => setShowClose(false)} />
       )}
