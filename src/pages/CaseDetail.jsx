@@ -67,6 +67,7 @@ export default function CaseDetail() {
   const [showEdit, setShowEdit]     = useState(false);
   const [showClose, setShowClose]   = useState(false);
   const [showAdvance, setShowAdvance] = useState(false);
+  const [showClone, setShowClone]   = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const { data: caseData, isLoading } = useQuery({
