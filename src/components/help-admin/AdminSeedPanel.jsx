@@ -87,7 +87,6 @@ export default function AdminSeedPanel() {
    const runSeed = async (pack) => {
      setLoading(p => ({ ...p, [pack.key]: true }));
      setResults(p => ({ ...p, [pack.key]: null }));
-     setResultsVisible(pack.key); // Show result when seed starts
      try {
        const msg = await pack.fn(base44);
        setResults(p => ({ ...p, [pack.key]: { ok: true, msg } }));
@@ -103,7 +102,6 @@ export default function AdminSeedPanel() {
 
    const clearResult = (key) => {
      setResults(p => ({ ...p, [key]: null }));
-     setResultsVisible(null);
    };
 
   return (
