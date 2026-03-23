@@ -37,6 +37,7 @@ import HelpCoverageReport from '@/pages/HelpCoverageReport';
 import HelpSearchAnalytics from '@/pages/HelpSearchAnalytics';
 import HelpManualManager from '@/pages/HelpManualManager';
 import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
+import ACALibrary from '@/pages/ACALibrary';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
