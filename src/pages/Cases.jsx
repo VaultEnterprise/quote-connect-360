@@ -311,7 +311,17 @@ export default function Cases() {
         <CasePipelineView cases={filtered} />
       ) : (
         <div className="space-y-2">
-          {filtered.map(c => <CaseListCard key={c.id} c={c} />)}
+          {filtered.map(c => (
+            <div
+              key={c.id}
+              onClick={() => handleSelectCase(c.id)}
+              className={`cursor-pointer transition-all ${
+                selectedIds.includes(c.id) ? "ring-2 ring-primary rounded-lg" : ""
+              }`}
+            >
+              <CaseListCard c={c} />
+            </div>
+          ))}
         </div>
       )}
     </div>
