@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BookOpen, Edit2, Trash2, Eye, EyeOff, Search } from "lucide-react";
+import { BookOpen, Edit2, Trash2, Eye, EyeOff, Search, RefreshCw } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const CATEGORY_COLORS = {
   getting_started: "bg-blue-100 text-blue-700",
@@ -19,7 +20,9 @@ const CATEGORY_COLORS = {
 
 export default function UserManualManager() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
+  const [regeneratingId, setRegeneratingId] = useState(null);
 
   const { data: manuals = [] } = useQuery({
     queryKey: ["user-manuals-all"],
@@ -38,6 +41,30 @@ export default function UserManualManager() {
     mutationFn: (id) => base44.entities.UserManual.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user-manuals-all"] }),
   });
+
+  const regenerateManual = async (manual) => {
+    setRegeneratingId(manual.id);
+    try {
+      const res = await base44.functions.invoke("generateUserManual", {
+        prompt: `Regenerate and expand the user manual for "${manual.title}". Include the latest features, capabilities, workflows, best practices, troubleshooting tips, and setup guidance. Make it comprehensive and up to date.`,
+        title: manual.title,
+        module: manual.module,
+      });
+      const generated = res.data;
+      await base44.entities.UserManual.update(manual.id, {
+        content: generated.content,
+        description: generated.description || manual.description,
+        last_updated: new Date().toISOString(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["user-manuals-all"] });
+      queryClient.invalidateQueries({ queryKey: ["user-manuals"] });
+      toast({ title: "Manual Regenerated", description: `"${manual.title}" has been updated with the latest content.` });
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
 
   const filtered = manuals.filter(m =>
     m.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -88,14 +115,21 @@ export default function UserManualManager() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="h-7 w-7 p-0 text-primary hover:text-primary"
+                    title="Regenerate with AI"
+                    onClick={() => regenerateManual(manual)}
+                    disabled={regeneratingId === manual.id}
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${regeneratingId === manual.id ? "animate-spin" : ""}`} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     className="h-7 w-7 p-0"
                     onClick={() => togglePublish.mutate(manual.id)}
                     disabled={togglePublish.isPending}
                   >
                     {manual.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0">
-                    <Edit2 className="w-3.5 h-3.5" />
                   </Button>
                   <Button
                     size="sm"
