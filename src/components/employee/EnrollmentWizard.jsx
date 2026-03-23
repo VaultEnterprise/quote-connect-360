@@ -373,34 +373,34 @@ export default function EnrollmentWizard({
 
                 {/* Waiver reason step */}
                 {currentStep.id === "waiver" && isWaiving && (
-                <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">Why are you waiving coverage?</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Please let us know the reason for declining coverage.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Select value={waiverReason} onValueChange={setWaiverReason}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a reason..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="covered_spouse">Covered under spouse's plan</SelectItem>
-                  <SelectItem value="covered_parent">Covered under parent's plan</SelectItem>
-                  <SelectItem value="medicare_medicaid">Medicare/Medicaid</SelectItem>
-                  <SelectItem value="other_employer">Other employer coverage</SelectItem>
-                  <SelectItem value="decline">Decline coverage</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
-                <p className="text-xs text-orange-700">
-                  <strong>Note:</strong> Waiving coverage means you decline benefits for the upcoming plan year. You may lose eligibility for tax-advantaged benefits. You can re-enroll if there's a qualifying life event.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg sm:text-xl">Why are you waiving coverage?</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Please let us know the reason for declining coverage.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Select value={waiverReason} onValueChange={setWaiverReason}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a reason..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="covered_spouse">Covered under spouse's plan</SelectItem>
+                          <SelectItem value="covered_parent">Covered under parent's plan</SelectItem>
+                          <SelectItem value="medicare_medicaid">Medicare/Medicaid</SelectItem>
+                          <SelectItem value="other_employer">Other employer coverage</SelectItem>
+                          <SelectItem value="decline">Decline coverage</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
+                        <p className="text-xs text-orange-700">
+                          <strong>Note:</strong> Waiving coverage means you decline benefits for the upcoming plan year. You may lose eligibility for tax-advantaged benefits. You can re-enroll if there's a qualifying life event.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
         {/* Review step */}
         {currentStep.id === "review" && (
