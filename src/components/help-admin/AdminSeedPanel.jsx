@@ -79,26 +79,33 @@ const SEED_PACKS = [
 ];
 
 export default function AdminSeedPanel() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState({});
-  const [results, setResults] = useState({});
+   const queryClient = useQueryClient();
+   const { toast } = useToast();
+   const [loading, setLoading] = useState({});
+   const [results, setResults] = useState({});
+   const [resultsVisible, setResultsVisible] = useState(null); // Track which result is showing
 
-  const runSeed = async (pack) => {
-    setLoading(p => ({ ...p, [pack.key]: true }));
-    setResults(p => ({ ...p, [pack.key]: null }));
-    try {
-      const msg = await pack.fn(base44);
-      setResults(p => ({ ...p, [pack.key]: { ok: true, msg } }));
-      pack.invalidates.forEach(k => queryClient.invalidateQueries({ queryKey: [k] }));
-      toast({ title: `${pack.label} Complete`, description: msg });
-    } catch (e) {
-      setResults(p => ({ ...p, [pack.key]: { ok: false, msg: e.message } }));
-      toast({ title: "Seed Error", description: e.message, variant: "destructive" });
-    } finally {
-      setLoading(p => ({ ...p, [pack.key]: false }));
-    }
-  };
+   const runSeed = async (pack) => {
+     setLoading(p => ({ ...p, [pack.key]: true }));
+     setResults(p => ({ ...p, [pack.key]: null }));
+     setResultsVisible(pack.key); // Show result when seed starts
+     try {
+       const msg = await pack.fn(base44);
+       setResults(p => ({ ...p, [pack.key]: { ok: true, msg } }));
+       pack.invalidates.forEach(k => queryClient.invalidateQueries({ queryKey: [k] }));
+       toast({ title: `${pack.label} Complete`, description: msg });
+     } catch (e) {
+       setResults(p => ({ ...p, [pack.key]: { ok: false, msg: e.message } }));
+       toast({ title: "Seed Error", description: e.message, variant: "destructive" });
+     } finally {
+       setLoading(p => ({ ...p, [pack.key]: false }));
+     }
+   };
+
+   const clearResult = (key) => {
+     setResults(p => ({ ...p, [key]: null }));
+     setResultsVisible(null);
+   };
 
   return (
     <div className="space-y-4">
