@@ -313,6 +313,21 @@ export default function Cases() {
           onClearSelection={() => setSelectedIds(new Set())}
           actions={[
             {
+              label: "Assign",
+              icon: Users,
+              onClick: () => setShowAssignModal(true),
+            },
+            {
+              label: "Stage",
+              icon: Layers,
+              onClick: () => setShowStageModal(true),
+            },
+            {
+              label: "Priority",
+              icon: Flag,
+              onClick: () => setShowPriorityModal(true),
+            },
+            {
               label: "Export",
               icon: Download,
               onClick: handleBulkExport,
@@ -326,6 +341,26 @@ export default function Cases() {
           ]}
         />
       )}
+
+      {/* Bulk Action Modals */}
+      <BulkAssignModal
+        isOpen={showAssignModal}
+        caseIds={Array.from(selectedIds)}
+        onClose={() => setShowAssignModal(false)}
+        onSuccess={handleBulkSuccess}
+      />
+      <BulkStageModal
+        isOpen={showStageModal}
+        caseIds={Array.from(selectedIds)}
+        onClose={() => setShowStageModal(false)}
+        onSuccess={handleBulkSuccess}
+      />
+      <BulkPriorityModal
+        isOpen={showPriorityModal}
+        caseIds={Array.from(selectedIds)}
+        onClose={() => setShowPriorityModal(false)}
+        onSuccess={handleBulkSuccess}
+      />
     </div>
   );
 }
