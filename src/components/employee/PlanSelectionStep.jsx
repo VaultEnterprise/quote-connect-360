@@ -184,16 +184,16 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
   const isMultiProduct = productTypes.length > 1;
 
   return (
-    <div className="space-y-4">
-      {effectiveDate && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-3 text-sm">
-            <p className="text-blue-700">
-              <strong>Coverage Effective Date:</strong> {format(new Date(effectiveDate), "MMMM d, yyyy")}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+     <div className="space-y-3 sm:space-y-4">
+       {effectiveDate && (
+         <Card className="border-blue-200 bg-blue-50">
+           <CardContent className="p-2 sm:p-3 text-xs sm:text-sm">
+             <p className="text-blue-700">
+               <strong>Coverage Effective Date:</strong> {format(new Date(effectiveDate), "MMMM d, yyyy")}
+             </p>
+           </CardContent>
+         </Card>
+       )}
 
       {isMultiProduct ? (
         /* Multi-product tabs */
