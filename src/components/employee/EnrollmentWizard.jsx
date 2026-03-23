@@ -347,29 +347,29 @@ export default function EnrollmentWizard({
 
                {/* Dependents step */}
                {currentStep.id === "dependents" && !isWaiving && (
-               <Card>
-               <CardHeader>
-                 <CardTitle className="text-lg sm:text-xl">Add Dependents</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Required for Employee + Spouse, Employee + Children, or Family coverage
-              </p>
-            </CardHeader>
-            <CardContent>
-              <DependentForm
-                dependents={dependents}
-                onAdd={(dep) => setDependents([...dependents, dep])}
-                onRemove={(i) => setDependents(dependents.filter((_, j) => j !== i))}
-                canAddMore={dependents.length < 10 && coverageTier !== "employee_only"}
-                disabled={coverageTier === "employee_only"}
-              />
-              {coverageTier === "employee_only" && (
-                <p className="text-xs text-muted-foreground text-center py-4">
-                  Employee Only coverage selected — no dependents needed.
-                </p>
-                )}
-                </CardContent>
-                </Card>
-                )}
+                 <Card>
+                   <CardHeader>
+                     <CardTitle className="text-lg sm:text-xl">Add Dependents</CardTitle>
+                     <p className="text-sm text-muted-foreground mt-1">
+                       Required for Employee + Spouse, Employee + Children, or Family coverage
+                     </p>
+                   </CardHeader>
+                   <CardContent>
+                     <DependentForm
+                       dependents={dependents}
+                       onAdd={(dep) => setDependents([...dependents, dep])}
+                       onRemove={(i) => setDependents(dependents.filter((_, j) => j !== i))}
+                       canAddMore={dependents.length < 10 && coverageTier !== "employee_only"}
+                       disabled={coverageTier === "employee_only"}
+                     />
+                     {coverageTier === "employee_only" && (
+                       <p className="text-xs text-muted-foreground text-center py-4">
+                         Employee Only coverage selected — no dependents needed.
+                       </p>
+                     )}
+                   </CardContent>
+                 </Card>
+               )}
 
                 {/* Waiver reason step */}
                 {currentStep.id === "waiver" && isWaiving && (
