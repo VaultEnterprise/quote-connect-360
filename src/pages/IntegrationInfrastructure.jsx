@@ -157,7 +157,7 @@ export default function IntegrationInfrastructure() {
         ))}
 
         {/* Developer */}
-        <TabsContent value="playground" className="mt-4"><APIPlaygroundPanel /></TabsContent>
+        <TabsContent value="playground" className="mt-4"><APITesterPanel /></TabsContent>
         <TabsContent value="reference" className="mt-4"><ApiReferencePanel /></TabsContent>
         <TabsContent value="graphql" className="mt-4"><GraphQLPanel /></TabsContent>
         <TabsContent value="auth" className="mt-4"><AuthGuidePanel /></TabsContent>
