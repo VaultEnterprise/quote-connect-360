@@ -163,7 +163,7 @@ export default function IntegrationInfrastructure() {
         <TabsContent value="auth" className="mt-4"><AuthGuidePanel /></TabsContent>
         <TabsContent value="keys" className="mt-4"><ApiKeysPanel /></TabsContent>
         <TabsContent value="sdks" className="mt-4"><SDKsAndLibrariesPanel /></TabsContent>
-        <TabsContent value="webhooks" className="mt-4"><WebhooksPanel /></TabsContent>
+        <TabsContent value="webhooks" className="mt-4"><WebhookTesterPanel /></TabsContent>
         <TabsContent value="events" className="mt-4"><EventLogPanel /></TabsContent>
         <TabsContent value="models" className="mt-4"><DataModelsPanel /></TabsContent>
 
