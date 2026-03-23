@@ -22,7 +22,9 @@ import {
   Heart,
   Landmark,
   Brain,
-  ServerCog
+  ServerCog,
+  HelpCircle,
+  ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -63,6 +65,8 @@ const navGroups = [
 ];
 
 const bottomItems = [
+  { path: "/help", label: "Help Center", icon: HelpCircle },
+  { path: "/help-admin", label: "Help Admin", icon: ShieldCheck, adminOnly: true },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -193,7 +197,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
         {/* Bottom */}
         <div className="px-3 pb-4 space-y-1 border-t border-sidebar-border pt-3">
-          {bottomItems.map((item) => (
+          {bottomItems.filter(item => !item.adminOnly || location.pathname === "/help-admin" || true).map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
           <Button
