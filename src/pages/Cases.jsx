@@ -171,6 +171,25 @@ export default function Cases() {
         </div>
       )}
 
+      {/* Bulk Actions Toolbar */}
+      {selectedIds.length > 0 && (
+        <BulkActionsToolbar
+          selectedCount={selectedIds.length}
+          selectedIds={selectedIds}
+          allSelected={selectedIds.length === filtered.length && filtered.length > 0}
+          totalCount={filtered.length}
+          onSelectAll={handleSelectAll}
+          onClearSelection={() => setSelectedIds([])}
+          actions={[
+            {
+              label: "Export",
+              icon: Download,
+              handler: handleExportSelected,
+            },
+          ]}
+        />
+      )}
+
       {/* Filter Bar */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-2">
