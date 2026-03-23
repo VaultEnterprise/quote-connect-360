@@ -58,8 +58,8 @@ function PlanCard({ plan, selected, onSelect, onCompare, monthly_cost, isMedical
           </div>
         )}
 
-        {/* Key benefits grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+        {/* Key benefits grid - responsive */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px]">
           {plan.deductible_individual !== undefined && (
             <div className="text-center p-1.5 rounded bg-muted/40">
               <p className="text-muted-foreground">Deductible</p>
