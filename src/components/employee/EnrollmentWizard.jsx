@@ -341,15 +341,15 @@ export default function EnrollmentWizard({
                  onClose={() => setCompareMode(false)}
                  onSelectPlan={(plan) => { handleSelectPlan(plan); setCompareMode(false); }}
                />
-             )}
-           </div>
-         )}
+               )}
+               </div>
+               )}
 
-        {/* Dependents step */}
-        {currentStep.id === "dependents" && !isWaiving && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Add Dependents</CardTitle>
+               {/* Dependents step */}
+               {currentStep.id === "dependents" && !isWaiving && (
+               <Card>
+               <CardHeader>
+                 <CardTitle className="text-lg sm:text-xl">Add Dependents</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 Required for Employee + Spouse, Employee + Children, or Family coverage
               </p>
