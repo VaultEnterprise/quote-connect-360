@@ -99,10 +99,17 @@ export default function IntegrationInfrastructure() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-3">
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-blue-900">📚 Reference Documentation</p>
+          <p className="text-xs text-blue-700 mt-1">This page showcases the Connect Quote 360 platform architecture and integration capabilities. Most features are documentation and reference material, not live configuration tools.</p>
+        </div>
+      </div>
+
       <PageHeader
-        title="Integration Infrastructure"
-        description="Enterprise API platform · Production hardening · AI-assisted integrations"
-        actions={
+         title="Integration Infrastructure"
+         description="Enterprise API platform · Production hardening · AI-assisted integrations"
+         actions={
           <div className="flex items-center gap-3 flex-wrap">
             <OverallStatusBadge status={overallStatus} />
             {/* Global AI toggle visible in header */}
