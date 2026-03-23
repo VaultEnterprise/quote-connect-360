@@ -53,6 +53,18 @@ const SEED_PACKS = [
     invalidates: ["help-manual-topics"],
   },
   {
+    key: "full_audit",
+    label: "Seed Full Audit Report",
+    description: "Complete page audit: status classification, orphaned controls, workflow gaps, missing permissions, prioritized fixes (24 fixes across 30 pages)",
+    variant: "outline",
+    icon: Play,
+    fn: async (base44) => {
+      const res = await base44.functions.invoke("seedFullAuditReport", {});
+      return `Created ${res.data?.created || 0}, updated ${res.data?.updated || 0}. ${res.data?.errors?.length ? res.data.errors.length + ' errors.' : ''}`;
+    },
+    invalidates: ["help-manual-topics"],
+  },
+  {
     key: "dashboard",
     label: "Seed Dashboard Help",
     description: "Dashboard-specific contextual help content",
