@@ -237,6 +237,16 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Proposals + Team Workload */}
+      <div>
+        <ProposalsKPI proposals={proposals} />
+      </div>
+
+      {/* Compliance + Revenue + Carrier Distribution */}
+      <ComplianceAlerts cases={cases} scenarios={scenarios} />
+      
+      <RevenueMetrics scenarios={scenarios} />
+
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <InteractivePipeline cases={cases} />
