@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRealtimeSubscriptions } from "@/hooks/useRealtimeSubscription";
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, Users,
   Pencil, AlertTriangle, Briefcase, Filter, X
