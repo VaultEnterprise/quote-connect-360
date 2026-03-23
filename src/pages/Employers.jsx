@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, Users,
-  Pencil, AlertTriangle, Briefcase, Filter, X
+  Pencil, AlertTriangle, Briefcase, Filter, X, Eye, CheckSquare
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import { differenceInDays, parseISO, isAfter } from "date-fns";
+import EmployerDetailDrawer from "@/components/employer/EmployerDetailDrawer";
+import { BulkActionsBar, EmployerImportModal } from "@/components/employer/BulkActionsBar";
+import { QuickCreateCase } from "@/components/employer/QuickCreateCase";
+import { RenewalDashboard } from "@/components/employer/RenewalDashboard";
 
 const INDUSTRIES = [
   "Accommodation & Food Services",
