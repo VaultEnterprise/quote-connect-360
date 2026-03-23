@@ -40,7 +40,7 @@ import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
 import ACALibrary from '@/pages/ACALibrary';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
