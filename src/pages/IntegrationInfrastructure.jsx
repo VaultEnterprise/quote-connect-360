@@ -28,6 +28,8 @@ import SDKsAndLibrariesPanel from "@/components/infra/SDKsAndLibrariesPanel";
 import GraphQLPanel from "@/components/infra/GraphQLPanel";
 import DataTransformationPanel from "@/components/infra/DataTransformationPanel";
 import APIPlaygroundPanel from "@/components/infra/APIPlaygroundPanel";
+import APITesterPanel from "@/components/infra/APITesterPanel";
+import WebhookTesterPanel from "@/components/infra/WebhookTesterPanel";
 import IntegrationMarketplacePanel from "@/components/infra/IntegrationMarketplacePanel";
 import ComplianceAuditPanel from "@/components/infra/ComplianceAuditPanel";
 
