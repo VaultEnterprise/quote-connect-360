@@ -1,8 +1,12 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Clock, BookOpen, ChevronDown } from "lucide-react";
+import { X, Clock, RefreshCw } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
 import ReactMarkdown from "react-markdown";
 
 const CATEGORY_CONFIG = {
@@ -16,8 +20,38 @@ const CATEGORY_CONFIG = {
 };
 
 export default function UserManualViewer({ manual, onClose }) {
-  const [expandedSection, setExpandedSection] = useState(null);
-  const cfg = CATEGORY_CONFIG[manual.category] || CATEGORY_CONFIG.features;
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [regenerating, setRegenerating] = useState(false);
+  const [currentManual, setCurrentManual] = useState(manual);
+  const cfg = CATEGORY_CONFIG[currentManual.category] || CATEGORY_CONFIG.features;
+  const isAdmin = user?.role === "admin";
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const res = await base44.functions.invoke("generateUserManual", {
+        prompt: `Regenerate and comprehensively update the user manual for "${currentManual.title}". Include all current features, capabilities, workflows, setup processes, best practices, and troubleshooting guidance. Make it thorough and up to date with the latest platform functionality.`,
+        title: currentManual.title,
+        module: currentManual.module,
+      });
+      const generated = res.data;
+      const updated = await base44.entities.UserManual.update(currentManual.id, {
+        content: generated.content,
+        description: generated.description || currentManual.description,
+        last_updated: new Date().toISOString(),
+      });
+      setCurrentManual(prev => ({ ...prev, content: generated.content, description: generated.description || prev.description }));
+      queryClient.invalidateQueries({ queryKey: ["user-manuals"] });
+      queryClient.invalidateQueries({ queryKey: ["user-manuals-all"] });
+      toast({ title: "Manual Regenerated", description: "Content has been updated with the latest information." });
+    } catch (err) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -30,28 +64,46 @@ export default function UserManualViewer({ manual, onClose }) {
               <Badge>{cfg.label}</Badge>
               <Badge variant="outline">{manual.module}</Badge>
             </div>
-            <h2 className="text-2xl font-bold">{manual.title}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{manual.description}</p>
+            <h2 className="text-2xl font-bold">{currentManual.title}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{currentManual.description}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" /> {manual.estimated_read_time || 5} min read
+                <Clock className="w-3 h-3" /> {currentManual.estimated_read_time || 5} min read
               </span>
-              <span className="capitalize">{manual.difficulty_level}</span>
+              <span className="capitalize">{currentManual.difficulty_level}</span>
+              {currentManual.last_updated && (
+                <span>Updated {new Date(currentManual.last_updated).toLocaleDateString()}</span>
+              )}
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                className="gap-1.5 text-xs h-8"
+                title="Regenerate manual content with AI"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                {regenerating ? "Regenerating..." : "Regenerate"}
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Main Content */}
           <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{manual.content}</ReactMarkdown>
+            <ReactMarkdown>{currentManual.content}</ReactMarkdown>
           </div>
 
           {/* Setup Steps */}
-          {manual.setup_steps && manual.setup_steps.length > 0 && (
+          {currentManual.setup_steps && currentManual.setup_steps.length > 0 && (
             <div className="border rounded-lg p-4 space-y-3">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <span>📋</span> Setup Steps
