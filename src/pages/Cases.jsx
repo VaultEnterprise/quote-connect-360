@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Briefcase, Plus, Search, Filter, X, LayoutList, Columns,
-  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown
+  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown, Download, Trash2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
