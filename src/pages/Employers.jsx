@@ -185,6 +185,10 @@ export default function Employers() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [editingEmployer, setEditingEmployer] = useState(null);
+  const [selectedEmployers, setSelectedEmployers] = useState([]);
+  const [viewingEmployer, setViewingEmployer] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showRenewalDashboard, setShowRenewalDashboard] = useState(false);
 
   const { data: employers = [] } = useQuery({
     queryKey: ["employers"],
@@ -199,6 +203,11 @@ export default function Employers() {
   const { data: cases = [] } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
+  });
+
+  const { data: documents = [] } = useQuery({
+    queryKey: ["documents"],
+    queryFn: () => base44.entities.Document.list("-created_date", 500),
   });
 
   // Build case count map per employer group
