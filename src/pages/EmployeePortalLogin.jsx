@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Heart, Loader } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { AlertCircle, Heart, Loader, Mail } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 
 /**
  * EmployeePortalLogin
@@ -19,6 +19,8 @@ export default function EmployeePortalLogin() {
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -165,9 +167,35 @@ export default function EmployeePortalLogin() {
             </Button>
           </form>
 
-          <div className="space-y-2 pt-4 border-t text-xs text-muted-foreground">
-            <p className="font-semibold">Didn't receive an invitation?</p>
-            <p>Contact your HR department or benefits administrator for assistance.</p>
+          <div className="space-y-3 pt-4 border-t text-xs text-muted-foreground">
+            <div>
+              <p className="font-semibold mb-1.5">Need Help?</p>
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => setShowPasswordReset(!showPasswordReset)}
+                  className="flex items-center gap-1.5 text-primary hover:underline text-xs font-medium"
+                >
+                  <Mail className="w-3 h-3" /> Resend Invitation Email
+                </button>
+                {showPasswordReset && (
+                  <div className="mt-2 p-2 rounded bg-primary/5 border border-primary/10 space-y-2">
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-2 py-1 text-xs border rounded"
+                    />
+                    <button className="w-full px-2 py-1 text-xs bg-primary text-white rounded hover:opacity-90">
+                      Send Invitation
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="border-t pt-2">
+              <p>Contact your HR department or <a href="mailto:support@connectquote.io" className="text-primary hover:underline">benefits administrator</a> for further assistance.</p>
+            </div>
           </div>
         </CardContent>
       </Card>

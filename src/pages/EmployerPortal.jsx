@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, CheckCircle, Clock, Menu, X } from "lucide-react";
+import { Building2, CheckCircle, Clock, Menu, X, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { useAuth } from "@/lib/AuthContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
+import CrossPageNavigation from "@/components/shared/CrossPageNavigation";
+import { useNavigate } from "react-router-dom";
 
 // Employer-specific components
 import ActionRequiredBanner from "@/components/employer/ActionRequiredBanner";
@@ -30,6 +32,7 @@ import PlanExplainerModal   from "@/components/employer/PlanExplainerModal";
 
 export default function EmployerPortal() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -183,6 +186,17 @@ export default function EmployerPortal() {
         ))}
       </div>
 
+      {/* ── Help & Support Navigation ── */}
+      <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
+        <div className="flex items-center gap-2 text-xs text-blue-700">
+          <HelpCircle className="w-4 h-4" />
+          <span className="font-medium">Need help with your enrollment or proposals?</span>
+        </div>
+        <button onClick={() => navigate("/help")} className="text-xs font-medium text-primary hover:underline">
+          View Help Center →
+        </button>
+      </div>
+
       {/* ── Main content: tabs + right sidebar — responsive ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-2 space-y-4">
@@ -320,11 +334,26 @@ export default function EmployerPortal() {
             agencyName={proposals[0]?.agency_name || null}
           />
 
+          {/* Quick Links Card */}
+          <Card>
+           <CardContent className="p-4 space-y-2">
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quick Links</p>
+             <div className="space-y-1.5">
+               <button onClick={() => navigate("/help")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-primary font-medium">
+                 ? Help Center
+               </button>
+               <button onClick={() => navigate("/employer-portal")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-foreground font-medium">
+                 ↻ Refresh Portal
+               </button>
+             </div>
+           </CardContent>
+          </Card>
+
           {/* Case info card */}
           <Card>
-            <CardContent className="p-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Case Details</p>
-              <div className="space-y-2 text-xs md:text-sm">
+           <CardContent className="p-4">
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Case Details</p>
+             <div className="space-y-2 text-xs md:text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Case #</span>
                   <span className="font-medium text-right">{activeCase?.case_number || caseId?.slice(-6)}</span>
