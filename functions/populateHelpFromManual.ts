@@ -169,44 +169,37 @@ Deno.serve(async (req) => {
       targetsByCode[target.help_target_code] = target;
     });
 
-    // Create HelpContent for each page
+    // Create HelpContent for each page target
     const resultsCreated = [];
     const resultsFailed = [];
 
-    for (const [pageCode, pageInfo] of Object.entries(pageMapping)) {
+    for (const [targetCode, targetInfo] of Object.entries(pageMapping)) {
       try {
-        const helpContent = helpContentMap[pageCode];
-        
-        if (!helpContent) {
-          resultsFailed.push({ pageCode, reason: 'No content defined' });
+        // Find the HelpTarget record
+        const target = targetsByCode[targetCode];
+        if (!target) {
+          resultsFailed.push({ targetCode, reason: `HelpTarget not found: ${targetCode}` });
           continue;
         }
 
-        // Find or create the HelpTarget
-        let target = targetsByCode[pageCode];
-        if (!target) {
-          // Create target if doesn't exist
-          target = await base44.asServiceRole.entities.HelpTarget.create({
-            help_target_code: pageCode,
-            module_code: pageInfo.module.toLowerCase(),
-            page_code: pageCode,
-            target_name: pageInfo.title,
-            target_type: 'page'
-          });
-          targetsByCode[pageCode] = target;
+        // Get help content from the map
+        const helpContent = helpContentMap[targetInfo.content_key];
+        if (!helpContent) {
+          resultsFailed.push({ targetCode, reason: 'No content defined for this page' });
+          continue;
         }
 
         // Create HelpContent record
         const contentRecord = await base44.asServiceRole.entities.HelpContent.create({
           help_target_id: target.id,
-          help_target_code: pageCode,
-          module_code: pageInfo.module.toLowerCase(),
-          page_code: pageCode,
-          content_source_type: 'system_generated',
+          help_target_code: targetCode,
+          module_code: target.module_code,
+          page_code: target.page_code,
+          content_source_type: 'migration_import',
           content_status: 'active',
           version_no: 1,
           language_code: 'en',
-          help_title: helpContent.short_help || pageInfo.title,
+          help_title: helpContent.short_help || target.target_name,
           short_help_text: helpContent.short_help,
           detailed_help_text: helpContent.detailed,
           feature_capabilities_text: helpContent.feature_capabilities,
@@ -219,14 +212,14 @@ Deno.serve(async (req) => {
         });
 
         resultsCreated.push({
-          pageCode,
-          pageTitle: pageInfo.title,
+          targetCode,
+          targetLabel: target.target_name,
           contentId: contentRecord.id,
           status: 'created'
         });
       } catch (error) {
         resultsFailed.push({
-          pageCode,
+          targetCode,
           reason: error.message
         });
       }
