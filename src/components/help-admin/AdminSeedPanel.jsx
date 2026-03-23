@@ -41,6 +41,18 @@ const SEED_PACKS = [
     invalidates: ["help-contents-admin", "help-contents-all"],
   },
   {
+    key: "page_inventory",
+    label: "Seed Page Inventory",
+    description: "Complete app page inventory, dependency map, section map, action map, missing dependency report",
+    variant: "outline",
+    icon: Play,
+    fn: async (base44) => {
+      const res = await base44.functions.invoke("seedPageInventory", {});
+      return `Created ${res.data?.created || 0}, updated ${res.data?.updated || 0}.`;
+    },
+    invalidates: ["help-manual-topics"],
+  },
+  {
     key: "dashboard",
     label: "Seed Dashboard Help",
     description: "Dashboard-specific contextual help content",
