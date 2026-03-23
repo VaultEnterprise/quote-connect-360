@@ -231,57 +231,59 @@ Deno.serve(async (req) => {
       targetsByCode[target.help_target_code] = target;
     });
 
-    // Create HelpContent for each page target
+    // Create HelpContent for each target (page-level and UI components)
     const resultsCreated = [];
     const resultsFailed = [];
 
-    for (const [targetCode, targetInfo] of Object.entries(pageMapping)) {
+    for (const target of helpTargets) {
       try {
-        // Find the HelpTarget record
-        const target = targetsByCode[targetCode];
-        if (!target) {
-          resultsFailed.push({ targetCode, reason: `HelpTarget not found: ${targetCode}` });
+        // Check if content already exists
+        const existing = await base44.asServiceRole.entities.HelpContent.filter({
+          help_target_code: target.help_target_code
+        });
+        
+        if (existing.length > 0) {
+          // Skip if content already exists
           continue;
         }
 
-        // Get help content from the map
-        const helpContent = helpContentMap[targetInfo.content_key];
-        if (!helpContent) {
-          resultsFailed.push({ targetCode, reason: 'No content defined for this page' });
-          continue;
-        }
+        // Generate help content for this target
+        const help = generateComponentHelp(target);
 
         // Create HelpContent record
         const contentRecord = await base44.asServiceRole.entities.HelpContent.create({
           help_target_id: target.id,
-          help_target_code: targetCode,
+          help_target_code: target.help_target_code,
           module_code: target.module_code,
           page_code: target.page_code,
-          content_source_type: 'migration_import',
-          content_status: 'active',
+          content_source_type: 'system_generated',
+          content_status: 'draft',
           version_no: 1,
           language_code: 'en',
-          help_title: helpContent.short_help || target.target_name,
-          short_help_text: helpContent.short_help,
-          detailed_help_text: helpContent.detailed,
-          feature_capabilities_text: helpContent.feature_capabilities,
-          process_meaning_text: helpContent.process_meaning,
-          expected_user_action_text: helpContent.expected_user_action,
-          examples_text: helpContent.examples,
-          is_primary: true,
+          help_title: target.target_label,
+          short_help_text: help.short_help_text,
+          detailed_help_text: help.detailed_help_text,
+          feature_capabilities_text: help.feature_capabilities_text,
+          process_meaning_text: help.process_meaning_text,
+          expected_user_action_text: help.expected_user_action_text,
+          examples_text: help.examples_text,
+          search_keywords: help.search_keywords,
+          is_primary: target.target_type === 'page',
           is_active: true,
           review_required: false
         });
 
         resultsCreated.push({
-          targetCode,
-          targetLabel: target.target_name,
+          targetCode: target.help_target_code,
+          targetLabel: target.target_label,
+          targetType: target.target_type,
           contentId: contentRecord.id,
           status: 'created'
         });
       } catch (error) {
         resultsFailed.push({
-          targetCode,
+          targetCode: target.help_target_code,
+          targetLabel: target.target_label,
           reason: error.message
         });
       }
