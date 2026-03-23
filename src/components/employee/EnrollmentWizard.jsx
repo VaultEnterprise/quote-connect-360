@@ -258,17 +258,17 @@ export default function EnrollmentWizard({
                   I want to Waive Coverage
                 </Button>
               )}
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+              </Card>
+              )}
 
-        {/* Coverage tier step */}
-        {currentStep.id === "coverage" && !isWaiving && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Who are you covering?</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+              {/* Coverage tier step */}
+              {currentStep.id === "coverage" && !isWaiving && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg sm:text-xl">Who are you covering?</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 sm:space-y-3">
               {[
                 { value: "employee_only", label: "Employee Only", desc: "Just yourself" },
                 { value: "employee_spouse", label: "Employee + Spouse", desc: "You and your spouse/domestic partner" },
