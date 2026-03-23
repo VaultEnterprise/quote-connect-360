@@ -189,10 +189,13 @@ export default function ExceptionQueue() {
   const [showCreate, setShowCreate] = useState(false);
   const [detailException, setDetailException] = useState(null);
 
-  const { data: exceptions = [] } = useQuery({
+  const { data: exceptions = [], refetch } = useQuery({
     queryKey: ["exceptions"],
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
   });
+
+  // Real-time updates
+  useRealtimeSubscription("ExceptionItem", () => refetch(), { debounce: 1000 });
 
   const dismiss = useMutation({
     mutationFn: (id) => base44.entities.ExceptionItem.update(id, { status: "dismissed" }),
