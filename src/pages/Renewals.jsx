@@ -49,7 +49,7 @@ export default function Renewals() {
   // Bulk select
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const { data: renewals = [] } = useQuery({
+  const { data: renewals = [], refetch: refetchRenewals } = useQuery({
     queryKey: ["renewals-all"],
     queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
   });
@@ -61,6 +61,13 @@ export default function Renewals() {
       : Promise.resolve([]),
     enabled: !!selectedRenewal?.case_id,
   });
+
+  // Real-time updates
+  useRealtimeSubscriptions(
+    ["RenewalCycle"],
+    () => refetchRenewals(),
+    { debounce: 1000 }
+  );
 
   const bulkStatusUpdate = useMutation({
     mutationFn: ({ ids, status }) =>
