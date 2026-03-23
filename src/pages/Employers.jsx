@@ -65,7 +65,7 @@ function EmployerModal({ employer, open, onClose, agencies }) {
     effective_date: employer?.effective_date || "",
     renewal_date: employer?.renewal_date || "",
     status: employer?.status || "prospect",
-    agency_id: employer?.agency_id || agencies[0]?.id || "",
+    agency_id: employer?.agency_id || "",
     primary_contact_name: employer?.primary_contact_name || "",
     primary_contact_email: employer?.primary_contact_email || "",
     primary_contact_phone: employer?.primary_contact_phone || "",
