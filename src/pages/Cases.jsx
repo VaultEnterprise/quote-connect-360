@@ -54,11 +54,16 @@ export default function Cases() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [sortBy, setSortBy]             = useState("created_desc");
   const [viewMode, setViewMode]         = useState("list"); // "list" | "pipeline"
+  const [selectedIds, setSelectedIds]   = useState([]);
+  const queryClient = useQueryClient();
 
-  const { data: cases = [], isLoading } = useQuery({
+  const { data: cases = [], isLoading, refetch } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
+
+  // Real-time updates on case changes
+  useRealtimeSubscription("BenefitCase", () => refetch(), { debounce: 1000 });
 
   const filtered = useMemo(() => {
     let result = cases.filter((c) => {
