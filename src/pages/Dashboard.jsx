@@ -100,11 +100,16 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ["exceptions"] });
     });
 
+    const unsubscribeProposals = base44.entities.Proposal.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+    });
+
     return () => {
       unsubscribeCases?.();
       unsubscribeTasks?.();
       unsubscribeEnrollments?.();
       unsubscribeExceptions?.();
+      unsubscribeProposals?.();
     };
   }, [queryClient]);
 
