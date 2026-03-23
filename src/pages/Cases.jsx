@@ -245,6 +245,30 @@ export default function Cases() {
             </SelectContent>
           </Select>
 
+          {/* Export Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              exportToCSV(
+                filtered.map(c => ({
+                  "Case #": c.case_number,
+                  Employer: c.employer_name,
+                  Type: c.case_type,
+                  Stage: c.stage,
+                  Priority: c.priority,
+                  "Assigned To": c.assigned_to,
+                  "Effective Date": c.effective_date,
+                  Status: c.enrollment_status,
+                })),
+                generateFilename("cases_export")
+              );
+            }}
+            className="gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5" /> Export
+          </Button>
+
           {/* View Toggle */}
           <div className="flex rounded-md border overflow-hidden flex-shrink-0">
             <button
@@ -260,7 +284,7 @@ export default function Cases() {
               <Columns className="w-3.5 h-3.5" /> Pipeline
             </button>
           </div>
-        </div>
+          </div>
 
         {(activeFilters > 0 || search) && (
           <div className="flex items-center gap-2">
