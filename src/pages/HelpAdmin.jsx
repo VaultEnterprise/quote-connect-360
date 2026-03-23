@@ -229,6 +229,9 @@ export default function HelpAdmin() {
         title="Help Management Console"
         description="Manage help content for every element in the application"
         actions={
+          <Button onClick={runDashboardSeed} disabled={seedingDashboard} variant="outline" size="sm" className="gap-1">
+            <Play className="w-3.5 h-3.5" /> {seedingDashboard ? "Seeding…" : "Seed Dashboard Help"}
+          </Button>
           <Button onClick={runSeed} disabled={seeding} variant="outline" size="sm" className="gap-1">
             <Play className="w-3.5 h-3.5" /> {seeding ? "Seeding…" : "Seed Default Help"}
           </Button>
