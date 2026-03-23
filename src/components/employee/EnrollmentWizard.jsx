@@ -258,9 +258,9 @@ export default function EnrollmentWizard({
                   I want to Waive Coverage
                 </Button>
               )}
-              </CardContent>
-              </Card>
-              )}
+            </CardContent>
+          </Card>
+        )}
 
               {/* Coverage tier step */}
               {currentStep.id === "coverage" && !isWaiving && (
