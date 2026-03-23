@@ -43,42 +43,48 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const results = [];
+    // First, check which pages already have help content
+    const allContent = await base44.entities.HelpContent.list("-updated_date", 500);
+    const existingCodes = new Set(allContent.map(c => c.help_target_code));
     
-    for (const page of PAGES_TO_GENERATE) {
-      try {
-        // Generate help content via AI
-        const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are a help content specialist for ConnectQuote 360 (CQ360), a comprehensive benefits administration platform.
+    const pagesToGenerate = PAGES_TO_GENERATE.filter(p => !existingCodes.has(`PAGE_${p.code}`));
+    
+    if (pagesToGenerate.length === 0) {
+      return Response.json({ 
+        message: "All pages already have help content",
+        total: PAGES_TO_GENERATE.length,
+        skipped: PAGES_TO_GENERATE.length
+      });
+    }
 
-Generate concise help content for the "${page.title}" page (${page.desc}).
+    // Batch generate (process in chunks to avoid timeout)
+    const results = [];
+    const CHUNK_SIZE = 5;
+    
+    for (let i = 0; i < pagesToGenerate.length; i += CHUNK_SIZE) {
+      const chunk = pagesToGenerate.slice(i, i + CHUNK_SIZE);
+      const chunkPromises = chunk.map(async (page) => {
+        try {
+          const res = await base44.integrations.Core.InvokeLLM({
+            prompt: `Help content for CQ360 page "${page.title}": ${page.desc}
 
-Provide JSON with:
+Return JSON:
 {
-  "short_help_text": "1-2 sentence concise explanation of what this page does and who uses it",
-  "help_body": "3-4 paragraph markdown help content covering: What is this page for? What can you do here? Key features. Tips/best practices.",
+  "short_help_text": "1-2 sentence concise overview",
+  "help_body": "3-4 paragraphs covering: What is this page? What can you do? Key features. Tips.",
   "search_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
-}
+}`,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                short_help_text: { type: "string" },
+                help_body: { type: "string" },
+                search_keywords: { type: "array", items: { type: "string" } }
+              },
+              required: ["short_help_text", "help_body", "search_keywords"]
+            }
+          });
 
-Be specific to CQ360 terminology (cases, census, quotes, proposals, enrollment, renewals, etc.). Keep it practical and task-oriented.`,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              short_help_text: { type: "string" },
-              help_body: { type: "string" },
-              search_keywords: { type: "array", items: { type: "string" } }
-            },
-            required: ["short_help_text", "help_body", "search_keywords"]
-          }
-        });
-
-        // Check if HelpContent already exists for this page
-        const existing = await base44.entities.HelpContent.filter({ 
-          help_target_code: `PAGE_${page.code}` 
-        });
-
-        if (existing.length === 0) {
-          // Create new HelpContent
           await base44.entities.HelpContent.create({
             help_target_code: `PAGE_${page.code}`,
             help_title: page.title,
@@ -90,13 +96,14 @@ Be specific to CQ360 terminology (cases, census, quotes, proposals, enrollment, 
             version_no: 1,
             view_count: 0
           });
-          results.push({ page: page.title, status: "created" });
-        } else {
-          results.push({ page: page.title, status: "skipped (exists)" });
+          return { page: page.title, status: "created" };
+        } catch (e) {
+          return { page: page.title, status: `error: ${e.message.substring(0, 100)}` };
         }
-      } catch (e) {
-        results.push({ page: page.title, status: `error: ${e.message}` });
-      }
+      });
+      
+      const chunkResults = await Promise.all(chunkPromises);
+      results.push(...chunkResults);
     }
 
     return Response.json({ 
