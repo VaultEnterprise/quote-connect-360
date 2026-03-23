@@ -414,6 +414,24 @@ export default function Employers() {
           onClose={() => { setShowModal(false); setEditingEmployer(null); }}
         />
       )}
+
+      {viewingEmployer && (
+        <EmployerDetailDrawer
+          employer={viewingEmployer}
+          cases={cases}
+          documents={documents}
+          open={!!viewingEmployer}
+          onClose={() => setViewingEmployer(null)}
+        />
+      )}
+
+      {showImportModal && (
+        <EmployerImportModal
+          open={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          agencies={agencies}
+        />
+      )}
     </div>
   );
 }
