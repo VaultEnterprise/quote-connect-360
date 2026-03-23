@@ -29,7 +29,7 @@ export default function HelpSearchAnalytics() {
     queryKey: ["help-analytics-ai"],
     queryFn: () => base44.entities.HelpAIQuestionLog.list("-created_date", 500),
   });
-  const _placeholder = null; void _placeholder; // keep useMemo happy
+
   });
 
   const { data: contents = [] } = useQuery({
@@ -62,8 +62,8 @@ export default function HelpSearchAnalytics() {
       const p = log.page_code || "GENERAL";
       if (!byPage[p]) byPage[p] = { page: p, questions: 0, lowConf: 0, avgConf: 0, total: 0 };
       byPage[p].questions++;
-      byPage[p].total += (log.answer_confidence || 0);
-      if ((log.answer_confidence || 0) < 0.4) byPage[p].lowConf++;
+      byPage[p].total += (log.confidence_score || 0);
+      if ((log.confidence_score || 0) < 0.4) byPage[p].lowConf++;
     }
     return Object.values(byPage).map(p => ({
       ...p,
