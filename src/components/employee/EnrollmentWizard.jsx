@@ -264,33 +264,33 @@ export default function EnrollmentWizard({
 
               {/* Coverage tier step */}
               {currentStep.id === "coverage" && !isWaiving && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg sm:text-xl">Who are you covering?</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 sm:space-y-3">
-              {[
-                { value: "employee_only", label: "Employee Only", desc: "Just yourself" },
-                { value: "employee_spouse", label: "Employee + Spouse", desc: "You and your spouse/domestic partner" },
-                { value: "employee_children", label: "Employee + Children", desc: "You and your dependent children" },
-                { value: "family", label: "Family", desc: "You, spouse, and children" },
-              ].map(tier => (
-                <button
-                  key={tier.value}
-                  onClick={() => setCoverageTier(tier.value)}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
-                    coverageTier === tier.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                  }`}
-                >
-                  <div>
-                    <p className="font-semibold text-sm">{tier.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{tier.desc}</p>
-                  </div>
-                  {coverageTier === tier.value && <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />}
-                </button>
-              ))}
-              </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg sm:text-xl">Who are you covering?</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 sm:space-y-3">
+                    {[
+                      { value: "employee_only", label: "Employee Only", desc: "Just yourself" },
+                      { value: "employee_spouse", label: "Employee + Spouse", desc: "You and your spouse/domestic partner" },
+                      { value: "employee_children", label: "Employee + Children", desc: "You and your dependent children" },
+                      { value: "family", label: "Family", desc: "You, spouse, and children" },
+                    ].map(tier => (
+                      <button
+                        key={tier.value}
+                        onClick={() => setCoverageTier(tier.value)}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
+                          coverageTier === tier.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <div>
+                          <p className="font-semibold text-sm">{tier.label}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{tier.desc}</p>
+                        </div>
+                        {coverageTier === tier.value && <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />}
+                      </button>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
 
               {/* Plans step - Enhanced UX */}
