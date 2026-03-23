@@ -38,6 +38,8 @@ const STAGE_GROUPS = [
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
+
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
@@ -50,13 +52,11 @@ export default function Dashboard() {
 
   const { data: enrollments = [] } = useQuery({
     queryKey: ["enrollments"],
-    // Raised from 20 → 100: truncated list silently understates open-enrollment KPI
     queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
 
   const { data: renewals = [] } = useQuery({
     queryKey: ["renewals"],
-    // Raised from 20 → 100: truncated list silently understates 90-day renewal KPI
     queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
   });
 
@@ -69,6 +69,32 @@ export default function Dashboard() {
     queryKey: ["exceptions"],
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 50),
   });
+
+  // Real-time updates via WebSocket subscriptions
+  useEffect(() => {
+    const unsubscribeCases = base44.entities.BenefitCase.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+    });
+
+    const unsubscribeTasks = base44.entities.CaseTask.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks-pending"] });
+    });
+
+    const unsubscribeEnrollments = base44.entities.EnrollmentWindow.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+    });
+
+    const unsubscribeExceptions = base44.entities.ExceptionItem.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+    });
+
+    return () => {
+      unsubscribeCases?.();
+      unsubscribeTasks?.();
+      unsubscribeEnrollments?.();
+      unsubscribeExceptions?.();
+    };
+  }, [queryClient]);
 
   const activeCases = cases.filter(c => !["closed", "renewed"].includes(c.stage));
   const quotingCases = cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage));
