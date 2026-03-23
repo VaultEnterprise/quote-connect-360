@@ -282,6 +282,8 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        <CarrierDistribution scenarios={scenarios} />
       </div>
 
       {/* Monthly Trend + Recent Activity */}
