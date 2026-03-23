@@ -195,10 +195,10 @@ export default function ProposalBuilder() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <PageHeader
-          title="Proposal Builder"
-          description="Create, send, and track client benefit proposals"
-        />
+         <PageHeader
+           title="Proposals"
+           description="Create, send, and track client benefit proposals"
+         />
         <div className="flex items-center gap-2 flex-wrap">
           {expiringSoon.length > 0 && (
             <button
