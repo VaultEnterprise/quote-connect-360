@@ -20,6 +20,7 @@ import ProviderSearch from "./ProviderSearch";
 import EnrollmentConfirmation from "./EnrollmentConfirmation";
 import HelpContactCard from "./HelpContactCard";
 import DocuSignSigningPane from "./DocuSignSigningPane";
+import EnrollmentStepTransition from "./EnrollmentStepTransition";
 
 const ENROLLMENT_STEPS = [
   { id: "welcome",   label: "Welcome" },
