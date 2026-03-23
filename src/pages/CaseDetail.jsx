@@ -335,7 +335,19 @@ export default function CaseDetail() {
 
         {/* Activity */}
         <TabsContent value="activity" className="mt-4">
-          <ActivityTab caseId={caseId} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ActivityTab caseId={caseId} />
+            </div>
+            <div>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">Change History</p>
+                  <AuditTrailViewer activities={activityLog} />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
