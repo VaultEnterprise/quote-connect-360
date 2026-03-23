@@ -51,6 +51,7 @@ const SORT_OPTIONS = [
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 export default function Cases() {
+  const queryClient = useQueryClient();
   const [search, setSearch]             = useState("");
   const [stageFilter, setStageFilter]   = useState("all");
   const [typeFilter, setTypeFilter]     = useState("all");
@@ -59,6 +60,9 @@ export default function Cases() {
   const [viewMode, setViewMode]         = useState("list"); // "list" | "pipeline"
   const [selectedIds, setSelectedIds]   = useState(new Set());
   const [bulkAction, setBulkAction]     = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showStageModal, setShowStageModal]   = useState(false);
+  const [showPriorityModal, setShowPriorityModal] = useState(false);
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
