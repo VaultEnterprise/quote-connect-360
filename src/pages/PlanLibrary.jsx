@@ -68,95 +68,7 @@ export default function PlanLibrary() {
   const handleEdit = (plan) => { setEditingPlan(plan); setShowForm(true); };
   const handleNew = () => { setEditingPlan(null); setShowForm(true); };
 
-  // View mode content
-  if (viewMode === "analytics") {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Plan Library"
-          description="Manage your Medical and Ancillary plan catalog with rate tables"
-          actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowImport(true)}>
-                <Upload className="w-4 h-4 mr-2" /> Import Plans
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button><Plus className="w-4 h-4 mr-2" /> Add Plan</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => { setActiveTab("medical"); handleNew(); }}>Medical Plan</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setActiveTab("ancillary"); handleNew(); }}>Ancillary Plan</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          }
-        />
-
-        <div className="flex items-center gap-2">
-          <Select value={viewMode} onValueChange={setViewMode}>
-            <SelectTrigger className="w-40 h-9 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="grid">Grid View</SelectItem>
-              <SelectItem value="analytics">Analytics</SelectItem>
-              <SelectItem value="guide">Help & Tips</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <PlanAnalyticsPanel plans={plans} />
-        <PlanQualityChecklist plans={plans} />
-        <PlanArchiveManager archivedPlans={archivedPlans} />
-        {showForm && <PlanFormModal plan={editingPlan} open={showForm} defaultType={activeTab === "medical" ? "medical" : "dental"} onClose={() => { setShowForm(false); setEditingPlan(null); }} />}
-        {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
-      </div>
-    );
-  }
-
-  if (viewMode === "guide") {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Plan Library"
-          description="Manage your Medical and Ancillary plan catalog with rate tables"
-          actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowImport(true)}>
-                <Upload className="w-4 h-4 mr-2" /> Import Plans
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button><Plus className="w-4 h-4 mr-2" /> Add Plan</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => { setActiveTab("medical"); handleNew(); }}>Medical Plan</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setActiveTab("ancillary"); handleNew(); }}>Ancillary Plan</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          }
-        />
-
-        <div className="flex items-center gap-2">
-          <Select value={viewMode} onValueChange={setViewMode}>
-            <SelectTrigger className="w-40 h-9 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="grid">Grid View</SelectItem>
-              <SelectItem value="analytics">Analytics</SelectItem>
-              <SelectItem value="guide">Help & Tips</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <PlanLibraryGuide />
-        <PlanQualityChecklist plans={plans} />
-        {showForm && <PlanFormModal plan={editingPlan} open={showForm} defaultType={activeTab === "medical" ? "medical" : "dental"} onClose={() => { setShowForm(false); setEditingPlan(null); }} />}
-        {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
-      </div>
-    );
-  }
-
-  return (
+  const PageContent = () => (
     <div className="space-y-6">
       <PageHeader
         title="Plan Library"
@@ -286,4 +198,28 @@ export default function PlanLibrary() {
       {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
     </div>
   );
+
+  // View mode content
+  if (viewMode === "analytics") {
+    return (
+      <div className="space-y-6">
+        <PageContent />
+        <PlanAnalyticsPanel plans={plans} />
+        <PlanQualityChecklist plans={plans} />
+        <PlanArchiveManager archivedPlans={archivedPlans} />
+      </div>
+    );
+  }
+
+  if (viewMode === "guide") {
+    return (
+      <div className="space-y-6">
+        <PageContent />
+        <PlanLibraryGuide />
+        <PlanQualityChecklist plans={plans} />
+      </div>
+    );
+  }
+
+  return <PageContent />;
 }
