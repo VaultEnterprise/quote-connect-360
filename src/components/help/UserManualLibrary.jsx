@@ -18,6 +18,12 @@ const CATEGORY_CONFIG = {
   best_practices: { icon: "✨", label: "Best Practices", color: "bg-pink-100 text-pink-700" },
 };
 
+/**
+ * UserManualLibrary — Browse published user manuals
+ * Status: Functional but may overlap with HelpCenter module browsing
+ * Usage: Can be surfaced in HelpCenter or used standalone
+ * Note: Display UserManual entities; ensure no duplication with HelpContent display
+ */
 export default function UserManualLibrary({ onSelectManual }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");

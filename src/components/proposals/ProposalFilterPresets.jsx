@@ -11,8 +11,14 @@ const DEFAULT_PRESETS = [
   { id: "5", name: "High Value", icon: "💎", filters: { minValue: 5000 } },
 ];
 
+/**
+ * UNWIRED COMPONENT: ProposalFilterPresets
+ * Status: Partially integrated — onSelectPreset callback is stubbed in ProposalBuilder
+ * TODO: Connect to ProposalBuilder filter logic to actually apply selected preset filters
+ * Usage: Called in ProposalBuilder line 275 but does not update filters on click
+ */
 export default function ProposalFilterPresets({ onSelectPreset }) {
-  const [presets, setPresets] = useState(DEFAULT_PRESETS);
+   const [presets, setPresets] = useState(DEFAULT_PRESETS);
 
   const removePreset = (id) => {
     setPresets(prev => prev.filter(p => p.id !== id));

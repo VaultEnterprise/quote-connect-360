@@ -27,6 +27,12 @@ const MODULES = [
   "Settings", "Integration Infrastructure", "Employee Portal"
 ];
 
+/**
+ * UserManualGenerator — AI-assisted manual creation tool
+ * Status: Fully functional but may be superseded by HelpAdmin's content management
+ * Note: This component creates UserManual entities via AI
+ * Ensure this is not duplicating HelpContent entity functionality
+ */
 export default function UserManualGenerator() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
