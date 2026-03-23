@@ -442,41 +442,43 @@ export default function HelpAdmin() {
                 <Card className="max-w-lg">
                   <CardContent className="p-5 space-y-4">
                     <h3 className="font-semibold text-base">{form.help_title}</h3>
-                    {form.short_help && <p className="text-sm text-foreground font-medium bg-primary/5 border border-primary/10 rounded-lg p-3">{form.short_help}</p>}
-                    {form.detailed_help && <div className="prose prose-sm max-w-none text-sm"><ReactMarkdown>{form.detailed_help}</ReactMarkdown></div>}
-                    {form.expected_user_action && <div className="rounded-lg border p-3"><p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">What to do</p><p className="text-sm">{form.expected_user_action}</p></div>}
-                    {form.warnings && <div className="rounded-lg bg-amber-50 border border-amber-200 p-3"><p className="text-xs font-semibold text-amber-700 mb-1">⚠ Warning</p><p className="text-sm text-amber-800">{form.warnings}</p></div>}
+                    {form.short_help_text && <p className="text-sm font-medium bg-primary/5 border border-primary/10 rounded-lg p-3">{form.short_help_text}</p>}
+                    {form.detailed_help_text && <div className="prose prose-sm max-w-none text-sm"><ReactMarkdown>{form.detailed_help_text}</ReactMarkdown></div>}
+                    {form.expected_user_action_text && <div className="rounded-lg border p-3"><p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">What to do</p><p className="text-sm">{form.expected_user_action_text}</p></div>}
+                    {form.warnings_text && <div className="rounded-lg bg-amber-50 border border-amber-200 p-3"><p className="text-xs font-semibold text-amber-700 mb-1">⚠ Warning</p><p className="text-sm text-amber-800">{form.warnings_text}</p></div>}
                   </CardContent>
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
                     <div><Label className="text-xs">Help Title *</Label><Input value={form.help_title} onChange={e => setForm(p => ({ ...p, help_title: e.target.value }))} className="mt-1 text-xs" /></div>
-                    <div><Label className="text-xs">Short Help (1-2 sentences) *</Label><Textarea value={form.short_help} onChange={e => setForm(p => ({ ...p, short_help: e.target.value }))} className="mt-1 text-xs h-16" /></div>
-                    <div><Label className="text-xs">Expected User Action</Label><Textarea value={form.expected_user_action} onChange={e => setForm(p => ({ ...p, expected_user_action: e.target.value }))} className="mt-1 text-xs h-16" /></div>
-                    <div><Label className="text-xs">Allowed Values</Label><Textarea value={form.allowed_values} onChange={e => setForm(p => ({ ...p, allowed_values: e.target.value }))} className="mt-1 text-xs h-12" /></div>
-                    <div><Label className="text-xs">Usage Example</Label><Textarea value={form.usage_example} onChange={e => setForm(p => ({ ...p, usage_example: e.target.value }))} className="mt-1 text-xs h-12" /></div>
-                    <div><Label className="text-xs">Warnings</Label><Textarea value={form.warnings} onChange={e => setForm(p => ({ ...p, warnings: e.target.value }))} className="mt-1 text-xs h-12" /></div>
-                    <div><Label className="text-xs">Validation Notes</Label><Textarea value={form.validation_notes} onChange={e => setForm(p => ({ ...p, validation_notes: e.target.value }))} className="mt-1 text-xs h-12" /></div>
+                    <div><Label className="text-xs">Short Help Text *</Label><Textarea value={form.short_help_text} onChange={e => setForm(p => ({ ...p, short_help_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
+                    <div><Label className="text-xs">Expected User Action</Label><Textarea value={form.expected_user_action_text} onChange={e => setForm(p => ({ ...p, expected_user_action_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
+                    <div><Label className="text-xs">Allowed Values</Label><Textarea value={form.allowed_values_text} onChange={e => setForm(p => ({ ...p, allowed_values_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
+                    <div><Label className="text-xs">Examples</Label><Textarea value={form.examples_text} onChange={e => setForm(p => ({ ...p, examples_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
+                    <div><Label className="text-xs">Warnings</Label><Textarea value={form.warnings_text} onChange={e => setForm(p => ({ ...p, warnings_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
+                    <div><Label className="text-xs">Validation Notes</Label><Textarea value={form.validation_notes_text} onChange={e => setForm(p => ({ ...p, validation_notes_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
+                    <div><Label className="text-xs">Dependency Notes</Label><Textarea value={form.dependency_notes_text} onChange={e => setForm(p => ({ ...p, dependency_notes_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
                     <div>
-                      <Label className="text-xs">Status</Label>
-                      <Select value={form.status} onValueChange={v => setForm(p => ({ ...p, status: v }))}>
+                      <Label className="text-xs">Content Status</Label>
+                      <Select value={form.content_status} onValueChange={v => setForm(p => ({ ...p, content_status: v }))}>
                         <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="active">Active</SelectItem>
                           <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
                           <SelectItem value="review_required">Review Required</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div><Label className="text-xs">Detailed Help (Markdown)</Label><Textarea value={form.detailed_help} onChange={e => setForm(p => ({ ...p, detailed_help: e.target.value }))} className="mt-1 text-xs h-48 font-mono" /></div>
-                    <div><Label className="text-xs">Feature Capabilities</Label><Textarea value={form.feature_capabilities} onChange={e => setForm(p => ({ ...p, feature_capabilities: e.target.value }))} className="mt-1 text-xs h-20" /></div>
-                    <div><Label className="text-xs">Process Description</Label><Textarea value={form.process_description} onChange={e => setForm(p => ({ ...p, process_description: e.target.value }))} className="mt-1 text-xs h-20" /></div>
-                    <div><Label className="text-xs">Related Topics (comma-separated)</Label><Input value={(form.related_topics || []).join(", ")} onChange={e => setForm(p => ({ ...p, related_topics: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }))} className="mt-1 text-xs" /></div>
-                    <div><Label className="text-xs">Search Keywords (comma-separated)</Label><Input value={(form.search_keywords || []).join(", ")} onChange={e => setForm(p => ({ ...p, search_keywords: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }))} className="mt-1 text-xs" /></div>
+                    <div><Label className="text-xs">Detailed Help Text (Markdown) *</Label><Textarea value={form.detailed_help_text} onChange={e => setForm(p => ({ ...p, detailed_help_text: e.target.value }))} className="mt-1 text-xs h-52 font-mono" /></div>
+                    <div><Label className="text-xs">Feature Capabilities</Label><Textarea value={form.feature_capabilities_text} onChange={e => setForm(p => ({ ...p, feature_capabilities_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
+                    <div><Label className="text-xs">Process Meaning</Label><Textarea value={form.process_meaning_text} onChange={e => setForm(p => ({ ...p, process_meaning_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
+                    <div><Label className="text-xs">Related Topics (comma-separated)</Label><Input value={form.related_topics_text} onChange={e => setForm(p => ({ ...p, related_topics_text: e.target.value }))} className="mt-1 text-xs" /></div>
+                    <div><Label className="text-xs">Search Keywords (comma-separated)</Label><Input value={form.search_keywords} onChange={e => setForm(p => ({ ...p, search_keywords: e.target.value }))} className="mt-1 text-xs" /></div>
                   </div>
                 </div>
               )}
