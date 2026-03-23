@@ -21,6 +21,15 @@ import PlanLibraryGuide from "@/components/plans/PlanLibraryGuide";
 import PlanSearchAdvanced from "@/components/plans/PlanSearchAdvanced";
 import PlanQualityChecklist from "@/components/plans/PlanQualityChecklist";
 import PlanArchiveManager from "@/components/plans/PlanArchiveManager";
+import PlanCSVExporter from "@/components/plans/PlanCSVExporter";
+import PlanTemplateLibrary from "@/components/plans/PlanTemplateLibrary";
+import EffectiveDateTracker from "@/components/plans/EffectiveDateTracker";
+import PlanUsageMetrics from "@/components/plans/PlanUsageMetrics";
+import DeprecationWarnings from "@/components/plans/DeprecationWarnings";
+import FormularyComparison from "@/components/plans/FormularyComparison";
+import HSAFilter from "@/components/plans/HSAFilter";
+import BulkRateUpdater from "@/components/plans/BulkRateUpdater";
+import CoverageTierComparison from "@/components/plans/CoverageTierComparison";
 
 const MEDICAL_CARRIERS = ["Aetna", "Anthem", "BlueCross BlueShield", "Cigna", "Humana", "Kaiser", "UnitedHealthcare", "Other"];
 const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
@@ -36,6 +45,7 @@ export default function PlanLibrary() {
   const [activeTab, setActiveTab] = useState("medical");
   const [comparisonPlans, setComparisonPlans] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide"
+  const [hsaFilter, setHsaFilter] = useState(false);
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ["benefit-plans"],
@@ -60,7 +70,8 @@ export default function PlanLibrary() {
       p.plan_code?.toLowerCase().includes(search.toLowerCase());
     const matchCarrier = carrierFilter === "all" || p.carrier === carrierFilter;
     const matchNetwork = networkFilter === "all" || p.network_type === networkFilter;
-    return matchSearch && matchCarrier && matchNetwork;
+    const matchHSA = !hsaFilter || p.hsa_eligible;
+    return matchSearch && matchCarrier && matchNetwork && matchHSA;
   });
 
   const carriers = [...new Set(plans.map(p => p.carrier).filter(Boolean))].sort();
@@ -74,7 +85,8 @@ export default function PlanLibrary() {
         title="Plan Library"
         description="Manage your Medical and Ancillary plan catalog with rate tables"
         actions={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <PlanCSVExporter plans={plans} />
             <Button variant="outline" onClick={() => setShowImport(true)}>
               <Upload className="w-4 h-4 mr-2" /> Import Plans
             </Button>
@@ -103,12 +115,15 @@ export default function PlanLibrary() {
         </Select>
       </div>
 
+      {/* Deprecation warnings */}
+      {viewMode === "grid" && <DeprecationWarnings plans={plans} />}
+
       {/* Quick filter presets */}
       {viewMode === "grid" && <PlanFilterPresets onSelectPreset={() => {}} />}
 
       {/* Filters (grid view only) */}
       {viewMode === "grid" && (
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Search by name, carrier, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
@@ -127,11 +142,29 @@ export default function PlanLibrary() {
               {["HMO","PPO","EPO","HDHP","POS"].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
             </SelectContent>
           </Select>
+          <HSAFilter plans={plans} onFilterChange={(f) => f === "hsa" && setHsaFilter(!hsaFilter)} />
         </div>
       )}
 
       {/* Advanced search */}
       {viewMode === "grid" && <PlanSearchAdvanced onSearch={() => {}} />}
+
+      {/* Plan templates */}
+      {viewMode === "grid" && <PlanTemplateLibrary />}
+
+      {/* Effective date tracker */}
+      {viewMode === "grid" && <EffectiveDateTracker plans={plans} />}
+
+      {/* Bulk components */}
+      {viewMode === "grid" && plans.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <BulkRateUpdater plans={plans} />
+          <FormularyComparison plans={plans} />
+        </div>
+      )}
+
+      {/* Coverage tier comparison */}
+      {viewMode === "grid" && <CoverageTierComparison plans={plans} />}
 
       {/* Quality checklist */}
       {viewMode === "grid" && <PlanQualityChecklist plans={plans} />}
@@ -205,6 +238,8 @@ export default function PlanLibrary() {
       <div className="space-y-6">
         <PageContent />
         <PlanAnalyticsPanel plans={plans} />
+        <PlanUsageMetrics plans={plans} />
+        <EffectiveDateTracker plans={plans} />
         <PlanQualityChecklist plans={plans} />
         <PlanArchiveManager archivedPlans={archivedPlans} />
       </div>
