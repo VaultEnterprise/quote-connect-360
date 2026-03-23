@@ -61,7 +61,14 @@ export default function HelpCenter() {
 
   const { data: manualTopics = [] } = useQuery({
     queryKey: ["help-manual-topics"],
-    queryFn: () => base44.entities.HelpManualTopic.filter({ is_active: true, is_published: true }, "sort_order", 100),
+    queryFn: async () => {
+      try {
+        return await base44.entities.HelpManualTopic.list("sort_order", 100);
+      } catch (err) {
+        console.warn("Failed to load manual topics:", err);
+        return [];
+      }
+    },
   });
 
   const contentMap = useMemo(() =>
