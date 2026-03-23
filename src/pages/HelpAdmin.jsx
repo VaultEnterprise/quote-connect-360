@@ -261,7 +261,7 @@ export default function HelpAdmin() {
             <CardContent className="space-y-3">
               {MODULES.map(mod => {
                 const targets = HELP_TARGETS.filter(t => t.module_code === mod);
-                const modCovered = targets.filter(t => contentMap[t.target_code]?.status === "active").length;
+                const modCovered = targets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
                 const pct = Math.round((modCovered / targets.length) * 100);
                 return (
                   <div key={mod} className="flex items-center gap-3">
@@ -329,7 +329,7 @@ export default function HelpAdmin() {
                       <span className="font-medium text-sm">{pageCode.replace(/_/g, " ")}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {targets.filter(t => contentMap[t.target_code]?.status === "active").length}/{targets.length} active
+                      {targets.filter(t => contentMap[t.target_code]?.content_status === "active").length}/{targets.length} active
                     </span>
                   </button>
                   {expandedPages[pageCode] && (
@@ -342,7 +342,8 @@ export default function HelpAdmin() {
                               <Badge variant="outline" className="text-[8px] py-0 flex-shrink-0">{t.component_type}</Badge>
                               <span className="text-xs truncate">{t.target_label}</span>
                               {!c && <Badge className="text-[8px] bg-amber-100 text-amber-700 flex-shrink-0">Missing</Badge>}
-                              {c?.status === "draft" && <Badge className="text-[8px] bg-slate-100 flex-shrink-0">Draft</Badge>}
+                              {c?.content_status === "draft" && <Badge className="text-[8px] bg-slate-100 flex-shrink-0">Draft</Badge>}
+                              {c?.content_status === "review_required" && <Badge className="text-[8px] bg-orange-100 text-orange-700 flex-shrink-0">Review</Badge>}
                             </div>
                             <div className="flex gap-1 flex-shrink-0">
                               <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditor(t)}>
@@ -351,8 +352,8 @@ export default function HelpAdmin() {
                               {c && (
                                 <>
                                   <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
-                                    onClick={() => toggleStatus.mutate({ id: c.id, status: c.status })}>
-                                    {c.status === "active" ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                                    onClick={() => toggleStatus.mutate({ id: c.id, status: c.content_status })}>
+                                    {c.content_status === "active" ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                                   </Button>
                                   <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive"
                                     onClick={() => deleteContent.mutate(c.id)}>
