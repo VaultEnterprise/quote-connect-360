@@ -341,12 +341,10 @@ Deno.serve(async (req) => {
   // ─── 1. MODULES ──────────────────────────────────────────────────────────
   const existingModules = await base44.asServiceRole.entities.HelpModule.list();
   const existingModuleCodes = new Set(existingModules.map(m => m.module_code));
-
-  for (const mod of MODULES) {
-    if (existingModuleCodes.has(mod.module_code)) { stats.modules.skipped++; continue; }
-    await base44.asServiceRole.entities.HelpModule.create(mod);
-    stats.modules.created++;
-  }
+  const newModules = MODULES.filter(m => !existingModuleCodes.has(m.module_code));
+  if (newModules.length > 0) await base44.asServiceRole.entities.HelpModule.bulkCreate(newModules);
+  stats.modules.created = newModules.length;
+  stats.modules.skipped = MODULES.length - newModules.length;
 
   // ─── 2. PAGES ────────────────────────────────────────────────────────────
   const allModules = await base44.asServiceRole.entities.HelpModule.list();
@@ -354,16 +352,12 @@ Deno.serve(async (req) => {
 
   const existingPages = await base44.asServiceRole.entities.HelpPage.list();
   const existingPageCodes = new Set(existingPages.map(p => p.page_code));
-
-  for (const pg of PAGES) {
-    if (existingPageCodes.has(pg.page_code)) { stats.pages.skipped++; continue; }
-    const mod = moduleByCode[pg.module_code];
-    await base44.asServiceRole.entities.HelpPage.create({
-      ...pg,
-      help_module_id: mod?.id || null,
-    });
-    stats.pages.created++;
-  }
+  const newPages = PAGES.filter(p => !existingPageCodes.has(p.page_code)).map(pg => ({
+    ...pg, help_module_id: moduleByCode[pg.module_code]?.id || null,
+  }));
+  if (newPages.length > 0) await base44.asServiceRole.entities.HelpPage.bulkCreate(newPages);
+  stats.pages.created = newPages.length;
+  stats.pages.skipped = PAGES.length - newPages.length;
 
   // ─── 3. SECTIONS ─────────────────────────────────────────────────────────
   const allPages = await base44.asServiceRole.entities.HelpPage.list();
@@ -371,16 +365,12 @@ Deno.serve(async (req) => {
 
   const existingSections = await base44.asServiceRole.entities.HelpSection.list();
   const existingSectionCodes = new Set(existingSections.map(s => s.section_code));
-
-  for (const sec of SECTIONS) {
-    if (existingSectionCodes.has(sec.section_code)) { stats.sections.skipped++; continue; }
-    const pg = pageByCode[sec.page_code];
-    await base44.asServiceRole.entities.HelpSection.create({
-      ...sec,
-      help_page_id: pg?.id || null,
-    });
-    stats.sections.created++;
-  }
+  const newSections = SECTIONS.filter(s => !existingSectionCodes.has(s.section_code)).map(sec => ({
+    ...sec, help_page_id: pageByCode[sec.page_code]?.id || null,
+  }));
+  if (newSections.length > 0) await base44.asServiceRole.entities.HelpSection.bulkCreate(newSections);
+  stats.sections.created = newSections.length;
+  stats.sections.skipped = SECTIONS.length - newSections.length;
 
   // ─── 4. TARGETS ──────────────────────────────────────────────────────────
   const allSections = await base44.asServiceRole.entities.HelpSection.list();
@@ -389,130 +379,93 @@ Deno.serve(async (req) => {
   const existingTargets = await base44.asServiceRole.entities.HelpTarget.list();
   const existingTargetCodes = new Set(existingTargets.map(t => t.target_code));
 
-  const newTargets = [];
-
+  const newTargetRecords = [];
   for (const row of INVENTORY) {
     const [target_code, page_code, section_code, target_type, target_name, target_label,
       component_key, field_name, control_name, action_code, workflow_code, grid_code,
       grid_column_code, target_path, search_keywords, role_scope, sort_order,
       is_help_enabled, is_required_for_coverage] = row;
-
     if (existingTargetCodes.has(target_code)) { stats.targets.skipped++; continue; }
-
     const pg = pageByCode[page_code];
     const sec = section_code ? sectionByCode[section_code] : null;
-
-    const record = {
-      target_code,
-      target_type,
-      target_name,
-      target_label,
-      module_code: pg?.module_code || null,
-      page_code,
+    newTargetRecords.push({
+      target_code, target_type, target_name, target_label,
+      module_code: pg?.module_code || null, page_code,
       section_code: section_code || null,
       help_module_id: pg ? (moduleByCode[pg.module_code]?.id || null) : null,
-      help_page_id: pg?.id || null,
-      help_section_id: sec?.id || null,
-      component_key: component_key || null,
-      field_name: field_name || null,
-      control_name: control_name || null,
-      action_code: action_code || null,
-      workflow_code: workflow_code || null,
-      grid_code: grid_code || null,
-      grid_column_code: grid_column_code || null,
-      target_path: target_path || null,
-      search_keywords: search_keywords || null,
-      role_scope: role_scope || "all",
-      sort_order: sort_order || 0,
-      is_help_enabled: is_help_enabled !== false,
+      help_page_id: pg?.id || null, help_section_id: sec?.id || null,
+      component_key: component_key || null, field_name: field_name || null,
+      control_name: control_name || null, action_code: action_code || null,
+      workflow_code: workflow_code || null, grid_code: grid_code || null,
+      grid_column_code: grid_column_code || null, target_path: target_path || null,
+      search_keywords: search_keywords || null, role_scope: role_scope || "all",
+      sort_order: sort_order || 0, is_help_enabled: is_help_enabled !== false,
       is_required_for_coverage: is_required_for_coverage !== false,
-      is_system_generated: true,
-      is_active: true,
-    };
-
-    await base44.asServiceRole.entities.HelpTarget.create(record);
-    newTargets.push({ ...record, id: null }); // id not returned, will refetch
-    stats.targets.created++;
+      is_system_generated: true, is_active: true,
+    });
   }
+  // Bulk create in batches of 25
+  const BATCH = 25;
+  for (let i = 0; i < newTargetRecords.length; i += BATCH) {
+    await base44.asServiceRole.entities.HelpTarget.bulkCreate(newTargetRecords.slice(i, i + BATCH));
+  }
+  stats.targets.created = newTargetRecords.length;
 
   // ─── 5. HELP CONTENTS ────────────────────────────────────────────────────
   const allTargets = await base44.asServiceRole.entities.HelpTarget.list();
   const existingContents = await base44.asServiceRole.entities.HelpContent.list();
   const existingContentTargetCodes = new Set(existingContents.map(c => c.help_target_code));
 
+  const newContents = [];
   for (const target of allTargets) {
     if (!target.is_active) continue;
     if (existingContentTargetCodes.has(target.target_code)) { stats.contents.skipped++; continue; }
-
     const generated = generateContent(target);
-    await base44.asServiceRole.entities.HelpContent.create({
-      help_target_id: target.id,
-      help_target_code: target.target_code,
-      module_code: target.module_code || null,
-      page_code: target.page_code || null,
-      content_source_type: "system_generated",
-      content_status: "draft",
-      version_no: 1,
-      language_code: "en",
-      ...generated,
-      role_visibility: target.role_scope || "all",
-      source_confidence_score: 0.7,
-      is_primary: true,
-      is_active: true,
-      review_required: true,
-      approved_by: null,
-      approved_at: null,
-      last_updated_by: null,
-      view_count: 0,
+    newContents.push({
+      help_target_id: target.id, help_target_code: target.target_code,
+      module_code: target.module_code || null, page_code: target.page_code || null,
+      content_source_type: "system_generated", content_status: "draft",
+      version_no: 1, language_code: "en", ...generated,
+      role_visibility: target.role_scope || "all", source_confidence_score: 0.7,
+      is_primary: true, is_active: true, review_required: true,
+      approved_by: null, approved_at: null, last_updated_by: null, view_count: 0,
     });
-    stats.contents.created++;
   }
+  for (let i = 0; i < newContents.length; i += BATCH) {
+    await base44.asServiceRole.entities.HelpContent.bulkCreate(newContents.slice(i, i + BATCH));
+  }
+  stats.contents.created = newContents.length;
 
   // ─── 6. MANUAL TOPICS ────────────────────────────────────────────────────
   const existingTopics = await base44.asServiceRole.entities.HelpManualTopic.list();
   const existingTopicCodes = new Set(existingTopics.map(t => t.topic_code));
-
-  for (const topic of MANUAL_TOPICS) {
-    if (existingTopicCodes.has(topic.topic_code)) { stats.manual_topics.skipped++; continue; }
-    const mod = moduleByCode[topic.module_code];
-    await base44.asServiceRole.entities.HelpManualTopic.create({
-      ...topic,
-      help_module_id: mod?.id || null,
-    });
-    stats.manual_topics.created++;
-  }
+  const newTopics = MANUAL_TOPICS.filter(t => !existingTopicCodes.has(t.topic_code)).map(topic => ({
+    ...topic, help_module_id: moduleByCode[topic.module_code]?.id || null,
+  }));
+  if (newTopics.length > 0) await base44.asServiceRole.entities.HelpManualTopic.bulkCreate(newTopics);
+  stats.manual_topics.created = newTopics.length;
+  stats.manual_topics.skipped = MANUAL_TOPICS.length - newTopics.length;
 
   // ─── 7. TOPIC TARGET MAPS ────────────────────────────────────────────────
   const allTopics = await base44.asServiceRole.entities.HelpManualTopic.list();
   const topicByCode = Object.fromEntries(allTopics.map(t => [t.topic_code, t]));
   const targetByCode = Object.fromEntries(allTargets.map(t => [t.target_code, t]));
 
-  // Check if HelpManualTopicTargetMap entity exists by attempting a list
   let existingMaps = [];
-  try {
-    existingMaps = await base44.asServiceRole.entities.HelpManualTopicTargetMap.list();
-  } catch (_) {
-    existingMaps = [];
-  }
+  try { existingMaps = await base44.asServiceRole.entities.HelpManualTopicTargetMap.list(); } catch (_) {}
   const existingMapKeys = new Set(existingMaps.map(m => `${m.help_manual_topic_id}__${m.help_target_id}`));
 
+  const newMaps = [];
   for (const map of TOPIC_TARGET_MAPS) {
     const topic = topicByCode[map.topic_code];
     const target = targetByCode[map.target_code];
     if (!topic || !target) { stats.topic_maps.skipped++; continue; }
-    const key = `${topic.id}__${target.id}`;
-    if (existingMapKeys.has(key)) { stats.topic_maps.skipped++; continue; }
-    try {
-      await base44.asServiceRole.entities.HelpManualTopicTargetMap.create({
-        help_manual_topic_id: topic.id,
-        topic_code: map.topic_code,
-        help_target_id: target.id,
-        target_code: map.target_code,
-      });
-      stats.topic_maps.created++;
-    } catch (_) {
-      stats.topic_maps.skipped++;
-    }
+    if (existingMapKeys.has(`${topic.id}__${target.id}`)) { stats.topic_maps.skipped++; continue; }
+    newMaps.push({ help_manual_topic_id: topic.id, topic_code: map.topic_code, help_target_id: target.id, target_code: map.target_code });
+  }
+  if (newMaps.length > 0) {
+    try { await base44.asServiceRole.entities.HelpManualTopicTargetMap.bulkCreate(newMaps); stats.topic_maps.created = newMaps.length; }
+    catch (_) { stats.topic_maps.skipped += newMaps.length; }
   }
 
   // ─── 8. AI TRAINING QUEUE ────────────────────────────────────────────────
@@ -520,37 +473,21 @@ Deno.serve(async (req) => {
   const existingQueue = await base44.asServiceRole.entities.HelpAITrainingQueue.list();
   const queuedIds = new Set(existingQueue.map(q => q.source_entity_id));
 
-  // Queue active/draft contents
+  const queueItems = [];
   for (const c of allContents) {
     if (queuedIds.has(c.id)) { stats.ai_queue.skipped++; continue; }
-    await base44.asServiceRole.entities.HelpAITrainingQueue.create({
-      source_entity_type: "HelpContent",
-      source_entity_id: c.id,
-      source_target_code: c.help_target_code,
-      change_reason: "initial seed",
-      queue_status: "queued",
-      attempt_count: 0,
-      queued_at: new Date().toISOString(),
-    });
-    stats.ai_queue.created++;
+    queueItems.push({ source_entity_type: "HelpContent", source_entity_id: c.id, source_target_code: c.help_target_code, change_reason: "initial seed", queue_status: "queued", attempt_count: 0, queued_at: new Date().toISOString() });
   }
-
-  // Queue published manual topics
   const allTopicsFinal = await base44.asServiceRole.entities.HelpManualTopic.list();
   for (const t of allTopicsFinal) {
     if (!t.is_published) continue;
     if (queuedIds.has(t.id)) { stats.ai_queue.skipped++; continue; }
-    await base44.asServiceRole.entities.HelpAITrainingQueue.create({
-      source_entity_type: "HelpManualTopic",
-      source_entity_id: t.id,
-      source_target_code: null,
-      change_reason: "initial seed",
-      queue_status: "queued",
-      attempt_count: 0,
-      queued_at: new Date().toISOString(),
-    });
-    stats.ai_queue.created++;
+    queueItems.push({ source_entity_type: "HelpManualTopic", source_entity_id: t.id, source_target_code: null, change_reason: "initial seed", queue_status: "queued", attempt_count: 0, queued_at: new Date().toISOString() });
   }
+  for (let i = 0; i < queueItems.length; i += BATCH) {
+    await base44.asServiceRole.entities.HelpAITrainingQueue.bulkCreate(queueItems.slice(i, i + BATCH));
+  }
+  stats.ai_queue.created = queueItems.length;
 
   return Response.json({
     success: true,
