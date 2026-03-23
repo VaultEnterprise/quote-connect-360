@@ -14,12 +14,21 @@ import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import {
   Search, ChevronRight, ChevronDown, Edit2, Eye, EyeOff, Trash2,
-  Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, RefreshCw, Play,
-  LayoutDashboard, FileBarChart, TrendingUp, BookOpen
+  Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, Play,
+  LayoutDashboard, FileBarChart, TrendingUp, BookOpen, Database,
+  X, Target, MessageSquare, Zap, Settings2, RefreshCw, Plus
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ReactMarkdown from "react-markdown";
 import { HELP_TARGETS, MODULES } from "@/lib/helpTargetRegistry";
+
+// Sub-components
+import AdminSeedPanel from "@/components/help-admin/AdminSeedPanel";
+import ContentCoverageTab from "@/components/help-admin/ContentCoverageTab";
+import BulkAIGeneratePanel from "@/components/help-admin/BulkAIGeneratePanel";
+import ManualTopicsTab from "@/components/help-admin/ManualTopicsTab";
+import TopicEditorModal from "@/components/help-admin/TopicEditorModal";
+import AIReviewTab from "@/components/help-admin/AIReviewTab";
 
 const MODULE_LABELS = {
   DASHBOARD:"Dashboard", CASES:"Cases", CENSUS:"Census", QUOTES:"Quotes",
@@ -30,11 +39,11 @@ const MODULE_LABELS = {
 };
 
 const EMPTY_FORM = {
-  help_title: "", short_help_text: "", detailed_help_text: "", feature_capabilities_text: "",
-  process_meaning_text: "", expected_user_action_text: "", allowed_values_text: "",
-  examples_text: "", dependency_notes_text: "", warnings_text: "",
-  validation_notes_text: "", related_topics_text: "", search_keywords: "",
-  role_visibility: "all", content_status: "active",
+  help_title:"", short_help_text:"", detailed_help_text:"", feature_capabilities_text:"",
+  process_meaning_text:"", expected_user_action_text:"", allowed_values_text:"",
+  examples_text:"", dependency_notes_text:"", warnings_text:"",
+  validation_notes_text:"", related_topics_text:"", search_keywords:"",
+  role_visibility:"all", content_status:"active",
 };
 
 export default function HelpAdmin() {
@@ -48,10 +57,11 @@ export default function HelpAdmin() {
   const [editingTarget, setEditingTarget] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [aiGenerating, setAiGenerating] = useState(false);
-  const [seeding, setSeeding] = useState(false);
-  const [seedingDashboard, setSeedingDashboard] = useState(false);
-  const [seedingManual, setSeedingManual] = useState(false);
   const [preview, setPreview] = useState(false);
+
+  // Manual topic editor modal
+  const [topicEditorOpen, setTopicEditorOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState(null);
 
   const { data: contents = [] } = useQuery({
     queryKey: ["help-contents-admin"],
@@ -67,9 +77,7 @@ export default function HelpAdmin() {
     contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}),
   [contents]);
 
-  const covered = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "active").length;
-  const missing = HELP_TARGETS.filter(t => !contentMap[t.target_code]).length;
-  const drafts = contents.filter(c => c.content_status === "draft").length;
+  const pendingReviewCount = aiLogs.length;
 
   const saveContent = useMutation({
     mutationFn: async (data) => {
@@ -86,7 +94,7 @@ export default function HelpAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] });
       queryClient.invalidateQueries({ queryKey: ["help-contents-all"] });
-      toast({ title: "Help content saved", description: `Content for "${editingTarget.target_label}" saved with version history.` });
+      toast({ title: "Saved", description: `Content for "${editingTarget.target_label}" saved.` });
       setEditingTarget(null);
     },
   });
@@ -124,7 +132,7 @@ export default function HelpAdmin() {
         content_status: existing.content_status || "active",
       });
     } else {
-      setForm({ ...EMPTY_FORM, help_title: target.target_label, short_help_text: "" });
+      setForm({ ...EMPTY_FORM, help_title: target.target_label });
     }
     setPreview(false);
     setTab("editor");
@@ -158,61 +166,11 @@ export default function HelpAdmin() {
         related_topics_text: data.related_topics_text || prev.related_topics_text,
         search_keywords: data.search_keywords || prev.search_keywords,
       }));
-      toast({ title: "AI Generated", description: "Content generated. Review and save." });
+      toast({ title: "AI Generated", description: "Review and save." });
     } catch (e) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally {
       setAiGenerating(false);
-    }
-  };
-
-  const runSeed = async () => {
-    setSeeding(true);
-    try {
-      const res = await base44.functions.invoke("seedHelpContent", {});
-      const data = res.data;
-      queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] });
-      toast({ title: "Seed Complete", description: `Created ${data.created} records, skipped ${data.skipped}.` });
-    } catch (e) {
-      toast({ title: "Seed Error", description: e.message, variant: "destructive" });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  const runDashboardSeed = async () => {
-    setSeedingDashboard(true);
-    try {
-      const res = await base44.functions.invoke("seedDashboardHelp", {});
-      const data = res.data;
-      queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] });
-      queryClient.invalidateQueries({ queryKey: ["help-contents-all"] });
-      toast({ title: "Dashboard Help Seeded", description: data.message });
-    } catch (e) {
-      toast({ title: "Seed Error", description: e.message, variant: "destructive" });
-    } finally {
-      setSeedingDashboard(false);
-    }
-  };
-
-  const runManualSeed = async () => {
-    setSeedingManual(true);
-    try {
-      const [r1, r2, r3, r4, r5] = await Promise.all([
-        base44.functions.invoke("seedApplicationManualPart1", {}),
-        base44.functions.invoke("seedApplicationManualPart2", {}),
-        base44.functions.invoke("seedManualPageGuides", {}),
-        base44.functions.invoke("seedManualFAQBank", {}),
-        base44.functions.invoke("seedManualArchitectureDoc", {}),
-      ]);
-      queryClient.invalidateQueries({ queryKey: ["help-manual-topics"] });
-      const totalCreated = [r1,r2,r3,r4,r5].reduce((s,r) => s + (r.data?.created || 0), 0);
-      const totalUpdated = [r1,r2,r3,r4,r5].reduce((s,r) => s + (r.data?.updated || 0), 0);
-      toast({ title: "Full Manual Seeded ✓", description: `${totalCreated} created, ${totalUpdated} updated across all 5 seed packs. HelpAI knowledge base is fully indexed.` });
-    } catch (e) {
-      toast({ title: "Manual Seed Error", description: e.message, variant: "destructive" });
-    } finally {
-      setSeedingManual(false);
     }
   };
 
@@ -245,232 +203,213 @@ export default function HelpAdmin() {
     );
   }
 
+  const openTopicEditor = (topic) => { setEditingTopic(topic || null); setTopicEditorOpen(true); };
+  const closeTopicEditor = () => { setEditingTopic(null); setTopicEditorOpen(false); };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Help Management Console"
-        description="Manage help content for every element in the application"
-        actions={
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={runManualSeed} disabled={seedingManual} variant="default" size="sm" className="gap-1">
-              <BookOpen className="w-3.5 h-3.5" /> {seedingManual ? "Seeding Manual…" : "Seed Full Manual"}
-            </Button>
-            <Button onClick={runDashboardSeed} disabled={seedingDashboard} variant="outline" size="sm" className="gap-1">
-              <Play className="w-3.5 h-3.5" /> {seedingDashboard ? "Seeding…" : "Seed Dashboard Help"}
-            </Button>
-            <Button onClick={runSeed} disabled={seeding} variant="outline" size="sm" className="gap-1">
-              <Play className="w-3.5 h-3.5" /> {seeding ? "Seeding…" : "Seed Default Help"}
-            </Button>
-          </div>
-        }
+        description="Manage all help content, manual topics, AI knowledge base, and documentation quality"
       />
 
-      {/* Quick nav to other admin pages */}
+      {/* Navigation strip to related admin pages */}
       <div className="flex flex-wrap gap-2">
         <Link to="/help-dashboard"><Button size="sm" variant="outline" className="gap-1 text-xs"><LayoutDashboard className="w-3 h-3" /> Help Dashboard</Button></Link>
         <Link to="/help-coverage"><Button size="sm" variant="outline" className="gap-1 text-xs"><FileBarChart className="w-3 h-3" /> Coverage Report</Button></Link>
         <Link to="/help-analytics"><Button size="sm" variant="outline" className="gap-1 text-xs"><TrendingUp className="w-3 h-3" /> Search Analytics</Button></Link>
-        <Link to="/help-manual-manager"><Button size="sm" variant="outline" className="gap-1 text-xs"><BookOpen className="w-3 h-3" /> Manual Manager</Button></Link>
         <Link to="/help-target-registry"><Button size="sm" variant="outline" className="gap-1 text-xs"><BarChart2 className="w-3 h-3" /> Target Registry</Button></Link>
+        <Link to="/help"><Button size="sm" variant="outline" className="gap-1 text-xs"><Eye className="w-3 h-3" /> View Help Center</Button></Link>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="coverage">Coverage</TabsTrigger>
-          <TabsTrigger value="browse">Browse by Module</TabsTrigger>
-          <TabsTrigger value="search">Search</TabsTrigger>
-          <TabsTrigger value="editor" disabled={!editingTarget}>Editor {editingTarget && `— ${editingTarget.target_label}`}</TabsTrigger>
-          <TabsTrigger value="ai_review">
-            AI Review {aiLogs.length > 0 && <Badge className="ml-1 text-[9px] bg-destructive">{aiLogs.length}</Badge>}
+        <TabsList className="flex-wrap h-auto gap-0.5">
+          <TabsTrigger value="coverage" className="gap-1 text-xs"><Target className="w-3 h-3" /> Coverage</TabsTrigger>
+          <TabsTrigger value="browse" className="gap-1 text-xs"><Search className="w-3 h-3" /> Browse</TabsTrigger>
+          <TabsTrigger value="manual" className="gap-1 text-xs"><BookOpen className="w-3 h-3" /> Manual Topics</TabsTrigger>
+          <TabsTrigger value="bulk_ai" className="gap-1 text-xs"><Sparkles className="w-3 h-3" /> Bulk AI Generate</TabsTrigger>
+          <TabsTrigger value="seeds" className="gap-1 text-xs"><Database className="w-3 h-3" /> Seed Data</TabsTrigger>
+          <TabsTrigger value="editor" disabled={!editingTarget} className="gap-1 text-xs">
+            <Edit2 className="w-3 h-3" /> Editor {editingTarget && <span className="max-w-24 truncate">— {editingTarget.target_label}</span>}
+          </TabsTrigger>
+          <TabsTrigger value="ai_review" className="gap-1 text-xs">
+            <MessageSquare className="w-3 h-3" /> AI Review
+            {pendingReviewCount > 0 && <Badge className="ml-1 text-[9px] bg-destructive text-white">{pendingReviewCount}</Badge>}
           </TabsTrigger>
         </TabsList>
 
-        {/* ── COVERAGE ── */}
-        <TabsContent value="coverage" className="mt-6 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: "Total Targets", value: HELP_TARGETS.length, color: "text-primary" },
-              { label: "With Active Help", value: covered, color: "text-emerald-600" },
-              { label: "Missing Help", value: missing, color: "text-red-600" },
-              { label: "Draft Content", value: drafts, color: "text-amber-600" },
-            ].map(kpi => (
-              <Card key={kpi.label}>
-                <CardContent className="p-4 text-center">
-                  <p className={`text-3xl font-bold ${kpi.color}`}>{kpi.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card>
-            <CardHeader><CardTitle className="text-sm">Coverage by Module</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {MODULES.map(mod => {
-                const targets = HELP_TARGETS.filter(t => t.module_code === mod);
-                const modCovered = targets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
-                const pct = Math.round((modCovered / targets.length) * 100);
-                return (
-                  <div key={mod} className="flex items-center gap-3">
-                    <button
-                      onClick={() => { setSelectedModule(mod); setTab("browse"); }}
-                      className="w-28 text-xs text-left font-medium hover:text-primary truncate"
-                    >
-                      {MODULE_LABELS[mod] || mod}
-                    </button>
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : pct > 50 ? "bg-primary" : "bg-amber-500"}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground w-16 text-right">{modCovered}/{targets.length}</span>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+        {/* ── COVERAGE ─────────────────────────────────────────────────────── */}
+        <TabsContent value="coverage" className="mt-5">
+          <ContentCoverageTab
+            contentMap={contentMap}
+            onEditTarget={(t) => openEditor(t)}
+            onBrowseModule={(mod) => { setSelectedModule(mod); setTab("browse"); }}
+          />
         </TabsContent>
 
-        {/* ── BROWSE ── */}
-        <TabsContent value="browse" className="mt-6 space-y-4">
+        {/* ── BROWSE BY MODULE ────────────────────────────────────────────── */}
+        <TabsContent value="browse" className="mt-5 space-y-4">
           {!selectedModule ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {MODULES.map(mod => {
-                const targets = HELP_TARGETS.filter(t => t.module_code === mod);
-                const modMissing = targets.filter(t => !contentMap[t.target_code]).length;
-                return (
-                  <Card key={mod} className="cursor-pointer hover:border-primary/50 transition-all"
-                    onClick={() => setSelectedModule(mod)}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-sm">{MODULE_LABELS[mod] || mod}</p>
-                        <p className="text-[11px] text-muted-foreground">{targets.length} targets</p>
-                      </div>
-                      <div className="text-right">
-                        {modMissing > 0
-                          ? <Badge className="text-[9px] bg-amber-100 text-amber-700">{modMissing} missing</Badge>
-                          : <Badge className="text-[9px] bg-emerald-100 text-emerald-700">Complete</Badge>
-                        }
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Quick search targets by label, code, or module…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+              </div>
+              {search ? (
+                <div className="space-y-2">
+                  {searchFiltered.length === 0 && <p className="text-sm text-muted-foreground">No targets found.</p>}
+                  {searchFiltered.map(t => {
+                    const c = contentMap[t.target_code];
+                    return (
+                      <Card key={t.target_code} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-3 flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-sm font-medium">{t.target_label}</span>
+                              <Badge variant="outline" className="text-[8px]">{t.module_code}</Badge>
+                              <Badge variant="outline" className="text-[8px]">{t.component_type}</Badge>
+                              {!c && <Badge className="text-[8px] bg-amber-100 text-amber-700">Missing</Badge>}
+                            </div>
+                            <p className="text-[10px] font-mono text-muted-foreground">{t.target_code}</p>
+                          </div>
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openEditor(t)}>
+                            <Edit2 className="w-3 h-3" /> {c ? "Edit" : "Add Help"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {MODULES.map(mod => {
+                    const targets = HELP_TARGETS.filter(t => t.module_code === mod);
+                    const modActive = targets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
+                    const modMissing = targets.filter(t => !contentMap[t.target_code]).length;
+                    const pct = Math.round((modActive / targets.length) * 100);
+                    return (
+                      <Card key={mod} className="cursor-pointer hover:border-primary/50 transition-all" onClick={() => setSelectedModule(mod)}>
+                        <CardContent className="p-4">
+                          <p className="font-semibold text-sm">{MODULE_LABELS[mod] || mod}</p>
+                          <p className="text-[11px] text-muted-foreground">{targets.length} targets</p>
+                          <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${pct === 100 ? "bg-emerald-500" : pct > 50 ? "bg-primary" : "bg-amber-500"}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-[10px] text-muted-foreground">{modActive}/{targets.length}</span>
+                            {modMissing > 0
+                              ? <Badge className="text-[8px] bg-amber-100 text-amber-700">{modMissing} missing</Badge>
+                              : <Badge className="text-[8px] bg-emerald-100 text-emerald-700">Complete</Badge>
+                            }
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <button onClick={() => setSelectedModule(null)} className="text-primary hover:underline text-sm">← All Modules</button>
                 <span className="text-muted-foreground">/</span>
                 <span className="font-semibold text-sm">{MODULE_LABELS[selectedModule]}</span>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0 ml-auto" onClick={() => setSelectedModule(null)}><X className="w-3 h-3" /></Button>
               </div>
-              {Object.entries(moduleGroups).map(([pageCode, targets]) => (
-                <Card key={pageCode}>
-                  <button
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30"
-                    onClick={() => setExpandedPages(p => ({ ...p, [pageCode]: !p[pageCode] }))}
-                  >
-                    <div className="flex items-center gap-2">
-                      {expandedPages[pageCode] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                      <span className="font-medium text-sm">{pageCode.replace(/_/g, " ")}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {targets.filter(t => contentMap[t.target_code]?.content_status === "active").length}/{targets.length} active
-                    </span>
-                  </button>
-                  {expandedPages[pageCode] && (
-                    <CardContent className="pt-0 pb-3 space-y-1">
-                      {targets.map(t => {
-                        const c = contentMap[t.target_code];
-                        return (
-                          <div key={t.target_code} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted/50 gap-2">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <Badge variant="outline" className="text-[8px] py-0 flex-shrink-0">{t.component_type}</Badge>
-                              <span className="text-xs truncate">{t.target_label}</span>
-                              {!c && <Badge className="text-[8px] bg-amber-100 text-amber-700 flex-shrink-0">Missing</Badge>}
-                              {c?.content_status === "draft" && <Badge className="text-[8px] bg-slate-100 flex-shrink-0">Draft</Badge>}
-                              {c?.content_status === "review_required" && <Badge className="text-[8px] bg-orange-100 text-orange-700 flex-shrink-0">Review</Badge>}
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditor(t)}>
-                                <Edit2 className="w-3 h-3" />
-                              </Button>
-                              {c && (
-                                <>
-                                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
-                                    onClick={() => toggleStatus.mutate({ id: c.id, status: c.content_status })}>
-                                    {c.content_status === "active" ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                                  </Button>
-                                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive"
-                                    onClick={() => deleteContent.mutate(c.id)}>
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </CardContent>
-                  )}
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ── SEARCH ── */}
-        <TabsContent value="search" className="mt-6 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search help targets by label, code, or module…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          {searchFiltered.length > 0 && (
-            <div className="space-y-2">
-              {searchFiltered.map(t => {
-                const c = contentMap[t.target_code];
+              {Object.entries(moduleGroups).map(([pageCode, targets]) => {
+                const activeInPage = targets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
                 return (
-                  <Card key={t.target_code} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-3 flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-sm font-medium">{t.target_label}</span>
-                          <Badge variant="outline" className="text-[8px]">{t.module_code}</Badge>
-                          <Badge variant="outline" className="text-[8px]">{t.component_type}</Badge>
-                          {!c && <Badge className="text-[8px] bg-amber-100 text-amber-700">Missing</Badge>}
-                        </div>
-                        <p className="text-[10px] font-mono text-muted-foreground">{t.target_code}</p>
+                  <Card key={pageCode}>
+                    <button className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30"
+                      onClick={() => setExpandedPages(p => ({ ...p, [pageCode]: !p[pageCode] }))}>
+                      <div className="flex items-center gap-2">
+                        {expandedPages[pageCode] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                        <span className="font-medium text-sm">{pageCode.replace(/_/g, " ")}</span>
                       </div>
-                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => openEditor(t)}>
-                        <Edit2 className="w-3 h-3" /> {c ? "Edit" : "Add Help"}
-                      </Button>
-                    </CardContent>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: `${Math.round(activeInPage/targets.length*100)}%` }} />
+                        </div>
+                        <span className="text-xs text-muted-foreground">{activeInPage}/{targets.length}</span>
+                      </div>
+                    </button>
+                    {expandedPages[pageCode] && (
+                      <CardContent className="pt-0 pb-3 space-y-0.5">
+                        {targets.map(t => {
+                          const c = contentMap[t.target_code];
+                          return (
+                            <div key={t.target_code} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted/50 gap-2 group">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <Badge variant="outline" className="text-[8px] py-0 flex-shrink-0">{t.component_type}</Badge>
+                                <span className="text-xs truncate">{t.target_label}</span>
+                                {!c && <Badge className="text-[8px] bg-red-100 text-red-700 flex-shrink-0">Missing</Badge>}
+                                {c?.content_status === "draft" && <Badge className="text-[8px] bg-amber-100 text-amber-700 flex-shrink-0">Draft</Badge>}
+                                {c?.content_status === "active" && <Badge className="text-[8px] bg-emerald-100 text-emerald-700 flex-shrink-0">Active</Badge>}
+                                {c?.content_status === "review_required" && <Badge className="text-[8px] bg-orange-100 text-orange-700 flex-shrink-0">Review</Badge>}
+                              </div>
+                              <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Edit" onClick={() => openEditor(t)}>
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                {c && (
+                                  <>
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="Toggle Status"
+                                      onClick={() => toggleStatus.mutate({ id: c.id, status: c.content_status })}>
+                                      {c.content_status === "active" ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" title="Delete"
+                                      onClick={() => { if (confirm("Delete this help content?")) deleteContent.mutate(c.id); }}>
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </CardContent>
+                    )}
                   </Card>
                 );
               })}
             </div>
           )}
-          {search && searchFiltered.length === 0 && (
-            <p className="text-sm text-muted-foreground">No targets found matching "{search}".</p>
-          )}
         </TabsContent>
 
-        {/* ── EDITOR ── */}
-        <TabsContent value="editor" className="mt-6">
-          {editingTarget && (
+        {/* ── MANUAL TOPICS ───────────────────────────────────────────────── */}
+        <TabsContent value="manual" className="mt-5">
+          <ManualTopicsTab
+            onEditTopic={(t) => openTopicEditor(t)}
+            onNewTopic={() => openTopicEditor(null)}
+          />
+        </TabsContent>
+
+        {/* ── BULK AI GENERATE ────────────────────────────────────────────── */}
+        <TabsContent value="bulk_ai" className="mt-5">
+          <BulkAIGeneratePanel contentMap={contentMap} />
+        </TabsContent>
+
+        {/* ── SEED DATA ───────────────────────────────────────────────────── */}
+        <TabsContent value="seeds" className="mt-5">
+          <AdminSeedPanel />
+        </TabsContent>
+
+        {/* ── CONTEXTUAL CONTENT EDITOR ───────────────────────────────────── */}
+        <TabsContent value="editor" className="mt-5">
+          {editingTarget ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <h3 className="font-semibold">{editingTarget.target_label}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{editingTarget.target_code}</code>
-                    <Badge variant="outline" className="text-[9px]">{editingTarget.component_type}</Badge>
+                <div className="flex items-center gap-3">
+                  <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => setEditingTarget(null)}>
+                    <X className="w-3 h-3" /> Close Editor
+                  </Button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">{editingTarget.target_label}</span>
+                      <Badge variant="outline" className="text-[9px]">{editingTarget.component_type}</Badge>
+                    </div>
+                    <code className="text-[10px] font-mono text-muted-foreground">{editingTarget.target_code}</code>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -487,7 +426,7 @@ export default function HelpAdmin() {
               </div>
 
               {preview ? (
-                <Card className="max-w-lg">
+                <Card className="max-w-xl">
                   <CardContent className="p-5 space-y-4">
                     <h3 className="font-semibold text-base">{form.help_title}</h3>
                     {form.short_help_text && <p className="text-sm font-medium bg-primary/5 border border-primary/10 rounded-lg p-3">{form.short_help_text}</p>}
@@ -501,12 +440,12 @@ export default function HelpAdmin() {
                   <div className="space-y-3">
                     <div><Label className="text-xs">Help Title *</Label><Input value={form.help_title} onChange={e => setForm(p => ({ ...p, help_title: e.target.value }))} className="mt-1 text-xs" /></div>
                     <div><Label className="text-xs">Short Help Text *</Label><Textarea value={form.short_help_text} onChange={e => setForm(p => ({ ...p, short_help_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
-                    <div><Label className="text-xs">Expected User Action</Label><Textarea value={form.expected_user_action_text} onChange={e => setForm(p => ({ ...p, expected_user_action_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
+                    <div><Label className="text-xs">Expected User Action</Label><Textarea value={form.expected_user_action_text} onChange={e => setForm(p => ({ ...p, expected_user_action_text: e.target.value }))} className="mt-1 text-xs h-14" /></div>
                     <div><Label className="text-xs">Allowed Values</Label><Textarea value={form.allowed_values_text} onChange={e => setForm(p => ({ ...p, allowed_values_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
                     <div><Label className="text-xs">Examples</Label><Textarea value={form.examples_text} onChange={e => setForm(p => ({ ...p, examples_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
                     <div><Label className="text-xs">Warnings</Label><Textarea value={form.warnings_text} onChange={e => setForm(p => ({ ...p, warnings_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
-                    <div><Label className="text-xs">Validation Notes</Label><Textarea value={form.validation_notes_text} onChange={e => setForm(p => ({ ...p, validation_notes_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
-                    <div><Label className="text-xs">Dependency Notes</Label><Textarea value={form.dependency_notes_text} onChange={e => setForm(p => ({ ...p, dependency_notes_text: e.target.value }))} className="mt-1 text-xs h-12" /></div>
+                    <div><Label className="text-xs">Validation Notes</Label><Textarea value={form.validation_notes_text} onChange={e => setForm(p => ({ ...p, validation_notes_text: e.target.value }))} className="mt-1 text-xs h-10" /></div>
+                    <div><Label className="text-xs">Dependency Notes</Label><Textarea value={form.dependency_notes_text} onChange={e => setForm(p => ({ ...p, dependency_notes_text: e.target.value }))} className="mt-1 text-xs h-10" /></div>
                     <div>
                       <Label className="text-xs">Content Status</Label>
                       <Select value={form.content_status} onValueChange={v => setForm(p => ({ ...p, content_status: v }))}>
@@ -522,79 +461,38 @@ export default function HelpAdmin() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div><Label className="text-xs">Detailed Help Text (Markdown) *</Label><Textarea value={form.detailed_help_text} onChange={e => setForm(p => ({ ...p, detailed_help_text: e.target.value }))} className="mt-1 text-xs h-52 font-mono" /></div>
-                    <div><Label className="text-xs">Feature Capabilities</Label><Textarea value={form.feature_capabilities_text} onChange={e => setForm(p => ({ ...p, feature_capabilities_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
-                    <div><Label className="text-xs">Process Meaning</Label><Textarea value={form.process_meaning_text} onChange={e => setForm(p => ({ ...p, process_meaning_text: e.target.value }))} className="mt-1 text-xs h-16" /></div>
+                    <div><Label className="text-xs">Detailed Help Text (Markdown) *</Label><Textarea value={form.detailed_help_text} onChange={e => setForm(p => ({ ...p, detailed_help_text: e.target.value }))} className="mt-1 text-xs h-56 font-mono" /></div>
+                    <div><Label className="text-xs">Feature Capabilities</Label><Textarea value={form.feature_capabilities_text} onChange={e => setForm(p => ({ ...p, feature_capabilities_text: e.target.value }))} className="mt-1 text-xs h-14" /></div>
+                    <div><Label className="text-xs">Process Meaning</Label><Textarea value={form.process_meaning_text} onChange={e => setForm(p => ({ ...p, process_meaning_text: e.target.value }))} className="mt-1 text-xs h-14" /></div>
                     <div><Label className="text-xs">Related Topics (comma-separated)</Label><Input value={form.related_topics_text} onChange={e => setForm(p => ({ ...p, related_topics_text: e.target.value }))} className="mt-1 text-xs" /></div>
                     <div><Label className="text-xs">Search Keywords (comma-separated)</Label><Input value={form.search_keywords} onChange={e => setForm(p => ({ ...p, search_keywords: e.target.value }))} className="mt-1 text-xs" /></div>
+                    {/* Live char counts */}
+                    <p className="text-[10px] text-muted-foreground">{form.detailed_help_text.length} chars in detailed text</p>
                   </div>
                 </div>
               )}
             </div>
-          )}
-        </TabsContent>
-
-        {/* ── AI REVIEW ── */}
-        <TabsContent value="ai_review" className="mt-6 space-y-4">
-          <p className="text-sm text-muted-foreground">Questions HelpAI answered with low confidence — review and improve the underlying help content.</p>
-          {aiLogs.length === 0 ? (
-            <Card className="text-center py-10">
-              <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500/30 mb-2" />
-              <p className="text-sm text-muted-foreground">No low-confidence questions flagged for review.</p>
-            </Card>
           ) : (
-            <div className="space-y-3">
-              {aiLogs.map(log => (
-                <Card key={log.id} className="border-amber-200">
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-amber-700 mb-1">User question ({log.page_code}):</p>
-                        <p className="font-semibold text-sm">"{log.question_text}"</p>
-                      </div>
-                      <Badge className="text-[9px] bg-amber-100 text-amber-700 flex-shrink-0">
-                        {Math.round((log.answer_confidence || 0) * 100)}% confidence
-                      </Badge>
-                    </div>
-                    {log.answer_text && (
-                      <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
-                        <p className="font-medium mb-1">HelpAI's answer:</p>
-                        <p className="line-clamp-3">{log.answer_text}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-7 gap-1"
-                        onClick={() => {
-                          base44.entities.HelpAIQuestionLog.update(log.id, { reviewed_by_admin: true, requires_admin_review: false });
-                          queryClient.invalidateQueries({ queryKey: ["helpai-logs"] });
-                        }}
-                      >
-                        <CheckCircle2 className="w-3 h-3" /> Mark Reviewed
-                      </Button>
-                      {log.source_target_codes && log.source_target_codes.length > 0 && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs h-7 gap-1"
-                          onClick={() => {
-                            const t = HELP_TARGETS.find(ht => ht.target_code === log.source_target_codes[0]);
-                            if (t) openEditor(t);
-                          }}
-                        >
-                          <Edit2 className="w-3 h-3" /> Improve Help Content
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="text-center py-16 text-muted-foreground">
+              <Edit2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">No target selected. Click Edit on any target in the Coverage or Browse tabs.</p>
             </div>
           )}
         </TabsContent>
+
+        {/* ── AI REVIEW ───────────────────────────────────────────────────── */}
+        <TabsContent value="ai_review" className="mt-5">
+          <AIReviewTab onEditTarget={(t) => openEditor(t)} />
+        </TabsContent>
       </Tabs>
+
+      {/* Manual Topic Editor Modal */}
+      {topicEditorOpen && (
+        <TopicEditorModal
+          topic={editingTopic}
+          onClose={closeTopicEditor}
+        />
+      )}
     </div>
   );
 }
