@@ -398,7 +398,7 @@ export default function Tasks() {
         ))}
       </div>
 
-      {/* Filters */}
+      {/* Filters & Export */}
       <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
         {/* My Tasks toggle */}
         <button
