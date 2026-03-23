@@ -69,29 +69,19 @@ export default function HelpAdmin() {
   const saveContent = useMutation({
     mutationFn: async (data) => {
       const existing = contentMap[editingTarget.target_code];
-      if (existing) {
-        return base44.entities.HelpContent.update(existing.id, {
-          ...data,
-          content_source: "admin_updated",
-          version_no: (existing.version_no || 1) + 1,
-          last_updated_by: user?.email,
-        });
-      } else {
-        return base44.entities.HelpContent.create({
-          ...data,
-          help_target_code: editingTarget.target_code,
-          module_code: editingTarget.module_code,
-          page_code: editingTarget.page_code,
-          content_source: "admin_created",
-          version_no: 1,
-          last_updated_by: user?.email,
-        });
-      }
+      const res = await base44.functions.invoke("saveHelpContent", {
+        content_id: existing?.id || null,
+        target_code: editingTarget.target_code,
+        module_code: editingTarget.module_code,
+        page_code: editingTarget.page_code,
+        data,
+      });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] });
       queryClient.invalidateQueries({ queryKey: ["help-contents-all"] });
-      toast({ title: "Help content saved", description: `Content for "${editingTarget.target_label}" saved.` });
+      toast({ title: "Help content saved", description: `Content for "${editingTarget.target_label}" saved with version history.` });
       setEditingTarget(null);
     },
   });
@@ -138,17 +128,26 @@ export default function HelpAdmin() {
     if (!editingTarget) return;
     setAiGenerating(true);
     try {
-      const res = await base44.functions.invoke("generateUserManual", {
-        title: editingTarget.target_label,
-        module: editingTarget.module_code,
-        prompt: `Generate comprehensive help content for the "${editingTarget.target_label}" element (type: ${editingTarget.component_type}) in the ${editingTarget.module_code} module of ConnectQuote 360, a benefits administration platform. Include purpose, how to use it, expected user action, warnings, and best practices.`,
+      const res = await base44.functions.invoke("generateHelpForTarget", {
+        target_code: editingTarget.target_code,
+        target_label: editingTarget.target_label,
+        module_code: editingTarget.module_code,
+        page_code: editingTarget.page_code,
+        component_type: editingTarget.component_type,
       });
-      const data = res.data;
+      const data = res.data?.content || {};
       setForm(prev => ({
         ...prev,
-        detailed_help: data.content || prev.detailed_help,
-        short_help: prev.short_help || data.description || "",
-        help_title: prev.help_title || editingTarget.target_label,
+        help_title: data.help_title || prev.help_title || editingTarget.target_label,
+        short_help: data.short_help || prev.short_help,
+        detailed_help: data.detailed_help || prev.detailed_help,
+        expected_user_action: data.expected_user_action || prev.expected_user_action,
+        allowed_values: data.allowed_values || prev.allowed_values,
+        usage_example: data.usage_example || prev.usage_example,
+        warnings: data.warnings || prev.warnings,
+        validation_notes: data.validation_notes || prev.validation_notes,
+        related_topics: data.related_topics?.length ? data.related_topics : prev.related_topics,
+        search_keywords: data.search_keywords?.length ? data.search_keywords : prev.search_keywords,
       }));
       toast({ title: "AI Generated", description: "Content generated. Review and save." });
     } catch (e) {
