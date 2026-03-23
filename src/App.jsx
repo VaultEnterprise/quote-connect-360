@@ -31,6 +31,10 @@ import PolicyMatchAI from '@/pages/PolicyMatchAI';
 import IntegrationInfrastructure from '@/pages/IntegrationInfrastructure.jsx';
 import HelpCenter from '@/pages/HelpCenter';
 import HelpAdmin from '@/pages/HelpAdmin';
+import HelpDashboard from '@/pages/HelpDashboard';
+import HelpCoverageReport from '@/pages/HelpCoverageReport';
+import HelpSearchAnalytics from '@/pages/HelpSearchAnalytics';
+import HelpManualManager from '@/pages/HelpManualManager';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -78,6 +82,10 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<HelpCenter />} />
         <Route path="/help-admin" element={<HelpAdmin />} />
+        <Route path="/help-dashboard" element={<HelpDashboard />} />
+        <Route path="/help-coverage" element={<HelpCoverageReport />} />
+        <Route path="/help-analytics" element={<HelpSearchAnalytics />} />
+        <Route path="/help-manual-manager" element={<HelpManualManager />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
