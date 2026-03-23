@@ -209,6 +209,7 @@ export default function EmployeeRosterTab({ enrollments, windows, cases, plans, 
   const [windowFilter, setWindowFilter] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [viewingDetail, setViewingDetail] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const windowMap = useMemo(() => Object.fromEntries(windows.map(w => [w.id, w])), [windows]);
