@@ -791,7 +791,7 @@ Coverage tier (Employee Only / +Spouse / +Children / Family), monthly premium (p
 
 ### 3. New Case — Agency ID Fallback
 **Page:** /cases/new
-**Issue:** CaseNew uses `agencies[0]?.id || "default"` as the agency_id. If no Agency record exists, agency_id = "default" is stored. If BenefitCase has a FK constraint on agency_id, this will break.
+**Issue:** CaseNew uses the first agency id with "default" fallback. If no Agency record exists, a placeholder string is stored. If BenefitCase has a FK constraint on agency_id, this will break.
 **Fix:** Ensure at least one Agency record exists (seed data), or remove agency_id from the required create payload.
 **Severity:** MEDIUM
 
