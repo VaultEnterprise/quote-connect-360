@@ -2,7 +2,6 @@ import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { useRealtimeSubscriptions } from "@/hooks/useRealtimeSubscription";
 import {
   Briefcase, Users, FileText, ClipboardCheck, RefreshCw, AlertCircle,
   ArrowRight, Clock, TrendingUp, DollarSign, Star, Target, Activity
@@ -39,51 +38,37 @@ const STAGE_GROUPS = [
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
 
 export default function Dashboard() {
-  const { data: cases = [], isLoading, refetch: refetchCases } = useQuery({
+  const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
 
-  const { data: tasks = [], refetch: refetchTasks } = useQuery({
+  const { data: tasks = [] } = useQuery({
     queryKey: ["tasks-pending"],
     queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 20),
   });
 
-  const { data: enrollments = [], refetch: refetchEnrollments } = useQuery({
+  const { data: enrollments = [] } = useQuery({
     queryKey: ["enrollments"],
     // Raised from 20 → 100: truncated list silently understates open-enrollment KPI
     queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
 
-  const { data: renewals = [], refetch: refetchRenewals } = useQuery({
+  const { data: renewals = [] } = useQuery({
     queryKey: ["renewals"],
     // Raised from 20 → 100: truncated list silently understates 90-day renewal KPI
     queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
   });
 
-  const { data: scenarios = [], refetch: refetchScenarios } = useQuery({
+  const { data: scenarios = [] } = useQuery({
     queryKey: ["scenarios-all"],
     queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100),
   });
 
-  const { data: exceptions = [], refetch: refetchExceptions } = useQuery({
+  const { data: exceptions = [] } = useQuery({
     queryKey: ["exceptions"],
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 50),
   });
-
-  // Real-time updates to all critical entities
-  useRealtimeSubscriptions(
-    ["BenefitCase", "CaseTask", "EnrollmentWindow", "RenewalCycle", "QuoteScenario", "ExceptionItem"],
-    () => {
-      refetchCases();
-      refetchTasks();
-      refetchEnrollments();
-      refetchRenewals();
-      refetchScenarios();
-      refetchExceptions();
-    },
-    { debounce: 2000 }
-  );
 
   const activeCases = cases.filter(c => !["closed", "renewed"].includes(c.stage));
   const quotingCases = cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage));

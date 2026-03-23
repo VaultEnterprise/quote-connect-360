@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Briefcase, Plus, Search, Filter, X, LayoutList, Columns,
-  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown, Download
+  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,6 @@ import EmptyState from "@/components/shared/EmptyState";
 import { CaseListSkeleton } from "@/components/shared/LoadingSkeleton";
 import CaseListCard from "@/components/cases/CaseListCard";
 import CasePipelineView from "@/components/cases/CasePipelineView";
-import BulkActionsToolbar from "@/components/shared/BulkActionsToolbar";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { exportToCSV, generateFilename } from "@/utils/exportHelpers";
 
 const STAGE_OPTIONS = [
   { value: "all",                      label: "All Stages" },
@@ -54,16 +51,11 @@ export default function Cases() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [sortBy, setSortBy]             = useState("created_desc");
   const [viewMode, setViewMode]         = useState("list"); // "list" | "pipeline"
-  const [selectedIds, setSelectedIds]   = useState([]);
-  const queryClient = useQueryClient();
 
-  const { data: cases = [], isLoading, refetch } = useQuery({
+  const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
-
-  // Real-time updates on case changes
-  useRealtimeSubscription("BenefitCase", () => refetch(), { debounce: 1000 });
 
   const filtered = useMemo(() => {
     let result = cases.filter((c) => {
@@ -90,36 +82,7 @@ export default function Cases() {
   }, [cases, search, stageFilter, typeFilter, priorityFilter, sortBy]);
 
   const activeFilters = [stageFilter, typeFilter, priorityFilter].filter(f => f !== "all").length;
-  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setSearch(""); setSelectedIds([]); };
-
-  // Bulk actions handlers
-  const handleSelectCase = useCallback((id) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  }, []);
-
-  const handleSelectAll = useCallback(() => {
-    setSelectedIds(filtered.map(c => c.id));
-  }, [filtered]);
-
-  const handleExportSelected = useCallback(() => {
-    const toExport = filtered.filter(c => selectedIds.includes(c.id));
-    exportToCSV(
-      toExport.map(c => ({
-        "Case #": c.case_number,
-        Employer: c.employer_name,
-        Type: c.case_type,
-        Stage: c.stage,
-        Priority: c.priority,
-        "Assigned To": c.assigned_to,
-        "Effective Date": c.effective_date,
-        Status: c.enrollment_status,
-      })),
-      generateFilename("cases_export")
-    );
-    setSelectedIds([]);
-  }, [filtered, selectedIds]);
+  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setSearch(""); };
 
   // KPI counts
   const urgentCount  = cases.filter(c => c.priority === "urgent").length;
@@ -169,25 +132,6 @@ export default function Cases() {
             </Card>
           ))}
         </div>
-      )}
-
-      {/* Bulk Actions Toolbar */}
-      {selectedIds.length > 0 && (
-        <BulkActionsToolbar
-          selectedCount={selectedIds.length}
-          selectedIds={selectedIds}
-          allSelected={selectedIds.length === filtered.length && filtered.length > 0}
-          totalCount={filtered.length}
-          onSelectAll={handleSelectAll}
-          onClearSelection={() => setSelectedIds([])}
-          actions={[
-            {
-              label: "Export",
-              icon: Download,
-              handler: handleExportSelected,
-            },
-          ]}
-        />
       )}
 
       {/* Filter Bar */}
@@ -245,30 +189,6 @@ export default function Cases() {
             </SelectContent>
           </Select>
 
-          {/* Export Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              exportToCSV(
-                filtered.map(c => ({
-                  "Case #": c.case_number,
-                  Employer: c.employer_name,
-                  Type: c.case_type,
-                  Stage: c.stage,
-                  Priority: c.priority,
-                  "Assigned To": c.assigned_to,
-                  "Effective Date": c.effective_date,
-                  Status: c.enrollment_status,
-                })),
-                generateFilename("cases_export")
-              );
-            }}
-            className="gap-1.5"
-          >
-            <Download className="w-3.5 h-3.5" /> Export
-          </Button>
-
           {/* View Toggle */}
           <div className="flex rounded-md border overflow-hidden flex-shrink-0">
             <button
@@ -284,7 +204,7 @@ export default function Cases() {
               <Columns className="w-3.5 h-3.5" /> Pipeline
             </button>
           </div>
-          </div>
+        </div>
 
         {(activeFilters > 0 || search) && (
           <div className="flex items-center gap-2">
@@ -311,17 +231,7 @@ export default function Cases() {
         <CasePipelineView cases={filtered} />
       ) : (
         <div className="space-y-2">
-          {filtered.map(c => (
-            <div
-              key={c.id}
-              onClick={() => handleSelectCase(c.id)}
-              className={`cursor-pointer transition-all ${
-                selectedIds.includes(c.id) ? "ring-2 ring-primary rounded-lg" : ""
-              }`}
-            >
-              <CaseListCard c={c} />
-            </div>
-          ))}
+          {filtered.map(c => <CaseListCard key={c.id} c={c} />)}
         </div>
       )}
     </div>

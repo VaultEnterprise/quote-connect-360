@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardCheck, Plus, Search, Filter, AlertTriangle, Download } from "lucide-react";
+import { ClipboardCheck, Plus, Search, Filter, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,6 @@ import EmptyState from "@/components/shared/EmptyState";
 import EnrollmentKPIBar from "@/components/enrollment/EnrollmentKPIBar";
 import EnrollmentWindowCard from "@/components/enrollment/EnrollmentWindowCard";
 import CreateEnrollmentModal from "@/components/enrollment/CreateEnrollmentModal";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { exportToCSV, generateFilename } from "@/utils/exportHelpers";
 import { parseISO, differenceInDays } from "date-fns";
 
 const STATUS_ORDER = { open: 0, closing_soon: 1, scheduled: 2, closed: 3, finalized: 4 };
@@ -22,13 +20,10 @@ export default function Enrollment() {
   const [showCreate, setShowCreate] = useState(false);
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
-  const { data: enrollments = [], isLoading, refetch } = useQuery({
+  const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ["enrollments-all"],
     queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
-
-  // Real-time updates
-  useRealtimeSubscription("EnrollmentWindow", () => refetch(), { debounce: 1000 });
 
   const now = new Date();
 
@@ -113,42 +108,18 @@ export default function Enrollment() {
         </Select>
 
         {(search || statusFilter !== "active" || showUrgentOnly) && (
-           <Button
-             variant="ghost" size="sm"
-             className="h-9 text-xs text-muted-foreground"
-             onClick={() => { setSearch(""); setStatusFilter("active"); setShowUrgentOnly(false); }}
-           >
-             Clear filters
-           </Button>
-         )}
+          <Button
+            variant="ghost" size="sm"
+            className="h-9 text-xs text-muted-foreground"
+            onClick={() => { setSearch(""); setStatusFilter("active"); setShowUrgentOnly(false); }}
+          >
+            Clear filters
+          </Button>
+        )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            exportToCSV(
-              filtered.map(e => ({
-                Employer: e.employer_name,
-                Status: e.status,
-                "Start Date": e.start_date,
-                "End Date": e.end_date,
-                "Total Eligible": e.total_eligible,
-                "Invited": e.invited_count,
-                "Enrolled": e.enrolled_count,
-                "Waived": e.waived_count,
-                "Participation Rate": `${e.participation_rate?.toFixed(1) || 0}%`,
-              })),
-              generateFilename("enrollment_windows")
-            );
-          }}
-          className="gap-1.5"
-        >
-          <Download className="w-3.5 h-3.5" /> Export
-        </Button>
-
-         <span className="text-xs text-muted-foreground ml-auto">
-           {filtered.length} window{filtered.length !== 1 ? "s" : ""}
-         </span>
+        <span className="text-xs text-muted-foreground ml-auto">
+          {filtered.length} window{filtered.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
       {/* Content */}

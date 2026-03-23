@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRealtimeSubscriptions } from "@/hooks/useRealtimeSubscription";
 import { RefreshCw, LayoutGrid, List, Plus, Download, X, SortAsc, CalendarDays, Users, XCircle, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -49,7 +48,7 @@ export default function Renewals() {
   // Bulk select
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const { data: renewals = [], refetch: refetchRenewals } = useQuery({
+  const { data: renewals = [] } = useQuery({
     queryKey: ["renewals-all"],
     queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
   });
@@ -61,13 +60,6 @@ export default function Renewals() {
       : Promise.resolve([]),
     enabled: !!selectedRenewal?.case_id,
   });
-
-  // Real-time updates
-  useRealtimeSubscriptions(
-    ["RenewalCycle"],
-    () => refetchRenewals(),
-    { debounce: 1000 }
-  );
 
   const bulkStatusUpdate = useMutation({
     mutationFn: ({ ids, status }) =>

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRealtimeSubscriptions } from "@/hooks/useRealtimeSubscription";
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, Users,
   Pencil, AlertTriangle, Briefcase, Filter, X
@@ -182,7 +181,7 @@ export default function Employers() {
   const [showModal, setShowModal] = useState(false);
   const [editingEmployer, setEditingEmployer] = useState(null);
 
-  const { data: employers = [], refetch: refetchEmployers } = useQuery({
+  const { data: employers = [] } = useQuery({
     queryKey: ["employers"],
     queryFn: () => base44.entities.EmployerGroup.list("-created_date", 100),
   });
@@ -192,20 +191,10 @@ export default function Employers() {
     queryFn: () => base44.entities.Agency.list(),
   });
 
-  const { data: cases = [], refetch: refetchCases } = useQuery({
+  const { data: cases = [] } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
-
-  // Real-time updates
-  useRealtimeSubscriptions(
-    ["EmployerGroup", "BenefitCase"],
-    () => {
-      refetchEmployers();
-      refetchCases();
-    },
-    { debounce: 1000 }
-  );
 
   // Build case count map per employer group
   const caseCountMap = useMemo(() => {

@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Search, Plus, CheckCircle, Download } from "lucide-react";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { exportToCSV, generateFilename } from "@/utils/exportHelpers";
+import { AlertTriangle, Search, Plus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -189,13 +187,10 @@ export default function ExceptionQueue() {
   const [showCreate, setShowCreate] = useState(false);
   const [detailException, setDetailException] = useState(null);
 
-  const { data: exceptions = [], refetch } = useQuery({
+  const { data: exceptions = [] } = useQuery({
     queryKey: ["exceptions"],
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
   });
-
-  // Real-time updates
-  useRealtimeSubscription("ExceptionItem", () => refetch(), { debounce: 1000 });
 
   const dismiss = useMutation({
     mutationFn: (id) => base44.entities.ExceptionItem.update(id, { status: "dismissed" }),
@@ -369,31 +364,6 @@ export default function ExceptionQueue() {
           onClick={() => setShowMyOnly(!showMyOnly)}
         >
           My Exceptions
-        </Button>
-
-        {/* Export button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs gap-1.5"
-          onClick={() => {
-            exportToCSV(
-              sorted.map(e => ({
-                Title: e.title,
-                Category: e.category,
-                Severity: e.severity,
-                Status: e.status,
-                Employer: e.employer_name || "",
-                "Assigned To": e.assigned_to || "",
-                "Due By": e.due_by || "",
-                "Created Date": e.created_date,
-                Description: e.description || "",
-              })),
-              generateFilename("exceptions_export")
-            );
-          }}
-        >
-          <Download className="w-3.5 h-3.5" /> Export
         </Button>
       </div>
 

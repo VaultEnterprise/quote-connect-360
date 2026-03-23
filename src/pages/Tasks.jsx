@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -6,10 +6,8 @@ import {
   CheckCircle2, Search, Filter, Plus, Clock, Pencil, Trash2,
   AlertCircle, Calendar, User, Briefcase, ChevronDown, ChevronRight,
   ArrowUpRight, ListChecks, BarChart2, Circle, Loader2, Ban, XCircle,
-  Star, ChevronUp, Download
+  Star, ChevronUp
 } from "lucide-react";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { exportToCSV, generateFilename } from "@/utils/exportHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -219,7 +217,7 @@ export default function Tasks() {
     base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
 
-  const { data: tasks = [], isLoading, refetch: refetchTasks } = useQuery({
+  const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks-all"],
     queryFn: () => base44.entities.CaseTask.list("-created_date", 200),
   });
@@ -228,9 +226,6 @@ export default function Tasks() {
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
-
-  // Real-time updates
-  useRealtimeSubscription("CaseTask", () => refetchTasks(), { debounce: 800 });
 
   const toggleStatus = useMutation({
     mutationFn: (task) => {
@@ -398,7 +393,7 @@ export default function Tasks() {
         ))}
       </div>
 
-      {/* Filters & Export */}
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
         {/* My Tasks toggle */}
         <button
@@ -453,39 +448,15 @@ export default function Tasks() {
           </Select>
         )}
         <Select value={groupBy} onValueChange={setGroupBy}>
-           <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
-           <SelectContent>
-             <SelectItem value="due_date">Group: Due Date</SelectItem>
-             <SelectItem value="priority">Group: Priority</SelectItem>
-             <SelectItem value="case">Group: Case</SelectItem>
-             <SelectItem value="status">Group: Status</SelectItem>
-           </SelectContent>
-         </Select>
-
-         {/* Export button */}
-         <Button
-           variant="outline"
-           size="sm"
-           onClick={() => {
-             exportToCSV(
-               filtered.map(t => ({
-                 Title: t.title,
-                 Type: t.task_type,
-                 Status: t.status,
-                 Priority: t.priority,
-                 "Due Date": t.due_date || "",
-                 "Assigned To": t.assigned_to || "",
-                 Employer: t.employer_name || "",
-                 Description: t.description || "",
-               })),
-               generateFilename("tasks_export")
-             );
-           }}
-           className="gap-1.5"
-         >
-           <Download className="w-3.5 h-3.5" /> Export
-         </Button>
-        </div>
+          <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="due_date">Group: Due Date</SelectItem>
+            <SelectItem value="priority">Group: Priority</SelectItem>
+            <SelectItem value="case">Group: Case</SelectItem>
+            <SelectItem value="status">Group: Status</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Bulk actions bar */}
       {selected.length > 0 && (
