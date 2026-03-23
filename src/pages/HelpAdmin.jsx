@@ -269,6 +269,7 @@ export default function HelpAdmin() {
         <Link to="/help-target-registry"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><BarChart2 className="w-3 h-3" /> Target Registry</Button></Link>
         <Link to="/help"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><Eye className="w-3 h-3" /> View Help Center</Button></Link>
         <Link to="/help-manual-manager"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><BookOpen className="w-3 h-3" /> Manual Manager</Button></Link>
+        <Link to="/aca-library"><Button size="sm" variant="outline" className="gap-1 text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"><Scale className="w-3 h-3" /> ACA Library</Button></Link>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
