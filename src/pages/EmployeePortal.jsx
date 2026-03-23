@@ -52,6 +52,10 @@ function EmployeePortalContent() {
   if (hasNoWindow) {
     return (
       <div className="max-w-3xl mx-auto space-y-6 py-6 px-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold">Employee Benefits Portal</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage your benefit elections and coverage</p>
+        </div>
         <EmptyState
           icon={Heart}
           title="No Active Enrollment"
@@ -84,22 +88,20 @@ function EmployeePortalContent() {
           </div>
         ))}
 
-        {/* Link to enroll if new window opens */}
-        {activeWindow && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-blue-900 text-sm sm:text-base">New Enrollment Available</p>
-                <p className="text-xs sm:text-sm text-blue-700 mt-0.5">
-                  A new enrollment window has opened for {activeWindow.employer_name || "your organization"}.
-                </p>
-              </div>
-              <Button onClick={() => setShowEnrollment(true)} className="w-full sm:w-auto flex-shrink-0 text-xs sm:text-sm">
-                Enroll Now
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Active enrollment CTA — guide user from portal to enrollment wizard */}
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-blue-900 text-sm sm:text-base">Start Your Enrollment</p>
+              <p className="text-xs sm:text-sm text-blue-700 mt-0.5">
+                Complete your benefits enrollment before the deadline ends.
+              </p>
+            </div>
+            <Button onClick={() => setShowEnrollment(true)} className="w-full sm:w-auto flex-shrink-0 text-xs sm:text-sm">
+              Begin Enrollment
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Life event + help */}
         <LifeEventCard />
