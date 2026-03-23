@@ -471,9 +471,8 @@ export default function EnrollmentWizard({
 
         {/* Help card */}
         <HelpContactCard />
-
-      </div>
-      </div>
+        </div>
+        </div>
 
       {/* Fixed footer for navigation — touch-friendly on mobile */}
       <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t mt-4 sm:mt-6">
