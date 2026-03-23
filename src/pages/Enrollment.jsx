@@ -22,10 +22,13 @@ export default function Enrollment() {
   const [showCreate, setShowCreate] = useState(false);
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
-  const { data: enrollments = [], isLoading } = useQuery({
+  const { data: enrollments = [], isLoading, refetch } = useQuery({
     queryKey: ["enrollments-all"],
     queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
+
+  // Real-time updates
+  useRealtimeSubscription("EnrollmentWindow", () => refetch(), { debounce: 1000 });
 
   const now = new Date();
 
