@@ -467,6 +467,10 @@ export default function EmployeeRosterTab({ enrollments, windows, cases, plans, 
                       <Send className="w-3 h-3 text-muted-foreground" />
                     </Button>
                   )}
+                  <Button variant="ghost" size="icon" className="h-7 w-7" title="View Details"
+                    onClick={() => setViewingDetail(e)}>
+                    <Eye className="w-3 h-3 text-muted-foreground" />
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" title="Edit"
                     onClick={() => setEditing(e)}>
                     <Pencil className="w-3 h-3 text-muted-foreground" />
