@@ -77,6 +77,11 @@ export default function Dashboard() {
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 50),
   });
 
+  const { data: proposals = [] } = useQuery({
+    queryKey: ["proposals"],
+    queryFn: () => base44.entities.Proposal.list("-created_date", 100),
+  });
+
   // Real-time updates via WebSocket subscriptions
   useEffect(() => {
     const unsubscribeCases = base44.entities.BenefitCase.subscribe((event) => {
