@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Shield, User, Save, UserPlus, Mail, AlertCircle, Zap, Lock, Bell, Palette } from "lucide-react";
+import { Building2, Shield, User, Save, UserPlus, Mail, AlertCircle, Zap, Lock, Bell, Palette, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,10 @@ import BrandingPanel from "@/components/settings/BrandingPanel";
 import AuditLogPanel from "@/components/settings/AuditLogPanel";
 import WebhookConfigPanel from "@/components/settings/WebhookConfigPanel";
 import BillingUsagePanel from "@/components/settings/BillingUsagePanel";
+import UserManualLibrary from "@/components/help/UserManualLibrary";
+import UserManualViewer from "@/components/help/UserManualViewer";
+import UserManualGenerator from "@/components/help/UserManualGenerator";
+import UserManualManager from "@/components/help/UserManualManager";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -27,6 +31,7 @@ export default function Settings() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
   const [inviting, setInviting] = useState(false);
+  const [selectedManual, setSelectedManual] = useState(null);
 
   const { data: agencies = [] } = useQuery({
     queryKey: ["agencies"],
@@ -127,10 +132,13 @@ export default function Settings() {
                 <Lock className="w-4 h-4" /> Billing
               </TabsTrigger>
               <TabsTrigger value="audit" className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> Audit Log
+                    <AlertCircle className="w-4 h-4" /> Audit Log
+                  </TabsTrigger>
+                </>
+              )}
+              <TabsTrigger value="help" className="flex items-center gap-2">
+               <BookOpen className="w-4 h-4" /> Help Center
               </TabsTrigger>
-            </>
-          )}
         </TabsList>
 
         {/* ─────────────────────────────────────────────────────────────────────────────── */}
@@ -292,7 +300,34 @@ export default function Settings() {
             </TabsContent>
           </>
         )}
+
+        {/* Help Center - Available to all users */}
+        <TabsContent value="help" className="mt-6 space-y-6">
+          {isAdmin && (
+            <>
+              <div className="flex gap-2 mb-4">
+                <Button variant="outline" size="sm" onClick={() => setSelectedManual("generator")}>
+                  ➕ Create Manual
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectedManual("manager")}>
+                  ⚙️ Manage Manuals
+                </Button>
+              </div>
+
+              {selectedManual === "generator" && <UserManualGenerator />}
+              {selectedManual === "manager" && <UserManualManager />}
+              {!selectedManual && <UserManualLibrary onSelectManual={setSelectedManual} />}
+            </>
+          )}
+
+          {!isAdmin && <UserManualLibrary onSelectManual={setSelectedManual} />}
+        </TabsContent>
       </Tabs>
+
+      {/* Manual Viewer Modal */}
+      {selectedManual && typeof selectedManual === "object" && (
+        <UserManualViewer manual={selectedManual} onClose={() => setSelectedManual(null)} />
+      )}
     </div>
   );
 }
