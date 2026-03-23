@@ -17,7 +17,7 @@ import {
   Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, Play,
   LayoutDashboard, FileBarChart, TrendingUp, BookOpen, Database,
   X, Target, MessageSquare, Zap, Settings2, RefreshCw, Plus,
-  Activity, ShieldAlert, Scale
+  Activity, ShieldAlert, Scale, Workflow, FileJson
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ReactMarkdown from "react-markdown";
@@ -34,6 +34,9 @@ import HelpConsoleKPIBar from "@/components/help-admin/HelpConsoleKPIBar";
 import RecentActivityFeed from "@/components/help-admin/RecentActivityFeed";
 import OrphanedContentPanel from "@/components/help-admin/OrphanedContentPanel";
 import ContentQualityScore from "@/components/help-admin/ContentQualityScore";
+import BulkActionsPanel from "@/components/help-admin/BulkActionsPanel";
+import ContentStatisticsTab from "@/components/help-admin/ContentStatisticsTab";
+import ImportExportPanel from "@/components/help-admin/ImportExportPanel";
 
 const MODULE_LABELS = {
   DASHBOARD:"Dashboard", CASES:"Cases", CENSUS:"Census", QUOTES:"Quotes",
@@ -276,8 +279,11 @@ export default function HelpAdmin() {
         <TabsList className="flex-wrap h-auto gap-0.5">
           <TabsTrigger value="coverage" className="gap-1 text-xs"><Target className="w-3 h-3" /> Coverage</TabsTrigger>
           <TabsTrigger value="browse" className="gap-1 text-xs"><Search className="w-3 h-3" /> Browse</TabsTrigger>
+          <TabsTrigger value="stats" className="gap-1 text-xs"><BarChart2 className="w-3 h-3" /> Statistics</TabsTrigger>
           <TabsTrigger value="manual" className="gap-1 text-xs"><BookOpen className="w-3 h-3" /> Manual Topics</TabsTrigger>
           <TabsTrigger value="bulk_ai" className="gap-1 text-xs"><Sparkles className="w-3 h-3" /> Bulk AI Generate</TabsTrigger>
+          <TabsTrigger value="bulk_actions" className="gap-1 text-xs"><Workflow className="w-3 h-3" /> Bulk Actions</TabsTrigger>
+          <TabsTrigger value="import_export" className="gap-1 text-xs"><FileJson className="w-3 h-3" /> Import/Export</TabsTrigger>
           <TabsTrigger value="seeds" className="gap-1 text-xs"><Database className="w-3 h-3" /> Seed Data</TabsTrigger>
           <TabsTrigger value="editor" disabled={!editingTarget} className="gap-1 text-xs">
             <Edit2 className="w-3 h-3" /> Editor {editingTarget && <span className="max-w-24 truncate">— {editingTarget.target_label}</span>}
@@ -451,6 +457,11 @@ export default function HelpAdmin() {
           )}
         </TabsContent>
 
+        {/* ── STATISTICS ──────────────────────────────────────────────────── */}
+        <TabsContent value="stats" className="mt-5">
+          <ContentStatisticsTab contentMap={contentMap} />
+        </TabsContent>
+
         {/* ── MANUAL TOPICS ───────────────────────────────────────────────── */}
         <TabsContent value="manual" className="mt-5">
           <ManualTopicsTab
@@ -462,6 +473,16 @@ export default function HelpAdmin() {
         {/* ── BULK AI GENERATE ────────────────────────────────────────────── */}
         <TabsContent value="bulk_ai" className="mt-5">
           <BulkAIGeneratePanel contentMap={contentMap} presetModule={bulkAIModule} />
+        </TabsContent>
+
+        {/* ── BULK ACTIONS ────────────────────────────────────────────────── */}
+        <TabsContent value="bulk_actions" className="mt-5">
+          <BulkActionsPanel contentMap={contentMap} />
+        </TabsContent>
+
+        {/* ── IMPORT/EXPORT ───────────────────────────────────────────────── */}
+        <TabsContent value="import_export" className="mt-5">
+          <ImportExportPanel contentMap={contentMap} />
         </TabsContent>
 
         {/* ── SEED DATA ───────────────────────────────────────────────────── */}
