@@ -26,7 +26,7 @@ export default function EmployeePortalLogin() {
     setLoading(true);
 
     try {
-      // Verify token against EmployeeEnrollment
+      // 1. Verify token against EmployeeEnrollment
       const enrollments = await base44.entities.EmployeeEnrollment.filter({
         employee_email: email,
         access_token: token,
@@ -40,17 +40,48 @@ export default function EmployeePortalLogin() {
 
       const enrollment = enrollments[0];
 
-      // Store session in localStorage for portal access
-      sessionStorage.setItem("portal_session", JSON.stringify({
-        enrollment_id: enrollment.id,
-        employee_email: enrollment.employee_email,
-        employee_name: enrollment.employee_name,
-        case_id: enrollment.case_id,
-        access_token: token,
-        timestamp: new Date().toISOString(),
-      }));
+      // 2. Verify enrollment window is still open
+      const enrollmentWindows = await base44.entities.EnrollmentWindow.filter({
+        id: enrollment.enrollment_window_id,
+      });
 
-      // Redirect to enrollment or dashboard
+      if (!enrollmentWindows || enrollmentWindows.length === 0) {
+        setError("This enrollment is no longer available.");
+        setLoading(false);
+        return;
+      }
+
+      const window = enrollmentWindows[0];
+
+      // 3. Check if enrollment period is still active or has ended
+      const now = new Date();
+      const endDate = new Date(window.end_date);
+      
+      if (now > endDate && window.status === "closed") {
+        setError("This enrollment period has ended.");
+        setLoading(false);
+        return;
+      }
+
+      // 4. Verify case exists and is active
+      const cases = await base44.entities.BenefitCase.filter({
+        id: enrollment.case_id,
+      });
+
+      if (!cases || cases.length === 0) {
+        setError("Case not found. Please contact your administrator.");
+        setLoading(false);
+        return;
+      }
+
+      // 5. Store secure session token (NOT access_token in plain text)
+      const sessionToken = btoa(`${enrollment.id}:${token}:${Date.now()}`);
+      sessionStorage.setItem("portal_session_token", sessionToken);
+      sessionStorage.setItem("portal_enrollment_id", enrollment.id);
+      sessionStorage.setItem("portal_case_id", enrollment.case_id);
+      sessionStorage.setItem("portal_session_timestamp", new Date().toISOString());
+
+      // 6. Redirect based on enrollment status
       if (enrollment.status === "invited" || enrollment.status === "started") {
         navigate("/employee-enrollment", { replace: true });
       } else if (enrollment.status === "completed" || enrollment.status === "waived") {
@@ -59,7 +90,8 @@ export default function EmployeePortalLogin() {
         navigate("/employee-enrollment", { replace: true });
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      console.error("Login error:", err);
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
