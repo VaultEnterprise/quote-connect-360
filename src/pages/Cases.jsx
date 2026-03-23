@@ -88,6 +88,37 @@ export default function Cases() {
   const activeFilters = [stageFilter, typeFilter, priorityFilter].filter(f => f !== "all").length;
   const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setSearch(""); };
 
+  // Bulk operations
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(c => c.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  const handleBulkExport = () => {
+    const selectedCases = filtered.filter(c => selectedIds.has(c.id));
+    const columns = ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"];
+    exportToCSV(selectedCases, "cases-export.csv", columns);
+  };
+
+  const handleBulkDelete = () => {
+    if (!window.confirm(`Delete ${selectedIds.size} case(s)? This cannot be undone.`)) return;
+    // Implement batch delete
+    setBulkAction("deleting");
+  };
+
   // KPI counts
   const urgentCount  = cases.filter(c => c.priority === "urgent").length;
   const activeCount  = cases.filter(c => c.stage === "active").length;
