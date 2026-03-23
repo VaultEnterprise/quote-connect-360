@@ -33,7 +33,7 @@ export default function HelpCenter() {
 
   const { data: contents = [] } = useQuery({
     queryKey: ["help-contents-all"],
-    queryFn: () => base44.entities.HelpContent.filter({ status: "active" }, "-view_count", 500),
+    queryFn: () => base44.entities.HelpContent.filter({ content_status: "active", is_active: true }, "-view_count", 500),
   });
 
   // Build content map by target_code
@@ -47,8 +47,8 @@ export default function HelpCenter() {
     const q = search.toLowerCase();
     return contents.filter(c =>
       c.help_title?.toLowerCase().includes(q) ||
-      c.short_help?.toLowerCase().includes(q) ||
-      c.detailed_help?.toLowerCase().includes(q) ||
+      c.short_help_text?.toLowerCase().includes(q) ||
+      c.detailed_help_text?.toLowerCase().includes(q) ||
       c.help_target_code?.toLowerCase().includes(q)
     ).slice(0, 20);
   }, [search, contents]);
@@ -122,7 +122,7 @@ export default function HelpCenter() {
                         <h3 className="font-semibold text-sm">{c.help_title}</h3>
                         <Badge variant="outline" className="text-[9px]">{c.module_code}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">{c.short_help}</p>
+                      <p className="text-xs text-muted-foreground">{c.short_help_text}</p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   </CardContent>
@@ -257,52 +257,58 @@ export default function HelpCenter() {
                   </div>
                 ) : (
                   <>
-                    {content.short_help && (
+                    {content.short_help_text && (
                       <div className="bg-primary/5 border border-primary/10 rounded-lg p-4">
-                        <p className="text-sm font-medium">{content.short_help}</p>
+                        <p className="text-sm font-medium">{content.short_help_text}</p>
                       </div>
                     )}
-                    {content.detailed_help && (
+                    {content.detailed_help_text && (
                       <div className="prose prose-sm max-w-none">
-                        <ReactMarkdown>{content.detailed_help}</ReactMarkdown>
+                        <ReactMarkdown>{content.detailed_help_text}</ReactMarkdown>
                       </div>
                     )}
-                    {content.expected_user_action && (
+                    {content.feature_capabilities_text && (
+                      <div className="rounded-lg border p-4 space-y-1">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Capabilities</p>
+                        <p className="text-sm text-muted-foreground">{content.feature_capabilities_text}</p>
+                      </div>
+                    )}
+                    {content.expected_user_action_text && (
                       <div className="rounded-lg border p-4 space-y-1">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">What to do</p>
-                        <p className="text-sm">{content.expected_user_action}</p>
+                        <p className="text-sm">{content.expected_user_action_text}</p>
                       </div>
                     )}
-                    {content.allowed_values && (
+                    {content.allowed_values_text && (
                       <div className="rounded-lg border p-4 space-y-1">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Allowed Values</p>
-                        <p className="text-sm text-muted-foreground">{content.allowed_values}</p>
+                        <p className="text-sm text-muted-foreground">{content.allowed_values_text}</p>
                       </div>
                     )}
-                    {content.usage_example && (
+                    {content.examples_text && (
                       <div className="rounded-lg bg-slate-50 border p-4 space-y-1">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Example</p>
-                        <p className="text-sm text-slate-700">{content.usage_example}</p>
+                        <p className="text-sm text-slate-700">{content.examples_text}</p>
                       </div>
                     )}
-                    {content.warnings && (
+                    {content.warnings_text && (
                       <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 space-y-1">
                         <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">⚠ Warning</p>
-                        <p className="text-sm text-amber-800">{content.warnings}</p>
+                        <p className="text-sm text-amber-800">{content.warnings_text}</p>
                       </div>
                     )}
-                    {content.validation_notes && (
+                    {content.validation_notes_text && (
                       <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 space-y-1">
                         <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Validation Notes</p>
-                        <p className="text-sm text-blue-800">{content.validation_notes}</p>
+                        <p className="text-sm text-blue-800">{content.validation_notes_text}</p>
                       </div>
                     )}
-                    {content.related_topics && content.related_topics.length > 0 && (
+                    {content.related_topics_text && (
                       <div className="pt-2 border-t space-y-2">
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Related Topics</p>
                         <div className="flex flex-wrap gap-2">
-                          {content.related_topics.map((t, i) => (
-                            <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">{t}</span>
+                          {content.related_topics_text.split(",").map((t, i) => (
+                            <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">{t.trim()}</span>
                           ))}
                         </div>
                       </div>
