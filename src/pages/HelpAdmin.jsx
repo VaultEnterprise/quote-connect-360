@@ -16,6 +16,7 @@ import {
   Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, RefreshCw, Play
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import ReactMarkdown from "react-markdown";
 import { HELP_TARGETS, MODULES } from "@/lib/helpTargetRegistry";
 
 const MODULE_LABELS = {
