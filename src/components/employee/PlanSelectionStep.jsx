@@ -198,17 +198,18 @@ export default function PlanSelectionStep({ selectedPlans, onSelect, onCompare, 
       {isMultiProduct ? (
         /* Multi-product tabs */
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-muted/50 w-full overflow-x-auto">
+          <TabsList className="bg-muted/50 w-full overflow-x-auto justify-start sm:justify-center">
             {productTypes.map(type => {
               const Info = PLAN_TYPE_INFO[type];
               const Icon = Info?.icon;
               const label = Info?.label || type;
               const selected = selectedPlans[type];
               return (
-                <TabsTrigger key={type} value={type} className="gap-1.5 flex-shrink-0">
-                  {Icon && <Icon className="w-3.5 h-3.5" />}
-                  {label}
-                  {selected && <span className="text-[10px] font-bold text-primary ml-1">✓</span>}
+                <TabsTrigger key={type} value={type} className="gap-1 sm:gap-1.5 flex-shrink-0 text-xs sm:text-sm">
+                  {Icon && <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="inline sm:hidden">{label.split(' ')[0]}</span>
+                  {selected && <span className="text-[9px] sm:text-[10px] font-bold text-primary ml-0.5 sm:ml-1">✓</span>}
                 </TabsTrigger>
               );
             })}
