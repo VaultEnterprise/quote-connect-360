@@ -9,31 +9,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Map of page codes to module/page info
+    // Map of page codes to content
     const pageMapping = {
-      'dashboard': { module: 'Dashboard', page: 'Dashboard', title: 'Dashboard' },
-      'cases': { module: 'Cases', page: 'Cases', title: 'Cases Management' },
-      'case-detail': { module: 'Cases', page: 'Case Detail', title: 'Case Detail View' },
-      'census': { module: 'Census', page: 'Census', title: 'Census Management' },
-      'quotes': { module: 'Quotes', page: 'Quotes', title: 'Quotes Module' },
-      'proposals': { module: 'Proposals', page: 'Proposals', title: 'Proposals Module' },
-      'enrollment': { module: 'Enrollment', page: 'Enrollment', title: 'Enrollment Windows' },
-      'renewals': { module: 'Renewals', page: 'Renewals', title: 'Renewals Management' },
-      'employee-portal': { module: 'Portals', page: 'Employee Portal', title: 'Employee Portal' },
-      'employee-management': { module: 'Employee Mgmt', page: 'Employee Management', title: 'Employee Management' },
-      'employee-benefits': { module: 'Employee Mgmt', page: 'Employee Benefits', title: 'Employee Benefits' },
-      'employer-portal': { module: 'Portals', page: 'Employer Portal', title: 'Employer Portal' },
-      'plans': { module: 'Plans', page: 'Plan Library', title: 'Plan Library' },
-      'contributions': { module: 'Contributions', page: 'Contribution Modeling', title: 'Contribution Modeling' },
-      'policymatch': { module: 'AI', page: 'PolicyMatchAI', title: 'PolicyMatch AI' },
-      'tasks': { module: 'Tasks', page: 'Tasks', title: 'Tasks Management' },
-      'exceptions': { module: 'Exceptions', page: 'Exceptions', title: 'Exceptions Queue' },
-      'help': { module: 'Help', page: 'Help Center', title: 'Help Center' },
-      'help-admin': { module: 'Help', page: 'Help Admin', title: 'Help Console (Admin)' },
-      'integration-infra': { module: 'Admin', page: 'Integration Infrastructure', title: 'Integration Infrastructure' },
-      'settings': { module: 'Admin', page: 'Settings', title: 'Settings Panel' },
-      'aca-library': { module: 'Resources', page: 'ACA Library', title: 'ACA Library' },
-      'employers': { module: 'Employers', page: 'Employers', title: 'Employers Management' },
+      'DASHBOARD.PAGE': { content_key: 'dashboard', short_help: 'Central dashboard for managing benefit cases from initial contact through closure.' },
+      'CASES.PAGE': { content_key: 'cases', short_help: 'Manage all benefit cases with filtering, bulk actions, and status tracking.' },
+      'CASES.DETAIL.PAGE': { content_key: 'case-detail', short_help: 'Detailed view and management for individual benefit cases.' },
+      'CENSUS.PAGE': { content_key: 'census', short_help: 'Upload and manage employee census data with validation and risk analysis.' },
+      'QUOTES.PAGE': { content_key: 'quotes', short_help: 'Build and compare benefit plan scenarios with rates and costs.' },
+      'PROPOSALS.PAGE': { content_key: 'proposals', short_help: 'Create formal benefit proposals and track employer engagement.' },
+      'ENROLLMENT.PAGE': { content_key: 'enrollment', short_help: 'Create and manage employee enrollment windows.' },
+      'RENEWALS.PAGE': { content_key: 'renewals', short_help: 'Manage annual renewal cycles with rate forecasting and options.' },
+      'EE_PORTAL.PAGE': { content_key: 'employee-portal', short_help: 'Self-service benefits enrollment for employees.' },
+      'ER_PORTAL.PAGE': { content_key: 'employer-portal', short_help: 'Employer dashboard for case status, proposals, and enrollment.' },
+      'PLANS.PAGE': { content_key: 'plans', short_help: 'Centralized library of benefit plans with comparison tools.' },
+      'CONTRIBUTIONS.PAGE': { content_key: 'contributions', short_help: 'Model employer contribution strategies and analyze costs.' },
+      'POLICYMATCH.PAGE': { content_key: 'policymatch', short_help: 'AI-powered recommendation engine for plan matching.' },
+      'TASKS.PAGE': { content_key: 'tasks', short_help: 'Create and manage case-related tasks with deadline tracking.' },
+      'EXCEPTIONS.PAGE': { content_key: 'exceptions', short_help: 'Manage and resolve data quality and process exceptions.' },
+      'SETTINGS.PAGE': { content_key: 'settings', short_help: 'Administrative settings for user management and integrations.' },
+      'EMPLOYERS.PAGE': { content_key: 'employers', short_help: 'Manage employer records and track associated cases.' },
     };
 
     // Sample help content for each page (from manual)
