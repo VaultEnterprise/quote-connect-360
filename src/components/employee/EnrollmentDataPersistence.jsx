@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from "react";
 
-const STORAGE_KEY = "enrollment_draft_data";
+// Key scoped to enrollmentId so multiple enrollment windows don't collide
+const getDraftKey = (enrollmentId) => `enrollment_draft_${enrollmentId || "anon"}`;
 
 /**
  * EnrollmentDataPersistence Hook
@@ -16,7 +17,7 @@ export function useEnrollmentSave(enrollmentId, state) {
           timestamp: new Date().toISOString(),
           state,
         };
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        sessionStorage.setItem(getDraftKey(enrollmentId), JSON.stringify(data));
       }
     }, 10000);
 
@@ -30,13 +31,13 @@ export function useEnrollmentSave(enrollmentId, state) {
         timestamp: new Date().toISOString(),
         state,
       };
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      sessionStorage.setItem(getDraftKey(enrollmentId), JSON.stringify(data));
     }
   }, [enrollmentId, state]);
 
   const getSavedData = useCallback(() => {
     try {
-      const data = sessionStorage.getItem(STORAGE_KEY);
+      const data = sessionStorage.getItem(getDraftKey(enrollmentId));
       return data ? JSON.parse(data) : null;
     } catch {
       return null;
@@ -44,7 +45,7 @@ export function useEnrollmentSave(enrollmentId, state) {
   }, []);
 
   const clearSavedData = useCallback(() => {
-    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(getDraftKey(enrollmentId));
   }, []);
 
   return { save, getSavedData, clearSavedData };
