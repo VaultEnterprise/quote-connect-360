@@ -129,8 +129,13 @@ export default function AdminSeedPanel() {
                 <p className="text-xs text-muted-foreground">{pack.description}</p>
               </CardHeader>
               <CardContent className="pt-0 space-y-2">
-                {res && (
-                  <p className={`text-xs ${res.ok ? "text-emerald-700" : "text-red-600"}`}>{res.msg}</p>
+                {res && resultsVisible === pack.key && (
+                  <div className="flex items-start justify-between gap-2 p-2 rounded-md bg-muted/50">
+                    <p className={`text-xs ${res.ok ? "text-emerald-700" : "text-red-600"}`}>{res.msg}</p>
+                    <button onClick={() => clearResult(pack.key)} className="text-muted-foreground hover:text-foreground flex-shrink-0">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 )}
                 <Button
                   size="sm"
