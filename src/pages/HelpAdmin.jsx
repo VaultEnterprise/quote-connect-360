@@ -50,6 +50,7 @@ export default function HelpAdmin() {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedingDashboard, setSeedingDashboard] = useState(false);
+  const [seedingManual, setSeedingManual] = useState(false);
   const [preview, setPreview] = useState(false);
 
   const { data: contents = [] } = useQuery({
