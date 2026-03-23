@@ -54,11 +54,11 @@ export default function Renewals() {
   });
 
   const { data: censusMembers = [] } = useQuery({
-    queryKey: ["renewal-census", selectedRenewal?.id],
-    queryFn: () => selectedRenewal?.id
-      ? base44.entities.CensusMember.filter({}, '', 10000)
+    queryKey: ["renewal-census", selectedRenewal?.case_id],
+    queryFn: () => selectedRenewal?.case_id
+      ? base44.entities.CensusMember.filter({ case_id: selectedRenewal.case_id }, "-created_date", 500)
       : Promise.resolve([]),
-    enabled: !!selectedRenewal?.id,
+    enabled: !!selectedRenewal?.case_id,
   });
 
   const bulkStatusUpdate = useMutation({

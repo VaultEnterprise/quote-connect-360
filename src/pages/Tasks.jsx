@@ -98,7 +98,7 @@ function TaskRow({ task, onEdit, onDelete, onStatusChange, selected, onSelect })
           )}
 
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-            {task.employer_name && (
+            {task.employer_name && task.case_id && (
               <Link
                 to={`/cases/${task.case_id}`}
                 className="flex items-center gap-1 text-xs text-primary hover:underline"
@@ -108,6 +108,12 @@ function TaskRow({ task, onEdit, onDelete, onStatusChange, selected, onSelect })
                 {task.employer_name}
                 <ArrowUpRight className="w-2.5 h-2.5" />
               </Link>
+            )}
+            {task.employer_name && !task.case_id && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Briefcase className="w-3 h-3" />
+                {task.employer_name}
+              </span>
             )}
             {task.assigned_to && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
