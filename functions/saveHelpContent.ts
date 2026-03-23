@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 /**
- * Saves/updates HelpContent and writes a version history snapshot.
- * Handles create, update, activate, deactivate.
+ * Saves/updates HelpContent with versioning + audit.
+ * Uses spec-canonical field names (short_help_text, detailed_help_text, etc.)
  */
 Deno.serve(async (req) => {
   try {
@@ -19,57 +19,56 @@ Deno.serve(async (req) => {
     let eventType = 'HELP_CONTENT_UPDATED';
 
     if (content_id) {
-      // Fetch existing to snapshot
       const existing = await base44.asServiceRole.entities.HelpContent.filter(
-        { id: content_id }, "-created_date", 1
-      );
+        {}, "-created_date", 500
+      ).then(all => all.find(c => c.id === content_id));
 
-      const prev = existing[0];
-      const newVersionNo = (prev?.version_no || 1) + 1;
+      const newVersionNo = (existing?.version_no || 1) + 1;
 
       if (action === 'activate') {
-        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { status: 'active', last_updated_by: user.email });
+        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { content_status: 'active', is_active: true, last_updated_by: user.email });
         changeType = 'activate'; eventType = 'HELP_CONTENT_ACTIVATED';
       } else if (action === 'deactivate') {
-        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { status: 'inactive', last_updated_by: user.email });
+        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { content_status: 'inactive', is_active: false, last_updated_by: user.email });
         changeType = 'deactivate'; eventType = 'HELP_CONTENT_DEACTIVATED';
       } else if (action === 'archive') {
-        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { status: 'inactive', last_updated_by: user.email });
+        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { content_status: 'archived', is_active: false, last_updated_by: user.email });
         changeType = 'archive'; eventType = 'HELP_CONTENT_ARCHIVED';
+      } else if (action === 'review_required') {
+        result = await base44.asServiceRole.entities.HelpContent.update(content_id, { content_status: 'review_required', review_required: true, last_updated_by: user.email });
+        changeType = 'update'; eventType = 'HELP_CONTENT_UPDATED';
       } else {
         result = await base44.asServiceRole.entities.HelpContent.update(content_id, {
           ...data,
-          content_source: 'admin_updated',
+          content_source_type: 'admin_updated',
           version_no: newVersionNo,
           last_updated_by: user.email,
         });
       }
 
-      // Write version snapshot
+      // Version snapshot
       await base44.asServiceRole.entities.HelpContentVersion.create({
         help_content_id: content_id,
-        help_target_code: prev?.help_target_code || target_code,
+        help_target_code: existing?.help_target_code || target_code,
         version_no: newVersionNo,
-        snapshot_payload: prev || {},
+        snapshot_payload: existing || {},
         change_type: changeType,
         changed_by: user.email,
-        change_notes: action || 'admin edit',
+        change_summary: action || 'admin edit',
       });
 
     } else {
-      // New record
       result = await base44.asServiceRole.entities.HelpContent.create({
         ...data,
         help_target_code: target_code,
         module_code,
         page_code,
-        content_source: 'admin_created',
+        content_source_type: 'admin_created',
         version_no: 1,
         last_updated_by: user.email,
       });
       changeType = 'create'; eventType = 'HELP_CONTENT_CREATED';
 
-      // Initial version snapshot
       await base44.asServiceRole.entities.HelpContentVersion.create({
         help_content_id: result.id,
         help_target_code: target_code,
@@ -79,6 +78,16 @@ Deno.serve(async (req) => {
         changed_by: user.email,
       });
     }
+
+    // Queue for AI reindex
+    await base44.asServiceRole.entities.HelpAITrainingQueue.create({
+      source_entity_type: 'HelpContent',
+      source_entity_id: result.id,
+      source_target_code: target_code,
+      change_reason: eventType,
+      queue_status: 'queued',
+      queued_at: new Date().toISOString(),
+    });
 
     // Audit log
     await base44.asServiceRole.entities.HelpAuditLog.create({
