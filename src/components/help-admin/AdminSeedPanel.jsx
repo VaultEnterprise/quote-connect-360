@@ -83,7 +83,6 @@ export default function AdminSeedPanel() {
    const { toast } = useToast();
    const [loading, setLoading] = useState({});
    const [results, setResults] = useState({});
-   const [resultsVisible, setResultsVisible] = useState(null); // Track which result is showing
 
    const runSeed = async (pack) => {
      setLoading(p => ({ ...p, [pack.key]: true }));
