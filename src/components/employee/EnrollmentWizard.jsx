@@ -289,13 +289,13 @@ export default function EnrollmentWizard({
                   {coverageTier === tier.value && <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />}
                 </button>
               ))}
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+              </Card>
+              )}
 
-        {/* Plans step - Enhanced UX */}
-         {currentStep.id === "plans" && !isWaiving && (
-           <div className="space-y-6">
+              {/* Plans step - Enhanced UX */}
+              {currentStep.id === "plans" && !isWaiving && (
+              <div className="space-y-4 sm:space-y-6">
              {/* Using enhanced plan selection with better comparison UX */}
              <PlanSelectionEnhanced
                plans={{
