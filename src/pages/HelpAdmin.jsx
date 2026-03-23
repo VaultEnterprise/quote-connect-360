@@ -179,6 +179,21 @@ export default function HelpAdmin() {
     }
   };
 
+  const runDashboardSeed = async () => {
+    setSeedingDashboard(true);
+    try {
+      const res = await base44.functions.invoke("seedDashboardHelp", {});
+      const data = res.data;
+      queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["help-contents-all"] });
+      toast({ title: "Dashboard Help Seeded", description: data.message });
+    } catch (e) {
+      toast({ title: "Seed Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSeedingDashboard(false);
+    }
+  };
+
   const searchFiltered = useMemo(() => {
     if (!search) return [];
     const q = search.toLowerCase();
