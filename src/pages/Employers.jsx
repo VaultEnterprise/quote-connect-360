@@ -256,11 +256,21 @@ export default function Employers() {
         title="Employer Groups"
         description="Manage your employer group accounts"
         actions={
-          <Button size="sm" onClick={() => { setEditingEmployer(null); setShowModal(true); }}>
-            <Plus className="w-4 h-4 mr-1.5" /> New Employer
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setShowRenewalDashboard(!showRenewalDashboard)}>
+              <Briefcase className="w-4 h-4 mr-1" /> {showRenewalDashboard ? "Hide" : "Show"} Renewals
+            </Button>
+            <Button size="sm" onClick={() => { setEditingEmployer(null); setShowModal(true); }}>
+              <Plus className="w-4 h-4 mr-1.5" /> New Employer
+            </Button>
+          </div>
         }
       />
+
+      {/* Renewal Dashboard */}
+      {showRenewalDashboard && (
+        <RenewalDashboard employers={employers} onEmployerClick={setViewingEmployer} />
+      )}
 
       {/* Renewal warning banner */}
       {renewingSoon.length > 0 && (
@@ -268,6 +278,15 @@ export default function Employers() {
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
           <span><strong>{renewingSoon.length}</strong> employer group{renewingSoon.length !== 1 ? "s" : ""} renewing within 60 days</span>
         </div>
+      )}
+
+      {/* Bulk Actions Bar */}
+      {selectedEmployers.length > 0 && (
+        <BulkActionsBar
+          selectedEmployers={selectedEmployers}
+          onClearSelection={() => setSelectedEmployers([])}
+          agencies={agencies}
+        />
       )}
 
       {/* Search + Filter */}
@@ -293,6 +312,9 @@ export default function Employers() {
             <X className="w-3.5 h-3.5 mr-1" /> Clear
           </Button>
         )}
+        <Button variant="outline" size="sm" onClick={() => setShowImportModal(true)}>
+          <Upload className="w-3.5 h-3.5 mr-1" /> Import
+        </Button>
         <span className="text-xs text-muted-foreground self-center ml-auto">{filtered.length} employer{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
