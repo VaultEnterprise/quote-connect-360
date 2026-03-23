@@ -30,10 +30,11 @@ const MODULE_LABELS = {
 };
 
 const EMPTY_FORM = {
-  help_title: "", short_help: "", detailed_help: "", feature_capabilities: "",
-  process_description: "", expected_user_action: "", allowed_values: "",
-  usage_example: "", validation_notes: "", warnings: "",
-  related_topics: [], search_keywords: [], role_visibility: "all", status: "active",
+  help_title: "", short_help_text: "", detailed_help_text: "", feature_capabilities_text: "",
+  process_meaning_text: "", expected_user_action_text: "", allowed_values_text: "",
+  examples_text: "", dependency_notes_text: "", warnings_text: "",
+  validation_notes_text: "", related_topics_text: "", search_keywords: "",
+  role_visibility: "all", content_status: "active",
 };
 
 export default function HelpAdmin() {
@@ -64,9 +65,9 @@ export default function HelpAdmin() {
     contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}),
   [contents]);
 
-  const covered = HELP_TARGETS.filter(t => contentMap[t.target_code]?.status === "active").length;
+  const covered = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "active").length;
   const missing = HELP_TARGETS.filter(t => !contentMap[t.target_code]).length;
-  const drafts = contents.filter(c => c.status === "draft").length;
+  const drafts = contents.filter(c => c.content_status === "draft").length;
 
   const saveContent = useMutation({
     mutationFn: async (data) => {
@@ -90,7 +91,7 @@ export default function HelpAdmin() {
 
   const toggleStatus = useMutation({
     mutationFn: ({ id, status }) =>
-      base44.entities.HelpContent.update(id, { status: status === "active" ? "inactive" : "active" }),
+      base44.entities.HelpContent.update(id, { content_status: status === "active" ? "inactive" : "active", is_active: status !== "active" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] }),
   });
 
@@ -105,22 +106,23 @@ export default function HelpAdmin() {
     if (existing) {
       setForm({
         help_title: existing.help_title || "",
-        short_help: existing.short_help || "",
-        detailed_help: existing.detailed_help || "",
-        feature_capabilities: existing.feature_capabilities || "",
-        process_description: existing.process_description || "",
-        expected_user_action: existing.expected_user_action || "",
-        allowed_values: existing.allowed_values || "",
-        usage_example: existing.usage_example || "",
-        validation_notes: existing.validation_notes || "",
-        warnings: existing.warnings || "",
-        related_topics: existing.related_topics || [],
-        search_keywords: existing.search_keywords || [],
+        short_help_text: existing.short_help_text || "",
+        detailed_help_text: existing.detailed_help_text || "",
+        feature_capabilities_text: existing.feature_capabilities_text || "",
+        process_meaning_text: existing.process_meaning_text || "",
+        expected_user_action_text: existing.expected_user_action_text || "",
+        allowed_values_text: existing.allowed_values_text || "",
+        examples_text: existing.examples_text || "",
+        dependency_notes_text: existing.dependency_notes_text || "",
+        warnings_text: existing.warnings_text || "",
+        validation_notes_text: existing.validation_notes_text || "",
+        related_topics_text: existing.related_topics_text || "",
+        search_keywords: existing.search_keywords || "",
         role_visibility: existing.role_visibility || "all",
-        status: existing.status || "active",
+        content_status: existing.content_status || "active",
       });
     } else {
-      setForm({ ...EMPTY_FORM, help_title: target.target_label });
+      setForm({ ...EMPTY_FORM, help_title: target.target_label, short_help_text: "" });
     }
     setPreview(false);
     setTab("editor");
@@ -141,15 +143,18 @@ export default function HelpAdmin() {
       setForm(prev => ({
         ...prev,
         help_title: data.help_title || prev.help_title || editingTarget.target_label,
-        short_help: data.short_help || prev.short_help,
-        detailed_help: data.detailed_help || prev.detailed_help,
-        expected_user_action: data.expected_user_action || prev.expected_user_action,
-        allowed_values: data.allowed_values || prev.allowed_values,
-        usage_example: data.usage_example || prev.usage_example,
-        warnings: data.warnings || prev.warnings,
-        validation_notes: data.validation_notes || prev.validation_notes,
-        related_topics: data.related_topics?.length ? data.related_topics : prev.related_topics,
-        search_keywords: data.search_keywords?.length ? data.search_keywords : prev.search_keywords,
+        short_help_text: data.short_help_text || prev.short_help_text,
+        detailed_help_text: data.detailed_help_text || prev.detailed_help_text,
+        feature_capabilities_text: data.feature_capabilities_text || prev.feature_capabilities_text,
+        process_meaning_text: data.process_meaning_text || prev.process_meaning_text,
+        expected_user_action_text: data.expected_user_action_text || prev.expected_user_action_text,
+        allowed_values_text: data.allowed_values_text || prev.allowed_values_text,
+        examples_text: data.examples_text || prev.examples_text,
+        dependency_notes_text: data.dependency_notes_text || prev.dependency_notes_text,
+        warnings_text: data.warnings_text || prev.warnings_text,
+        validation_notes_text: data.validation_notes_text || prev.validation_notes_text,
+        related_topics_text: data.related_topics_text || prev.related_topics_text,
+        search_keywords: data.search_keywords || prev.search_keywords,
       }));
       toast({ title: "AI Generated", description: "Content generated. Review and save." });
     } catch (e) {
