@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ReactMarkdown from "react-markdown";
+import CrossPageNavigation from "@/components/shared/CrossPageNavigation";
 import { HELP_TARGETS, MODULES } from "@/lib/helpTargetRegistry";
 
 // Sub-components
@@ -229,6 +230,7 @@ export default function HelpAdmin() {
 
   const openTopicEditor = (topic) => { setEditingTopic(topic || null); setTopicEditorOpen(true); };
   const closeTopicEditor = () => { setEditingTopic(null); setTopicEditorOpen(false); };
+  const handleNavigateToHelp = () => { window.open("/help", "_blank"); };
 
   // When bulk AI module is set, navigate to bulk_ai tab with pre-set module
   const handleBulkAIModule = (mod) => {
@@ -243,9 +245,14 @@ export default function HelpAdmin() {
           title="Help Management Console"
           description="Manage all help content, manual topics, AI knowledge base, and documentation quality"
         />
-        <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShowActivity(p => !p)}>
-          <Activity className="w-3.5 h-3.5" /> {showActivity ? "Hide" : "Activity"}
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={handleNavigateToHelp}>
+            <Eye className="w-3.5 h-3.5" /> Preview Help Center
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShowActivity(p => !p)}>
+            <Activity className="w-3.5 h-3.5" /> {showActivity ? "Hide" : "Activity"}
+          </Button>
+        </div>
       </div>
 
       {/* System health KPI bar */}
@@ -264,15 +271,13 @@ export default function HelpAdmin() {
       {/* Orphaned content warning */}
       <OrphanedContentPanel contentMap={contentMap} />
 
-      {/* Navigation strip to related admin pages */}
-      <div className="flex flex-wrap gap-2">
-        <Link to="/help-dashboard"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><LayoutDashboard className="w-3 h-3" /> Help Dashboard</Button></Link>
-        <Link to="/help-coverage"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><FileBarChart className="w-3 h-3" /> Coverage Report</Button></Link>
-        <Link to="/help-analytics"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><TrendingUp className="w-3 h-3" /> Search Analytics</Button></Link>
-        <Link to="/help-target-registry"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><BarChart2 className="w-3 h-3" /> Target Registry</Button></Link>
-        <Link to="/help"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><Eye className="w-3 h-3" /> View Help Center</Button></Link>
-        <Link to="/help-manual-manager"><Button size="sm" variant="outline" className="gap-1 text-xs h-7"><BookOpen className="w-3 h-3" /> Manual Manager</Button></Link>
-        <Link to="/aca-library"><Button size="sm" variant="outline" className="gap-1 text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50"><Scale className="w-3 h-3" /> ACA Library</Button></Link>
+      {/* Related Pages Navigation */}
+      <CrossPageNavigation category="help" currentPage="help-admin" />
+
+      {/* Quick links to other admin areas */}
+      <div className="flex flex-wrap gap-1.5 text-xs mb-3">
+        <Link to="/settings"><Button size="sm" variant="ghost" className="h-7 text-xs gap-1"><Settings2 className="w-3 h-3" /> Settings</Button></Link>
+        <Link to="/integration-infra"><Button size="sm" variant="ghost" className="h-7 text-xs gap-1"><Zap className="w-3 h-3" /> Integration Infra</Button></Link>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
