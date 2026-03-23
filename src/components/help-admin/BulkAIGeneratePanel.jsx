@@ -18,11 +18,16 @@ const MODULE_LABELS = {
   SETTINGS:"Settings", PORTALS:"Portals",
 };
 
-export default function BulkAIGeneratePanel({ contentMap }) {
+export default function BulkAIGeneratePanel({ contentMap, presetModule }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [filterModule, setFilterModule] = useState("all");
+  const [filterModule, setFilterModule] = useState(presetModule || "all");
   const [onlyMissing, setOnlyMissing] = useState(true);
+
+  // Sync when presetModule changes
+  React.useEffect(() => {
+    if (presetModule) setFilterModule(presetModule);
+  }, [presetModule]);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0, errors: 0, current: "" });
   const [abortRef] = useState({ abort: false });
