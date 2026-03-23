@@ -9,25 +9,87 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Map of page codes to content
-    const pageMapping = {
-      'DASHBOARD.PAGE': { content_key: 'dashboard', short_help: 'Central dashboard for managing benefit cases from initial contact through closure.' },
-      'CASES.PAGE': { content_key: 'cases', short_help: 'Manage all benefit cases with filtering, bulk actions, and status tracking.' },
-      'CASES.DETAIL.PAGE': { content_key: 'case-detail', short_help: 'Detailed view and management for individual benefit cases.' },
-      'CENSUS.PAGE': { content_key: 'census', short_help: 'Upload and manage employee census data with validation and risk analysis.' },
-      'QUOTES.PAGE': { content_key: 'quotes', short_help: 'Build and compare benefit plan scenarios with rates and costs.' },
-      'PROPOSALS.PAGE': { content_key: 'proposals', short_help: 'Create formal benefit proposals and track employer engagement.' },
-      'ENROLLMENT.PAGE': { content_key: 'enrollment', short_help: 'Create and manage employee enrollment windows.' },
-      'RENEWALS.PAGE': { content_key: 'renewals', short_help: 'Manage annual renewal cycles with rate forecasting and options.' },
-      'EE_PORTAL.PAGE': { content_key: 'employee-portal', short_help: 'Self-service benefits enrollment for employees.' },
-      'ER_PORTAL.PAGE': { content_key: 'employer-portal', short_help: 'Employer dashboard for case status, proposals, and enrollment.' },
-      'PLANS.PAGE': { content_key: 'plans', short_help: 'Centralized library of benefit plans with comparison tools.' },
-      'CONTRIBUTIONS.PAGE': { content_key: 'contributions', short_help: 'Model employer contribution strategies and analyze costs.' },
-      'POLICYMATCH.PAGE': { content_key: 'policymatch', short_help: 'AI-powered recommendation engine for plan matching.' },
-      'TASKS.PAGE': { content_key: 'tasks', short_help: 'Create and manage case-related tasks with deadline tracking.' },
-      'EXCEPTIONS.PAGE': { content_key: 'exceptions', short_help: 'Manage and resolve data quality and process exceptions.' },
-      'SETTINGS.PAGE': { content_key: 'settings', short_help: 'Administrative settings for user management and integrations.' },
-      'EMPLOYERS.PAGE': { content_key: 'employers', short_help: 'Manage employer records and track associated cases.' },
+    // Map all targets with basic help content
+    // Generate content for UI components based on their type and context
+    const generateComponentHelp = (target) => {
+      const { target_code, target_label, target_type, module_code, page_code, section_code } = target;
+      
+      // Generic help templates by component type
+      const typeTemplates = {
+        'page': (label) => ({ 
+          short: `${label}`,
+          detailed: `# ${label}\n\nThis page provides access to ${label.toLowerCase()} functionality.`
+        }),
+        'card': (label) => ({ 
+          short: `${label} - Information card`,
+          detailed: `# ${label}\n\nThis card displays ${label.toLowerCase()} information. Click to view or interact with this data.`
+        }),
+        'button': (label) => ({ 
+          short: `${label} - Action button`,
+          detailed: `# ${label}\n\nClick this button to ${label.toLowerCase().replace(' button', '').toLowerCase()}.`
+        }),
+        'filter': (label) => ({ 
+          short: `${label} - Filter control`,
+          detailed: `# ${label}\n\nUse this filter to narrow results by ${label.toLowerCase().replace(' filter', '')}.`
+        }),
+        'section': (label) => ({ 
+          short: `${label} - Content section`,
+          detailed: `# ${label}\n\nThis section contains ${label.toLowerCase()} information and controls.`
+        }),
+        'tab': (label) => ({ 
+          short: `${label} - Tab navigation`,
+          detailed: `# ${label}\n\nClick this tab to view ${label.toLowerCase()} content.`
+        }),
+        'status': (label) => ({ 
+          short: `${label} - Status indicator`,
+          detailed: `# ${label}\n\nThis status represents ${label.toLowerCase()}.`
+        }),
+        'field': (label) => ({ 
+          short: `${label} - Data field`,
+          detailed: `# ${label}\n\nThis field displays ${label.toLowerCase()}.`
+        }),
+        'badge': (label) => ({ 
+          short: `${label} - Status badge`,
+          detailed: `# ${label}\n\nThis badge indicates ${label.toLowerCase()}.`
+        }),
+        'action': (label) => ({ 
+          short: `${label} - Action item`,
+          detailed: `# ${label}\n\nUse this to ${label.toLowerCase().replace(' action', '')}.`
+        }),
+        'toggle': (label) => ({ 
+          short: `${label} - Toggle switch`,
+          detailed: `# ${label}\n\nToggle this to enable or disable ${label.toLowerCase().replace(' flag', '')}.`
+        }),
+        'grid': (label) => ({ 
+          short: `${label} - Data grid`,
+          detailed: `# ${label}\n\nThis table displays ${label.toLowerCase()}.`
+        }),
+        'workflow_step': (label) => ({ 
+          short: `${label} - Workflow stage`,
+          detailed: `# ${label}\n\nThis represents the ${label.toLowerCase()} stage in the workflow.`
+        }),
+        'select_option': (label) => ({ 
+          short: `${label} - Selection option`,
+          detailed: `# ${label}\n\nSelect this option for ${label.toLowerCase()}.`
+        }),
+        'radio_option': (label) => ({ 
+          short: `${label} - Radio selection`,
+          detailed: `# ${label}\n\nChoose this option for ${label.toLowerCase()}.`
+        }),
+      };
+      
+      const template = typeTemplates[target_type] || typeTemplates['section'];
+      const help = template(target_label);
+      
+      return {
+        short_help_text: help.short,
+        detailed_help_text: help.detailed,
+        feature_capabilities_text: `${target_label} (${target_type})`,
+        process_meaning_text: `Part of ${page_code} page in ${module_code} module`,
+        expected_user_action_text: `Interact with this ${target_type} as needed`,
+        examples_text: `See the ${module_code} module documentation for examples`,
+        search_keywords: `${target_label}, ${target_type}, ${module_code}, ${page_code}`.toLowerCase()
+      };
     };
 
     // Sample help content for each page (from manual)
