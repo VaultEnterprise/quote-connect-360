@@ -77,7 +77,7 @@ export default function HelpSearchAnalytics() {
   // Confidence distribution
   const confBuckets = { "90-100%": 0, "70-89%": 0, "50-69%": 0, "30-49%": 0, "<30%": 0 };
   for (const l of aiLogs) {
-    const c = (l.answer_confidence || 0) * 100;
+    const c = (l.confidence_score || 0) * 100;
     if (c >= 90) confBuckets["90-100%"]++;
     else if (c >= 70) confBuckets["70-89%"]++;
     else if (c >= 50) confBuckets["50-69%"]++;
