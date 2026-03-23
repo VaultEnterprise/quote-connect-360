@@ -182,10 +182,10 @@ export default function PlanLibrary() {
             { v: "grid", icon: Grid, label: "Grid" },
             { v: "analytics", icon: BarChart2, label: "Analytics" },
             { v: "guide", icon: BookOpen, label: "Guide" },
-          ].map(({ v, icon: Icon, label }) => (
+          ].map(({ v, icon: ModeIcon, label }) => (
             <button key={v} onClick={() => setViewMode(v)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === v ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-              <Icon className="w-3.5 h-3.5" /> {label}
+              <ModeIcon className="w-3.5 h-3.5" /> {label}
             </button>
           ))}
         </div>
