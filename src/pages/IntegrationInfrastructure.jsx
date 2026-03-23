@@ -93,6 +93,7 @@ export default function IntegrationInfrastructure() {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [overallStatus, setOverallStatus] = useState("healthy");
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [tab, setTab] = useState("playground");
 
   return (
     <div className="space-y-6">
