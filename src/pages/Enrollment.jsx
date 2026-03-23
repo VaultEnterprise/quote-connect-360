@@ -113,18 +113,42 @@ export default function Enrollment() {
         </Select>
 
         {(search || statusFilter !== "active" || showUrgentOnly) && (
-          <Button
-            variant="ghost" size="sm"
-            className="h-9 text-xs text-muted-foreground"
-            onClick={() => { setSearch(""); setStatusFilter("active"); setShowUrgentOnly(false); }}
-          >
-            Clear filters
-          </Button>
-        )}
+           <Button
+             variant="ghost" size="sm"
+             className="h-9 text-xs text-muted-foreground"
+             onClick={() => { setSearch(""); setStatusFilter("active"); setShowUrgentOnly(false); }}
+           >
+             Clear filters
+           </Button>
+         )}
 
-        <span className="text-xs text-muted-foreground ml-auto">
-          {filtered.length} window{filtered.length !== 1 ? "s" : ""}
-        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            exportToCSV(
+              filtered.map(e => ({
+                Employer: e.employer_name,
+                Status: e.status,
+                "Start Date": e.start_date,
+                "End Date": e.end_date,
+                "Total Eligible": e.total_eligible,
+                "Invited": e.invited_count,
+                "Enrolled": e.enrolled_count,
+                "Waived": e.waived_count,
+                "Participation Rate": `${e.participation_rate?.toFixed(1) || 0}%`,
+              })),
+              generateFilename("enrollment_windows")
+            );
+          }}
+          className="gap-1.5"
+        >
+          <Download className="w-3.5 h-3.5" /> Export
+        </Button>
+
+         <span className="text-xs text-muted-foreground ml-auto">
+           {filtered.length} window{filtered.length !== 1 ? "s" : ""}
+         </span>
       </div>
 
       {/* Content */}
