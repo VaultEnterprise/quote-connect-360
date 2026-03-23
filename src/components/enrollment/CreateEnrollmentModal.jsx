@@ -38,6 +38,7 @@ export default function CreateEnrollmentModal({ open, onClose }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["enrollments-all"] });
       queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["enrollments-active-count"] });
       onClose();
     },
   });

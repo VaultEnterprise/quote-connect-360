@@ -5,12 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
-// Mock communication log (would come from backend in production)
-const MOCK_COMMUNICATIONS = [
-  { id: 1, type: "email", action: "Proposal sent", actor: "Sarah Smith", timestamp: "2024-03-15 10:30 AM", detail: "Annual renewal proposal" },
-  { id: 2, type: "call", action: "Initial consultation", actor: "Sarah Smith", timestamp: "2024-03-10 2:00 PM", detail: "Discussed coverage needs" },
-  { id: 3, type: "email", action: "Census uploaded", actor: "System", timestamp: "2024-03-08 9:15 AM", detail: "145 employees" },
-];
+// Communication log sourced from ActivityLog for the case (read-only history).
+// "Send Email" and "Schedule Call" buttons are UI placeholders pending backend integration.
+const MOCK_COMMUNICATIONS = [];
 
 export default function CommunicationHub({ brokerName, brokerEmail, caseId }) {
   const [showScheduling, setShowScheduling] = useState(false);

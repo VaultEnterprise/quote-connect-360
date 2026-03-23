@@ -84,7 +84,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   const { data: openExceptions = [] } = useQuery({
     queryKey: ["exceptions-open-count"],
-    queryFn: () => base44.entities.ExceptionItem.filter({ status: "new" }, "-created_date", 50),
+    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 100),
     refetchInterval: 120000,
     select: (data) => data.filter(e => !["resolved","dismissed"].includes(e.status)),
   });
