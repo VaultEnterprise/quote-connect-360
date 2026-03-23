@@ -219,7 +219,7 @@ export default function Tasks() {
     base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
 
-  const { data: tasks = [], isLoading } = useQuery({
+  const { data: tasks = [], isLoading, refetch: refetchTasks } = useQuery({
     queryKey: ["tasks-all"],
     queryFn: () => base44.entities.CaseTask.list("-created_date", 200),
   });
@@ -228,6 +228,9 @@ export default function Tasks() {
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
+
+  // Real-time updates
+  useRealtimeSubscription("CaseTask", () => refetchTasks(), { debounce: 800 });
 
   const toggleStatus = useMutation({
     mutationFn: (task) => {
