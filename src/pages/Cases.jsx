@@ -121,10 +121,23 @@ export default function Cases() {
     exportToCSV(selectedCases, "cases-export.csv", columns);
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (!window.confirm(`Delete ${selectedIds.size} case(s)? This cannot be undone.`)) return;
-    // Implement batch delete
     setBulkAction("deleting");
+    try {
+      for (const id of selectedIds) {
+        await base44.entities.BenefitCase.delete(id);
+      }
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      setSelectedIds(new Set());
+    } finally {
+      setBulkAction(null);
+    }
+  };
+
+  const handleBulkSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["cases"] });
+    setSelectedIds(new Set());
   };
 
   // KPI counts
