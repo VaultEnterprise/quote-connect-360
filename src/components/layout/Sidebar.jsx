@@ -25,7 +25,8 @@ import {
   Brain,
   ServerCog,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ const navGroups = [
       { path: "/tasks", label: "Tasks", icon: AlertCircle },
       { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
       { path: "/integration-infra", label: "Integration Infra", icon: ServerCog },
+      { path: "/aca-library", label: "ACA Library", icon: Scale },
     ],
   },
   {
