@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import EnrollmentDeadlineBanner from "./EnrollmentDeadlineBanner";
 import DependentForm from "./DependentForm";
 import PlanSelectionStep from "./PlanSelectionStep";
+import PlanSelectionEnhanced from "./PlanSelectionEnhanced";
 import PlanCompareModal from "./PlanCompareModal";
 import ProviderSearch from "./ProviderSearch";
 import EnrollmentConfirmation from "./EnrollmentConfirmation";
