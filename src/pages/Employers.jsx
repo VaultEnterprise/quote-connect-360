@@ -182,7 +182,7 @@ export default function Employers() {
   const [showModal, setShowModal] = useState(false);
   const [editingEmployer, setEditingEmployer] = useState(null);
 
-  const { data: employers = [] } = useQuery({
+  const { data: employers = [], refetch: refetchEmployers } = useQuery({
     queryKey: ["employers"],
     queryFn: () => base44.entities.EmployerGroup.list("-created_date", 100),
   });
@@ -192,10 +192,20 @@ export default function Employers() {
     queryFn: () => base44.entities.Agency.list(),
   });
 
-  const { data: cases = [] } = useQuery({
+  const { data: cases = [], refetch: refetchCases } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
+
+  // Real-time updates
+  useRealtimeSubscriptions(
+    ["EmployerGroup", "BenefitCase"],
+    () => {
+      refetchEmployers();
+      refetchCases();
+    },
+    { debounce: 1000 }
+  );
 
   // Build case count map per employer group
   const caseCountMap = useMemo(() => {
