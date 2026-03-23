@@ -225,6 +225,7 @@ export default function HelpAdmin() {
         <Link to="/help-coverage"><Button size="sm" variant="outline" className="gap-1 text-xs"><FileBarChart className="w-3 h-3" /> Coverage Report</Button></Link>
         <Link to="/help-analytics"><Button size="sm" variant="outline" className="gap-1 text-xs"><TrendingUp className="w-3 h-3" /> Search Analytics</Button></Link>
         <Link to="/help-manual-manager"><Button size="sm" variant="outline" className="gap-1 text-xs"><BookOpen className="w-3 h-3" /> Manual Manager</Button></Link>
+        <Link to="/help-target-registry"><Button size="sm" variant="outline" className="gap-1 text-xs"><BarChart2 className="w-3 h-3" /> Target Registry</Button></Link>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>

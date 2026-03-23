@@ -35,6 +35,7 @@ import HelpDashboard from '@/pages/HelpDashboard';
 import HelpCoverageReport from '@/pages/HelpCoverageReport';
 import HelpSearchAnalytics from '@/pages/HelpSearchAnalytics';
 import HelpManualManager from '@/pages/HelpManualManager';
+import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -86,6 +87,7 @@ const AuthenticatedApp = () => {
         <Route path="/help-coverage" element={<HelpCoverageReport />} />
         <Route path="/help-analytics" element={<HelpSearchAnalytics />} />
         <Route path="/help-manual-manager" element={<HelpManualManager />} />
+        <Route path="/help-target-registry" element={<HelpTargetRegistry />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
