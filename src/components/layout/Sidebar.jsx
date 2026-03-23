@@ -21,6 +21,7 @@ import {
   Calculator,
   Heart,
   Landmark,
+  UserCog,
   Brain,
   ServerCog,
   HelpCircle,
@@ -60,6 +61,7 @@ const navGroups = [
     items: [
       { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
       { path: "/employee-portal", label: "Employee Portal", icon: Heart },
+      { path: "/employee-management", label: "Employee Mgmt", icon: UserCog },
     ],
   },
 ];
