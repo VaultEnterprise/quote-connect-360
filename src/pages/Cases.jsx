@@ -51,6 +51,8 @@ export default function Cases() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [sortBy, setSortBy]             = useState("created_desc");
   const [viewMode, setViewMode]         = useState("list"); // "list" | "pipeline"
+  const [selectedIds, setSelectedIds]   = useState(new Set());
+  const [bulkAction, setBulkAction]     = useState(null);
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
