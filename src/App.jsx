@@ -29,6 +29,8 @@ import EmployeeBenefits from '@/pages/EmployeeBenefits';
 import EmployerPortal from '@/pages/EmployerPortal';
 import PolicyMatchAI from '@/pages/PolicyMatchAI';
 import IntegrationInfrastructure from '@/pages/IntegrationInfrastructure.jsx';
+import HelpCenter from '@/pages/HelpCenter';
+import HelpAdmin from '@/pages/HelpAdmin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -74,6 +76,8 @@ const AuthenticatedApp = () => {
         <Route path="/policymatch" element={<PolicyMatchAI />} />
         <Route path="/integration-infra" element={<IntegrationInfrastructure />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/help-admin" element={<HelpAdmin />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
