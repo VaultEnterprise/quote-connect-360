@@ -476,33 +476,33 @@ export default function EnrollmentWizard({
 
       {/* Fixed footer for navigation — touch-friendly on mobile */}
       <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t mt-4 sm:mt-6">
-      <div className="max-w-3xl mx-auto px-4 py-3 sm:py-4">
-        <div className="flex gap-2 sm:gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 text-xs sm:text-sm h-10 sm:h-9"
-            onClick={handleBack}
-            disabled={currentStepIndex === 0}
-          >
-            <ChevronLeft className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-0.5 sm:mr-1" /> 
-            <span className="hidden sm:inline">Back</span>
-          </Button>
-          <Button
-            className="flex-1 text-xs sm:text-sm h-10 sm:h-9"
-            onClick={currentStep.id === "review" ? () => completeEnrollment.mutate() : handleNext}
-            disabled={!canProceed() || completeEnrollment.isPending}
-          >
-            {currentStep.id === "review" ? (
-              completeEnrollment.isPending ? "Submitting..." : isWaiving ? "Confirm Waiver" : "Submit & Sign"
-            ) : (
-              <>
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 sm:ml-1" />
-              </>
-            )}
-          </Button>
+        <div className="max-w-3xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 text-xs sm:text-sm h-10 sm:h-9"
+              onClick={handleBack}
+              disabled={currentStepIndex === 0}
+            >
+              <ChevronLeft className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-0.5 sm:mr-1" /> 
+              <span className="hidden sm:inline">Back</span>
+            </Button>
+            <Button
+              className="flex-1 text-xs sm:text-sm h-10 sm:h-9"
+              onClick={currentStep.id === "review" ? () => completeEnrollment.mutate() : handleNext}
+              disabled={!canProceed() || completeEnrollment.isPending}
+            >
+              {currentStep.id === "review" ? (
+                completeEnrollment.isPending ? "Submitting..." : isWaiving ? "Confirm Waiver" : "Submit & Sign"
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-3.5 sm:w-4 h-3.5 sm:h-4 sm:ml-1" />
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
       </div>
       </div>
       );
