@@ -4,8 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
+import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Copy } from "lucide-react";
 import RateTableEditor from "./RateTableEditor";
+import RateTableDashboard from "./RateTableDashboard";
+import PlanCloneModal from "./PlanCloneModal";
+import ScenarioIntegration from "./ScenarioIntegration";
 
 const TYPE_COLORS = {
   medical: "bg-blue-100 text-blue-700",
@@ -19,6 +22,7 @@ const TYPE_COLORS = {
 
 export default function PlanCard({ plan, onEdit, onArchive }) {
   const [showRates, setShowRates] = useState(false);
+  const [showClone, setShowClone] = useState(false);
 
   const { data: rateTables = [] } = useQuery({
     queryKey: ["rate-tables", plan.id],
@@ -46,6 +50,9 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
           <div className="flex gap-1 flex-shrink-0">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(plan)}>
               <Pencil className="w-3 h-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Clone" onClick={() => setShowClone(true)}>
+              <Copy className="w-3 h-3" />
             </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onArchive}>
               <Archive className="w-3 h-3" />
@@ -83,7 +90,13 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
         {showRates && (
           <RateTableEditor planId={plan.id} rateTables={rateTables} />
         )}
+
+        {/* Scenario integration */}
+        <ScenarioIntegration plan={plan} />
       </CardContent>
+
+      {/* Clone modal */}
+      <PlanCloneModal plan={plan} open={showClone} onClose={() => setShowClone(false)} />
     </Card>
   );
 }
