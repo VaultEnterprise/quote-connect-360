@@ -170,54 +170,62 @@ export default function EnrollmentWizard({
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6 px-4">
-      {/* Deadline banner — always shown */}
-      {enrollmentWindow && <EnrollmentDeadlineBanner enrollmentWindow={enrollmentWindow} />}
+     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-background">
+       {/* Fixed header on mobile for better UX */}
+       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b">
+         <div className="max-w-3xl mx-auto px-4 py-2 sm:py-3">
+           {/* Progress bar */}
+           <Progress value={progress} className="h-1 mb-2 sm:mb-3" />
 
-      {/* Enrollment context header — responsive */}
-       <div className="space-y-1">
-         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-           {enrollmentWindow?.employer_name || "Enrollment"}
-         </p>
-         <h1 className="text-xl sm:text-2xl font-bold">{isWaiving ? "Waive Coverage" : "Enroll in Benefits"}</h1>
-         <p className="text-xs sm:text-sm text-muted-foreground">
-           {isWaiving
-             ? "Let us know why you're declining coverage."
-             : `Complete your benefit elections by ${format(new Date(enrollmentWindow?.end_date || ""), "MMMM d, yyyy")}`}
-         </p>
-       </div>
-
-      {/* Step indicator — responsive pill/dots */}
-       <div className="flex items-center justify-between gap-1 sm:gap-2 overflow-x-auto px-1 -mx-4 px-4">
-         {steps.map((step, i) => (
-           <div key={step.id} className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-             <div
-               className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-semibold transition-all ${
-                 i === currentStepIndex
-                   ? "bg-primary text-white shadow-sm"
-                   : i < currentStepIndex
-                   ? "bg-green-100 text-green-700"
-                   : "bg-muted text-muted-foreground"
-               }`}
-             >
-               {i < currentStepIndex ? "✓" : i + 1}
-             </div>
-             <span
-               className={`text-[10px] sm:text-xs font-medium whitespace-nowrap hidden sm:inline ${
-                 i === currentStepIndex ? "text-foreground" : "text-muted-foreground"
-               }`}
-             >
-               {step.label}
-             </span>
-             {i < steps.length - 1 && (
-               <div className={`w-1 sm:w-2 h-0.5 ${i < currentStepIndex ? "bg-green-100" : "bg-border"}`} />
-             )}
+           {/* Step indicator — collapsible on mobile */}
+           <div className="flex items-center gap-1 overflow-x-auto -mx-4 px-4">
+             {steps.map((step, i) => (
+               <div key={step.id} className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
+                 <div
+                   className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[9px] sm:text-xs font-semibold transition-all ${
+                     i === currentStepIndex
+                       ? "bg-primary text-white shadow-sm"
+                       : i < currentStepIndex
+                       ? "bg-green-100 text-green-700"
+                       : "bg-muted text-muted-foreground"
+                   }`}
+                 >
+                   {i < currentStepIndex ? "✓" : i + 1}
+                 </div>
+                 <span
+                   className={`text-[9px] sm:text-xs font-medium whitespace-nowrap hidden sm:inline ${
+                     i === currentStepIndex ? "text-foreground font-semibold" : "text-muted-foreground"
+                   }`}
+                 >
+                   {step.label}
+                 </span>
+                 {i < steps.length - 1 && (
+                   <div className={`w-0.5 sm:w-1 h-0.5 ${i < currentStepIndex ? "bg-green-100" : "bg-border"}`} />
+                 )}
+               </div>
+             ))}
            </div>
-         ))}
+         </div>
        </div>
 
-      {/* Progress bar */}
-      <Progress value={progress} className="h-1" />
+       {/* Main content area — scrollable */}
+       <div className="flex-1 overflow-y-auto">
+         <div className="max-w-3xl mx-auto px-4 py-4 sm:py-6">
+           {/* Deadline banner — always shown */}
+           {enrollmentWindow && <EnrollmentDeadlineBanner enrollmentWindow={enrollmentWindow} />}
+
+           {/* Enrollment context header — responsive */}
+           <div className="space-y-1 mb-6">
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+               {enrollmentWindow?.employer_name || "Enrollment"}
+             </p>
+             <h1 className="text-lg sm:text-2xl font-bold">{isWaiving ? "Waive Coverage" : "Enroll in Benefits"}</h1>
+             <p className="text-xs sm:text-sm text-muted-foreground">
+               {isWaiving
+                 ? "Let us know why you're declining coverage."
+                 : `Complete your benefit elections by ${format(new Date(enrollmentWindow?.end_date || ""), "MMMM d, yyyy")}`}
+             </p>
+           </div>
 
       {/* Step content */}
       <EnrollmentStepTransition stepId={currentStep.id}>
