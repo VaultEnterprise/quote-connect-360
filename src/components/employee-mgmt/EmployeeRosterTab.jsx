@@ -488,6 +488,16 @@ export default function EmployeeRosterTab({ enrollments, windows, cases, plans, 
 
       {showAdd && <AddEmployeeModal open={showAdd} onClose={() => setShowAdd(false)} windows={windows} cases={cases} />}
       {editing && <EditEmployeeModal enrollment={editing} open={!!editing} onClose={() => setEditing(null)} />}
+      {viewingDetail && (
+        <EmployeeDetailDrawer
+          enrollment={viewingDetail}
+          window={windowMap[viewingDetail.enrollment_window_id]}
+          plan={planMap[viewingDetail.selected_plan_id]}
+          open={!!viewingDetail}
+          onClose={() => setViewingDetail(null)}
+          onEdit={(e) => { setViewingDetail(null); setEditing(e); }}
+        />
+      )}
     </div>
   );
 }
