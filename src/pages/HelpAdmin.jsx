@@ -17,7 +17,7 @@ import {
   Sparkles, Save, AlertCircle, CheckCircle2, BarChart2, Play,
   LayoutDashboard, FileBarChart, TrendingUp, BookOpen, Database,
   X, Target, MessageSquare, Zap, Settings2, RefreshCw, Plus,
-  Activity, ShieldAlert
+  Activity, ShieldAlert, Scale
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import ReactMarkdown from "react-markdown";
