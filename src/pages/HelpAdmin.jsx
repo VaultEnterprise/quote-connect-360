@@ -247,7 +247,10 @@ export default function HelpAdmin() {
         title="Help Management Console"
         description="Manage help content for every element in the application"
         actions={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={runManualSeed} disabled={seedingManual} variant="default" size="sm" className="gap-1">
+              <BookOpen className="w-3.5 h-3.5" /> {seedingManual ? "Seeding Manual…" : "Seed Full Manual"}
+            </Button>
             <Button onClick={runDashboardSeed} disabled={seedingDashboard} variant="outline" size="sm" className="gap-1">
               <Play className="w-3.5 h-3.5" /> {seedingDashboard ? "Seeding…" : "Seed Dashboard Help"}
             </Button>
