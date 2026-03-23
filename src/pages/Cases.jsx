@@ -90,7 +90,36 @@ export default function Cases() {
   }, [cases, search, stageFilter, typeFilter, priorityFilter, sortBy]);
 
   const activeFilters = [stageFilter, typeFilter, priorityFilter].filter(f => f !== "all").length;
-  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setSearch(""); };
+  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setSearch(""); setSelectedIds([]); };
+
+  // Bulk actions handlers
+  const handleSelectCase = useCallback((id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(filtered.map(c => c.id));
+  }, [filtered]);
+
+  const handleExportSelected = useCallback(() => {
+    const toExport = filtered.filter(c => selectedIds.includes(c.id));
+    exportToCSV(
+      toExport.map(c => ({
+        "Case #": c.case_number,
+        Employer: c.employer_name,
+        Type: c.case_type,
+        Stage: c.stage,
+        Priority: c.priority,
+        "Assigned To": c.assigned_to,
+        "Effective Date": c.effective_date,
+        Status: c.enrollment_status,
+      })),
+      generateFilename("cases_export")
+    );
+    setSelectedIds([]);
+  }, [filtered, selectedIds]);
 
   // KPI counts
   const urgentCount  = cases.filter(c => c.priority === "urgent").length;
