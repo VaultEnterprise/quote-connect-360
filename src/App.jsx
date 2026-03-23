@@ -36,6 +36,7 @@ import HelpDashboard from '@/pages/HelpDashboard';
 import HelpCoverageReport from '@/pages/HelpCoverageReport';
 import HelpSearchAnalytics from '@/pages/HelpSearchAnalytics';
 import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
+import HelpManualManager from '@/pages/HelpManualManager';
 import ACALibrary from '@/pages/ACALibrary';
 
 const AuthenticatedApp = () => {
@@ -88,6 +89,7 @@ const AuthenticatedApp = () => {
         <Route path="/help-coverage" element={<HelpCoverageReport />} />
         <Route path="/help-analytics" element={<HelpSearchAnalytics />} />
         <Route path="/help-target-registry" element={<HelpTargetRegistry />} />
+        <Route path="/help-manual-manager" element={<HelpManualManager />} />
         <Route path="/aca-library" element={<ACALibrary />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
