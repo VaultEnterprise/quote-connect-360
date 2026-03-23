@@ -91,6 +91,7 @@ const AuthenticatedApp = () => {
         <Route path="/help-analytics" element={<HelpSearchAnalytics />} />
         <Route path="/help-manual-manager" element={<HelpManualManager />} />
         <Route path="/help-target-registry" element={<HelpTargetRegistry />} />
+        <Route path="/aca-library" element={<ACALibrary />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
