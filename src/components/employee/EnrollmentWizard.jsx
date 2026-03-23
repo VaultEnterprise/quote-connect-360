@@ -459,10 +459,10 @@ export default function EnrollmentWizard({
             </CardContent>
           </Card>
         )}
-      </div>
+        </EnrollmentStepTransition>
 
-      {/* Help card */}
-      <HelpContactCard />
+        {/* Help card */}
+        <HelpContactCard />
 
       {/* Navigation buttons — responsive */}
        <div className="flex gap-2 sm:gap-3">
