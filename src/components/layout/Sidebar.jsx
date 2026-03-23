@@ -66,7 +66,7 @@ const navGroups = [
 
 const bottomItems = [
   { path: "/help", label: "Help Center", icon: HelpCircle },
-  { path: "/help-admin", label: "Help Admin", icon: ShieldCheck, adminOnly: true },
+  { path: "/help-admin", label: "Help Console", icon: ShieldCheck },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -197,7 +197,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
         {/* Bottom */}
         <div className="px-3 pb-4 space-y-1 border-t border-sidebar-border pt-3">
-          {bottomItems.filter(item => !item.adminOnly || location.pathname === "/help-admin" || true).map((item) => (
+          {bottomItems.map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
           <Button
