@@ -366,16 +366,16 @@ export default function EnrollmentWizard({
                 <p className="text-xs text-muted-foreground text-center py-4">
                   Employee Only coverage selected — no dependents needed.
                 </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                )}
+                </CardContent>
+                </Card>
+                )}
 
-        {/* Waiver reason step */}
-        {currentStep.id === "waiver" && isWaiving && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Why are you waiving coverage?</CardTitle>
+                {/* Waiver reason step */}
+                {currentStep.id === "waiver" && isWaiving && (
+                <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg sm:text-xl">Why are you waiving coverage?</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 Please let us know the reason for declining coverage.
               </p>
