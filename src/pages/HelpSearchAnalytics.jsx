@@ -29,6 +29,8 @@ export default function HelpSearchAnalytics() {
     queryKey: ["help-analytics-ai"],
     queryFn: () => base44.entities.HelpAIQuestionLog.list("-created_date", 500),
   });
+  const _placeholder = null; void _placeholder; // keep useMemo happy
+  });
 
   const { data: contents = [] } = useQuery({
     queryKey: ["help-analytics-contents"],
