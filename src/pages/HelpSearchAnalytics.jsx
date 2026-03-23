@@ -30,11 +30,9 @@ export default function HelpSearchAnalytics() {
     queryFn: () => base44.entities.HelpAIQuestionLog.list("-created_date", 500),
   });
 
-  });
-
   const { data: contents = [] } = useQuery({
     queryKey: ["help-analytics-contents"],
-    queryFn: () => base44.entities.HelpContent.filter({ status: "active" }, "-view_count", 100),
+    queryFn: () => base44.entities.HelpContent.filter({ content_status: "active" }, "-view_count", 100),
   });
 
   if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
