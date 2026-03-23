@@ -467,6 +467,36 @@ export default function HelpAdmin() {
         {/* ── SEED DATA ───────────────────────────────────────────────────── */}
         <TabsContent value="seeds" className="mt-5">
           <AdminSeedPanel />
+          
+          <Card className="mt-6 border-purple-200 bg-purple-50">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm mb-1">Populate Help from Manual</h3>
+                  <p className="text-xs text-muted-foreground">Auto-populate all 81 missing help topics using content from the operations manual.</p>
+                </div>
+                <Button 
+                  onClick={async () => {
+                    try {
+                      const res = await base44.functions.invoke('populateHelpFromManual', {});
+                      toast({ 
+                        title: "Success", 
+                        description: `Created ${res.data.totalCreated} help topics, ${res.data.totalFailed} failed.` 
+                      });
+                      queryClient.invalidateQueries({ queryKey: ["help-contents-admin"] });
+                      setTab("coverage");
+                    } catch (e) {
+                      toast({ title: "Error", description: e.message, variant: "destructive" });
+                    }
+                  }}
+                  size="sm"
+                  className="gap-1 bg-purple-600 hover:bg-purple-700"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Populate Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── CONTEXTUAL CONTENT EDITOR ───────────────────────────────────── */}
