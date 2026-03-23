@@ -516,7 +516,11 @@ export default function PolicyMatchAIPage() {
           {viewMode === "list" && (
             <>
               {/* Quick filter presets */}
-              <PolicyMatchFilterPresets onSelectPreset={() => {}} />
+              <PolicyMatchFilterPresets onSelectPreset={(filters) => {
+                if (filters.tier) setFilterTier(Array.isArray(filters.tier) ? filters.tier[0] : filters.tier);
+                if (filters.status) setFilterStatus(filters.status);
+                if (filters.autoBindable) setFilterTier("preferred");
+              }} />
 
                   <div className="flex items-center gap-2 flex-wrap">
                 <Filter className="w-3.5 h-3.5 text-muted-foreground" />

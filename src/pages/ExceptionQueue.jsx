@@ -368,7 +368,21 @@ export default function ExceptionQueue() {
       </div>
 
           {/* Bulk actions */}
-          {selectedIds.size > 0 && <ExceptionBulkActionsPanel selectedCount={selectedIds.size} />}
+          {selectedIds.size > 0 && (
+            <ExceptionBulkActionsPanel
+              selectedCount={selectedIds.size}
+              onAction={(action, params) => {
+                if (action === "assign") {
+                  Promise.all([...selectedIds].map(id =>
+                    base44.entities.ExceptionItem.update(id, { assigned_to: params.email })
+                  )).then(() => queryClient.invalidateQueries({ queryKey: ["exceptions"] }));
+                } else if (action === "status") {
+                  bulkResolve.mutate();
+                }
+                setSelectedIds(new Set());
+              }}
+            />
+          )}
 
           {/* Exception list */}
           {sorted.length === 0 ? (
