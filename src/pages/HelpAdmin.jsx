@@ -195,6 +195,23 @@ export default function HelpAdmin() {
     }
   };
 
+  const runManualSeed = async () => {
+    setSeedingManual(true);
+    try {
+      const [r1, r2] = await Promise.all([
+        base44.functions.invoke("seedApplicationManualPart1", {}),
+        base44.functions.invoke("seedApplicationManualPart2", {}),
+      ]);
+      queryClient.invalidateQueries({ queryKey: ["help-manual-topics"] });
+      const total = (r1.data?.created || 0) + (r2.data?.created || 0) + (r1.data?.updated || 0) + (r2.data?.updated || 0);
+      toast({ title: "Full Manual Seeded", description: `${total} chapters seeded (Parts 1 & 2 complete). HelpAI now has the full operations manual indexed.` });
+    } catch (e) {
+      toast({ title: "Manual Seed Error", description: e.message, variant: "destructive" });
+    } finally {
+      setSeedingManual(false);
+    }
+  };
+
   const searchFiltered = useMemo(() => {
     if (!search) return [];
     const q = search.toLowerCase();
