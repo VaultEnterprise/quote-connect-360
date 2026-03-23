@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, Users,
-  Pencil, AlertTriangle, Briefcase, Filter, X, Eye, CheckSquare
+  Pencil, AlertTriangle, Briefcase, Filter, X, Eye, CheckSquare, Upload
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
