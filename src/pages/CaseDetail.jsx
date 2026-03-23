@@ -204,6 +204,9 @@ export default function CaseDetail() {
           <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
             <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowClone(true)}>
+            <Copy className="w-3.5 h-3.5 mr-1.5" /> Clone
+          </Button>
           {caseData.stage !== "closed" && (
             <Button
               variant="outline" size="sm"
