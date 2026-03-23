@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -6,8 +6,10 @@ import {
   CheckCircle2, Search, Filter, Plus, Clock, Pencil, Trash2,
   AlertCircle, Calendar, User, Briefcase, ChevronDown, ChevronRight,
   ArrowUpRight, ListChecks, BarChart2, Circle, Loader2, Ban, XCircle,
-  Star, ChevronUp
+  Star, ChevronUp, Download
 } from "lucide-react";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { exportToCSV, generateFilename } from "@/utils/exportHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
