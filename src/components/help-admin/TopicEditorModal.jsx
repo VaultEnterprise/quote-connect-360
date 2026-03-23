@@ -111,9 +111,13 @@ Return JSON with: topic_body (markdown string), topic_summary (2-sentence summar
 
   const f = (field) => (e) => setForm(p => ({ ...p, [field]: e.target?.value ?? e }));
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto p-4">
-      <div className="bg-background rounded-xl shadow-2xl w-full max-w-5xl my-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto p-4" onClick={handleBackdropClick}>
+      <div className="bg-background rounded-xl shadow-2xl w-full max-w-5xl my-4" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div className="flex items-center gap-3">
