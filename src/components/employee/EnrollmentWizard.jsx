@@ -406,9 +406,9 @@ export default function EnrollmentWizard({
         {currentStep.id === "review" && (
           <Card>
             <CardHeader>
-              <CardTitle>{isWaiving ? "Confirm Waiver" : "Review Your Elections"}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+               <CardTitle className="text-lg sm:text-xl">{isWaiving ? "Confirm Waiver" : "Review Your Elections"}</CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-3 sm:space-y-4">
               {isWaiving ? (
                 <>
                   <div className="p-4 rounded-xl bg-orange-50 border border-orange-200">
