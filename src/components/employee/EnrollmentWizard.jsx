@@ -284,54 +284,57 @@ export default function EnrollmentWizard({
           </Card>
         )}
 
-        {/* Plans step */}
-        {currentStep.id === "plans" && !isWaiving && (
-          <div className="space-y-4">
-            <PlanSelectionStep
-              selectedPlans={selectedPlans}
-              onSelect={handleSelectPlan}
-              onCompare={(plan) => {
-                const plans = Object.values(selectedPlans).filter(p => p.plan_type === plan.plan_type);
-                if (plans.length > 1) {
-                  setComparePlans({ plan1: plans[0], plan2: plan });
-                  setCompareMode(true);
-                }
-              }}
-              effectiveDate={enrollmentWindow?.effective_date}
-            />
+        {/* Plans step - Enhanced UX */}
+         {currentStep.id === "plans" && !isWaiving && (
+           <div className="space-y-6">
+             {/* Using enhanced plan selection with better comparison UX */}
+             <PlanSelectionEnhanced
+               plans={{
+                 medical: [], // Will be populated from scenario data
+                 dental: [],
+                 vision: [],
+               }}
+               selectedPlans={selectedPlans}
+               onSelect={handleSelectPlan}
+               onCompare={(plan) => {
+                 setComparePlans({ plan1: selectedPlans[plan.plan_type], plan2: plan });
+                 setCompareMode(true);
+               }}
+               effectiveDate={enrollmentWindow?.effective_date}
+             />
 
-            {/* HSA tip */}
-            {selectedPlans.medical?.hsa_eligible && (
-              <Card className="border-green-200 bg-green-50">
-                <CardContent className="p-3">
-                  <p className="text-sm font-semibold text-green-800">💡 HSA Eligible Plan Selected</p>
-                  <p className="text-xs text-green-700 mt-1">
-                    This HDHP qualifies you for a Health Savings Account (HSA). In 2026, you can contribute up to $4,300 (individual) or $8,550 (family) pre-tax. Funds roll over year to year.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+             {/* HSA tip */}
+             {selectedPlans.medical?.hsa_eligible && (
+               <Card className="border-green-200 bg-green-50">
+                 <CardContent className="p-3">
+                   <p className="text-sm font-semibold text-green-800">💡 HSA Eligible Plan Selected</p>
+                   <p className="text-xs text-green-700 mt-1">
+                     This HDHP qualifies you for a Health Savings Account (HSA). In 2026, you can contribute up to $4,300 (individual) or $8,550 (family) pre-tax. Funds roll over year to year.
+                   </p>
+                 </CardContent>
+               </Card>
+             )}
 
-            {/* Provider search */}
-            {selectedPlans.medical && (
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm font-semibold">Check If Your Doctor Is In-Network</p>
-                  <ProviderSearch plan={selectedPlans.medical} />
-                </CardContent>
-              </Card>
-            )}
+             {/* Provider search */}
+             {selectedPlans.medical && (
+               <Card>
+                 <CardContent className="p-4 space-y-3">
+                   <p className="text-sm font-semibold">Check If Your Doctor Is In-Network</p>
+                   <ProviderSearch plan={selectedPlans.medical} />
+                 </CardContent>
+               </Card>
+             )}
 
-            {compareMode && comparePlans && (
-              <PlanCompareModal
-                plan1={comparePlans.plan1}
-                plan2={comparePlans.plan2}
-                onClose={() => setCompareMode(false)}
-                onSelectPlan={(plan) => { handleSelectPlan(plan); setCompareMode(false); }}
-              />
-            )}
-          </div>
-        )}
+             {compareMode && comparePlans && (
+               <PlanCompareModal
+                 plan1={comparePlans.plan1}
+                 plan2={comparePlans.plan2}
+                 onClose={() => setCompareMode(false)}
+                 onSelectPlan={(plan) => { handleSelectPlan(plan); setCompareMode(false); }}
+               />
+             )}
+           </div>
+         )}
 
         {/* Dependents step */}
         {currentStep.id === "dependents" && !isWaiving && (
