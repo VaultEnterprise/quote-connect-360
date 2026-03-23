@@ -21,6 +21,13 @@ import EnrollmentCountdowns from "@/components/dashboard/EnrollmentCountdowns";
 import StalledCases from "@/components/dashboard/StalledCases";
 import QuickActions from "@/components/dashboard/QuickActions";
 import CensusGapAlert from "@/components/dashboard/CensusGapAlert";
+import ProposalsKPI from "@/components/dashboard/ProposalsKPI";
+import TeamWorkload from "@/components/dashboard/TeamWorkload";
+import RevenueMetrics from "@/components/dashboard/RevenueMetrics";
+import ComplianceAlerts from "@/components/dashboard/ComplianceAlerts";
+import CarrierDistribution from "@/components/dashboard/CarrierDistribution";
+import EnrollmentForecast from "@/components/dashboard/EnrollmentForecast";
+import CycleTiming from "@/components/dashboard/CycleTiming";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid
