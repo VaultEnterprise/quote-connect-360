@@ -265,9 +265,45 @@ export default function Cases() {
       ) : viewMode === "pipeline" ? (
         <CasePipelineView cases={filtered} />
       ) : (
-        <div className="space-y-2">
-          {filtered.map(c => <CaseListCard key={c.id} c={c} />)}
+        <div className="space-y-2 pb-20">
+          {filtered.map(c => (
+            <div key={c.id} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedIds.has(c.id)}
+                onChange={() => toggleSelect(c.id)}
+                className="w-4 h-4 rounded border border-input"
+              />
+              <div className="flex-1">
+                <CaseListCard c={c} />
+              </div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <BulkActionsBar
+          selectedCount={selectedIds.size}
+          totalCount={filtered.length}
+          allSelected={selectedIds.size === filtered.length}
+          onSelectAll={toggleSelectAll}
+          onClearSelection={() => setSelectedIds(new Set())}
+          actions={[
+            {
+              label: "Export",
+              icon: Download,
+              onClick: handleBulkExport,
+            },
+            {
+              label: "Delete",
+              icon: Trash2,
+              variant: "destructive",
+              onClick: handleBulkDelete,
+            },
+          ]}
+        />
       )}
     </div>
   );
