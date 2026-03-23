@@ -201,7 +201,7 @@ function EditEmployeeModal({ enrollment, open, onClose }) {
   );
 }
 
-export default function EmployeeRosterTab({ enrollments, windows, cases, plans, isLoading, currentUser }) {
+export default function EmployeeRosterTab({ enrollments, windows, cases, plans, isLoading, currentUser, onNavigate }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
