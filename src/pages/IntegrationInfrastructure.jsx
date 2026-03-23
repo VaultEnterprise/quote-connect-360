@@ -193,16 +193,19 @@ export default function IntegrationInfrastructure() {
   );
 }
 
-function StackDiagram() {
-  const layers = [
-    { label: "Base44 UI + API Playground", sub: "React frontend · GraphQL IDE · Interactive REST client", color: "bg-primary/10 border-primary/30 text-primary" },
-    { label: "QC360 REST + GraphQL APIs", sub: "Cases · Census · Quotes · Proposals · Enrollment · Renewal · Webhooks", color: "bg-accent/10 border-accent/30 text-accent-foreground" },
-    { label: "Hardening Middleware", sub: "Retry · Idempotency · Rate Limiting · Validation · Structured Logging · Secrets", color: "bg-amber-50 border-amber-200 text-amber-800", highlight: true },
-    { label: "Integration & Transformation Layer", sub: "AI ETL Engine · Field Mapper · Schema Validator · Marketplace Connectors", color: "bg-violet-50 border-violet-200 text-violet-800" },
-    { label: "Auth & Compliance", sub: "OAuth 2.0 · OIDC SSO · SCIM · RBAC · HIPAA · SOC 2 · Audit Trail", color: "bg-rose-50 border-rose-200 text-rose-800" },
-    { label: "Adapter Layer", sub: "ADP · Workday · DocuSign · Aetna · BCBS · Stripe · BambooHR · Slack", color: "bg-purple-50 border-purple-200 text-purple-800" },
-    { label: "PostgreSQL Repositories", sub: "Audit · Census · Quote · Proposal · Enrollment · Install · Renewal", color: "bg-slate-100 border-slate-300 text-slate-700" },
-  ];
+// Maps each stack layer to which tab(s) it corresponds to
+const LAYER_TAB_MAP = [
+  { label: "Base44 UI + API Playground", sub: "React frontend · GraphQL IDE · Interactive REST client", color: "bg-primary/10 border-primary/30 text-primary", tab: "playground", tabs: ["playground", "graphql", "reference", "sdks"] },
+  { label: "CQ360 REST + GraphQL APIs", sub: "Cases · Census · Quotes · Proposals · Enrollment · Renewal · Webhooks", color: "bg-accent/10 border-accent/30 text-accent-foreground", tab: "reference", tabs: ["reference", "graphql", "webhooks", "models", "events"] },
+  { label: "Hardening Middleware", sub: "Retry · Idempotency · Rate Limiting · Validation · Structured Logging · Secrets", color: "bg-amber-50 border-amber-200 text-amber-800", tab: "retry", tabs: ["retry", "idempotency", "ratelimit", "validators", "logger", "secrets"] },
+  { label: "Integration & Transformation Layer", sub: "AI ETL Engine · Field Mapper · Schema Validator · Marketplace Connectors", color: "bg-violet-50 border-violet-200 text-violet-800", tab: "transform", tabs: ["transform", "marketplace", "ai"] },
+  { label: "Auth & Compliance", sub: "OAuth 2.0 · OIDC SSO · SCIM · RBAC · HIPAA · SOC 2 · Audit Trail", color: "bg-rose-50 border-rose-200 text-rose-800", tab: "sso", tabs: ["sso", "auth", "keys", "compliance"] },
+  { label: "Adapter Layer", sub: "ADP · Workday · DocuSign · Aetna · BCBS · Stripe · BambooHR · Slack", color: "bg-purple-50 border-purple-200 text-purple-800", tab: "marketplace", tabs: ["marketplace"] },
+  { label: "PostgreSQL Repositories", sub: "Audit · Census · Quote · Proposal · Enrollment · Install · Renewal", color: "bg-slate-100 border-slate-300 text-slate-700", tab: "models", tabs: ["models", "events", "health"] },
+];
+
+function StackDiagram({ activeTab, onNavigate }) {
+  const activeLayerIndex = LAYER_TAB_MAP.findIndex(l => l.tabs.includes(activeTab));
 
   return (
     <Card>
@@ -210,22 +213,31 @@ function StackDiagram() {
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Shield className="w-4 h-4 text-primary" />
           CQ360 Enterprise API Stack
+          <span className="text-[10px] font-normal text-muted-foreground ml-1">— click a layer to navigate</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center gap-0">
-          {layers.map((layer, i) => (
-            <React.Fragment key={layer.label}>
-              <div className={`w-full max-w-2xl border rounded-lg px-4 py-2.5 text-center ${layer.color} ${layer.highlight ? "ring-2 ring-amber-400 ring-offset-1 shadow-sm" : ""}`}>
-                <p className="text-xs font-semibold">{layer.label}</p>
-                <p className="text-[10px] opacity-70 mt-0.5">{layer.sub}</p>
-                {layer.highlight && (
-                  <Badge className="mt-1 text-[9px] bg-amber-200 text-amber-800 border-amber-300 border py-0">← You are here</Badge>
-                )}
-              </div>
-              {i < layers.length - 1 && <div className="w-px h-3 bg-border" />}
-            </React.Fragment>
-          ))}
+          {LAYER_TAB_MAP.map((layer, i) => {
+            const isActive = i === activeLayerIndex;
+            return (
+              <React.Fragment key={layer.label}>
+                <button
+                  onClick={() => onNavigate(layer.tab)}
+                  className={`w-full max-w-2xl border rounded-lg px-4 py-2.5 text-center transition-all hover:scale-[1.01] hover:shadow-md
+                    ${layer.color}
+                    ${isActive ? "ring-2 ring-primary ring-offset-1 shadow-sm scale-[1.01]" : "opacity-80 hover:opacity-100"}`}
+                >
+                  <p className="text-xs font-semibold">{layer.label}</p>
+                  <p className="text-[10px] opacity-70 mt-0.5">{layer.sub}</p>
+                  {isActive && (
+                    <Badge className="mt-1 text-[9px] bg-primary/20 text-primary border-primary/40 border py-0">← You are here</Badge>
+                  )}
+                </button>
+                {i < LAYER_TAB_MAP.length - 1 && <div className="w-px h-3 bg-border" />}
+              </React.Fragment>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
