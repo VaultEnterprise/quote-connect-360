@@ -65,35 +65,48 @@ export default function CaseDetail() {
   const [showAdvance, setShowAdvance] = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
-  const { data: caseData, isLoading } = useQuery({
+  const { data: caseData, isLoading, refetch: refetchCase } = useQuery({
     queryKey: ["case", caseId],
     queryFn: () => base44.entities.BenefitCase.filter({ id: caseId }).then(r => r[0]),
     enabled: !!caseId,
   });
 
-  const { data: tasks = [] } = useQuery({
+  const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ["case-tasks", caseId],
     queryFn: () => base44.entities.CaseTask.filter({ case_id: caseId }, "-created_date"),
     enabled: !!caseId,
   });
 
-  const { data: censusVersions = [] } = useQuery({
+  const { data: censusVersions = [], refetch: refetchCensus } = useQuery({
     queryKey: ["census-versions", caseId],
     queryFn: () => base44.entities.CensusVersion.filter({ case_id: caseId }, "-version_number"),
     enabled: !!caseId,
   });
 
-  const { data: scenarios = [] } = useQuery({
+  const { data: scenarios = [], refetch: refetchScenarios } = useQuery({
     queryKey: ["quote-scenarios", caseId],
     queryFn: () => base44.entities.QuoteScenario.filter({ case_id: caseId }, "-created_date"),
     enabled: !!caseId,
   });
 
-  const { data: docs = [] } = useQuery({
+  const { data: docs = [], refetch: refetchDocs } = useQuery({
     queryKey: ["documents", caseId],
     queryFn: () => base44.entities.Document.filter({ case_id: caseId }),
     enabled: !!caseId,
   });
+
+  // Real-time updates for all case-related entities
+  useRealtimeSubscriptions(
+    ["BenefitCase", "CaseTask", "CensusVersion", "QuoteScenario", "Document"],
+    () => {
+      refetchCase();
+      refetchTasks();
+      refetchCensus();
+      refetchScenarios();
+      refetchDocs();
+    },
+    { debounce: 1000 }
+  );
 
   // ── Stage advance mutation ─────────────────────────────────────────────────
   const advanceStageMutation = useMutation({
