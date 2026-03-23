@@ -111,10 +111,16 @@ Deno.serve(async (req) => {
         for (const record of records) {
           await base44.entities.HelpContent.delete(record.id);
           deleted++;
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       } catch (err) {
         console.warn(`Failed to delete content for ${code}:`, err.message);
         failed++;
+      }
+      // Batch delay every 5 codes
+      if (ORPHANED_CODES.indexOf(code) % 5 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
 
