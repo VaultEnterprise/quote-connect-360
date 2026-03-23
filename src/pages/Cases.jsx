@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Briefcase, Plus, Search, Filter, X, LayoutList, Columns,
-  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown
+  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown, Download
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,9 @@ import EmptyState from "@/components/shared/EmptyState";
 import { CaseListSkeleton } from "@/components/shared/LoadingSkeleton";
 import CaseListCard from "@/components/cases/CaseListCard";
 import CasePipelineView from "@/components/cases/CasePipelineView";
+import BulkActionsToolbar from "@/components/shared/BulkActionsToolbar";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { exportToCSV, generateFilename } from "@/utils/exportHelpers";
 
 const STAGE_OPTIONS = [
   { value: "all",                      label: "All Stages" },
