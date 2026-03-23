@@ -4,9 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search, Filter, Plus, Mail, CheckCircle2, Clock, AlertTriangle,
   UserX, RefreshCw, Download, Pencil, Trash2, ChevronDown, ChevronUp,
-  Send, X, Eye, User, ExternalLink, Users
+  Send, X, Eye, User
 } from "lucide-react";
-import EmployeeDetailDrawer from "@/components/employee-mgmt/EmployeeDetailDrawer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -201,7 +200,7 @@ function EditEmployeeModal({ enrollment, open, onClose }) {
   );
 }
 
-export default function EmployeeRosterTab({ enrollments, windows, cases, plans, isLoading, currentUser, onNavigate }) {
+export default function EmployeeRosterTab({ enrollments, windows, cases, plans, isLoading, currentUser }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -209,7 +208,6 @@ export default function EmployeeRosterTab({ enrollments, windows, cases, plans, 
   const [windowFilter, setWindowFilter] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [viewingDetail, setViewingDetail] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const windowMap = useMemo(() => Object.fromEntries(windows.map(w => [w.id, w])), [windows]);
@@ -467,10 +465,6 @@ export default function EmployeeRosterTab({ enrollments, windows, cases, plans, 
                       <Send className="w-3 h-3 text-muted-foreground" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" className="h-7 w-7" title="View Details"
-                    onClick={() => setViewingDetail(e)}>
-                    <Eye className="w-3 h-3 text-muted-foreground" />
-                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" title="Edit"
                     onClick={() => setEditing(e)}>
                     <Pencil className="w-3 h-3 text-muted-foreground" />
@@ -488,16 +482,6 @@ export default function EmployeeRosterTab({ enrollments, windows, cases, plans, 
 
       {showAdd && <AddEmployeeModal open={showAdd} onClose={() => setShowAdd(false)} windows={windows} cases={cases} />}
       {editing && <EditEmployeeModal enrollment={editing} open={!!editing} onClose={() => setEditing(null)} />}
-      {viewingDetail && (
-        <EmployeeDetailDrawer
-          enrollment={viewingDetail}
-          window={windowMap[viewingDetail.enrollment_window_id]}
-          plan={planMap[viewingDetail.selected_plan_id]}
-          open={!!viewingDetail}
-          onClose={() => setViewingDetail(null)}
-          onEdit={(e) => { setViewingDetail(null); setEditing(e); }}
-        />
-      )}
     </div>
   );
 }
