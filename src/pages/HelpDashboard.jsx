@@ -54,13 +54,13 @@ export default function HelpDashboard() {
   // Compute live stats
   const contentMap = contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {});
   const total = HELP_TARGETS.length;
-  const activeCount = HELP_TARGETS.filter(t => contentMap[t.target_code]?.status === "active").length;
+  const activeCount = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "active").length;
   const missingCount = HELP_TARGETS.filter(t => !contentMap[t.target_code]).length;
-  const draftCount = contents.filter(c => c.status === "draft").length;
-  const reviewCount = contents.filter(c => c.status === "review_required").length;
+  const draftCount = contents.filter(c => c.content_status === "draft").length;
+  const reviewCount = contents.filter(c => c.content_status === "review_required").length;
   const coveragePct = Math.round((activeCount / total) * 100);
 
-  const lowConfidenceAI = aiLogs.filter(l => (l.answer_confidence || 0) < 0.4 && !l.reviewed_by_admin);
+  const lowConfidenceAI = aiLogs.filter(l => (l.confidence_score || 0) < 0.4 && !l.reviewed_by_admin);
   const unanswered = aiLogs.filter(l => !l.answer_text);
 
   // Top searched terms
@@ -80,7 +80,7 @@ export default function HelpDashboard() {
   // Lowest coverage modules
   const modCoverage = MODULES.map(mod => {
     const modTargets = HELP_TARGETS.filter(t => t.module_code === mod);
-    const modActive = modTargets.filter(t => contentMap[t.target_code]?.status === "active").length;
+    const modActive = modTargets.filter(t => contentMap[t.target_code]?.content_status === "active").length;
     return { mod, total: modTargets.length, active: modActive, pct: Math.round((modActive / modTargets.length) * 100) };
   }).sort((a,b) => a.pct - b.pct).slice(0, 5);
 
@@ -179,7 +179,7 @@ export default function HelpDashboard() {
                   <div key={log.id} className="flex items-start gap-2 py-1 border-b last:border-0">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs truncate">{log.question_text}</p>
-                      <p className="text-[10px] text-muted-foreground">{log.page_code} · {Math.round((log.answer_confidence || 0) * 100)}% confidence</p>
+                      <p className="text-[10px] text-muted-foreground">{log.page_code} · {Math.round((log.confidence_score || 0) * 100)}% confidence</p>
                     </div>
                   </div>
                 ))}
@@ -241,9 +241,9 @@ export default function HelpDashboard() {
                   <p className="text-[10px] text-muted-foreground">{c.last_updated_by || "system"} · v{c.version_no || 1}</p>
                 </div>
                 <Badge
-                  className={`text-[9px] ml-2 ${c.status === "active" ? "bg-emerald-100 text-emerald-700" : c.status === "draft" ? "bg-slate-100 text-slate-600" : "bg-amber-100 text-amber-700"}`}
+                  className={`text-[9px] ml-2 ${c.content_status === "active" ? "bg-emerald-100 text-emerald-700" : c.content_status === "draft" ? "bg-slate-100 text-slate-600" : "bg-amber-100 text-amber-700"}`}
                 >
-                  {c.status}
+                  {c.content_status}
                 </Badge>
               </div>
             ))}
