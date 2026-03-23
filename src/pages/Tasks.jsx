@@ -453,15 +453,39 @@ export default function Tasks() {
           </Select>
         )}
         <Select value={groupBy} onValueChange={setGroupBy}>
-          <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="due_date">Group: Due Date</SelectItem>
-            <SelectItem value="priority">Group: Priority</SelectItem>
-            <SelectItem value="case">Group: Case</SelectItem>
-            <SelectItem value="status">Group: Status</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+           <SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger>
+           <SelectContent>
+             <SelectItem value="due_date">Group: Due Date</SelectItem>
+             <SelectItem value="priority">Group: Priority</SelectItem>
+             <SelectItem value="case">Group: Case</SelectItem>
+             <SelectItem value="status">Group: Status</SelectItem>
+           </SelectContent>
+         </Select>
+
+         {/* Export button */}
+         <Button
+           variant="outline"
+           size="sm"
+           onClick={() => {
+             exportToCSV(
+               filtered.map(t => ({
+                 Title: t.title,
+                 Type: t.task_type,
+                 Status: t.status,
+                 Priority: t.priority,
+                 "Due Date": t.due_date || "",
+                 "Assigned To": t.assigned_to || "",
+                 Employer: t.employer_name || "",
+                 Description: t.description || "",
+               })),
+               generateFilename("tasks_export")
+             );
+           }}
+           className="gap-1.5"
+         >
+           <Download className="w-3.5 h-3.5" /> Export
+         </Button>
+        </div>
 
       {/* Bulk actions bar */}
       {selected.length > 0 && (
