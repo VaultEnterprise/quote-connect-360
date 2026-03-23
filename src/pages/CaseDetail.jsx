@@ -100,6 +100,12 @@ export default function CaseDetail() {
     enabled: !!caseId,
   });
 
+  const { data: activityLog = [] } = useQuery({
+    queryKey: ["activity", caseId],
+    queryFn: () => base44.entities.ActivityLog.filter({ case_id: caseId }, "-created_date"),
+    enabled: !!caseId,
+  });
+
   // ── Stage advance mutation ─────────────────────────────────────────────────
   const advanceStageMutation = useMutation({
     mutationFn: async (nextStage) => {
