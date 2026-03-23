@@ -94,10 +94,10 @@ function EmployerModal({ employer, open, onClose, agencies }) {
         <div className="space-y-4 py-2">
 
           {/* Agency picker */}
-          {agencies.length > 1 && (
+          {agencies.length > 0 && (
             <div>
               <Label>Agency <span className="text-destructive">*</span></Label>
-              <Select value={form.agency_id} onValueChange={v => set("agency_id", v)}>
+              <Select value={form.agency_id || agencies[0]?.id} onValueChange={v => set("agency_id", v)}>
                 <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select agency..." /></SelectTrigger>
                 <SelectContent>
                   {agencies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
