@@ -145,7 +145,7 @@ export default function IntegrationInfrastructure() {
             </p>
             <TabsList className="bg-muted/50 flex-wrap h-auto gap-1 mb-2">
               {group.tabs.map(t => (
-                <TabsTrigger key={t.id} value={t.id} className="text-xs">
+                <TabsTrigger key={t.id} value={t.id} className="text-xs" onClick={() => setTab(t.id)}>
                   {t.shortLabel}
                   {t.id === "ai" && aiEnabled && <Sparkles className="w-2.5 h-2.5 ml-1 text-primary" />}
                 </TabsTrigger>
