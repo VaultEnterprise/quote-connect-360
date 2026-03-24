@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, AlertTriangle, ChevronRight, Clock } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { format, differenceInDays } from "date-fns";
+import CaseHealthScore from "./CaseHealthScore";
+import { format, differenceInDays, parseISO, isAfter } from "date-fns";
 
 const PRIORITY_DOT = {
   urgent: "bg-red-500",
@@ -21,11 +22,11 @@ const STAGE_PROGRESS = {
 };
 
 export default function CaseListCard({ c }) {
-  const daysSince = c.last_activity_date
-    ? differenceInDays(new Date(), new Date(c.last_activity_date))
-    : null;
-  const isStale   = daysSince !== null && daysSince > 7;
-  const progress  = STAGE_PROGRESS[c.stage] || 0;
+  const isOverdue = c.effective_date && isAfter(new Date(), parseISO(c.effective_date));
+  const daysUntilEffective = c.effective_date ? Math.ceil((parseISO(c.effective_date) - new Date()) / 86400000) : null;
+  const daysSince = c.last_activity_date ? differenceInDays(new Date(), new Date(c.last_activity_date)) : null;
+  const isStale = daysSince && daysSince > 7 && c.stage && !["active", "closed"].includes(c.stage);
+  const progress = STAGE_PROGRESS[c.stage] || 0;
 
   return (
     <Link to={`/cases/${c.id}`}>
@@ -58,8 +59,8 @@ export default function CaseListCard({ c }) {
                     </span>
                   )}
                   {c.effective_date && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />Eff. {format(new Date(c.effective_date), "MMM d, yyyy")}
+                    <span className={`text-xs flex items-center gap-1 ${isOverdue ? "text-red-600 font-bold" : daysUntilEffective && daysUntilEffective < 30 ? "text-amber-600 font-medium" : "text-muted-foreground"}`}>
+                      <Calendar className="w-3 h-3" />{isOverdue ? "OVERDUE" : `${daysUntilEffective}d`}
                     </span>
                   )}
                   {c.target_close_date && (
@@ -78,8 +79,9 @@ export default function CaseListCard({ c }) {
 
             {/* Right side */}
             <div className="flex items-center gap-2 flex-shrink-0">
+              <CaseHealthScore c={c} />
               {c.assigned_to && (
-                <span className="text-xs text-muted-foreground hidden lg:block truncate max-w-32">{c.assigned_to}</span>
+                <span className="text-xs text-muted-foreground hidden lg:block truncate max-w-32">{c.assigned_to.split("@")[0]}</span>
               )}
               <StatusBadge status={c.stage} />
               <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />

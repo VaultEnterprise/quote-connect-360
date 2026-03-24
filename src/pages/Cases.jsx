@@ -21,6 +21,9 @@ import BulkActionsBar from "@/components/shared/BulkActionsBar";
 import BulkAssignModal from "@/components/cases/BulkAssignModal";
 import BulkStageModal from "@/components/cases/BulkStageModal";
 import BulkPriorityModal from "@/components/cases/BulkPriorityModal";
+import SavedFiltersPanel from "@/components/cases/SavedFiltersPanel";
+import AssignedUserFilter from "@/components/cases/AssignedUserFilter";
+import BulkStageAdvanceModal from "@/components/cases/BulkStageAdvanceModal";
 import { exportToCSV } from "@/utils/export-import";
 
 const STAGE_OPTIONS = [
@@ -56,13 +59,15 @@ export default function Cases() {
   const [stageFilter, setStageFilter]   = useState("all");
   const [typeFilter, setTypeFilter]     = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [assignedToFilter, setAssignedToFilter] = useState("all");
   const [sortBy, setSortBy]             = useState("created_desc");
-  const [viewMode, setViewMode]         = useState("list"); // "list" | "pipeline"
+  const [viewMode, setViewMode]         = useState("list");
   const [selectedIds, setSelectedIds]   = useState(new Set());
   const [bulkAction, setBulkAction]     = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showStageModal, setShowStageModal]   = useState(false);
   const [showPriorityModal, setShowPriorityModal] = useState(false);
+  const [showStageAdvanceModal, setShowStageAdvanceModal] = useState(false);
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
@@ -78,7 +83,8 @@ export default function Cases() {
       const matchStage    = stageFilter    === "all" || c.stage     === stageFilter;
       const matchType     = typeFilter     === "all" || c.case_type === typeFilter;
       const matchPriority = priorityFilter === "all" || c.priority  === priorityFilter;
-      return matchSearch && matchStage && matchType && matchPriority;
+      const matchAssignee = assignedToFilter === "all" ? true : assignedToFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignedToFilter;
+      return matchSearch && matchStage && matchType && matchPriority && matchAssignee;
     });
 
     result = [...result].sort((a, b) => {
@@ -91,10 +97,18 @@ export default function Cases() {
     });
 
     return result;
-  }, [cases, search, stageFilter, typeFilter, priorityFilter, sortBy]);
+  }, [cases, search, stageFilter, typeFilter, priorityFilter, assignedToFilter, sortBy]);
 
-  const activeFilters = [stageFilter, typeFilter, priorityFilter].filter(f => f !== "all").length;
-  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setSearch(""); };
+  const activeFilters = [stageFilter, typeFilter, priorityFilter, assignedToFilter].filter(f => f !== "all").length;
+  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setAssignedToFilter("all"); setSearch(""); };
+
+  const handleLoadPreset = (filters) => {
+    if (filters.search !== undefined) setSearch(filters.search || "");
+    if (filters.stageFilter !== undefined) setStageFilter(filters.stageFilter);
+    if (filters.typeFilter !== undefined) setTypeFilter(filters.typeFilter);
+    if (filters.priorityFilter !== undefined) setPriorityFilter(filters.priorityFilter);
+    if (filters.assignedToFilter !== undefined) setAssignedToFilter(filters.assignedToFilter);
+  };
 
   // Bulk operations
   const toggleSelectAll = () => {
@@ -235,6 +249,8 @@ export default function Cases() {
             </SelectContent>
           </Select>
 
+          <AssignedUserFilter cases={cases} value={assignedToFilter} onChange={setAssignedToFilter} />
+
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-40 h-9">
               <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
@@ -260,6 +276,8 @@ export default function Cases() {
               <Columns className="w-3.5 h-3.5" /> Pipeline
             </button>
           </div>
+
+          <SavedFiltersPanel currentFilters={{ search, stageFilter, typeFilter, priorityFilter, assignedToFilter }} onLoadPreset={handleLoadPreset} />
         </div>
 
         {(activeFilters > 0 || search) && (
@@ -328,6 +346,11 @@ export default function Cases() {
               onClick: () => setShowPriorityModal(true),
             },
             {
+              label: "Advance Stage",
+              icon: Layers,
+              onClick: () => setShowStageAdvanceModal(true),
+            },
+            {
               label: "Export",
               icon: Download,
               onClick: handleBulkExport,
@@ -359,6 +382,12 @@ export default function Cases() {
         isOpen={showPriorityModal}
         caseIds={Array.from(selectedIds)}
         onClose={() => setShowPriorityModal(false)}
+        onSuccess={handleBulkSuccess}
+      />
+      <BulkStageAdvanceModal
+        isOpen={showStageAdvanceModal}
+        caseIds={Array.from(selectedIds)}
+        onClose={() => setShowStageAdvanceModal(false)}
         onSuccess={handleBulkSuccess}
       />
     </div>
