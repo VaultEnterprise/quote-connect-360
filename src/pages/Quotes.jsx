@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText, Plus, Search, Filter, GitCompare, ChevronDown, ChevronUp,
-  AlertTriangle, SortAsc, X, XCircle
+  AlertTriangle, SortAsc, X, XCircle, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,10 @@ import ScenarioCard from "@/components/quotes/ScenarioCard";
 import ScenarioCompare from "@/components/quotes/ScenarioCompare";
 import NewScenarioFromQuotes from "@/components/quotes/NewScenarioFromQuotes";
 import QuoteScenarioModal from "@/components/quotes/QuoteScenarioModal";
+import ScenarioDetailModal from "@/components/quotes/ScenarioDetailModal";
+import ApprovalModal from "@/components/quotes/ApprovalModal";
+import ContributionSlider from "@/components/quotes/ContributionSlider";
+import SavedViewsPanel from "@/components/quotes/SavedViewsPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
 
@@ -37,6 +41,9 @@ export default function Quotes() {
   const [groupByCaseMode, setGroupByCaseMode] = useState(true);
   const [carrierFilter, setCarrierFilter] = useState("all");
   const [bulkCalculating, setBulkCalculating] = useState(false);
+  const [scenarioDetailModal, setScenarioDetailModal] = useState(null);
+  const [approvalModal, setApprovalModal] = useState(null);
+  const [contributionModal, setContributionModal] = useState(null);
 
   const { data: scenarios = [], isLoading } = useQuery({
     queryKey: ["scenarios-all"],
@@ -86,7 +93,6 @@ export default function Quotes() {
       return matchSearch && matchStatus && matchCase && matchExpiring && matchCarrier;
     });
 
-    // Sort
     result = [...result].sort((a, b) => {
       if (sortBy === "premium") return (b.total_monthly_premium || 0) - (a.total_monthly_premium || 0);
       if (sortBy === "expiry") {
@@ -96,14 +102,12 @@ export default function Quotes() {
         return parseISO(a.expires_at) - parseISO(b.expires_at);
       }
       if (sortBy === "score") return (b.recommendation_score || 0) - (a.recommendation_score || 0);
-      // Default: created_date
       return new Date(b.created_date) - new Date(a.created_date);
     });
 
     return result;
   }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon]);
 
-  // Group by case
   const grouped = useMemo(() => {
     const groups = {};
     filtered.forEach(s => {
@@ -197,6 +201,55 @@ export default function Quotes() {
     toast?.({ title: `${selectedIds.length} scenarios deleted` });
   };
 
+  const handleBulkExportCSV = () => {
+    const headers = ["Name", "Status", "Employer", "Premium", "Employer Cost", "Employee Cost", "Plans", "Carriers", "Score", "Recommended"];
+    const rows = selectedScenarios.map(s => [
+      s.name,
+      s.status,
+      caseMap[s.case_id]?.employer_name || "",
+      s.total_monthly_premium || "",
+      s.employer_monthly_cost || "",
+      s.employee_monthly_cost_avg || "",
+      s.plan_count || "",
+      s.carriers_included?.join(";") || "",
+      s.recommendation_score || "",
+      s.is_recommended ? "Yes" : "No",
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `scenarios-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast?.({ title: "Export started" });
+  };
+
+  const handleLoadPreset = (filters) => {
+    if (filters.search !== undefined) setSearch(filters.search || "");
+    if (filters.statusFilter !== undefined) setStatusFilter(filters.statusFilter);
+    if (filters.caseFilter !== undefined) setCaseFilter(filters.caseFilter);
+    if (filters.carrierFilter !== undefined) setCarrierFilter(filters.carrierFilter);
+    if (filters.showExpiringOnly !== undefined) setShowExpiringOnly(filters.showExpiringOnly);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+        e.preventDefault();
+        setShowNewScenario(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "c" && selectedIds.length >= 2) {
+        e.preventDefault();
+        setCompareMode(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [selectedIds]);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -218,6 +271,11 @@ export default function Quotes() {
               </button>
             )}
 
+            <SavedViewsPanel
+              currentFilters={{ search, statusFilter, caseFilter, carrierFilter, showExpiringOnly }}
+              onLoadPreset={handleLoadPreset}
+            />
+
             <Button onClick={() => setShowNewScenario(true)}>
               <Plus className="w-4 h-4 mr-2" /> New Scenario
             </Button>
@@ -225,10 +283,8 @@ export default function Quotes() {
         }
       />
 
-      {/* KPI Bar */}
       <QuotesKPIBar scenarios={scenarios} />
 
-      {/* Compare Panel */}
       {compareMode && selectedScenarios.length >= 2 && (
         <ScenarioCompare
           scenarios={selectedScenarios}
@@ -236,7 +292,6 @@ export default function Quotes() {
         />
       )}
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
         <div className="flex items-center border rounded-lg overflow-hidden">
           <button
@@ -313,7 +368,6 @@ export default function Quotes() {
         <span className="text-xs text-muted-foreground ml-auto">{filtered.length} scenario{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
-      {/* Active filter chips */}
       {activeFilters.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap -mt-2">
           {activeFilters.map((f, i) => (
@@ -328,7 +382,6 @@ export default function Quotes() {
         </div>
       )}
 
-      {/* Bulk actions bar */}
       {selectedIds.length > 0 && (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
           <span className="text-xs font-medium text-primary">{selectedIds.length} selected</span>
@@ -338,6 +391,9 @@ export default function Quotes() {
                 <GitCompare className="w-3.5 h-3.5 mr-1.5" /> Compare
               </Button>
             )}
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleBulkExportCSV}>
+              <Download className="w-3.5 h-3.5 mr-1.5" /> Export CSV
+            </Button>
             <Button variant="outline" size="sm" className="h-7 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={handleBulkExpire}>
               <XCircle className="w-3.5 h-3.5 mr-1.5" /> Mark Expired
             </Button>
@@ -351,7 +407,6 @@ export default function Quotes() {
         </div>
       )}
 
-      {/* Calculate all drafts */}
       {draftScenarios.length > 1 && (
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200">
           <span className="text-xs text-amber-800 font-medium">{draftScenarios.length} scenarios waiting to be calculated</span>
@@ -361,14 +416,12 @@ export default function Quotes() {
         </div>
       )}
 
-      {/* Compare hint */}
       {!compareMode && selectedIds.length > 0 && selectedIds.length < 2 && (
         <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
           Select {2 - selectedIds.length} more scenario{2 - selectedIds.length !== 1 ? "s" : ""} to enable comparison (max 4).
         </div>
       )}
 
-      {/* Content */}
       {isLoading ? (
         <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>
       ) : filtered.length === 0 ? (
@@ -380,11 +433,9 @@ export default function Quotes() {
           onAction={scenarios.length === 0 ? () => setShowNewScenario(true) : undefined}
         />
       ) : groupByCaseMode ? (
-        // Grouped by case
         <div className="space-y-4">
           {grouped.map(group => (
             <div key={group.caseId} className="border rounded-xl overflow-hidden">
-              {/* Case Header */}
               <button
                 className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors"
                 onClick={() => toggleCase(group.caseId)}
@@ -408,7 +459,6 @@ export default function Quotes() {
                 {collapsedCases[group.caseId] ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
               </button>
 
-              {/* Scenarios */}
               {!collapsedCases[group.caseId] && (
                 <div className="p-3 space-y-2 bg-card">
                   {group.items.map(s => (
@@ -418,6 +468,9 @@ export default function Quotes() {
                       isSelected={selectedIds.includes(s.id)}
                       onToggleSelect={toggleSelect}
                       onEdit={setEditingScenario}
+                      onShowDetails={() => setScenarioDetailModal(s)}
+                      onApproval={() => setApprovalModal(s)}
+                      onContribution={() => setContributionModal(s)}
                       calculating={calculating}
                       onCalculate={handleCalculate}
                     />
@@ -428,7 +481,6 @@ export default function Quotes() {
           ))}
         </div>
       ) : (
-        // Flat list
         <div className="space-y-2">
           {filtered.map(s => (
             <ScenarioCard
@@ -437,6 +489,9 @@ export default function Quotes() {
               isSelected={selectedIds.includes(s.id)}
               onToggleSelect={toggleSelect}
               onEdit={setEditingScenario}
+              onShowDetails={() => setScenarioDetailModal(s)}
+              onApproval={() => setApprovalModal(s)}
+              onContribution={() => setContributionModal(s)}
               calculating={calculating}
               onCalculate={handleCalculate}
             />
@@ -444,7 +499,6 @@ export default function Quotes() {
         </div>
       )}
 
-      {/* Modals */}
       {showNewScenario && (
         <NewScenarioFromQuotes open={showNewScenario} onClose={() => setShowNewScenario(false)} />
       )}
@@ -454,6 +508,27 @@ export default function Quotes() {
           scenario={editingScenario}
           open={!!editingScenario}
           onClose={() => setEditingScenario(null)}
+        />
+      )}
+      {scenarioDetailModal && (
+        <ScenarioDetailModal
+          scenario={scenarioDetailModal}
+          open={!!scenarioDetailModal}
+          onClose={() => setScenarioDetailModal(null)}
+        />
+      )}
+      {approvalModal && (
+        <ApprovalModal
+          scenario={approvalModal}
+          open={!!approvalModal}
+          onClose={() => setApprovalModal(null)}
+        />
+      )}
+      {contributionModal && (
+        <ContributionSlider
+          scenario={contributionModal}
+          open={!!contributionModal}
+          onClose={() => setContributionModal(null)}
         />
       )}
     </div>
