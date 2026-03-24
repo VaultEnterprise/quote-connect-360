@@ -1,135 +1,91 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { AlertTriangle, Clock, CheckCircle, Zap } from "lucide-react";
-import { differenceInDays } from "date-fns";
+import { useMemo } from 'react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle, AlertOctagon, Clock, CheckCircle } from 'lucide-react';
 
-const CATEGORY_COLORS = {
-  census: "#a78bfa",
-  quote: "#60a5fa",
-  enrollment: "#10b981",
-  carrier: "#f97316",
-  document: "#6b7280",
-  billing: "#ef4444",
-  system: "#64748b",
-};
+export default function ExceptionKPIBar({ exceptions = [] }) {
+  const metrics = useMemo(() => {
+    const total = exceptions.length;
+    const bySeverity = {
+      critical: exceptions.filter(e => e.severity === 'critical').length,
+      high: exceptions.filter(e => e.severity === 'high').length,
+      medium: exceptions.filter(e => e.severity === 'medium').length,
+      low: exceptions.filter(e => e.severity === 'low').length,
+    };
 
-/**
- * ExceptionKPIBar
- * Open count, critical/high count, SLA breached count, resolved today, category donut chart.
- *
- * Props:
- *   exceptions — ExceptionItem[]
- */
-export default function ExceptionKPIBar({ exceptions }) {
-  const openExceptions = exceptions.filter(e => !["resolved", "dismissed"].includes(e.status));
-  const critical = openExceptions.filter(e => e.severity === "critical").length;
-  const high = openExceptions.filter(e => e.severity === "high").length;
-  const slaBreached = openExceptions.filter(e => e.due_by && differenceInDays(new Date(e.due_by), new Date()) < 0).length;
-  const resolvedToday = exceptions.filter(e => e.resolved_at && new Date(e.resolved_at).toDateString() === new Date().toDateString()).length;
+    const byStatus = {
+      new: exceptions.filter(e => e.status === 'new').length,
+      in_progress: exceptions.filter(e => e.status === 'in_progress').length,
+      waiting: exceptions.filter(e => e.status === 'waiting_external').length,
+      resolved: exceptions.filter(e => e.status === 'resolved').length,
+    };
 
-  // Category breakdown
-  const categoryData = Object.keys(CATEGORY_COLORS).map(cat => ({
-    name: cat.charAt(0).toUpperCase() + cat.slice(1),
-    value: openExceptions.filter(e => e.category === cat).length,
-  })).filter(d => d.value > 0);
+    const avgResolutionTime = exceptions
+      .filter(e => e.resolved_at)
+      .reduce((sum, e) => {
+        const created = new Date(e.created_date);
+        const resolved = new Date(e.resolved_at);
+        return sum + (resolved - created) / (1000 * 60 * 60 * 24);
+      }, 0) / Math.max(1, exceptions.filter(e => e.resolved_at).length);
+
+    return {
+      total,
+      critical: bySeverity.critical,
+      high: bySeverity.high,
+      medium: bySeverity.medium,
+      new: byStatus.new,
+      inProgress: byStatus.in_progress,
+      resolved: byStatus.resolved,
+      resolutionDays: Math.round(avgResolutionTime * 10) / 10,
+    };
+  }, [exceptions]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {/* Metric tiles */}
-      <div className="grid grid-cols-2 gap-3 lg:col-span-1">
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Open</p>
-                <p className="text-2xl font-bold text-blue-700 mt-0.5">{openExceptions.length}</p>
-              </div>
-              <AlertTriangle className="w-4 h-4 text-blue-600 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Total */}
+      <Card className="p-4 text-center hover:shadow-md transition-shadow">
+        <div className="flex justify-center mb-2">
+          <AlertTriangle className="w-5 h-5 text-muted-foreground" />
+        </div>
+        <p className="text-xs text-muted-foreground mb-1">Total Exceptions</p>
+        <p className="text-2xl font-bold">{metrics.total}</p>
+      </Card>
 
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Critical</p>
-                <p className="text-2xl font-bold text-red-700 mt-0.5">{critical}</p>
-              </div>
-              <Zap className="w-4 h-4 text-red-600 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Critical */}
+      <Card className="p-4 text-center border-red-200 bg-red-50 hover:shadow-md transition-shadow">
+        <div className="flex justify-center mb-2">
+          <AlertOctagon className="w-5 h-5 text-red-600" />
+        </div>
+        <p className="text-xs text-muted-foreground mb-1">Critical</p>
+        <p className="text-2xl font-bold text-red-600">{metrics.critical}</p>
+      </Card>
 
-        <Card className="bg-orange-50 border-orange-200">
-          <CardContent className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">High</p>
-                <p className="text-2xl font-bold text-orange-700 mt-0.5">{high}</p>
-              </div>
-              <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* New/In Progress */}
+      <Card className="p-4 text-center border-orange-200 bg-orange-50 hover:shadow-md transition-shadow">
+        <div className="flex justify-center mb-2">
+          <Clock className="w-5 h-5 text-orange-600" />
+        </div>
+        <p className="text-xs text-muted-foreground mb-1">Active</p>
+        <p className="text-2xl font-bold text-orange-600">{metrics.new + metrics.inProgress}</p>
+      </Card>
 
-        <Card className={`${slaBreached > 0 ? "bg-red-50 border-red-200" : "bg-muted border-border"}`}>
-          <CardContent className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Overdue</p>
-                <p className={`text-2xl font-bold mt-0.5 ${slaBreached > 0 ? "text-red-700" : "text-muted-foreground"}`}>
-                  {slaBreached}
-                </p>
-              </div>
-              <Clock className={`w-4 h-4 flex-shrink-0 ${slaBreached > 0 ? "text-red-600" : "text-muted-foreground"}`} />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Resolved */}
+      <Card className="p-4 text-center border-green-200 bg-green-50 hover:shadow-md transition-shadow">
+        <div className="flex justify-center mb-2">
+          <CheckCircle className="w-5 h-5 text-green-600" />
+        </div>
+        <p className="text-xs text-muted-foreground mb-1">Resolved</p>
+        <p className="text-2xl font-bold text-green-600">{metrics.resolved}</p>
+      </Card>
 
-        <Card className="bg-green-50 border-green-200 col-span-2">
-          <CardContent className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium">Resolved Today</p>
-                <p className="text-2xl font-bold text-green-700 mt-0.5">{resolvedToday}</p>
-              </div>
-              <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Category breakdown chart */}
-      {categoryData.length > 0 && (
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-sm">Open Exceptions by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name.toLowerCase()] || "#999"} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value} exception${value !== 1 ? "s" : ""}`} />
-                <Legend wrapperStyle={{ fontSize: "11px" }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
+      {/* Resolution Time */}
+      <Card className="p-4 col-span-2 sm:col-span-4 text-center border-purple-200 bg-purple-50">
+        <p className="text-xs text-muted-foreground mb-2">Avg Resolution Time</p>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-3xl font-bold text-purple-600">{metrics.resolutionDays}</span>
+          <span className="text-sm text-muted-foreground">days</span>
+        </div>
+      </Card>
     </div>
   );
 }
