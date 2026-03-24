@@ -1,89 +1,154 @@
-import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
-import RateTableEditor from "./RateTableEditor";
+import { useMemo } from 'react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Info, Heart, Share2 } from 'lucide-react';
 
-const TYPE_COLORS = {
-  medical: "bg-blue-100 text-blue-700",
-  dental: "bg-emerald-100 text-emerald-700",
-  vision: "bg-purple-100 text-purple-700",
-  life: "bg-amber-100 text-amber-700",
-  std: "bg-orange-100 text-orange-700",
-  ltd: "bg-red-100 text-red-700",
-  voluntary: "bg-pink-100 text-pink-700",
-};
+export default function PlanCard({ plan, onSelect, onFavorite, onShare, isFavorited }) {
+  const planTypeLabel = useMemo(() => {
+    const labels = {
+      medical: 'Medical',
+      dental: 'Dental',
+      vision: 'Vision',
+      life: 'Life Insurance',
+      std: 'Short-term Disability',
+      ltd: 'Long-term Disability',
+      voluntary: 'Voluntary',
+    };
+    return labels[plan.plan_type] || plan.plan_type;
+  }, [plan.plan_type]);
 
-export default function PlanCard({ plan, onEdit, onArchive }) {
-  const [showRates, setShowRates] = useState(false);
+  const networkLabel = useMemo(() => {
+    const labels = {
+      HMO: 'HMO',
+      PPO: 'PPO',
+      EPO: 'EPO',
+      HDHP: 'High Deductible',
+      POS: 'POS',
+      indemnity: 'Indemnity',
+      other: 'Other',
+    };
+    return labels[plan.network_type] || plan.network_type;
+  }, [plan.network_type]);
 
-  const { data: rateTables = [] } = useQuery({
-    queryKey: ["rate-tables", plan.id],
-    queryFn: () => base44.entities.PlanRateTable.filter({ plan_id: plan.id }),
-    enabled: showRates,
-  });
+  const deductibleInfo = useMemo(() => {
+    if (!plan.deductible_individual && !plan.deductible_family) return null;
+    return {
+      individual: plan.deductible_individual?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      family: plan.deductible_family?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+    };
+  }, [plan]);
 
-  const primaryRate = rateTables[0];
+  const oopInfo = useMemo(() => {
+    if (!plan.oop_max_individual && !plan.oop_max_family) return null;
+    return {
+      individual: plan.oop_max_individual?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      family: plan.oop_max_family?.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+    };
+  }, [plan]);
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2 pt-4 px-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <Badge className={`text-[10px] font-semibold ${TYPE_COLORS[plan.plan_type] || "bg-gray-100 text-gray-700"}`}>
-                {plan.plan_type?.toUpperCase()}
-              </Badge>
-              {plan.network_type && <Badge variant="outline" className="text-[10px]">{plan.network_type}</Badge>}
-              {plan.hsa_eligible && <Badge variant="outline" className="text-[10px] border-green-300 text-green-700">HSA</Badge>}
+    <Card className="p-4 hover:shadow-md transition-shadow flex flex-col h-full">
+      <div className="space-y-3 flex-1">
+        {/* Header */}
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm truncate">{plan.plan_name}</h3>
+              <p className="text-xs text-muted-foreground truncate">{plan.carrier}</p>
             </div>
-            <p className="text-sm font-semibold leading-tight">{plan.plan_name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{plan.carrier}{plan.plan_code ? ` · ${plan.plan_code}` : ""}</p>
+            {plan.status === 'archived' && (
+              <Badge variant="outline" className="text-xs flex-shrink-0">Archived</Badge>
+            )}
           </div>
-          <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(plan)}>
-              <Pencil className="w-3 h-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onArchive}>
-              <Archive className="w-3 h-3" />
-            </Button>
+          <div className="flex flex-wrap gap-1">
+            <Badge variant="secondary" className="text-xs">{planTypeLabel}</Badge>
+            {plan.network_type && <Badge variant="outline" className="text-xs">{networkLabel}</Badge>}
+            {plan.hsa_eligible && <Badge className="bg-green-600 text-xs">HSA Eligible</Badge>}
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="px-4 pb-3 space-y-2">
-        {/* Key benefits */}
-        {plan.plan_type === "medical" && (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-            {plan.deductible_individual != null && <span className="text-muted-foreground">Ded: <span className="text-foreground font-medium">${plan.deductible_individual.toLocaleString()}</span></span>}
-            {plan.oop_max_individual != null && <span className="text-muted-foreground">OOP Max: <span className="text-foreground font-medium">${plan.oop_max_individual.toLocaleString()}</span></span>}
-            {plan.copay_pcp != null && <span className="text-muted-foreground">PCP: <span className="text-foreground font-medium">${plan.copay_pcp}</span></span>}
-            {plan.coinsurance != null && <span className="text-muted-foreground">Coins: <span className="text-foreground font-medium">{plan.coinsurance}%</span></span>}
+        {/* Coverage Details */}
+        <div className="space-y-2 pt-2 border-t">
+          {deductibleInfo && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <p className="text-muted-foreground">Deductible (Individual)</p>
+                <p className="font-semibold">{deductibleInfo.individual}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Deductible (Family)</p>
+                <p className="font-semibold">{deductibleInfo.family}</p>
+              </div>
+            </div>
+          )}
+
+          {oopInfo && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <p className="text-muted-foreground">Out-of-Pocket Max (Ind)</p>
+                <p className="font-semibold">{oopInfo.individual}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Out-of-Pocket Max (Fam)</p>
+                <p className="font-semibold">{oopInfo.family}</p>
+              </div>
+            </div>
+          )}
+
+          {plan.copay_pcp && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <p className="text-muted-foreground">PCP Copay</p>
+                <p className="font-semibold">${plan.copay_pcp}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Specialist Copay</p>
+                <p className="font-semibold">${plan.copay_specialist}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Plan Code */}
+        {plan.plan_code && (
+          <div className="text-xs p-2 bg-muted rounded">
+            <p className="text-muted-foreground">Plan Code: <strong>{plan.plan_code}</strong></p>
           </div>
         )}
+      </div>
 
-        {/* Rate preview */}
-        {!showRates && primaryRate == null && (
-          <p className="text-xs text-muted-foreground italic">No rate table</p>
-        )}
-
+      {/* Actions */}
+      <div className="flex gap-2 pt-3 border-t mt-3">
         <Button
-          variant="ghost"
           size="sm"
-          className="w-full h-7 text-xs text-muted-foreground hover:text-foreground justify-between px-2"
-          onClick={() => setShowRates(!showRates)}
+          className="flex-1"
+          onClick={() => onSelect?.(plan.id)}
         >
-          <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> Rate Table</span>
-          {showRates ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          <Info className="w-4 h-4 mr-1" />
+          Select
         </Button>
-
-        {showRates && (
-          <RateTableEditor planId={plan.id} rateTables={rateTables} />
+        {onFavorite && (
+          <Button
+            size="icon"
+            variant={isFavorited ? 'default' : 'outline'}
+            className="h-9 w-9"
+            onClick={() => onFavorite(plan.id)}
+          >
+            <Heart className={`w-4 h-4 ${isFavorited ? 'fill-current' : ''}`} />
+          </Button>
         )}
-      </CardContent>
+        {onShare && (
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-9 w-9"
+            onClick={() => onShare(plan.id)}
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
     </Card>
   );
 }
