@@ -1,71 +1,41 @@
-export default function LoadingSkeleton({ count = 3, type = 'card', height = 'h-20' }) {
-  if (type === 'card') {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className={`${height} bg-muted rounded-lg animate-pulse`} />
-        ))}
-      </div>
-    );
-  }
+import React from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-  if (type === 'list') {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="flex gap-3">
-            <div className="w-10 h-10 bg-muted rounded animate-pulse flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-muted rounded w-3/4 animate-pulse" />
-              <div className="h-3 bg-muted rounded w-1/2 animate-pulse" />
-            </div>
+export function CaseListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="border border-border rounded-xl p-4 flex items-center gap-4">
+          <Skeleton className="w-10 h-10 rounded-xl flex-shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-72" />
           </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (type === 'table') {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="flex gap-2">
-            <div className="h-10 bg-muted rounded flex-1 animate-pulse" />
-            <div className="h-10 bg-muted rounded flex-1 animate-pulse" />
-            <div className="h-10 bg-muted rounded flex-1 animate-pulse" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (type === 'text') {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className={`h-4 bg-muted rounded ${i % 5 === 0 ? 'w-3/4' : 'w-full'} animate-pulse`} />
-        ))}
-      </div>
-    );
-  }
-
-  return <div className={`${height} bg-muted rounded-lg animate-pulse`} />;
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="h-12 bg-muted rounded-lg animate-pulse" />
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 bg-muted rounded-lg animate-pulse" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="border border-border rounded-xl p-5">
+            <Skeleton className="h-3 w-24 mb-3" />
+            <Skeleton className="h-8 w-16" />
+          </div>
         ))}
       </div>
-      <div className="h-64 bg-muted rounded-lg animate-pulse" />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-40 bg-muted rounded-lg animate-pulse" />
-        ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 border border-border rounded-xl p-5 space-y-3">
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
+        </div>
+        <div className="border border-border rounded-xl p-5 space-y-3">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+        </div>
       </div>
     </div>
   );
