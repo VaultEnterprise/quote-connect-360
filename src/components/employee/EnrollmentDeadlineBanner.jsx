@@ -1,50 +1,44 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock, AlertTriangle } from "lucide-react";
-import { differenceInDays, format } from "date-fns";
+import { useMemo } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, Clock } from 'lucide-react';
+import { differenceInDays, format } from 'date-fns';
 
-/**
- * EnrollmentDeadlineBanner
- * Prominent countdown banner showing enrollment window deadline.
- *
- * Props:
- *   enrollmentWindow — EnrollmentWindow
- */
 export default function EnrollmentDeadlineBanner({ enrollmentWindow }) {
-  if (!enrollmentWindow?.end_date) return null;
+  const urgency = useMemo(() => {
+    if (!enrollmentWindow?.end_date) return null;
 
-  const daysLeft = differenceInDays(new Date(enrollmentWindow.end_date), new Date());
-  const isUrgent = daysLeft <= 3;
-  const isExpired = daysLeft < 0;
+    const today = new Date();
+    const endDate = new Date(enrollmentWindow.end_date);
+    const daysRemaining = differenceInDays(endDate, today);
 
-  if (isExpired) {
+    return {
+      daysRemaining: Math.max(0, daysRemaining),
+      formattedDate: format(endDate, 'MMMM d, yyyy'),
+      urgent: daysRemaining <= 3,
+      expired: daysRemaining < 0,
+    };
+  }, [enrollmentWindow?.end_date]);
+
+  if (!urgency || urgency.expired) return null;
+
+  if (urgency.urgent) {
     return (
-      <Card className="border-destructive/30 bg-destructive/5">
-        <CardContent className="p-3 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
-          <span className="text-sm font-medium text-destructive">Enrollment window has closed</span>
-        </CardContent>
-      </Card>
+      <Alert variant="destructive" className="mb-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Enrollment closes in {urgency.daysRemaining} day{urgency.daysRemaining !== 1 ? 's' : ''}!</strong>
+          {' '}Complete your selection by {urgency.formattedDate}.
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <Card className={isUrgent ? "border-amber-300 bg-amber-50" : "border-blue-200 bg-blue-50"}>
-      <CardContent className="p-3 flex items-center gap-2">
-        <Clock className={`w-4 h-4 flex-shrink-0 ${isUrgent ? "text-amber-600" : "text-blue-600"}`} />
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm font-semibold ${isUrgent ? "text-amber-900" : "text-blue-900"}`}>
-            {daysLeft === 0
-              ? "Enrollment closes TODAY"
-              : daysLeft === 1
-              ? "Enrollment closes TOMORROW"
-              : `${daysLeft} days left to enroll`}
-          </p>
-          <p className={`text-xs ${isUrgent ? "text-amber-700" : "text-blue-700"}`}>
-            Deadline: {format(new Date(enrollmentWindow.end_date), "EEEE, MMMM d, yyyy")}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <Alert className="mb-4 bg-blue-50 border-blue-200">
+      <Clock className="h-4 w-4 text-blue-600" />
+      <AlertDescription className="text-blue-900">
+        Enrollment closes <strong>{urgency.formattedDate}</strong> ({urgency.daysRemaining} days remaining).
+      </AlertDescription>
+    </Alert>
   );
 }
