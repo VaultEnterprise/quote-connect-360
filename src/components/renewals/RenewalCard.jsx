@@ -1,218 +1,132 @@
-import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, TrendingUp, TrendingDown, Minus, Pencil, AlertTriangle, StickyNote, ChevronDown, ChevronUp, Building2 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
-import StatusBadge from "@/components/shared/StatusBadge";
+import { useMemo } from 'react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 
-/**
- * RenewalCard
- * Rich renewal card with urgency/overdue badge, inline quick actions, carrier, notes preview, bulk select.
- *
- * Props:
- *   renewal      — RenewalCycle
- *   onEdit       — () => void
- *   onClick      — () => void
- *   isSelected   — boolean
- *   onToggleSelect — (id) => void
- */
-export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onToggleSelect }) {
-  const queryClient = useQueryClient();
-  const [showNotes, setShowNotes] = useState(false);
+export default function RenewalCard({ renewal, onAction }) {
+  const metrics = useMemo(() => {
+    const rateChange = renewal.rate_change_percent || 0;
+    const disruption = renewal.disruption_score || 0;
 
-  const updateStatus = useMutation({
-    mutationFn: (status) => base44.entities.RenewalCycle.update(renewal.id, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["renewals-all"] }),
-  });
+    const currentPremium = renewal.current_premium || 0;
+    const renewalPremium = renewal.renewal_premium || 0;
+    const premiumIncrease = renewalPremium - currentPremium;
 
-  const daysUntilRenewal = renewal.renewal_date
-    ? differenceInDays(new Date(renewal.renewal_date), new Date())
-    : null;
+    return {
+      rateChange: rateChange.toFixed(1),
+      rateChangePercent: Math.abs(rateChange).toFixed(1),
+      disruption,
+      currentPremium: currentPremium.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      renewalPremium: renewalPremium.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      premiumIncrease: Math.abs(premiumIncrease).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      isPriceIncrease: premiumIncrease > 0,
+    };
+  }, [renewal]);
 
-  const isPastDue = daysUntilRenewal !== null && daysUntilRenewal < 0 && renewal.status !== "completed";
+  const daysToRenewal = useMemo(() => {
+    return differenceInDays(new Date(renewal.renewal_date), new Date());
+  }, [renewal.renewal_date]);
 
-  // Urgency tier
-  let urgencyTier = null;
-  let urgencyColor = null;
-  if (isPastDue) {
-    urgencyTier = `${Math.abs(daysUntilRenewal)}d overdue`;
-    urgencyColor = "bg-red-200 text-red-800";
-  } else if (daysUntilRenewal !== null) {
-    if (daysUntilRenewal <= 30) {
-      urgencyTier = `${daysUntilRenewal}d left`;
-      urgencyColor = "bg-red-100 text-red-700";
-    } else if (daysUntilRenewal <= 60) {
-      urgencyTier = `${daysUntilRenewal}d left`;
-      urgencyColor = "bg-amber-100 text-amber-700";
-    } else if (daysUntilRenewal <= 90) {
-      urgencyTier = `${daysUntilRenewal}d left`;
-      urgencyColor = "bg-yellow-100 text-yellow-700";
-    }
-  }
+  const statusColor = {
+    pre_renewal: 'bg-slate-50 border-slate-200',
+    marketed: 'bg-blue-50 border-blue-200',
+    options_prepared: 'bg-purple-50 border-purple-200',
+    employer_review: 'bg-orange-50 border-orange-200',
+    decision_made: 'bg-green-50 border-green-200',
+    install_renewal: 'bg-indigo-50 border-indigo-200',
+    active_renewal: 'bg-emerald-50 border-emerald-200',
+    completed: 'bg-gray-50 border-gray-200',
+  };
 
-  const rateChangeIcon =
-    renewal.rate_change_percent === undefined || renewal.rate_change_percent === null
-      ? <Minus className="w-3.5 h-3.5" />
-      : renewal.rate_change_percent > 0
-      ? <TrendingUp className="w-3.5 h-3.5" />
-      : <TrendingDown className="w-3.5 h-3.5" />;
-
-  const rateChangeColor =
-    renewal.rate_change_percent === undefined || renewal.rate_change_percent === null
-      ? "text-muted-foreground"
-      : renewal.rate_change_percent > 0
-      ? "text-destructive"
-      : "text-green-600";
+  const recommendationColor = {
+    renew_as_is: 'bg-green-100 text-green-900 border-green-300',
+    renew_with_changes: 'bg-blue-100 text-blue-900 border-blue-300',
+    market: 'bg-orange-100 text-orange-900 border-orange-300',
+    terminate: 'bg-red-100 text-red-900 border-red-300',
+  };
 
   return (
-    <Card className={`hover:shadow-md transition-all ${isPastDue ? "border-red-300 bg-red-50/30" : ""} ${isSelected ? "ring-2 ring-primary/30 bg-primary/5" : ""}`} onClick={onClick}>
-      <CardContent className="p-4 space-y-3">
-        {/* Header: employer, status, urgency */}
-        <div className="flex items-start justify-between gap-3">
-          {/* Bulk select checkbox */}
-          <div className="flex items-start gap-2 flex-1 min-w-0">
-            {onToggleSelect && (
-              <Checkbox
-                checked={!!isSelected}
-                onCheckedChange={() => onToggleSelect(renewal.id)}
-                onClick={e => e.stopPropagation()}
-                className="mt-0.5 flex-shrink-0"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{renewal.employer_name || "Unknown Employer"}</p>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                <p className="text-xs text-muted-foreground">
-                  {renewal.renewal_date && `Renews ${format(new Date(renewal.renewal_date), "MMM d, yyyy")}`}
-                </p>
-                {renewal.assigned_to && (
-                  <span className="text-xs text-muted-foreground">• {renewal.assigned_to.split("@")[0]}</span>
-                )}
-              </div>
-            </div>
+    <Card className={`p-4 border ${statusColor[renewal.status]}`}>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="font-semibold text-sm mb-1">{renewal.employer_name}</h3>
+            <p className="text-xs text-muted-foreground">
+              Renewal Date: {format(new Date(renewal.renewal_date), 'MMM d, yyyy')}
+            </p>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <StatusBadge status={renewal.status} />
-            {urgencyTier && (
-              <Badge className={`text-[10px] font-semibold ${urgencyColor}`}>
-                {isPastDue && <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />}
-                {urgencyTier}
-              </Badge>
-            )}
+          <div className="text-right">
+            <Badge variant="outline" className="text-xs">
+              {renewal.status.replace(/_/g, ' ').toUpperCase()}
+            </Badge>
           </div>
         </div>
 
-        {/* Premium and rate change */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-          {renewal.current_premium && (
-            <div className="p-2 rounded bg-muted/40">
-              <p className="text-muted-foreground">Current Premium</p>
-              <p className="font-semibold text-sm mt-0.5">${renewal.current_premium.toLocaleString()}</p>
-            </div>
-          )}
-          {renewal.renewal_premium && (
-            <div className="p-2 rounded bg-muted/40">
-              <p className="text-muted-foreground">Renewal Premium</p>
-              <p className="font-semibold text-sm mt-0.5">${renewal.renewal_premium.toLocaleString()}</p>
-            </div>
-          )}
-          {renewal.rate_change_percent !== undefined && renewal.rate_change_percent !== null && (
-            <div className={`p-2 rounded flex items-center gap-1 ${renewal.rate_change_percent > 0 ? "bg-red-50 border border-red-200" : renewal.rate_change_percent < 0 ? "bg-green-50 border border-green-200" : "bg-muted/40"}`}>
-              <span className={`font-semibold text-sm ${rateChangeColor} flex items-center gap-1`}>
-                {rateChangeIcon}
-                {renewal.rate_change_percent > 0 ? "+" : ""}{renewal.rate_change_percent}%
+        {/* Rate Change */}
+        <div className="p-3 rounded border bg-white/50">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-medium">Rate Change</span>
+            <div className="flex items-center gap-1">
+              {metrics.rateChange > 0 ? (
+                <TrendingUp className="w-4 h-4 text-red-600" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-green-600" />
+              )}
+              <span className={metrics.rateChange > 0 ? 'text-red-600 font-bold' : 'text-green-600 font-bold'}>
+                {metrics.rateChange > 0 ? '+' : '-'}{metrics.rateChangePercent}%
               </span>
             </div>
-          )}
+          </div>
+          <div className="mt-2 text-xs space-y-1">
+            <p className="text-muted-foreground">Current: {metrics.currentPremium}</p>
+            <p className="text-muted-foreground">Renewal: {metrics.renewalPremium}</p>
+            <p className={metrics.isPriceIncrease ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+              {metrics.isPriceIncrease ? '+' : '-'}{metrics.premiumIncrease}
+            </p>
+          </div>
         </div>
 
-        {/* Disruption score bar */}
-        {renewal.disruption_score !== undefined && renewal.disruption_score !== null && (
-          <div>
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-muted-foreground">Disruption Risk</span>
-              <span className={`font-semibold ${renewal.disruption_score >= 70 ? "text-destructive" : renewal.disruption_score >= 40 ? "text-amber-600" : "text-green-600"}`}>
-                {renewal.disruption_score}/100
-              </span>
-            </div>
-            <Progress
-              value={renewal.disruption_score}
-              className="h-1.5"
+        {/* Disruption Score */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Disruption Risk</span>
+            <span className={`font-semibold ${metrics.disruption > 70 ? 'text-red-600' : metrics.disruption > 40 ? 'text-orange-600' : 'text-green-600'}`}>
+              {metrics.disruption.toFixed(0)}/100
+            </span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+            <div
+              className={`h-full transition-all ${
+                metrics.disruption > 70 ? 'bg-red-500' : metrics.disruption > 40 ? 'bg-orange-500' : 'bg-green-500'
+              }`}
+              style={{ width: `${metrics.disruption}%` }}
             />
           </div>
-        )}
-
-        {/* Recommendation + inline quick-action status changer */}
-        <div className="flex items-center justify-between gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {renewal.recommendation && (
-              <Badge variant="outline" className="capitalize text-[10px]">
-                Rec: {renewal.recommendation.replace(/_/g, " ")}
-              </Badge>
-            )}
-            {renewal.decision && (
-              <Badge className="bg-green-100 text-green-700 text-[10px]">
-                {renewal.decision.replace(/_/g, " ")}
-              </Badge>
-            )}
-          </div>
-
-          {/* Inline status quick-change */}
-          <Select
-            value={renewal.status}
-            onValueChange={(v) => updateStatus.mutate(v)}
-          >
-            <SelectTrigger className="h-6 text-[10px] w-36 border-dashed" onClick={e => e.stopPropagation()}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pre_renewal">Pre-Renewal</SelectItem>
-              <SelectItem value="marketed">Marketed</SelectItem>
-              <SelectItem value="options_prepared">Options Prepared</SelectItem>
-              <SelectItem value="employer_review">Employer Review</SelectItem>
-              <SelectItem value="decision_made">Decision Made</SelectItem>
-              <SelectItem value="install_renewal">Installing</SelectItem>
-              <SelectItem value="active_renewal">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
-        {/* Notes inline preview */}
-        {renewal.notes && (
-          <div onClick={e => e.stopPropagation()}>
-            <button
-              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setShowNotes(v => !v)}
-            >
-              <StickyNote className="w-3 h-3" />
-              {showNotes ? "Hide notes" : "Show notes"}
-              {showNotes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-            {showNotes && (
-              <p className="mt-1.5 p-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-900 whitespace-pre-wrap">
-                {renewal.notes}
-              </p>
-            )}
+        {/* Recommendation */}
+        {renewal.recommendation && (
+          <div className={`p-2 rounded border text-xs font-semibold ${recommendationColor[renewal.recommendation]}`}>
+            {renewal.recommendation.replace(/_/g, ' ').toUpperCase()}
           </div>
         )}
 
-        {/* Action button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full text-xs"
-          onClick={e => { e.stopPropagation(); onEdit?.(); }}
-        >
-          <Pencil className="w-3 h-3 mr-1" /> View Full Details
-        </Button>
-      </CardContent>
+        {/* Days to Renewal */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock className="w-4 h-4" />
+          {daysToRenewal > 0 ? `${daysToRenewal} days until renewal` : 'Renewal date passed'}
+        </div>
+
+        {/* Actions */}
+        {onAction && (
+          <Button size="sm" className="w-full" onClick={() => onAction(renewal.id)}>
+            View Details
+          </Button>
+        )}
+      </div>
     </Card>
   );
 }
