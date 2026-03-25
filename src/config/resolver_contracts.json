@@ -1,0 +1,203 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "QC360 Resolver Service Contracts — canonical interface definitions for all backend rating resolvers",
+    "backend_function": "planRatingEngine",
+    "invocation": "base44.functions.invoke('planRatingEngine', { action, ...params })"
+  },
+
+  "resolvers": {
+    "zipToArea": {
+      "action": "zipToArea",
+      "description": "Resolves a ZIP code to a deterministic rating area using PlanZipAreaMap. Plan-specific mappings take precedence over global mappings.",
+      "input": {
+        "zip":           { "type": "string", "required": true,  "description": "Raw ZIP — will be normalized internally" },
+        "planId":        { "type": "string", "required": false, "description": "FK → BenefitPlan — uses plan-specific mapping if available" },
+        "effectiveDate": { "type": "string", "format": "date",  "required": false, "default": "today" }
+      },
+      "output_success": {
+        "rating_area_code": "string",
+        "state_code":       "string",
+        "county":           "string | null",
+        "zip_code":         "string (normalized 5-digit)"
+      },
+      "output_error": {
+        "error": "string",
+        "code":  "INVALID_ZIP | NO_ZIP_AREA_MATCH"
+      },
+      "rejection_codes": ["INVALID_ZIP", "NO_ZIP_AREA_MATCH"]
+    },
+
+    "dobToAgeBand": {
+      "action": "dobToAgeBand",
+      "description": "Converts a date of birth to age and ACA standard age band code as of a given effective date. Never trust age/band from spreadsheet formulas.",
+      "input": {
+        "dob":           { "type": "string | number", "required": true,  "description": "ISO date string or Excel serial number" },
+        "effectiveDate": { "type": "string", "format": "date", "required": false, "default": "today" }
+      },
+      "output_success": {
+        "age":        "number — age as of effectiveDate",
+        "band_code":  "string — e.g. Under25, 25-29, 65+",
+        "band_label": "string — display label"
+      },
+      "output_error": {
+        "error": "string",
+        "code":  "INVALID_DOB"
+      },
+      "normalization_applied": ["Excel serial → ISO", "future DOB → reject", "null → reject"]
+    },
+
+    "tierNormalize": {
+      "action": "tierNormalize",
+      "description": "Maps raw tier text from any source (workbook, census, carrier file) to QC360 canonical tier codes.",
+      "input": {
+        "tier": { "type": "string", "required": true }
+      },
+      "output": {
+        "normalized": "EE | ES | EC | FAM | null (null = unknown/reject)",
+        "input":      "string — echo of raw input"
+      },
+      "tier_map": {
+        "EE":  ["Single", "EE", "Employee Only", "Employee"],
+        "ES":  ["EE+Sp", "EE + Sp", "EE+Spouse", "Employee+Spouse", "Employee + Spouse"],
+        "EC":  ["EE+Ch", "EE+Ch(ren)", "EE + Ch(ren)", "EE+Children", "Employee+Children"],
+        "FAM": ["Family", "FAM", "EE+Family", "EE + Family"]
+      }
+    },
+
+    "rateResolve": {
+      "action": "rateResolve",
+      "description": "Point lookup for a single monthly rate given the full rating key. Used for single-member spot checks and QA.",
+      "input": {
+        "planId":          { "type": "string", "required": true },
+        "rateScheduleId":  { "type": "string", "required": false, "description": "If omitted, uses any active schedule for planId" },
+        "ratingAreaCode":  { "type": "string", "required": true },
+        "ageBandCode":     { "type": "string", "required": true },
+        "tierCode":        { "type": "string", "required": true, "enum": ["EE","ES","EC","FAM"] },
+        "tobaccoFlag":     { "type": "boolean", "required": false, "default": false }
+      },
+      "output_success": {
+        "monthly_rate":    "number",
+        "rate_record_id":  "string — FK → PlanRateDetail"
+      },
+      "output_error": {
+        "error": "string",
+        "code":  "NO_RATE_MATCH"
+      }
+    },
+
+    "importRateRows": {
+      "action": "importRateRows",
+      "description": "Batch-validates and persists rate detail rows from a parsed CSV/array. Creates an ImportRun audit record and per-row ImportException records for all failures.",
+      "input": {
+        "rows":           { "type": "array", "required": true, "description": "Array of raw row objects from parsed CSV" },
+        "rateScheduleId": { "type": "string", "required": true },
+        "planId":         { "type": "string", "required": true },
+        "sourceFileName": { "type": "string", "required": false }
+      },
+      "output": {
+        "run_id":   "string — FK → ImportRun",
+        "status":   "completed | completed_with_warnings | failed",
+        "success":  "number",
+        "errors":   "number",
+        "warnings": "number",
+        "total":    "number"
+      },
+      "validation_sequence": [
+        "1. Check required fields (rating_area_code, age_band_code, tier_code, monthly_rate)",
+        "2. Normalize tier via tierNormalizer — reject unknown",
+        "3. Validate monthly_rate > 0",
+        "4. Check duplicate key within batch",
+        "5. Warn if age_band_code not in ACA_STANDARD_10"
+      ]
+    },
+
+    "importZipRows": {
+      "action": "importZipRows",
+      "description": "Batch-validates and persists ZIP-to-area mapping rows. Creates ImportRun and ImportException records.",
+      "input": {
+        "rows":           { "type": "array", "required": true },
+        "planId":         { "type": "string", "required": false, "description": "null = global mapping" },
+        "sourceFileName": { "type": "string", "required": false }
+      },
+      "output": {
+        "run_id": "string", "status": "string", "success": "number", "errors": "number", "warnings": "number", "total": "number"
+      },
+      "validation_sequence": [
+        "1. Normalize ZIP — reject if not valid 5-digit",
+        "2. Check rating_area_code present",
+        "3. Warn if state_code missing",
+        "4. Check duplicate ZIP + effective_date within batch"
+      ]
+    },
+
+    "rateCensus": {
+      "action": "rateCensus",
+      "description": "Full case rating pipeline. Iterates all eligible CensusMember rows for a case, resolves each through the full rating chain, persists CaseRatedResult rows, and creates an ImportRun audit record.",
+      "input": {
+        "caseId":         { "type": "string", "required": true },
+        "planId":         { "type": "string", "required": true },
+        "rateScheduleId": { "type": "string", "required": false, "description": "If omitted, uses latest active schedule" },
+        "effectiveDate":  { "type": "string", "format": "date", "required": false, "default": "today" }
+      },
+      "internal_flow": [
+        "1. Create ImportRun record (import_type=census_members)",
+        "2. Fetch all CensusMember rows for caseId",
+        "3. For each member: normalize ZIP → zipToAreaResolver",
+        "4. For each member: normalize DOB → age → ageToBandResolver",
+        "5. For each member: normalize tier → tierNormalizer",
+        "6. planRateResolver(planId, rateScheduleId, area, band, tier, tobacco)",
+        "7. On success: write CaseRatedResult row with rating_status=rated",
+        "8. On failure: write CaseRatedResult row with rating_status=exception, log ImportException",
+        "9. Finalize ImportRun with counts and status"
+      ],
+      "output": {
+        "run_id":                 "string",
+        "status":                 "string",
+        "total_members_rated":    "number",
+        "total_members_failed":   "number",
+        "total_monthly_premium":  "number",
+        "ee_monthly":             "number",
+        "es_monthly":             "number",
+        "ec_monthly":             "number",
+        "fam_monthly":            "number",
+        "tier_breakdown":         "object — { EE: {count, premium}, ... }",
+        "rating_area_breakdown":  "object — { area_code: {count, premium}, ... }",
+        "member_results":         "array — per-member rated rows with errors"
+      }
+    },
+
+    "validateRateSchedule": {
+      "action": "validateRateSchedule",
+      "description": "Validates all PlanRateDetail rows for a schedule. Checks for missing fields, invalid tiers, duplicate keys, and tier completeness per area+band combination. Updates PlanRateSchedule.validation_status.",
+      "input": {
+        "rateScheduleId": { "type": "string", "required": true }
+      },
+      "output": {
+        "status":      "valid | has_errors",
+        "error_count": "number",
+        "errors":      "array of strings — up to 100",
+        "row_count":   "number"
+      },
+      "checks": [
+        "monthly_rate present and > 0",
+        "rating_area_code present",
+        "age_band_code present",
+        "tier_code in [EE, ES, EC, FAM]",
+        "no duplicate rate key: area + band + tier + tobacco",
+        "every area+band combination has all 4 tier codes"
+      ]
+    },
+
+    "seedAgeBandSchema": {
+      "action": "seedAgeBandSchema",
+      "description": "Admin-only. Seeds the ACA Standard 10-Band age schema into AgeBandSchema if not already present. Idempotent.",
+      "requires_role": "admin",
+      "input": {},
+      "output": {
+        "message": "Already seeded | Seeded",
+        "count":   "number"
+      }
+    }
+  }
+}

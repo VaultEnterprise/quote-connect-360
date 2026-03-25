@@ -1,0 +1,179 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "QC360 Screen Page Specification Pack — dependency-ordered, maps to implementation files",
+    "routes_base": "/plan-rating"
+  },
+
+  "dependency_order": [
+    "SCR-PLN-001", "SCR-PLN-002", "SCR-PLN-003",
+    "SCR-PLN-004", "SCR-PLN-005",
+    "SCR-RATE-001", "SCR-RATE-002", "SCR-ADM-001"
+  ],
+
+  "screens": {
+    "SCR-PLN-001": {
+      "id": "SCR-PLN-001",
+      "label": "Plan Library",
+      "route": "/plans",
+      "component": "pages/PlanLibrary.jsx",
+      "status": "implemented",
+      "purpose": "Master plan catalog with search, filter, and lifecycle management",
+      "sections": [
+        { "id": "S1", "label": "Search + Filter Bar",   "fields": ["plan_name", "carrier", "market_segment", "plan_year", "status"] },
+        { "id": "S2", "label": "Plan Grid",             "columns": ["plan_name","carrier","plan_type","market_segment","plan_year","rating_model","status","version"] },
+        { "id": "S3", "label": "Active/Archived Toggle" },
+        { "id": "S4", "label": "Version Badge",         "note": "Shows current version_number on plan card" }
+      ],
+      "actions": ["create_plan", "import_plan", "open_plan_detail", "archive_plan"],
+      "data_sources": ["BenefitPlan", "PlanRateSchedule"],
+      "depends_on": []
+    },
+
+    "SCR-PLN-002": {
+      "id": "SCR-PLN-002",
+      "label": "Plan Detail",
+      "route": "/plans/:id",
+      "component": "pages/PlanLibrary.jsx (detail drawer)",
+      "status": "implemented",
+      "purpose": "Plan master record + rate schedule summary + document panel + audit trail",
+      "sections": [
+        { "id": "S1", "label": "Plan Header",           "fields": ["plan_name","carrier","plan_code","status","version_number"] },
+        { "id": "S2", "label": "Plan Metadata",         "fields": ["market_segment","funding_type","plan_type","rating_model","tobacco_rating_flag","effective_date","termination_date"] },
+        { "id": "S3", "label": "Active Schedule List",  "data": "PlanRateSchedule filtered by plan_id" },
+        { "id": "S4", "label": "Document Panel",        "data": "Document filtered by plan_id" },
+        { "id": "S5", "label": "Validation Status Card","data": "DataCompletenessFlag + RateVarianceAlert" },
+        { "id": "S6", "label": "Audit Trail",           "data": "PlanAuditLog" }
+      ],
+      "actions": ["edit_metadata","create_schedule_version","view_zip_map","view_rate_table","upload_document","deprecate_plan"],
+      "data_sources": ["BenefitPlan","PlanRateSchedule","PlanAuditLog","Document","DataCompletenessFlag"],
+      "depends_on": ["SCR-PLN-001"]
+    },
+
+    "SCR-PLN-003": {
+      "id": "SCR-PLN-003",
+      "label": "ZIP / Area Manager",
+      "route": "/plan-rating (tab: ZIP / Area Mapping)",
+      "component": "components/plans/ZipAreaMappingManager.jsx",
+      "status": "implemented",
+      "purpose": "Manage the deterministic ZIP-to-rating-area lookup table",
+      "sections": [
+        { "id": "S1", "label": "Summary KPIs",      "metrics": ["total_zips","total_areas","total_states"] },
+        { "id": "S2", "label": "Search + Filter",   "fields": ["zip_search","state_filter"] },
+        { "id": "S3", "label": "ZIP-Area Grid",     "columns": ["zip_code","state_code","county","city","rating_area_code","scope","source"] },
+        { "id": "S4", "label": "CSV Import Panel",  "note": "Routes through importZipRows backend action for full audit trail" },
+        { "id": "S5", "label": "Single Row Add" }
+      ],
+      "actions": ["import_zip_csv","add_single_row","delete_row","export_map"],
+      "data_sources": ["PlanZipAreaMap"],
+      "import_action": "importZipRows",
+      "depends_on": ["SCR-PLN-001"]
+    },
+
+    "SCR-PLN-004": {
+      "id": "SCR-PLN-004",
+      "label": "Rate Schedule Detail",
+      "route": "/plan-rating (tab: Rate Schedules)",
+      "component": "components/plans/RateScheduleManager.jsx",
+      "status": "implemented",
+      "purpose": "Create and manage versioned rate schedule headers",
+      "sections": [
+        { "id": "S1", "label": "Schedule List",    "columns": ["schedule_name","plan","rating_basis","version","effective_date","termination_date","row_count","validation_status"] },
+        { "id": "S2", "label": "Create Form",      "fields": ["plan_id","schedule_name","plan_year","effective_date","termination_date","rating_basis","tobacco_mode","market_segment","funding_type","version_number"] }
+      ],
+      "actions": ["create_schedule","archive_schedule","restore_schedule"],
+      "data_sources": ["PlanRateSchedule","BenefitPlan"],
+      "depends_on": ["SCR-PLN-001"]
+    },
+
+    "SCR-PLN-005": {
+      "id": "SCR-PLN-005",
+      "label": "Rate Table Grid",
+      "route": "/plan-rating (tab: Rate Detail Grid)",
+      "component": "components/plans/RateDetailGrid.jsx",
+      "status": "implemented",
+      "purpose": "View, add, and import normalized rate detail rows grouped by rating area",
+      "sections": [
+        { "id": "S1", "label": "Schedule Selector" },
+        { "id": "S2", "label": "Rate Grid",        "columns": ["age_band_code","tier_code","tier_label","monthly_rate","annual_rate"], "grouped_by": "rating_area_code" },
+        { "id": "S3", "label": "CSV Import Panel", "note": "Routes through importRateRows backend action for full audit + normalization" },
+        { "id": "S4", "label": "Add Row Form" }
+      ],
+      "actions": ["add_row","delete_row","import_csv","export_csv"],
+      "data_sources": ["PlanRateDetail","PlanRateSchedule"],
+      "import_action": "importRateRows",
+      "depends_on": ["SCR-PLN-004"]
+    },
+
+    "SCR-RATE-001": {
+      "id": "SCR-RATE-001",
+      "label": "Validation Console",
+      "route": "/plan-rating (tab: Validation Console)",
+      "component": "components/plans/RateValidationConsole.jsx",
+      "status": "implemented",
+      "purpose": "Run validation against a rate schedule and unit-test each resolver",
+      "sections": [
+        { "id": "S1", "label": "Schedule Validator",   "action": "validateRateSchedule" },
+        { "id": "S2", "label": "ZIP Resolver Tester",  "action": "zipToArea" },
+        { "id": "S3", "label": "DOB → Age Band Tester","action": "dobToAgeBand" },
+        { "id": "S4", "label": "Tier Normalizer Tester","action": "tierNormalize" }
+      ],
+      "validation_output_fields": ["status","error_count","errors","row_count"],
+      "data_sources": ["PlanRateSchedule","PlanRateDetail","PlanZipAreaMap"],
+      "depends_on": ["SCR-PLN-005", "SCR-PLN-003"]
+    },
+
+    "SCR-RATE-002": {
+      "id": "SCR-RATE-002",
+      "label": "Case Rating Runner",
+      "route": "/plan-rating (tab: Run Rating)",
+      "component": "components/plans/CaseRatingRunner.jsx",
+      "status": "implemented",
+      "purpose": "Execute the full census rating pipeline and view member-level results",
+      "sections": [
+        { "id": "S1", "label": "Run Controls",         "fields": ["case_id","plan_id","rate_schedule_id","effective_date"] },
+        { "id": "S2", "label": "Summary KPIs",         "metrics": ["total_monthly_premium","members_rated","members_failed"] },
+        { "id": "S3", "label": "Premium by Tier",      "data": "tier_breakdown from rateCensus response" },
+        { "id": "S4", "label": "Premium by Area",      "data": "rating_area_breakdown" },
+        { "id": "S5", "label": "Member Detail Grid",   "columns": ["name","age","age_band","tier","area","monthly_rate","status/error"] },
+        { "id": "S6", "label": "Warnings + Errors",    "data": "member_results where errors.length > 0" }
+      ],
+      "actions": ["run_rating","export_results"],
+      "rating_action": "rateCensus",
+      "data_sources": ["BenefitCase","CensusMember","PlanRateSchedule","CaseRatedResult"],
+      "depends_on": ["SCR-PLN-005","SCR-PLN-003","SCR-RATE-001"],
+      "qa_requirement": "Total monthly premium must reconcile to workbook pivot table output within rounding tolerance"
+    },
+
+    "SCR-ADM-001": {
+      "id": "SCR-ADM-001",
+      "label": "Import Run Log",
+      "route": "/plan-rating (tab: Import Log)",
+      "component": "components/plans/ImportRunLog.jsx",
+      "status": "implemented",
+      "purpose": "Operational audit screen for all import runs — view status, exceptions, and export error CSV",
+      "sections": [
+        { "id": "S1", "label": "KPI Bar",          "metrics": ["total_runs","completed","with_warnings","failed"] },
+        { "id": "S2", "label": "Filter Controls",  "fields": ["import_type","status"] },
+        { "id": "S3", "label": "Run List",         "columns": ["import_type","status","source_file","started_at","duration","success_rows","error_rows","created_by"] },
+        { "id": "S4", "label": "Exception Drilldown","trigger": "expand run row","data": "ImportException filtered by import_run_id" }
+      ],
+      "actions": ["expand_run","export_exceptions_csv","seed_age_band_schema"],
+      "data_sources": ["ImportRun","ImportException"],
+      "depends_on": []
+    }
+  },
+
+  "acceptance_criteria": {
+    "plan_creation":       "A plan record can be created from workbook metadata",
+    "zip_import":          "ZIP-area mapping table can be imported and validated with full audit trail",
+    "rate_import":         "Rate table imports into normalized rows with tier/band normalization and duplicate detection",
+    "census_rating":       "QC360 rates census without spreadsheet formulas — via backend resolvers only",
+    "member_resolution":   "Every census member resolves to exactly one area, one age band, one rate row",
+    "exception_logging":   "All failures are logged to ImportException — none silently skipped",
+    "results_export":      "Rated results can be viewed, filtered, and exported",
+    "audit_trail":         "Every import run is auditable via ImportRun + ImportException records",
+    "reconciliation":      "QC360 monthly totals can be reconciled to workbook pivot table",
+    "rollback":            "Any import can be traced back to its ImportRun for data-level reversal"
+  }
+}
