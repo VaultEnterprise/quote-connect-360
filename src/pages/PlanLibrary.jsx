@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Upload, BookOpen, FileDown, BarChart2, Scale, GitBranch, Layers, Settings } from "lucide-react";
+import { Plus, Search, Upload, BookOpen, FileDown, BarChart2, Scale, GitBranch, Layers, Settings, FileText, Calculator, HandCoins } from "lucide-react";
+import PlanSummaryGenerator from "@/components/plans/PlanSummaryGenerator";
+import PlanCostCalculator from "@/components/plans/PlanCostCalculator";
+import BenefitsGlossaryPanel from "@/components/plans/BenefitsGlossaryPanel";
+import NegotiationTracker from "@/components/plans/NegotiationTracker";
+import PlanReportBuilder from "@/components/plans/PlanReportBuilder";
+import RateCardGenerator from "@/components/plans/RateCardGenerator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
@@ -43,7 +49,7 @@ export default function PlanLibrary() {
   const [editingPlan, setEditingPlan] = useState(null);
   const [activeTab, setActiveTab] = useState("medical");
   const [comparisonPlans, setComparisonPlans] = useState([]);
-  const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide"
+  const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide", "employee", "reports", "negotiation"
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompareDrawer, setShowCompareDrawer] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -118,6 +124,9 @@ export default function PlanLibrary() {
           <SelectContent>
             <SelectItem value="grid">Grid View</SelectItem>
             <SelectItem value="analytics">Analytics</SelectItem>
+            <SelectItem value="employee">Employee Tools</SelectItem>
+            <SelectItem value="reports">Reports & Exports</SelectItem>
+            <SelectItem value="negotiation">Negotiations</SelectItem>
             <SelectItem value="guide">Help & Tips</SelectItem>
           </SelectContent>
         </Select>
@@ -272,6 +281,54 @@ export default function PlanLibrary() {
         <PlanAnalyticsPanel plans={plans} />
         <PlanQualityChecklist plans={plans} />
         <PlanArchiveManager archivedPlans={archivedPlans} />
+      </div>
+    );
+  }
+
+  if (viewMode === "employee") {
+    return (
+      <div className="space-y-6">
+        <PageContent />
+        <div className="rounded-xl border p-4 space-y-4">
+          <h2 className="text-base font-semibold flex items-center gap-2"><FileText className="w-4 h-4 text-primary" />Plan Summary Generator</h2>
+          <PlanSummaryGenerator plans={plans} />
+        </div>
+        <div className="rounded-xl border p-4 space-y-4">
+          <h2 className="text-base font-semibold flex items-center gap-2"><Calculator className="w-4 h-4 text-primary" />Employee Cost Calculator</h2>
+          <PlanCostCalculator plans={plans} />
+        </div>
+        <div className="rounded-xl border p-4 space-y-4">
+          <h2 className="text-base font-semibold">Benefits Glossary</h2>
+          <BenefitsGlossaryPanel />
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === "reports") {
+    return (
+      <div className="space-y-6">
+        <PageContent />
+        <div className="rounded-xl border p-4 space-y-4">
+          <h2 className="text-base font-semibold">Custom Report Builder</h2>
+          <PlanReportBuilder plans={plans} />
+        </div>
+        <div className="rounded-xl border p-4 space-y-4">
+          <h2 className="text-base font-semibold">Rate Card Generator</h2>
+          <RateCardGenerator plans={plans} />
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === "negotiation") {
+    return (
+      <div className="space-y-6">
+        <PageContent />
+        <div className="rounded-xl border p-4 space-y-4">
+          <h2 className="text-base font-semibold flex items-center gap-2"><HandCoins className="w-4 h-4 text-primary" />Carrier Negotiation Tracker</h2>
+          <NegotiationTracker plans={plans} />
+        </div>
       </div>
     );
   }

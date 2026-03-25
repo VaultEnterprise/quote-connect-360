@@ -9,6 +9,9 @@ import { ArrowLeft, TrendingUp, Award, BarChart2, AlertTriangle, Activity } from
 import { Link } from "react-router-dom";
 import CarrierPerformanceDashboard from "@/components/plans/CarrierPerformanceDashboard";
 import PlanDataValidation from "@/components/plans/PlanDataValidation";
+import PlanHeatmapAnalytics from "@/components/plans/PlanHeatmapAnalytics";
+import MarketShareAnalytics from "@/components/plans/MarketShareAnalytics";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const COLORS = ["hsl(var(--chart-1))","hsl(var(--chart-2))","hsl(var(--chart-3))","hsl(var(--chart-4))","hsl(var(--chart-5))"];
 
@@ -141,11 +144,26 @@ export default function PlanAnalyticsDashboard() {
         </Card>
       )}
 
-      {/* Carrier Performance Dashboard */}
-      <CarrierPerformanceDashboard plans={activePlans} />
-
-      {/* Data Validation */}
-      <PlanDataValidation plans={activePlans} />
+      <Tabs defaultValue="carriers">
+        <TabsList>
+          <TabsTrigger value="carriers">Carrier Performance</TabsTrigger>
+          <TabsTrigger value="heatmap">Geographic Heatmap</TabsTrigger>
+          <TabsTrigger value="market">Market Share</TabsTrigger>
+          <TabsTrigger value="validation">Data Validation</TabsTrigger>
+        </TabsList>
+        <TabsContent value="carriers" className="mt-4">
+          <CarrierPerformanceDashboard plans={activePlans} />
+        </TabsContent>
+        <TabsContent value="heatmap" className="mt-4">
+          <PlanHeatmapAnalytics plans={activePlans} />
+        </TabsContent>
+        <TabsContent value="market" className="mt-4">
+          <MarketShareAnalytics plans={activePlans} />
+        </TabsContent>
+        <TabsContent value="validation" className="mt-4">
+          <PlanDataValidation plans={activePlans} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
