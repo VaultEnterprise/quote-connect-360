@@ -56,6 +56,7 @@ const navGroups = [
       { path: "/plan-rate-editor", label: "Rate Editor", icon: BarChart2 },
       { path: "/plan-analytics", label: "Plan Analytics", icon: Award },
       { path: "/plan-compliance", label: "Compliance Center", icon: ShieldCheck },
+      { path: "/plan-rating", label: "Rating Engine", icon: Zap },
       { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
       { path: "/tasks", label: "Tasks", icon: AlertCircle },
       { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
