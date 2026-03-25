@@ -9,6 +9,7 @@ import RateDetailGrid from "@/components/plans/RateDetailGrid";
 import ZipAreaMappingManager from "@/components/plans/ZipAreaMappingManager";
 import RateValidationConsole from "@/components/plans/RateValidationConsole";
 import CaseRatingRunner from "@/components/plans/CaseRatingRunner";
+import ImportRunLog from "@/components/plans/ImportRunLog";
 
 export default function PlanRatingEngine() {
   const { data: plans = [] } = useQuery({
@@ -59,6 +60,7 @@ export default function PlanRatingEngine() {
           <TabsTrigger value="zip" className="gap-1.5"><MapPin className="w-3.5 h-3.5" />ZIP / Area Mapping</TabsTrigger>
           <TabsTrigger value="validate" className="gap-1.5"><ShieldCheck className="w-3.5 h-3.5" />Validation Console</TabsTrigger>
           <TabsTrigger value="rate" className="gap-1.5"><Zap className="w-3.5 h-3.5" />Run Rating</TabsTrigger>
+          <TabsTrigger value="log" className="gap-1.5"><Database className="w-3.5 h-3.5" />Import Log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="schedules" className="mt-4">
@@ -75,6 +77,9 @@ export default function PlanRatingEngine() {
         </TabsContent>
         <TabsContent value="rate" className="mt-4">
           <CaseRatingRunner plans={plans} schedules={schedules} />
+        </TabsContent>
+        <TabsContent value="log" className="mt-4">
+          <ImportRunLog />
         </TabsContent>
       </Tabs>
     </div>
