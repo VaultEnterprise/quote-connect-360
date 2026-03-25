@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, XCircle, AlertTriangle, Clock, ChevronDown, ChevronRight, RefreshCw, Zap, Download } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Clock, ChevronDown, ChevronRight, RefreshCw, Zap, Download, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_CONFIG = {
@@ -175,9 +175,20 @@ export default function ImportRunLog() {
             </SelectContent>
           </Select>
         </div>
-        <Button size="sm" variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="h-8 text-xs gap-1.5">
-          <Zap className="w-3 h-3" />{seedMutation.isPending ? "Seeding..." : "Seed Age Band Schema"}
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending} className="h-8 text-xs gap-1.5">
+            <Zap className="w-3 h-3" />{seedMutation.isPending ? "Seeding..." : "Seed Age Band Schema"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={async () => {
+            try {
+              const res = await base44.functions.invoke("seedValidationRules", {});
+              qc.invalidateQueries({ queryKey: ["import-runs"] });
+              toast.success(`Validation rules: ${res.data?.message || "done"}`);
+            } catch(e) { toast.error(e.message); }
+          }} className="h-8 text-xs gap-1.5">
+            <ShieldCheck className="w-3 h-3" />Seed Validation Rules
+          </Button>
+        </div>
       </div>
 
       {/* Run list */}
