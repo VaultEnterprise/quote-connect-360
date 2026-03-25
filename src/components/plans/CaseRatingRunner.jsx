@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Users, DollarSign, AlertTriangle, CheckCircle, Download, TrendingUp } from "lucide-react";
+import { Zap, Users, DollarSign, AlertTriangle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 function fmt(n) { return n != null ? `$${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"; }
@@ -85,25 +85,13 @@ export default function CaseRatingRunner({ plans, schedules }) {
 
       {result && !result.error && (
         <>
-          {/* Export */}
-          <div className="flex justify-end">
-            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => {
-              const lines = ["member,age,age_band,tier,area,monthly_rate,annual_rate,status,errors",
-                ...result.member_results.map(m =>
-                  `${JSON.stringify(m.name || "")},${m.age ?? ""},${m.age_band_code || ""},${m.tier_code || ""},${m.rating_area_code || ""},${m.monthly_rate ?? ""},${m.monthly_rate != null ? (m.monthly_rate * 12).toFixed(2) : ""},${m.errors?.length > 0 ? "exception" : "rated"},${JSON.stringify((m.errors || []).join("; "))}`
-                )];
-              const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-              const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `rating_results_${caseId}_${planId}.csv`; a.click();
-            }}><Download className="w-3 h-3" />Export Results CSV</Button>
-          </div>
-
           {/* Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { label: "Total Monthly Premium", val: fmt(result.total_monthly_premium), icon: DollarSign, color: "text-primary" },
-              { label: "Annual Premium", val: fmt((result.total_monthly_premium || 0) * 12), icon: TrendingUp, color: "text-indigo-600" },
               { label: "Members Rated", val: result.total_members_rated, icon: CheckCircle, color: "text-green-600" },
               { label: "Failed Members", val: result.total_members_failed, icon: AlertTriangle, color: result.total_members_failed > 0 ? "text-red-600" : "text-muted-foreground" },
+              { label: "Members Total", val: (result.total_members_rated || 0) + (result.total_members_failed || 0), icon: Users, color: "text-blue-600" },
             ].map(kpi => (
               <Card key={kpi.label}>
                 <CardContent className="p-3 flex items-center gap-2">

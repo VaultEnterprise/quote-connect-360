@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Upload, Download, Trash2, AlertTriangle, CheckCircle, X } from "lucide-react";
+import { Plus, Upload, Download, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const AGE_BANDS = ["Under25","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65+"];
@@ -45,12 +45,9 @@ function parseCSVRates(text, scheduleId, planId) {
 export default function RateDetailGrid({ plans, schedules }) {
   const qc = useQueryClient();
   const [scheduleId, setScheduleId] = useState("");
-  const [newRow, setNewRow] = useState({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false, effective_date: "", termination_date: "" });
+  const [newRow, setNewRow] = useState({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "" });
   const [csvText, setCsvText] = useState("");
   const [showCsvImport, setShowCsvImport] = useState(false);
-  const [areaFilter, setAreaFilter] = useState("all");
-  const [editRowId, setEditRowId] = useState(null);
-  const [editRate, setEditRate] = useState("");
 
   const schedule = schedules.find(s => s.id === scheduleId);
   const plan = plans.find(p => p.id === schedule?.plan_id);
@@ -72,11 +69,6 @@ export default function RateDetailGrid({ plans, schedules }) {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.PlanRateDetail.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["rate-detail", scheduleId] }),
-  });
-
-  const editMutation = useMutation({
-    mutationFn: ({ id, monthly_rate }) => base44.entities.PlanRateDetail.update(id, { monthly_rate: parseFloat(monthly_rate), annual_rate: parseFloat(monthly_rate) * 12 }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["rate-detail", scheduleId] }); setEditRowId(null); toast.success("Rate updated"); },
   });
 
   const importMutation = useMutation({
@@ -110,20 +102,7 @@ export default function RateDetailGrid({ plans, schedules }) {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `rate_detail_${scheduleId}.csv`; a.click();
   };
 
-  const allAreas = [...new Set(rates.map(r => r.rating_area_code))].sort();
   const byArea = rates.reduce((m, r) => { if (!m[r.rating_area_code]) m[r.rating_area_code] = []; m[r.rating_area_code].push(r); return m; }, {});
-  const filteredByArea = areaFilter === "all" ? byArea : Object.fromEntries(Object.entries(byArea).filter(([k]) => k === areaFilter));
-
-  // Completeness check per area: each area+band combo should have all 4 tiers
-  const completenessWarnings = [];
-  Object.entries(byArea).forEach(([area, rows]) => {
-    const bands = [...new Set(rows.map(r => r.age_band_code))];
-    bands.forEach(band => {
-      const tiers = rows.filter(r => r.age_band_code === band).map(r => r.tier_code);
-      const missing = TIERS.filter(t => !tiers.includes(t));
-      if (missing.length) completenessWarnings.push(`${area} / ${band}: missing tiers ${missing.join(", ")}`);
-    });
-  });
 
   return (
     <div className="space-y-4">
@@ -140,15 +119,6 @@ export default function RateDetailGrid({ plans, schedules }) {
         {scheduleId && (
           <>
             <Badge variant="outline" className="text-xs">{rates.length} rows</Badge>
-            {allAreas.length > 0 && (
-              <Select value={areaFilter} onValueChange={setAreaFilter}>
-                <SelectTrigger className="w-36 h-7 text-xs"><SelectValue placeholder="All areas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Areas</SelectItem>
-                  {allAreas.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            )}
             <Button size="sm" variant="outline" onClick={() => setShowCsvImport(!showCsvImport)} className="h-7 text-xs gap-1"><Upload className="w-3 h-3" />Import CSV</Button>
             <Button size="sm" variant="outline" onClick={exportCSV} className="h-7 text-xs gap-1"><Download className="w-3 h-3" />Export CSV</Button>
           </>
@@ -175,22 +145,35 @@ export default function RateDetailGrid({ plans, schedules }) {
 
       {scheduleId && (
         <>
-          {/* Completeness warnings */}
-          {completenessWarnings.length > 0 && (
-            <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700 space-y-0.5">
-              <p className="font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Tier completeness issues ({completenessWarnings.length}):</p>
-              {completenessWarnings.slice(0, 5).map((w, i) => <p key={i}>· {w}</p>)}
-              {completenessWarnings.length > 5 && <p>...and {completenessWarnings.length - 5} more</p>}
-            </div>
-          )}
-
           {/* Add row */}
           <Card>
             <CardContent className="p-3">
               <div className="flex items-end gap-2 flex-wrap">
+                <div><label className="text-xs mb-1 block">Area Code</label><Input value={newRow.rating_area_code} onChange={e => setNewRow(p => ({ ...p, rating_area_code: e.target.value }))} placeholder="e.g. CA001" className="h-7 text-xs w-24" /></div>
+                <div>
+                  <label className="text-xs mb-1 block">Age Band</label>
+                  <Select value={newRow.age_band_code} onValueChange={v => setNewRow(p => ({ ...p, age_band_code: v }))}>
+                    <SelectTrigger className="h-7 text-xs w-28"><SelectValue placeholder="Band" /></SelectTrigger>
+                    <SelectContent>{AGE_BANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs mb-1 block">Tier</label>
+                  <Select value={newRow.tier_code} onValueChange={v => setNewRow(p => ({ ...p, tier_code: v }))}>
+                    <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                    <SelectContent>{TIERS.map(t => <SelectItem key={t} value={t}>{t} — {TIER_LABELS[t]}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><label className="text-xs mb-1 block">Monthly Rate $</label><Input type="number" step="0.01" value={newRow.monthly_rate} onChange={e => setNewRow(p => ({ ...p, monthly_rate: e.target.value }))} placeholder="0.00" className="h-7 text-xs w-24" /></div>
+                <Button size="sm" className="h-7 text-xs gap-1" onClick={() => addMutation.mutate()} disabled={!newRow.rating_area_code || !newRow.age_band_code || !newRow.monthly_rate || addMutation.isPending}>
+                  <Plus className="w-3 h-3" />Add
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Rate grid grouped by area */}
-          {isLoading ? <div className="h-32 rounded bg-muted animate-pulse" /> : Object.entries(filteredByArea).map(([area, areaRates]) => (
+          {isLoading ? <div className="h-32 rounded bg-muted animate-pulse" /> : Object.entries(byArea).map(([area, areaRates]) => (
             <Card key={area}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs flex items-center gap-2">Rating Area: <Badge variant="outline">{area}</Badge> <span className="text-muted-foreground font-normal">({areaRates.length} rows)</span></CardTitle>
@@ -205,19 +188,8 @@ export default function RateDetailGrid({ plans, schedules }) {
                           <td className="px-3 py-1.5 font-mono">{r.age_band_code}</td>
                           <td className="px-3 py-1.5 text-center"><Badge className="text-xs h-4 px-1">{r.tier_code}</Badge></td>
                           <td className="px-3 py-1.5 text-center text-muted-foreground">{TIER_LABELS[r.tier_code]}</td>
-                          <td className="px-3 py-1.5 text-right">
-                            {editRowId === r.id ? (
-                              <div className="flex items-center gap-1 justify-end">
-                                <Input type="number" step="0.01" value={editRate} onChange={e => setEditRate(e.target.value)} className="h-5 text-xs w-20" autoFocus />
-                                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => editMutation.mutate({ id: r.id, monthly_rate: editRate })}><CheckCircle className="w-3 h-3 text-green-600" /></Button>
-                                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => setEditRowId(null)}><X className="w-3 h-3" /></Button>
-                              </div>
-                            ) : (
-                              <span className="font-semibold cursor-pointer hover:text-primary" onClick={() => { setEditRowId(r.id); setEditRate(r.monthly_rate); }}>${r.monthly_rate?.toFixed(2)}</span>
-                            )}
-                          </td>
+                          <td className="px-3 py-1.5 text-right font-semibold">${r.monthly_rate?.toFixed(2)}</td>
                           <td className="px-3 py-1.5 text-right text-muted-foreground">${(r.monthly_rate * 12)?.toFixed(2)}</td>
-                          {r.tobacco_flag && <td className="px-2 text-xs text-amber-600">🚬</td>}
                           <td className="px-2"><Button size="icon" variant="ghost" className="h-5 w-5 text-muted-foreground hover:text-destructive" onClick={() => deleteMutation.mutate(r.id)}><Trash2 className="w-3 h-3" /></Button></td>
                         </tr>
                       ))}

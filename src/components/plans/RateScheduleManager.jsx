@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, CheckCircle, AlertTriangle, Clock, Archive, Play, Pencil, X } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, CheckCircle, AlertTriangle, Clock, Archive } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_BADGE = {
@@ -40,60 +39,23 @@ export default function RateScheduleManager({ plans, schedules }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] }); toast.success("Rate schedule created"); setShowForm(false); setForm(EMPTY_FORM); },
   });
 
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [validatingId, setValidatingId] = useState(null);
-
   const toggleActive = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.PlanRateSchedule.update(id, { is_active: !is_active }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] }),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.PlanRateSchedule.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] }); toast.success("Schedule updated"); setEditingId(null); },
-  });
-
-  const validateMutation = useMutation({
-    mutationFn: async (scheduleId) => {
-      setValidatingId(scheduleId);
-      const res = await base44.functions.invoke("planRatingEngine", { action: "validateRateSchedule", rateScheduleId: scheduleId });
-      return { scheduleId, ...res.data };
-    },
-    onSuccess: (data) => {
-      setValidatingId(null);
-      qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] });
-      if (data.status === "valid") toast.success(`Schedule valid — ${data.row_count} rows pass all checks`);
-      else toast.error(`${data.error_count} validation error(s) found`);
-    },
-    onError: () => setValidatingId(null),
-  });
-
-  const filtered = (filterPlan === "all" ? schedules : schedules.filter(s => s.plan_id === filterPlan))
-    .filter(s => statusFilter === "all" || s.validation_status === statusFilter);
+  const filtered = filterPlan === "all" ? schedules : schedules.filter(s => s.plan_id === filterPlan);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 justify-between flex-wrap">
-        <div className="flex gap-2">
-          <Select value={filterPlan} onValueChange={setFilterPlan}>
-            <SelectTrigger className="w-48 h-8 text-xs"><SelectValue placeholder="Filter by plan" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Plans</SelectItem>
-              {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.plan_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="All statuses" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="valid">Valid</SelectItem>
-              <SelectItem value="has_errors">Has Errors</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={filterPlan} onValueChange={setFilterPlan}>
+          <SelectTrigger className="w-56 h-8 text-xs"><SelectValue placeholder="Filter by plan" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Plans</SelectItem>
+            {plans.map(p => <SelectItem key={p.id} value={p.id}>{p.plan_name}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" />New Schedule</Button>
       </div>
 
@@ -105,62 +67,27 @@ export default function RateScheduleManager({ plans, schedules }) {
             const plan = plans.find(p => p.id === s.plan_id);
             const ValidationIcon = s.validation_status === "valid" ? CheckCircle : s.validation_status === "has_errors" ? AlertTriangle : Clock;
             return (
-              <Card key={s.id} className={`${!s.is_active ? "opacity-60" : ""} ${s.validation_status === "has_errors" ? "border-red-200" : ""}`}>
-                <CardContent className="p-4">
-                  {editingId === s.id ? (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div><label className="text-xs font-medium block mb-1">Schedule Name</label><Input value={editForm.schedule_name || ""} onChange={e => setEditForm(p => ({ ...p, schedule_name: e.target.value }))} className="h-7 text-xs" /></div>
-                        <div><label className="text-xs font-medium block mb-1">Plan Year</label><Input type="number" value={editForm.plan_year || ""} onChange={e => setEditForm(p => ({ ...p, plan_year: e.target.value }))} className="h-7 text-xs" /></div>
-                        <div><label className="text-xs font-medium block mb-1">Effective Date</label><Input type="date" value={editForm.effective_date || ""} onChange={e => setEditForm(p => ({ ...p, effective_date: e.target.value }))} className="h-7 text-xs" /></div>
-                        <div><label className="text-xs font-medium block mb-1">Termination Date</label><Input type="date" value={editForm.termination_date || ""} onChange={e => setEditForm(p => ({ ...p, termination_date: e.target.value }))} className="h-7 text-xs" /></div>
-                      </div>
-                      <div><label className="text-xs font-medium block mb-1">Notes</label><Input value={editForm.notes || ""} onChange={e => setEditForm(p => ({ ...p, notes: e.target.value }))} className="h-7 text-xs" placeholder="Optional notes..." /></div>
-                      <div className="flex gap-2">
-                        <Button size="sm" className="h-7 text-xs" onClick={() => updateMutation.mutate({ id: s.id, data: { ...editForm, plan_year: Number(editForm.plan_year) } })} disabled={updateMutation.isPending}>Save</Button>
-                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingId(null)}><X className="w-3 h-3" /></Button>
-                      </div>
+              <Card key={s.id} className={s.is_active ? "" : "opacity-60"}>
+                <CardContent className="p-4 flex items-start gap-4 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="font-semibold text-sm">{s.schedule_name}</span>
+                      <Badge className={`text-xs ${STATUS_BADGE[s.validation_status]}`}>
+                        <ValidationIcon className="w-3 h-3 mr-1" />{s.validation_status}
+                      </Badge>
+                      {!s.is_active && <Badge variant="outline" className="text-xs">Archived</Badge>}
                     </div>
-                  ) : (
-                    <div className="flex items-start gap-4 flex-wrap">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="font-semibold text-sm">{s.schedule_name}</span>
-                          <Badge className={`text-xs ${STATUS_BADGE[s.validation_status]}`}>
-                            <ValidationIcon className="w-3 h-3 mr-1" />{s.validation_status}
-                          </Badge>
-                          {!s.is_active && <Badge variant="outline" className="text-xs">Archived</Badge>}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{plan?.plan_name || "Unknown plan"} · {s.rating_basis} · v{s.version_number} · {s.plan_year}</p>
-                        <div className="flex gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                          <span>Effective: {s.effective_date || "—"}</span>
-                          {s.termination_date && <span>Ends: {s.termination_date}</span>}
-                          {s.row_count != null && <span className="font-medium text-foreground">{s.row_count} rate rows</span>}
-                          <span>{s.market_segment} · {s.funding_type}</span>
-                        </div>
-                        {s.validation_errors?.length > 0 && (
-                          <div className="mt-2">
-                            {s.validation_errors.slice(0, 3).map((e, i) => (
-                              <p key={i} className="text-xs text-red-600">· {e}</p>
-                            ))}
-                            {s.validation_errors.length > 3 && <p className="text-xs text-muted-foreground">...and {s.validation_errors.length - 3} more</p>}
-                          </div>
-                        )}
-                        {s.notes && <p className="text-xs text-muted-foreground mt-1 italic">{s.notes}</p>}
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => validateMutation.mutate(s.id)} disabled={validatingId === s.id}>
-                          <Play className="w-3 h-3" />{validatingId === s.id ? "..." : "Validate"}
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => { setEditingId(s.id); setEditForm({ schedule_name: s.schedule_name, plan_year: s.plan_year, effective_date: s.effective_date, termination_date: s.termination_date, notes: s.notes }); }}>
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => toggleActive.mutate({ id: s.id, is_active: s.is_active })}>
-                          <Archive className="w-3 h-3" />{s.is_active ? "Archive" : "Restore"}
-                        </Button>
-                      </div>
+                    <p className="text-xs text-muted-foreground">{plan?.plan_name || "Unknown plan"} · {s.rating_basis} · v{s.version_number} · {s.plan_year}</p>
+                    <div className="flex gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                      <span>Effective: {s.effective_date || "—"}</span>
+                      {s.termination_date && <span>Ends: {s.termination_date}</span>}
+                      {s.row_count != null && <span>{s.row_count} rate rows</span>}
+                      <span>{s.market_segment} · {s.funding_type}</span>
                     </div>
-                  )}
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => toggleActive.mutate({ id: s.id, is_active: s.is_active })}>
+                    <Archive className="w-3 h-3" />{s.is_active ? "Archive" : "Restore"}
+                  </Button>
                 </CardContent>
               </Card>
             );
