@@ -39,6 +39,7 @@ export default function PlanRateEditor() {
     queryFn: () => base44.entities.PlanRateSchedule.list("-created_date", 100),
   });
 
+  const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const planSchedules = allSchedules.filter(s => s.plan_id === selectedPlanId);
   const selectedStateRate = stateRates.find(r => r.state === selectedState);
 
@@ -156,21 +157,6 @@ export default function PlanRateEditor() {
             {selectedStateRate && (
               <AgeBandedRateEditor planId={selectedPlanId} rateStateId={selectedStateRate.id} state={selectedState} />
             )}
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-4">
-            <PlanVersioningPanel plan={selectedPlan} />
-          </TabsContent>
-
-          <TabsContent value="renewal" className="mt-4">
-            <RenewalProjectionEngine planId={selectedPlanId} planName={selectedPlan?.plan_name} />
-          </TabsContent>
-
-          <TabsContent value="workflow" className="mt-4">
-            <PlanApprovalWorkflow plan={selectedPlan} />
-          </TabsContent>
-        </Tabs>
-      )}
           </TabsContent>
 
           <TabsContent value="history" className="mt-4">
