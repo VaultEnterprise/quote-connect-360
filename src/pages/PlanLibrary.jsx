@@ -26,6 +26,9 @@ import PlanArchiveManager from "@/components/plans/PlanArchiveManager";
 import PlanDataValidation from "@/components/plans/PlanDataValidation";
 import BulkRateUpload from "@/components/plans/BulkRateUpload";
 import PlanCompareDrawer from "@/components/plans/PlanCompareDrawer";
+import PlanEffectiveDateManager from "@/components/plans/PlanEffectiveDateManager";
+import PlanFavoritesRecents, { usePlanFavorites } from "@/components/plans/PlanFavoritesRecents";
+import ScenarioAutoPopulate from "@/components/plans/ScenarioAutoPopulate";
 
 const MEDICAL_CARRIERS = ["Aetna", "Anthem", "BlueCross BlueShield", "Cigna", "Humana", "Kaiser", "UnitedHealthcare", "Other"];
 const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
@@ -44,6 +47,9 @@ export default function PlanLibrary() {
   const [selectedForCompare, setSelectedForCompare] = useState([]);
   const [showCompareDrawer, setShowCompareDrawer] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showScenarioPopulate, setShowScenarioPopulate] = useState(false);
+  const { toggleFavorite, getFavorites, addRecent } = usePlanFavorites();
+  const [favIds, setFavIds] = React.useState(() => { try { return JSON.parse(localStorage.getItem(`plan_library_favorites_`) || "[]"); } catch { return []; } });
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ["benefit-plans"],
@@ -147,6 +153,12 @@ export default function PlanLibrary() {
       {/* Advanced search */}
       {viewMode === "grid" && <PlanSearchAdvanced onSearch={() => {}} />}
 
+      {/* Effective Date Alerts */}
+      {viewMode === "grid" && <PlanEffectiveDateManager plans={plans} />}
+
+      {/* Favorites & Recents */}
+      {viewMode === "grid" && <PlanFavoritesRecents plans={plans} onSelectPlan={(p) => { setEditingPlan(p); setShowForm(true); }} />}
+
       {/* Bulk Rate Upload */}
       {showBulkUpload && (
         <BulkRateUpload plans={plans} />
@@ -158,13 +170,14 @@ export default function PlanLibrary() {
       {/* Quality checklist */}
       {viewMode === "grid" && <PlanQualityChecklist plans={plans} />}
 
-      {/* Compare bar */}
+      {/* Compare / Scenario bar */}
       {selectedForCompare.length > 0 && (
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-primary/5 border-primary/30">
+        <div className="flex items-center gap-3 p-3 rounded-lg border bg-primary/5 border-primary/30 flex-wrap">
           <Scale className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">{selectedForCompare.length} plan(s) selected for comparison</span>
-          <Button size="sm" onClick={() => setShowCompareDrawer(true)} className="h-7 text-xs ml-auto">Compare Now</Button>
-          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setSelectedForCompare([])}>Clear</Button>
+          <span className="text-sm font-medium">{selectedForCompare.length} plan(s) selected</span>
+          <Button size="sm" onClick={() => setShowCompareDrawer(true)} className="h-7 text-xs">Compare</Button>
+          <Button size="sm" variant="outline" onClick={() => setShowScenarioPopulate(true)} className="h-7 text-xs gap-1"><Layers className="w-3 h-3" />Generate Scenarios</Button>
+          <Button size="sm" variant="ghost" className="h-7 text-xs ml-auto" onClick={() => setSelectedForCompare([])}>Clear</Button>
         </div>
       )}
 
@@ -239,6 +252,13 @@ export default function PlanLibrary() {
           open={showCompareDrawer}
           onClose={() => setShowCompareDrawer(false)}
           onRemovePlan={(id) => setSelectedForCompare(prev => prev.filter(x => x !== id))}
+        />
+      )}
+      {showScenarioPopulate && (
+        <ScenarioAutoPopulate
+          selectedPlans={plans.filter(p => selectedForCompare.includes(p.id))}
+          open={showScenarioPopulate}
+          onClose={() => setShowScenarioPopulate(false)}
         />
       )}
     </div>
