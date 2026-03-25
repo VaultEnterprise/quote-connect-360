@@ -38,6 +38,8 @@ import HelpSearchAnalytics from '@/pages/HelpSearchAnalytics';
 import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
 import HelpManualManager from '@/pages/HelpManualManager';
 import ACALibrary from '@/pages/ACALibrary';
+import PlanRateEditor from '@/pages/PlanRateEditor';
+import PlanAnalyticsDashboard from '@/pages/PlanAnalyticsDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -91,6 +93,8 @@ const AuthenticatedApp = () => {
         <Route path="/help-target-registry" element={<HelpTargetRegistry />} />
         <Route path="/help-manual-manager" element={<HelpManualManager />} />
         <Route path="/aca-library" element={<ACALibrary />} />
+        <Route path="/plan-rate-editor" element={<PlanRateEditor />} />
+        <Route path="/plan-analytics" element={<PlanAnalyticsDashboard />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Upload, BookOpen, FileDown } from "lucide-react";
+import { Plus, Search, Upload, BookOpen, FileDown, BarChart2, Scale, GitBranch, Layers, Settings } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import PlanCard from "@/components/plans/PlanCard";
@@ -21,6 +23,9 @@ import PlanLibraryGuide from "@/components/plans/PlanLibraryGuide";
 import PlanSearchAdvanced from "@/components/plans/PlanSearchAdvanced";
 import PlanQualityChecklist from "@/components/plans/PlanQualityChecklist";
 import PlanArchiveManager from "@/components/plans/PlanArchiveManager";
+import PlanDataValidation from "@/components/plans/PlanDataValidation";
+import BulkRateUpload from "@/components/plans/BulkRateUpload";
+import PlanCompareDrawer from "@/components/plans/PlanCompareDrawer";
 
 const MEDICAL_CARRIERS = ["Aetna", "Anthem", "BlueCross BlueShield", "Cigna", "Humana", "Kaiser", "UnitedHealthcare", "Other"];
 const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
@@ -36,6 +41,9 @@ export default function PlanLibrary() {
   const [activeTab, setActiveTab] = useState("medical");
   const [comparisonPlans, setComparisonPlans] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide"
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
+  const [showCompareDrawer, setShowCompareDrawer] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ["benefit-plans"],
@@ -72,11 +80,17 @@ export default function PlanLibrary() {
     <div className="space-y-6">
       <PageHeader
         title="Plan Library"
-        description="Manage your Medical and Ancillary plan catalog with rate tables"
+        description="Rate intelligence system · carrier analytics · compliance enforcement"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowImport(true)}>
-              <Upload className="w-4 h-4 mr-2" /> Import Plans
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/plan-rate-editor" className="flex items-center gap-1.5"><Settings className="w-4 h-4" />Rate Editor</Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/plan-analytics" className="flex items-center gap-1.5"><BarChart2 className="w-4 h-4" />Analytics</Link>
+            </Button>
+            <Button variant="outline" onClick={() => setShowBulkUpload(!showBulkUpload)}>
+              <Upload className="w-4 h-4 mr-2" /> Bulk Upload
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -133,8 +147,26 @@ export default function PlanLibrary() {
       {/* Advanced search */}
       {viewMode === "grid" && <PlanSearchAdvanced onSearch={() => {}} />}
 
+      {/* Bulk Rate Upload */}
+      {showBulkUpload && (
+        <BulkRateUpload plans={plans} />
+      )}
+
+      {/* Data Completeness Validation */}
+      {viewMode === "grid" && <PlanDataValidation plans={plans} />}
+
       {/* Quality checklist */}
       {viewMode === "grid" && <PlanQualityChecklist plans={plans} />}
+
+      {/* Compare bar */}
+      {selectedForCompare.length > 0 && (
+        <div className="flex items-center gap-3 p-3 rounded-lg border bg-primary/5 border-primary/30">
+          <Scale className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">{selectedForCompare.length} plan(s) selected for comparison</span>
+          <Button size="sm" onClick={() => setShowCompareDrawer(true)} className="h-7 text-xs ml-auto">Compare Now</Button>
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setSelectedForCompare([])}>Clear</Button>
+        </div>
+      )}
 
       {/* Comparison tool for medical plans */}
       {activeTab === "medical" && filterPlans(medicalPlans).length > 0 && (
@@ -160,9 +192,14 @@ export default function PlanLibrary() {
             <EmptyState icon={BookOpen} title="No medical plans" description="Add plans manually or import from a CSV file" actionLabel="Add Plan" onAction={handleNew} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filterPlans(medicalPlans).map(p => (
-                <PlanCard key={p.id} plan={p} onEdit={handleEdit} onArchive={() => archiveMutation.mutate(p.id)} />
-              ))}
+            {filterPlans(medicalPlans).map(p => (
+              <div key={p.id} className="relative">
+                <div className={`absolute top-2 right-2 z-10`}>
+                  <input type="checkbox" checked={selectedForCompare.includes(p.id)} onChange={e => setSelectedForCompare(prev => e.target.checked ? [...prev.slice(0,5), p.id] : prev.filter(id => id !== p.id))} className="w-4 h-4 accent-primary" title="Add to comparison" />
+                </div>
+                <PlanCard plan={p} onEdit={handleEdit} onArchive={() => archiveMutation.mutate(p.id)} />
+              </div>
+            ))}
             </div>
           )}
         </TabsContent>
@@ -196,6 +233,14 @@ export default function PlanLibrary() {
         />
       )}
       {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
+      {showCompareDrawer && (
+        <PlanCompareDrawer
+          plans={plans.filter(p => selectedForCompare.includes(p.id))}
+          open={showCompareDrawer}
+          onClose={() => setShowCompareDrawer(false)}
+          onRemovePlan={(id) => setSelectedForCompare(prev => prev.filter(x => x !== id))}
+        />
+      )}
     </div>
   );
 
