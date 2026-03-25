@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Database, MapPin, Table2, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, Database, MapPin, Table2, ShieldCheck, Zap, FileText } from "lucide-react";
 import RateScheduleManager from "@/components/plans/RateScheduleManager";
 import RateDetailGrid from "@/components/plans/RateDetailGrid";
 import ZipAreaMappingManager from "@/components/plans/ZipAreaMappingManager";
@@ -22,6 +22,16 @@ export default function PlanRatingEngine() {
     queryFn: () => base44.entities.PlanRateSchedule.list("-created_date", 100),
   });
 
+  const { data: rateDetails = [] } = useQuery({
+    queryKey: ["rate-detail-count"],
+    queryFn: () => base44.entities.PlanRateDetail.list("-created_date", 1),
+  });
+
+  const { data: zipMaps = [] } = useQuery({
+    queryKey: ["zip-area-map-count"],
+    queryFn: () => base44.entities.PlanZipAreaMap.list("-created_date", 1),
+  });
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div>
@@ -37,11 +47,11 @@ export default function PlanRatingEngine() {
       {/* Architecture summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
         {[
-          { icon: Database, label: "Plan Master", sub: `${plans.length} plans` },
-          { icon: Table2, label: "Rate Schedules", sub: `${schedules.length} schedules` },
-          { icon: Table2, label: "Rate Detail", sub: "Normalized rows" },
-          { icon: MapPin, label: "ZIP → Area", sub: "Lookup table" },
-          { icon: Zap, label: "Rating Engine", sub: "Backend service" },
+          { icon: Database, label: "Plan Master",     sub: `${plans.length} active plans` },
+          { icon: Table2, label: "Rate Schedules",  sub: `${schedules.filter(s=>s.is_active).length} active / ${schedules.length} total` },
+          { icon: FileText, label: "Rate Detail",   sub: schedules.reduce((n,s) => n + (s.row_count || 0), 0) + " rows loaded" },
+          { icon: MapPin, label: "ZIP → Area",      sub: "Lookup table configured" },
+          { icon: Zap, label: "Rating Engine",      sub: "Backend resolver active" },
         ].map(item => (
           <div key={item.label} className="flex items-center gap-2 p-2.5 rounded-lg border bg-card">
             <item.icon className="w-4 h-4 text-primary flex-shrink-0" />
