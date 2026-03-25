@@ -5,11 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, MapPin, BarChart2, History, Lock } from "lucide-react";
+import { ArrowLeft, MapPin, BarChart2, History, Lock, TrendingUp, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import MultiStateRateEditor from "@/components/plans/MultiStateRateEditor";
 import AgeBandedRateEditor from "@/components/plans/AgeBandedRateEditor";
 import PlanVersioningPanel from "@/components/plans/PlanVersioningPanel";
+import RenewalProjectionEngine from "@/components/plans/RenewalProjectionEngine";
+import PlanApprovalWorkflow from "@/components/plans/PlanApprovalWorkflow";
 import { format, differenceInDays } from "date-fns";
 
 export default function PlanRateEditor() {
@@ -97,6 +99,8 @@ export default function PlanRateEditor() {
             <TabsTrigger value="composite" className="gap-1"><MapPin className="w-3.5 h-3.5" />Multi-State Rates</TabsTrigger>
             <TabsTrigger value="agebanded" className="gap-1"><BarChart2 className="w-3.5 h-3.5" />Age-Banded Editor</TabsTrigger>
             <TabsTrigger value="history" className="gap-1"><History className="w-3.5 h-3.5" />Version History</TabsTrigger>
+            <TabsTrigger value="renewal" className="gap-1"><TrendingUp className="w-3.5 h-3.5" />Projections</TabsTrigger>
+            <TabsTrigger value="workflow" className="gap-1"><ShieldCheck className="w-3.5 h-3.5" />Workflow</TabsTrigger>
           </TabsList>
 
           <TabsContent value="composite" className="mt-4">
@@ -121,6 +125,14 @@ export default function PlanRateEditor() {
 
           <TabsContent value="history" className="mt-4">
             <PlanVersioningPanel plan={selectedPlan} />
+          </TabsContent>
+
+          <TabsContent value="renewal" className="mt-4">
+            <RenewalProjectionEngine planId={selectedPlanId} planName={selectedPlan?.plan_name} />
+          </TabsContent>
+
+          <TabsContent value="workflow" className="mt-4">
+            <PlanApprovalWorkflow plan={selectedPlan} />
           </TabsContent>
         </Tabs>
       )}
