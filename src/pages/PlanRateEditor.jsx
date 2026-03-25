@@ -5,13 +5,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, MapPin, BarChart2, History, Lock, TrendingUp, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MapPin, BarChart2, History, Lock, TrendingUp, ShieldCheck, Database, Table2, Zap, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import MultiStateRateEditor from "@/components/plans/MultiStateRateEditor";
 import AgeBandedRateEditor from "@/components/plans/AgeBandedRateEditor";
 import PlanVersioningPanel from "@/components/plans/PlanVersioningPanel";
 import RenewalProjectionEngine from "@/components/plans/RenewalProjectionEngine";
 import PlanApprovalWorkflow from "@/components/plans/PlanApprovalWorkflow";
+import RateScheduleManager from "@/components/plans/RateScheduleManager";
+import RateDetailGrid from "@/components/plans/RateDetailGrid";
+import RateValidationConsole from "@/components/plans/RateValidationConsole";
 import { format, differenceInDays } from "date-fns";
 
 export default function PlanRateEditor() {
@@ -31,7 +34,12 @@ export default function PlanRateEditor() {
     enabled: !!selectedPlanId,
   });
 
-  const selectedPlan = plans.find(p => p.id === selectedPlanId);
+  const { data: allSchedules = [] } = useQuery({
+    queryKey: ["plan-rate-schedules"],
+    queryFn: () => base44.entities.PlanRateSchedule.list("-created_date", 100),
+  });
+
+  const planSchedules = allSchedules.filter(s => s.plan_id === selectedPlanId);
   const selectedStateRate = stateRates.find(r => r.state === selectedState);
 
   const lockedRates = stateRates.filter(r => r.is_locked && r.lock_expiration_date);
@@ -94,20 +102,47 @@ export default function PlanRateEditor() {
           <p className="text-sm">Choose from the dropdown above</p>
         </div>
       ) : (
-        <Tabs defaultValue="composite">
-          <TabsList>
-            <TabsTrigger value="composite" className="gap-1"><MapPin className="w-3.5 h-3.5" />Multi-State Rates</TabsTrigger>
-            <TabsTrigger value="agebanded" className="gap-1"><BarChart2 className="w-3.5 h-3.5" />Age-Banded Editor</TabsTrigger>
+        <Tabs defaultValue="schedules">
+          <TabsList className="flex-wrap h-auto gap-1">
+            <TabsTrigger value="schedules" className="gap-1"><Database className="w-3.5 h-3.5" />Rate Schedules{planSchedules.length > 0 && <Badge className="ml-1 h-4 px-1 text-[10px]">{planSchedules.length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="rates" className="gap-1"><Table2 className="w-3.5 h-3.5" />Rate Detail Grid</TabsTrigger>
+            <TabsTrigger value="validate" className="gap-1"><ShieldCheck className="w-3.5 h-3.5" />Validation</TabsTrigger>
+            <TabsTrigger value="composite" className="gap-1"><MapPin className="w-3.5 h-3.5" />Legacy: Multi-State</TabsTrigger>
+            <TabsTrigger value="agebanded" className="gap-1"><BarChart2 className="w-3.5 h-3.5" />Legacy: Age-Banded</TabsTrigger>
             <TabsTrigger value="history" className="gap-1"><History className="w-3.5 h-3.5" />Version History</TabsTrigger>
             <TabsTrigger value="renewal" className="gap-1"><TrendingUp className="w-3.5 h-3.5" />Projections</TabsTrigger>
             <TabsTrigger value="workflow" className="gap-1"><ShieldCheck className="w-3.5 h-3.5" />Workflow</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="schedules" className="mt-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Rate schedules for <strong>{selectedPlan?.plan_name}</strong> — versioned wrappers for normalized rate rows</p>
+              <Link to="/plan-rating"><Button size="sm" variant="outline" className="h-7 text-xs gap-1"><ExternalLink className="w-3 h-3" />Full Rating Engine</Button></Link>
+            </div>
+            <RateScheduleManager plans={plans} schedules={planSchedules} />
+          </TabsContent>
+
+          <TabsContent value="rates" className="mt-4">
+            <div className="mb-3">
+              <p className="text-xs text-muted-foreground">Normalized rate rows for <strong>{selectedPlan?.plan_name}</strong> grouped by rating area. Select a schedule below.</p>
+            </div>
+            <RateDetailGrid plans={plans} schedules={planSchedules} />
+          </TabsContent>
+
+          <TabsContent value="validate" className="mt-4">
+            <div className="mb-3">
+              <p className="text-xs text-muted-foreground">Validate a rate schedule and test resolvers (ZIP → Area, DOB → Age Band, Tier normalization, Rate spot-check)</p>
+            </div>
+            <RateValidationConsole schedules={planSchedules} />
+          </TabsContent>
+
           <TabsContent value="composite" className="mt-4">
+            <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">⚠️ Legacy: uses PlanRateByState. New plans should use the Rate Schedules + Rate Detail Grid tabs above.</div>
             <MultiStateRateEditor planId={selectedPlanId} planName={selectedPlan?.plan_name} />
           </TabsContent>
 
           <TabsContent value="agebanded" className="mt-4 space-y-4">
+            <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">⚠️ Legacy: uses AgeBandedRate. New plans should use the Rate Detail Grid tab above.</div>
             <div className="flex items-center gap-3">
               <p className="text-sm font-medium">Editing state:</p>
               <Select value={selectedState} onValueChange={setSelectedState}>
@@ -121,6 +156,21 @@ export default function PlanRateEditor() {
             {selectedStateRate && (
               <AgeBandedRateEditor planId={selectedPlanId} rateStateId={selectedStateRate.id} state={selectedState} />
             )}
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-4">
+            <PlanVersioningPanel plan={selectedPlan} />
+          </TabsContent>
+
+          <TabsContent value="renewal" className="mt-4">
+            <RenewalProjectionEngine planId={selectedPlanId} planName={selectedPlan?.plan_name} />
+          </TabsContent>
+
+          <TabsContent value="workflow" className="mt-4">
+            <PlanApprovalWorkflow plan={selectedPlan} />
+          </TabsContent>
+        </Tabs>
+      )}
           </TabsContent>
 
           <TabsContent value="history" className="mt-4">

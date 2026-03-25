@@ -18,6 +18,17 @@ export default function RateValidationConsole({ schedules }) {
   const [zipResult, setZipResult] = useState(null);
   const [ageResult, setAgeResult] = useState(null);
   const [tierResult, setTierResult] = useState(null);
+  const [spotPlanId, setSpotPlanId] = useState("");
+  const [spotArea, setSpotArea] = useState("");
+  const [spotBand, setSpotBand] = useState("");
+  const [spotTier, setSpotTier] = useState("EE");
+  const [spotScheduleId, setSpotScheduleId] = useState("");
+  const [spotResult, setSpotResult] = useState(null);
+  const [plans, setPlans] = useState([]);
+
+  React.useEffect(() => {
+    base44.entities.BenefitPlan.filter({ status: "active" }).then(setPlans).catch(() => {});
+  }, []);
 
   const validateMutation = useMutation({
     mutationFn: async () => {
@@ -50,6 +61,25 @@ export default function RateValidationConsole({ schedules }) {
     },
     onSuccess: setTierResult,
   });
+
+  const spotCheckMutation = useMutation({
+    mutationFn: async () => {
+      const res = await base44.functions.invoke("planRatingEngine", {
+        action: "rateResolve",
+        planId: spotPlanId,
+        rateScheduleId: spotScheduleId || undefined,
+        ratingAreaCode: spotArea,
+        ageBandCode: spotBand,
+        tierCode: spotTier,
+        tobaccoFlag: false,
+      });
+      return res.data;
+    },
+    onSuccess: setSpotResult,
+    onError: (e) => setSpotResult({ error: e.message }),
+  });
+
+  const planSchedules = schedules.filter(s => s.plan_id === spotPlanId && s.is_active);
 
   return (
     <div className="space-y-4">
@@ -132,6 +162,7 @@ export default function RateValidationConsole({ schedules }) {
               <div className="p-2 rounded text-xs bg-blue-50 text-blue-700">
                 <p><span className="font-medium">Age:</span> {ageResult.age}</p>
                 <p><span className="font-medium">Band:</span> {ageResult.band_code}</p>
+                <p><span className="font-medium">Label:</span> {ageResult.band_label}</p>
               </div>
             )}
           </CardContent>
@@ -156,6 +187,66 @@ export default function RateValidationConsole({ schedules }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rate Spot-Check */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2"><Search className="w-4 h-4 text-primary" />Rate Spot-Check (Full Lookup)</CardTitle>
+          <p className="text-xs text-muted-foreground">Test the complete rate resolution chain: select plan + area + band + tier → look up exact monthly rate from PlanRateDetail</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs font-medium block mb-1">Plan</label>
+              <select value={spotPlanId} onChange={e => { setSpotPlanId(e.target.value); setSpotScheduleId(""); }} className="h-8 text-xs border rounded w-full px-2 bg-background">
+                <option value="">Select plan...</option>
+                {plans.map(p => <option key={p.id} value={p.id}>{p.plan_name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Rate Schedule (optional)</label>
+              <select value={spotScheduleId} onChange={e => setSpotScheduleId(e.target.value)} className="h-8 text-xs border rounded w-full px-2 bg-background">
+                <option value="">Auto (latest active)</option>
+                {planSchedules.map(s => <option key={s.id} value={s.id}>{s.schedule_name} v{s.version_number}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Rating Area Code</label>
+              <Input value={spotArea} onChange={e => setSpotArea(e.target.value)} placeholder="e.g. CA001" className="h-8 text-xs" />
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Age Band</label>
+              <select value={spotBand} onChange={e => setSpotBand(e.target.value)} className="h-8 text-xs border rounded w-full px-2 bg-background">
+                <option value="">Select band...</option>
+                {["Under25","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65+"].map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium block mb-1">Tier</label>
+              <select value={spotTier} onChange={e => setSpotTier(e.target.value)} className="h-8 text-xs border rounded w-full px-2 bg-background">
+                <option value="EE">EE — Single</option>
+                <option value="ES">ES — EE + Spouse</option>
+                <option value="EC">EC — EE + Children</option>
+                <option value="FAM">FAM — Family</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <Button size="sm" className="h-8 w-full gap-1.5" onClick={() => spotCheckMutation.mutate()} disabled={!spotPlanId || !spotArea || !spotBand || spotCheckMutation.isPending}>
+                <Play className="w-3.5 h-3.5" />{spotCheckMutation.isPending ? "Looking up..." : "Look Up Rate"}
+              </Button>
+            </div>
+          </div>
+          {spotResult && (
+            <div className={`p-3 rounded-lg border text-sm font-medium ${spotResult.error ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700"}`}>
+              {spotResult.error ? (
+                <><AlertTriangle className="w-4 h-4 inline mr-1" />{spotResult.error}</>
+              ) : (
+                <><CheckCircle className="w-4 h-4 inline mr-1" />Monthly Rate: <strong>${Number(spotResult.monthly_rate).toFixed(2)}</strong> · Annual: <strong>${(Number(spotResult.monthly_rate) * 12).toFixed(2)}</strong> · Record: <span className="font-mono text-xs">{spotResult.rate_record_id?.slice(-8)}</span></>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

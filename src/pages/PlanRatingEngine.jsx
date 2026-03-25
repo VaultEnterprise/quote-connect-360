@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Database, MapPin, Table2, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, Database, MapPin, Table2, ShieldCheck, Zap, FileEdit } from "lucide-react";
 import RateScheduleManager from "@/components/plans/RateScheduleManager";
 import RateDetailGrid from "@/components/plans/RateDetailGrid";
 import ZipAreaMappingManager from "@/components/plans/ZipAreaMappingManager";
@@ -42,8 +42,9 @@ export default function PlanRatingEngine() {
           { icon: Table2, label: "Rate Detail", sub: "Normalized rows" },
           { icon: MapPin, label: "ZIP → Area", sub: "Lookup table" },
           { icon: Zap, label: "Rating Engine", sub: "Backend service" },
+          { icon: FileEdit, label: "Rate Editor", sub: "Plan-level editor", link: "/plan-rate-editor" },
         ].map(item => (
-          <div key={item.label} className="flex items-center gap-2 p-2.5 rounded-lg border bg-card">
+          <div key={item.label} className={`flex items-center gap-2 p-2.5 rounded-lg border bg-card ${item.link ? "cursor-pointer hover:border-primary" : ""}`} onClick={() => item.link && (window.location.href = item.link)}>
             <item.icon className="w-4 h-4 text-primary flex-shrink-0" />
             <div>
               <p className="font-semibold">{item.label}</p>
