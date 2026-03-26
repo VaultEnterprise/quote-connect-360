@@ -44,8 +44,8 @@ function FilterSelect({ value, onValueChange, placeholder, options }) {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All</SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
+        {options.map((option, index) => (
+          <SelectItem key={`${option.value}-${index}`} value={option.value}>
             {option.label}
           </SelectItem>
         ))}

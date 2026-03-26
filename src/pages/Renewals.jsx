@@ -18,6 +18,7 @@ import CreateRenewalModal from "@/components/renewals/CreateRenewalModal";
 import RenewalRiskForecast from "@/components/renewals/RenewalRiskForecast";
 import RenewalCalendarView from "@/components/renewals/RenewalCalendarView";
 import RenewalWorkloadBar from "@/components/renewals/RenewalWorkloadBar";
+import useRouteContext from "@/hooks/useRouteContext";
 
 const SORT_OPTIONS = [
   { value: "urgency", label: "Urgency (Soonest)" },
@@ -29,6 +30,9 @@ const SORT_OPTIONS = [
 
 export default function Renewals() {
   const queryClient = useQueryClient();
+  const routeContext = useRouteContext();
+  const caseScope = routeContext.caseId || "";
+  const employerScope = routeContext.employerId || "";
   const [selectedRenewal, setSelectedRenewal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // "list" | "pipeline" | "calendar"
@@ -104,6 +108,8 @@ export default function Renewals() {
 
   const filtered = useMemo(() => {
     return renewals.filter(r => {
+      if (caseScope && r.case_id !== caseScope) return false;
+      if (employerScope && r.employer_group_id !== employerScope) return false;
       if (searchQuery && !r.employer_name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (filterStatus !== "all" && r.status !== filterStatus) return false;
       if (filterAssignee !== "all" && r.assigned_to !== filterAssignee) return false;
@@ -126,7 +132,7 @@ export default function Renewals() {
 
       return true;
     });
-  }, [renewals, searchQuery, filterStatus, filterUrgency, filterAssignee, filterRateDirection, filterOverdue]);
+  }, [renewals, caseScope, employerScope, searchQuery, filterStatus, filterUrgency, filterAssignee, filterRateDirection, filterOverdue]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {

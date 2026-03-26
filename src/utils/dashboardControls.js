@@ -88,10 +88,12 @@ export function buildDashboardOptions(cases, agencies) {
       value,
       label: agencyMap[value] || value,
     })),
-    employers: unique(cases.map((c) => `${c.employer_group_id || c.id}:::${c.employer_name || "Unnamed Employer"}`)).map((value) => {
-      const [id, label] = value.split(":::");
-      return { value: id, label };
-    }),
+    employers: Object.values(cases.reduce((accumulator, currentCase) => {
+      const id = currentCase.employer_group_id || currentCase.id;
+      if (!id || accumulator[id]) return accumulator;
+      accumulator[id] = { value: id, label: currentCase.employer_name || "Unnamed Employer" };
+      return accumulator;
+    }, {})).sort((a, b) => a.label.localeCompare(b.label)),
   };
 }
 

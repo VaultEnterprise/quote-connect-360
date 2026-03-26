@@ -27,6 +27,7 @@ import ExceptionBulkActionsPanel from "@/components/exceptions/ExceptionBulkActi
 import ExceptionNotificationSettings from "@/components/exceptions/ExceptionNotificationSettings";
 import ExceptionFilterPresets from "@/components/exceptions/ExceptionFilterPresets";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useRouteContext from "@/hooks/useRouteContext";
 
 function ResolveModal({ exception, open, onClose }) {
   const queryClient = useQueryClient();
@@ -173,6 +174,8 @@ function CreateExceptionModal({ open, onClose, caseContext }) {
 export default function ExceptionQueue() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const routeContext = useRouteContext();
+  const caseScope = routeContext.caseId || "";
 
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("all");
@@ -221,14 +224,15 @@ export default function ExceptionQueue() {
   // ── Filtering ───────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return exceptions.filter(e => {
+      const matchCase = !caseScope || e.case_id === caseScope;
       const matchSearch = !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.employer_name?.toLowerCase().includes(search.toLowerCase());
       const matchSev = severityFilter === "all" || e.severity === severityFilter;
       const matchCat = categoryFilter === "all" || e.category === categoryFilter;
       const matchStatus = statusFilter === "all" || (statusFilter === "open" && !["resolved","dismissed"].includes(e.status)) || e.status === statusFilter;
       const matchMyOnly = !showMyOnly || e.assigned_to === user?.email;
-      return matchSearch && matchSev && matchCat && matchStatus && matchMyOnly;
+      return matchCase && matchSearch && matchSev && matchCat && matchStatus && matchMyOnly;
     });
-  }, [exceptions, search, severityFilter, categoryFilter, statusFilter, showMyOnly, user?.email]);
+  }, [exceptions, caseScope, search, severityFilter, categoryFilter, statusFilter, showMyOnly, user?.email]);
 
   // ── Sorting ──────────────────────────────────────────────────────────────────
   const sorted = useMemo(() => {

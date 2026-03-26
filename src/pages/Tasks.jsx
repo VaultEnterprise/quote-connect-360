@@ -20,6 +20,8 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import TaskModal from "@/components/cases/TaskModal";
 import { format, isToday, isTomorrow, isPast, isThisWeek } from "date-fns";
+import useRouteContext from "@/hooks/useRouteContext";
+import { buildRoute } from "@/contracts/routeContracts";
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 };
 const STATUS_ICON = {
@@ -100,7 +102,7 @@ function TaskRow({ task, onEdit, onDelete, onStatusChange, selected, onSelect })
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             {task.employer_name && task.case_id && (
               <Link
-                to={`/cases/${task.case_id}`}
+                to={buildRoute("caseDetail", { caseId: task.case_id })}
                 className="flex items-center gap-1 text-xs text-primary hover:underline"
                 onClick={e => e.stopPropagation()}
               >
@@ -199,6 +201,8 @@ function GroupedSection({ title, tasks, collapsed, onToggle, onEdit, onDelete, o
 }
 
 export default function Tasks() {
+  const routeContext = useRouteContext();
+  const caseScope = routeContext.caseId || "";
   const [statusFilter, setStatusFilter] = useState("active");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -277,6 +281,7 @@ export default function Tasks() {
   const filtered = useMemo(() => {
     return tasks
       .filter(t => {
+        const matchCase = !caseScope || t.case_id === caseScope;
         const matchSearch = !search ||
           t.title?.toLowerCase().includes(search.toLowerCase()) ||
           t.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -288,10 +293,10 @@ export default function Tasks() {
         const matchType = typeFilter === "all" || t.task_type === typeFilter;
         const matchAssignee = assigneeFilter === "all" || t.assigned_to === assigneeFilter;
         const matchMyTasks = !myTasksOnly || (currentUser && t.assigned_to === currentUser.email);
-        return matchSearch && matchStatus && matchPriority && matchType && matchAssignee && matchMyTasks;
+        return matchCase && matchSearch && matchStatus && matchPriority && matchType && matchAssignee && matchMyTasks;
       })
       .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
-  }, [tasks, search, statusFilter, priorityFilter, typeFilter, assigneeFilter, myTasksOnly, currentUser]);
+  }, [tasks, caseScope, search, statusFilter, priorityFilter, typeFilter, assigneeFilter, myTasksOnly, currentUser]);
 
   // ── Group ──────────────────────────────────────────────────────────────────
   const groups = useMemo(() => {

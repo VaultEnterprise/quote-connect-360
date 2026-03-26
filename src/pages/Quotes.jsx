@@ -22,14 +22,16 @@ import ContributionSlider from "@/components/quotes/ContributionSlider";
 import SavedViewsPanel from "@/components/quotes/SavedViewsPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
+import useRouteContext from "@/hooks/useRouteContext";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const routeContext = useRouteContext();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [caseFilter, setCaseFilter] = useState("all");
+  const [caseFilter, setCaseFilter] = useState(routeContext.caseId || "all");
   const [sortBy, setSortBy] = useState("created_date");
   const [showExpiringOnly, setShowExpiringOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);

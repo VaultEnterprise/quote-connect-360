@@ -27,6 +27,7 @@ import ProposalApprovalTrend from "@/components/proposals/ProposalApprovalTrend"
 import ProposalWorkflowSuggestions from "@/components/proposals/ProposalWorkflowSuggestions";
 import ProposalDetailExpanded from "@/components/proposals/ProposalDetailExpanded";
 import { isAfter, addDays, parseISO, differenceInDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import useRouteContext from "@/hooks/useRouteContext";
 
 const DATE_RANGE_OPTIONS = [
   { value: "all",      label: "All Time" },
@@ -38,6 +39,8 @@ const DATE_RANGE_OPTIONS = [
 
 export default function ProposalBuilder() {
   const queryClient = useQueryClient();
+  const routeContext = useRouteContext();
+  const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [employerFilter, setEmployerFilter] = useState("all");
@@ -101,6 +104,7 @@ export default function ProposalBuilder() {
 
   const filtered = useMemo(() => {
     const result = proposals.filter(p => {
+      if (caseScope && p.case_id !== caseScope) return false;
       if (search && !p.title?.toLowerCase().includes(search.toLowerCase()) &&
           !p.employer_name?.toLowerCase().includes(search.toLowerCase()) &&
           !p.broker_name?.toLowerCase().includes(search.toLowerCase())) return false;
@@ -140,7 +144,7 @@ export default function ProposalBuilder() {
         default: return 0;
       }
     });
-  }, [proposals, search, statusFilter, employerFilter, brokerFilter, showExpiringOnly, expiringSoon, sortBy, dateRange, kpiFilter]);
+  }, [proposals, caseScope, search, statusFilter, employerFilter, brokerFilter, showExpiringOnly, expiringSoon, sortBy, dateRange, kpiFilter]);
 
   const handleCloseEdit = () => { setEditing(null); setShowCreate(false); };
 
