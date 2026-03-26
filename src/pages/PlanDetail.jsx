@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Settings } from "lucide-react";
+import { ArrowLeft, ExternalLink, Pencil, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
@@ -65,6 +65,13 @@ export default function PlanDetail() {
             <Button variant="outline" size="sm" asChild>
               <Link to={`/plan-rate-editor?plan_id=${plan.id}`} className="gap-1.5"><Settings className="w-4 h-4" />Open in Rate Editor</Link>
             </Button>
+            {plan.schedule_of_benefits_url && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={plan.schedule_of_benefits_url} target="_blank" rel="noreferrer" className="gap-1.5">
+                  <ExternalLink className="w-4 h-4" />Schedule of Benefits
+                </a>
+              </Button>
+            )}
             <Button size="sm" onClick={() => setShowEdit(true)} className="gap-1.5">
               <Pencil className="w-4 h-4" />Edit Plan
             </Button>
