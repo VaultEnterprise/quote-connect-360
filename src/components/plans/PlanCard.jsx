@@ -5,8 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar, MapPin } from "lucide-react";
-import RateTableEditor from "./RateTableEditor";
+import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar } from "lucide-react";
 import RateTableEditor from "./RateTableEditor";
 
 const TYPE_COLORS = {
@@ -19,7 +18,7 @@ const TYPE_COLORS = {
   voluntary: "bg-pink-100 text-pink-700",
 };
 
-export default function PlanCard({ plan, zipCount = 0, onEdit, onArchive }) {
+export default function PlanCard({ plan, onEdit, onArchive }) {
   const navigate = useNavigate();
   const [showRates, setShowRates] = useState(false);
 
@@ -67,14 +66,6 @@ export default function PlanCard({ plan, zipCount = 0, onEdit, onArchive }) {
             {plan.coinsurance != null && <span className="text-muted-foreground">Coins: <span className="text-foreground font-medium">{plan.coinsurance}%</span></span>}
           </div>
         )}
-
-        <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs space-y-1">
-          <div className="flex items-center gap-1.5 font-medium text-foreground">
-            <MapPin className="w-3.5 h-3.5 text-primary" />
-            ZIP Coverage
-          </div>
-          <p className="text-muted-foreground">Imported ZIP codes: <span className="text-foreground font-medium">{zipCount}</span></p>
-        </div>
 
         {(plan.effective_date || plan.policy_expiration_date) && (
           <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs space-y-1">

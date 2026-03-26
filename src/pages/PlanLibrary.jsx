@@ -63,11 +63,6 @@ export default function PlanLibrary() {
     queryFn: () => base44.entities.BenefitPlan.list("-created_date", 500),
   });
 
-  const { data: zipMappings = [] } = useQuery({
-    queryKey: ["zip-area-maps"],
-    queryFn: () => base44.entities.PlanZipAreaMap.list("-created_date", 5000),
-  });
-
   const plans = allPlans.filter(p => p.status === "active");
   const archivedPlans = allPlans.filter(p => p.status === "archived");
 
@@ -90,12 +85,6 @@ export default function PlanLibrary() {
   });
 
   const carriers = [...new Set(plans.map(p => p.carrier).filter(Boolean))].sort();
-
-  const zipCountByPlanId = zipMappings.reduce((acc, mapping) => {
-    if (!mapping.plan_id) return acc;
-    acc[mapping.plan_id] = (acc[mapping.plan_id] || 0) + 1;
-    return acc;
-  }, {});
 
   const handleEdit = (plan) => { setEditingPlan(plan); setShowForm(true); };
   const handleNew = () => { setEditingPlan(null); setShowForm(true); };
@@ -234,7 +223,7 @@ export default function PlanLibrary() {
                 <div className={`absolute top-2 right-2 z-10`}>
                   <input type="checkbox" checked={selectedForCompare.includes(p.id)} onChange={e => setSelectedForCompare(prev => e.target.checked ? [...prev.slice(0,5), p.id] : prev.filter(id => id !== p.id))} className="w-4 h-4 accent-primary" title="Add to comparison" />
                 </div>
-                <PlanCard plan={p} zipCount={zipCountByPlanId[p.id] || 0} onEdit={handleEdit} onArchive={() => archiveMutation.mutate(p.id)} />
+                <PlanCard plan={p} onEdit={handleEdit} onArchive={() => archiveMutation.mutate(p.id)} />
               </div>
             ))}
             </div>

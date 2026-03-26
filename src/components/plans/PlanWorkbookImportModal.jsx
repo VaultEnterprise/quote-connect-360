@@ -50,8 +50,7 @@ export default function PlanWorkbookImportModal({ open, onClose, onImported }) {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["benefit-plans"] });
       qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] });
-      qc.invalidateQueries({ queryKey: ["zip-area-maps"] });
-      toast.success(`Imported ${data.imported_rate_rows} rate rows and ${data.imported_zip_rows} ZIP codes into ${form.plan_name}`);
+      toast.success(`Imported ${data.imported_rate_rows} rate rows into ${form.plan_name}`);
       onClose();
       if (onImported) onImported(data.plan_id);
     },
