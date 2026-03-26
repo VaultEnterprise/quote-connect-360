@@ -289,9 +289,7 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
           ) : Object.entries(byArea).length === 0 ? (
             <Card className="border-dashed"><CardContent className="p-6 text-center text-muted-foreground text-xs">No rate rows yet. Add rows manually or import from CSV.</CardContent></Card>
           ) : (
-            Object.entries(byArea)
-              .sort(([areaA], [areaB]) => areaA.localeCompare(areaB))
-              .map(([area, areaRates]) => (
+            Object.entries(byArea).map(([area, areaRates]) => (
               <Card key={area}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs flex items-center gap-2 flex-wrap">
