@@ -17,6 +17,8 @@ import RateDetailGrid from "@/components/plans/RateDetailGrid";
 import RateValidationConsole from "@/components/plans/RateValidationConsole";
 import { format, differenceInDays } from "date-fns";
 
+const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
+
 export default function PlanRateEditor() {
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
@@ -58,9 +60,10 @@ export default function PlanRateEditor() {
     enabled: !!selectedPlanId,
   });
 
-  const plans = allPlans.filter((plan) => plan.status === "active");
-  const medicalPlans = plans.filter((plan) => plan.plan_type === "medical");
-  const ancillaryPlans = plans.filter((plan) => plan.plan_type !== "medical");
+  const activePlans = allPlans.filter((plan) => plan.status === "active");
+  const medicalPlans = activePlans.filter((plan) => plan.plan_type === "medical");
+  const ancillaryPlans = activePlans.filter((plan) => ANCILLARY_TYPES.includes(plan.plan_type));
+  const plans = [...medicalPlans, ...ancillaryPlans];
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const planSchedules = allSchedules.filter(s => s.plan_id === selectedPlanId);
   const lockedRates = stateRates.filter(r => r.is_locked && r.lock_expiration_date);
