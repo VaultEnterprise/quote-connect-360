@@ -11,6 +11,9 @@ export const ENTITY_WRITE_SCHEMAS = {
   PlanRateSchedule: ["plan_id", "schedule_name", "effective_date", "termination_date", "rating_basis", "tobacco_mode", "state_scope", "version_number", "plan_year", "market_segment", "funding_type", "rating_model", "tobacco_rating_flag", "is_active", "uploaded_by", "row_count", "validation_status", "validation_errors", "notes"],
   PlanZipAreaMap: ["plan_id", "zip_code", "state_code", "county", "city", "rating_area_code", "effective_date", "termination_date", "is_active", "source"],
   CaseRatedResult: ["case_id", "plan_id", "rate_schedule_id", "census_version_id", "rating_date", "total_members_rated", "total_members_failed", "total_monthly_premium", "ee_monthly", "es_monthly", "ec_monthly", "fam_monthly", "avg_age", "rating_area_breakdown", "tier_breakdown", "member_results", "errors", "warnings", "status", "rated_by"],
+  CaseTask: ["case_id", "title", "description", "task_type", "status", "priority", "assigned_to", "due_date", "completed_at", "completed_by", "related_entity_type", "related_entity_id", "notes", "employer_name"],
+  ExceptionItem: ["case_id", "employer_name", "category", "severity", "status", "title", "description", "suggested_action", "assigned_to", "due_by", "resolved_at", "resolution_notes", "entity_type", "entity_id"],
+  RenewalCycle: ["case_id", "employer_group_id", "renewal_date", "status", "current_premium", "renewal_premium", "rate_change_percent", "disruption_score", "recommendation", "decision", "decision_date", "employer_name", "assigned_to", "notes"],
 };
 
 export function validateEntityWrite(entityName, payload, requiredKeys = []) {

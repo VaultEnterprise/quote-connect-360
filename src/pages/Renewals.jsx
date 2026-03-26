@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import useRenewalsPageModel from "@/domain/renewals/useRenewalsPageModel";
+import { downloadCsv } from "@/utils/downloadCsv";
 import { RefreshCw, LayoutGrid, List, Plus, Download, X, SortAsc, CalendarDays, Users, XCircle, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,15 +29,12 @@ const SORT_OPTIONS = [
 ];
 
 export default function Renewals() {
-  const queryClient = useQueryClient();
   const routeContext = useRouteContext();
   const caseScope = routeContext.caseId || "";
   const employerScope = routeContext.employerId || "";
   const [selectedRenewal, setSelectedRenewal] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [viewMode, setViewMode] = useState("list"); // "list" | "pipeline" | "calendar"
-
-  // Filters
+  const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterUrgency, setFilterUrgency] = useState("all");
@@ -45,51 +42,23 @@ export default function Renewals() {
   const [filterRateDirection, setFilterRateDirection] = useState("all");
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [sortBy, setSortBy] = useState("urgency");
-
-  // KPI quick filter state
-  const [kpiFilter, setKpiFilter] = useState(null); // { key, value }
-
-  // Bulk select
+  const [kpiFilter, setKpiFilter] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const { data: renewals = [] } = useQuery({
-    queryKey: ["renewals-all"],
-    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
+  const { renewals, filtered, sorted, censusMembers, uniqueAssignees, activeFilterCount, bulkStatusUpdate, bulkDelete } = useRenewalsPageModel({
+    caseScope,
+    employerScope,
+    searchQuery,
+    filterStatus,
+    filterUrgency,
+    filterAssignee,
+    filterRateDirection,
+    filterOverdue,
+    sortBy,
+    selectedIds,
+    selectedRenewal,
   });
 
-  const { data: censusMembers = [] } = useQuery({
-    queryKey: ["renewal-census", selectedRenewal?.case_id],
-    queryFn: () => selectedRenewal?.case_id
-      ? base44.entities.CensusMember.filter({ case_id: selectedRenewal.case_id }, "-created_date", 500)
-      : Promise.resolve([]),
-    enabled: !!selectedRenewal?.case_id,
-  });
-
-  const bulkStatusUpdate = useMutation({
-    mutationFn: ({ ids, status }) =>
-      Promise.all(ids.map(id => base44.entities.RenewalCycle.update(id, { status }))),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
-      setSelectedIds([]);
-    },
-  });
-
-  const bulkDelete = useMutation({
-    mutationFn: (ids) => Promise.all(ids.map(id => base44.entities.RenewalCycle.delete(id))),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
-      setSelectedIds([]);
-    },
-  });
-
-  const uniqueAssignees = useMemo(() => {
-    const assignees = [...new Set(renewals.map(r => r.assigned_to).filter(Boolean))];
-    return assignees.sort();
-  }, [renewals]);
-
-  const now = new Date();
-
-  // KPI tile click handler
   const handleKpiClick = (key, value) => {
     if (kpiFilter?.key === key && kpiFilter?.value === value) {
       setKpiFilter(null);
@@ -106,56 +75,6 @@ export default function Renewals() {
     }
   };
 
-  const filtered = useMemo(() => {
-    return renewals.filter(r => {
-      if (caseScope && r.case_id !== caseScope) return false;
-      if (employerScope && r.employer_group_id !== employerScope) return false;
-      if (searchQuery && !r.employer_name?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (filterStatus !== "all" && r.status !== filterStatus) return false;
-      if (filterAssignee !== "all" && r.assigned_to !== filterAssignee) return false;
-
-      if (filterOverdue) {
-        const d = r.renewal_date ? new Date(r.renewal_date) : null;
-        if (!d || d >= now || r.status === "completed") return false;
-      } else if (filterUrgency !== "all" && r.renewal_date) {
-        const daysUntil = Math.ceil((new Date(r.renewal_date) - now) / (1000 * 60 * 60 * 24));
-        if (filterUrgency === "30" && daysUntil > 30) return false;
-        if (filterUrgency === "60" && daysUntil > 60) return false;
-        if (filterUrgency === "90" && daysUntil > 90) return false;
-      }
-
-      if (filterRateDirection !== "all") {
-        if (filterRateDirection === "increases" && (!r.rate_change_percent || r.rate_change_percent <= 0)) return false;
-        if (filterRateDirection === "decreases" && (!r.rate_change_percent || r.rate_change_percent >= 0)) return false;
-        if (filterRateDirection === "flat" && r.rate_change_percent !== 0) return false;
-      }
-
-      return true;
-    });
-  }, [renewals, caseScope, employerScope, searchQuery, filterStatus, filterUrgency, filterAssignee, filterRateDirection, filterOverdue]);
-
-  const sorted = useMemo(() => {
-    return [...filtered].sort((a, b) => {
-      if (sortBy === "employer") return (a.employer_name || "").localeCompare(b.employer_name || "");
-      if (sortBy === "rate_change") return (Math.abs(b.rate_change_percent || 0)) - (Math.abs(a.rate_change_percent || 0));
-      if (sortBy === "disruption") return (b.disruption_score || 0) - (a.disruption_score || 0);
-      if (sortBy === "premium") return (b.current_premium || 0) - (a.current_premium || 0);
-      // Default: urgency (soonest first, past due first)
-      const aD = a.renewal_date ? new Date(a.renewal_date) : new Date(8640000000000000);
-      const bD = b.renewal_date ? new Date(b.renewal_date) : new Date(8640000000000000);
-      return aD - bD;
-    });
-  }, [filtered, sortBy]);
-
-  const activeFilterCount = [
-    searchQuery,
-    filterStatus !== "all",
-    filterUrgency !== "all",
-    filterAssignee !== "all",
-    filterRateDirection !== "all",
-    filterOverdue,
-  ].filter(Boolean).length;
-
   const clearAllFilters = () => {
     setSearchQuery(""); setFilterStatus("all"); setFilterUrgency("all");
     setFilterAssignee("all"); setFilterRateDirection("all"); setFilterOverdue(false);
@@ -167,15 +86,20 @@ export default function Renewals() {
   };
 
   const handleExportCSV = () => {
-    const rows = [
+    downloadCsv("renewals.csv", [
       ["Employer", "Status", "Renewal Date", "Current Premium", "Renewal Premium", "Rate Change %", "Disruption Score", "Recommendation", "Assigned To"],
-      ...filtered.map(r => [r.employer_name || "", r.status || "", r.renewal_date || "", r.current_premium || "", r.renewal_premium || "", r.rate_change_percent || "", r.disruption_score || "", r.recommendation || "", r.assigned_to || ""]),
-    ];
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "renewals.csv"; a.click();
-    URL.revokeObjectURL(url);
+      ...filtered.map((renewal) => [
+        renewal.employer_name || "",
+        renewal.status || "",
+        renewal.renewal_date || "",
+        renewal.current_premium || "",
+        renewal.renewal_premium || "",
+        renewal.rate_change_percent || "",
+        renewal.disruption_score || "",
+        renewal.recommendation || "",
+        renewal.assigned_to || "",
+      ]),
+    ]);
   };
 
   return (

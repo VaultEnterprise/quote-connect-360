@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { updateValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
   });
 
   const update = useMutation({
-    mutationFn: () => base44.entities.RenewalCycle.update(renewal.id, formData),
+    mutationFn: () => updateValidatedEntityRecord("RenewalCycle", renewal.id, formData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
       setIsEditing(false);
