@@ -10,6 +10,7 @@ import InlineDetailDrawer from "./InlineDetailDrawer";
 import EnrollmentCountdown from "./EnrollmentCountdown";
 import TaskQuickCreate from "./TaskQuickCreate";
 import RelatedItemsBadge from "./RelatedItemsBadge";
+import CaseEmployeePreview from "./CaseEmployeePreview";
 import { format, differenceInDays, parseISO, isAfter } from "date-fns";
 
 const PRIORITY_DOT = {
@@ -26,7 +27,7 @@ const STAGE_PROGRESS = {
   renewal_pending: 100, renewed: 100, closed: 100,
 };
 
-export default function CaseListCard({ c }) {
+export default function CaseListCard({ c, employees = [], employeeCount = 0 }) {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showTaskCreate, setShowTaskCreate] = useState(false);
   const isOverdue = c.effective_date && isAfter(new Date(), parseISO(c.effective_date));
@@ -119,6 +120,8 @@ export default function CaseListCard({ c }) {
               )}
             </div>
           </div>
+
+          <CaseEmployeePreview employees={employees} employeeCount={employeeCount} />
 
           {/* Quick Action Buttons */}
           <div className="flex gap-2 pt-2 border-t">

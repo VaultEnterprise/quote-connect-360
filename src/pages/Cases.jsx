@@ -90,6 +90,11 @@ export default function Cases() {
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
 
+  const { data: censusMembers = [] } = useQuery({
+    queryKey: ["case-census-members"],
+    queryFn: () => base44.entities.CensusMember.list("-created_date", 500),
+  });
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -124,6 +129,23 @@ export default function Cases() {
 
     return result;
   }, [cases, search, stageFilter, typeFilter, priorityFilter, assignedToFilter, sortBy, dateFilter, activityFilter, employeeFilter]);
+
+  const employeePreviewByCase = useMemo(() => {
+    return censusMembers.reduce((acc, member) => {
+      if (!member.case_id) return acc;
+      if (!acc[member.case_id]) acc[member.case_id] = [];
+      if (acc[member.case_id].length < 4) acc[member.case_id].push(member);
+      return acc;
+    }, {});
+  }, [censusMembers]);
+
+  const employeeCountByCase = useMemo(() => {
+    return censusMembers.reduce((acc, member) => {
+      if (!member.case_id) return acc;
+      acc[member.case_id] = (acc[member.case_id] || 0) + 1;
+      return acc;
+    }, {});
+  }, [censusMembers]);
 
   const activeFilters = [stageFilter, typeFilter, priorityFilter, assignedToFilter, dateFilter, employeeFilter].filter(f => f !== "all" && f !== null).length;
   const clearFilters = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setAssignedToFilter("all"); setDateFilter(null); setActivityFilter("all"); setEmployeeFilter(null); setSearch(""); };
@@ -339,7 +361,7 @@ export default function Cases() {
             <div key={c.id} className="flex items-center gap-2">
               <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 rounded border border-input" />
               <div className="flex-1">
-                <CaseListCard c={c} />
+                <CaseListCard c={c} employees={employeePreviewByCase[c.id] || []} employeeCount={employeeCountByCase[c.id] || 0} />
               </div>
             </div>
           ))}
