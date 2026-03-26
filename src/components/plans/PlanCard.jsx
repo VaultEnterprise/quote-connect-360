@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar, MapPin } from "lucide-react";
+import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar, MapPin, ExternalLink } from "lucide-react";
 import RateTableEditor from "./RateTableEditor";
 
 const TYPE_COLORS = {
@@ -92,6 +92,21 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
             Imported ZIP codes: <span className="text-foreground font-medium">{zipMappings.length}</span>
           </p>
         </div>
+
+        {plan.schedule_of_benefits_url && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-8 text-xs justify-between"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(plan.schedule_of_benefits_url, "_blank", "noopener,noreferrer");
+            }}
+          >
+            <span>Launch Website</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Button>
+        )}
 
         {/* Rate preview */}
         {!showRates && primaryRate == null && (
