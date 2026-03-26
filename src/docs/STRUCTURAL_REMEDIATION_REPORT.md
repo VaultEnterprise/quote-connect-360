@@ -205,7 +205,7 @@
 | Canonical import processing backend-owned | PASS | `src/functions/inspectCensusFile.js`, `src/functions/importCensusFile.js`, `src/components/census/CensusUploadModal.jsx` |
 | Backend payloads/results explicitly validated | PASS | `src/functions/planRatingEngine.js`, `src/validation/importContractValidator.js`, `src/validation/configRuntimeValidator.js` |
 | Schema/function/config alignment exists | PASS | `src/validation/schemaWriteValidator.js`, `src/validation/configRuntimeValidator.js` |
-| Touched flows warning-free by remediation target | PASS | duplicate select-key source removed in dashboard controls/utilities; census dialog a11y warning source removed in modal; blocking warning patterns encoded in `src/validation/runtimeWarningGate.js` |
+| Touched flows warning-free by remediation target | PARTIAL | duplicate select-key source has been hardened in dashboard controls, but runtime replay must remain the source of truth before this can be marked PASS; census dialog a11y warning source removed in modal; blocking warning patterns encoded in `src/validation/runtimeWarningGate.js` |
 | Touched quick links and dashboard drilldowns resolve correctly | PASS | `src/components/cases/CaseQuickLinks.jsx`, `src/components/dashboard/QuickActions.jsx`, `src/components/dashboard/DashboardMetricGrid.jsx`, `src/components/dashboard/InteractivePipeline.jsx`, `src/components/dashboard/TodaysPriorities.jsx` |
 | No partial implementation remains in remediation scope | PASS | each touched route/drilldown now maps to a shared contract or explicit backend/domain validator |
 | Shared layers now support future changes | PASS | route, workflow, domain, import, and validation layers created under `src/contracts`, `src/lib`, `src/domain`, `src/validation` |

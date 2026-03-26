@@ -20,7 +20,10 @@ const CASE_TYPE_OPTIONS = [
 ];
 
 function FilterSelect({ value, onValueChange, placeholder, options }) {
-  const dedupedOptions = options.filter((option, index) => options.findIndex((candidate) => candidate.value === option.value) === index);
+  const dedupedOptions = React.useMemo(
+    () => options.filter((option, index) => options.findIndex((candidate) => candidate.value === option.value) === index),
+    [options]
+  );
 
   return (
     <Select value={value} onValueChange={onValueChange}>

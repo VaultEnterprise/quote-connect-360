@@ -1,11 +1,12 @@
 import { validateWritePayload } from "@/validation/appContracts";
 import { ROUTE_PARAM_SCHEMAS } from "@/contracts/routes/routeParamSchemas";
 import { resolveRouteContext } from "@/lib/routing/resolveRouteContext";
+import { getRouteContractKeys } from "@/lib/routing/getRouteContractKeys";
 
 export function validateRouteParams(routeKey, params = {}) {
   const schema = ROUTE_PARAM_SCHEMAS[routeKey];
   if (!schema) throw new Error(`Unknown route contract: ${routeKey}`);
-  return validateWritePayload(params, schema.queryKeys || [], `${routeKey} route params`);
+  return validateWritePayload(params, getRouteContractKeys(schema), `${routeKey} route params`, schema.required || []);
 }
 
 export function validateRouteSearch(routeKey, search) {

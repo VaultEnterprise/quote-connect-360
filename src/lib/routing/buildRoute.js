@@ -1,5 +1,6 @@
 import { validateWritePayload } from "@/validation/appContracts";
-import { ROUTE_CONTEXT_KEYS, ROUTE_PARAM_SCHEMAS } from "@/contracts/routes/routeParamSchemas";
+import { ROUTE_PARAM_SCHEMAS } from "@/contracts/routes/routeParamSchemas";
+import { getRouteContractKeys } from "@/lib/routing/getRouteContractKeys";
 
 export function buildRoute(routeKey, params = {}) {
   const schema = ROUTE_PARAM_SCHEMAS[routeKey];
@@ -7,7 +8,7 @@ export function buildRoute(routeKey, params = {}) {
 
   const validatedParams = validateWritePayload(
     params,
-    ROUTE_CONTEXT_KEYS,
+    getRouteContractKeys(schema),
     `${routeKey} route params`,
     schema.required || []
   );
