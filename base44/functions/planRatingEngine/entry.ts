@@ -220,6 +220,14 @@ async function importRateRows(base44, payload, user) {
   return { run_id: run.id, status, success, errors, warnings, total: payload.rows.length };
 }
 
+function chunkRows(rows, size = 1000) {
+  const chunks = [];
+  for (let index = 0; index < rows.length; index += size) {
+    chunks.push(rows.slice(index, index + size));
+  }
+  return chunks;
+}
+
 async function importZipRows(base44, payload, user) {
   const run = await createImportRun(base44, { importType: 'zip_area_map', sourceFileName: payload.sourceFileName, planId: payload.planId, createdBy: user.email });
   const seenKeys = new Set();
@@ -270,7 +278,11 @@ async function importZipRows(base44, payload, user) {
     success += 1;
   }
 
-  if (writeRows.length > 0) await base44.asServiceRole.entities.PlanZipAreaMap.bulkCreate(writeRows);
+  if (writeRows.length > 0) {
+    for (const batch of chunkRows(writeRows, 1000)) {
+      await base44.asServiceRole.entities.PlanZipAreaMap.bulkCreate(batch);
+    }
+  }
   const status = errors > 0 && success === 0 ? 'failed' : errors > 0 || warnings > 0 ? 'completed_with_warnings' : 'completed';
   await finalizeRun(base44, run.id, { status, totalRows: payload.rows.length, successRows: success, errorRows: errors, warningRows: warnings });
   return { run_id: run.id, status, success, errors, warnings, total: payload.rows.length };
