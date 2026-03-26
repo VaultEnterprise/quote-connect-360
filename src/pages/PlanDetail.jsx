@@ -10,6 +10,7 @@ import PlanFormModal from "@/components/plans/PlanFormModal";
 import PlanWorkspaceSummary from "@/components/plans/PlanWorkspaceSummary";
 import RateScheduleManager from "@/components/plans/RateScheduleManager";
 import RateDetailGrid from "@/components/plans/RateDetailGrid";
+import PlanExportMenu from "@/components/plans/PlanExportMenu";
 
 export default function PlanDetail() {
   const { id } = useParams();
@@ -65,6 +66,7 @@ export default function PlanDetail() {
             <Button variant="outline" size="sm" asChild>
               <Link to={`/plan-rate-editor?plan_id=${plan.id}`} className="gap-1.5"><Settings className="w-4 h-4" />Open in Rate Editor</Link>
             </Button>
+            <PlanExportMenu planId={plan.id} />
             {plan.schedule_of_benefits_url && (
               <Button variant="outline" size="sm" asChild>
                 <a href={plan.schedule_of_benefits_url} target="_blank" rel="noreferrer" className="gap-1.5">
