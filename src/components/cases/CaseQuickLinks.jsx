@@ -10,6 +10,7 @@ const links = [
   { key: "proposals", label: "Proposals", icon: FileText, getTo: (c) => `/proposals?caseId=${c.id}` },
   { key: "enrollment", label: "Enrollment", icon: ClipboardCheck, getTo: (c) => `/enrollment?caseId=${c.id}` },
   { key: "employer", label: "Employer", icon: Building2, getTo: (c) => `/employers${c.employer_group_id ? `?employerId=${c.employer_group_id}` : ""}` },
+  { key: "employees", label: "Employees", icon: Users, getTo: (c) => `/employee-management` },
   { key: "tasks", label: "Tasks", icon: CheckSquare, getTo: (c) => `/tasks?caseId=${c.id}` },
   { key: "exceptions", label: "Exceptions", icon: TriangleAlert, getTo: (c) => `/exceptions?caseId=${c.id}` },
 ];
