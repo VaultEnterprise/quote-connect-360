@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CheckCircle, XCircle, RefreshCw, Upload, Download,
-  Building2, Briefcase, FileText, Users, ArrowRight, ArrowLeft, Zap, AlertTriangle
+  Building2, Briefcase, FileText, Users, ArrowRight, ArrowLeft, Zap, AlertTriangle, ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -132,10 +132,22 @@ export default function SalesforceIntegration() {
           </h1>
           <p className="text-muted-foreground text-sm">Bidirectional sync of Employers, Cases, Proposals, and Contacts</p>
         </div>
-        <Button onClick={() => runFullSync.mutate()} disabled={runFullSync.isPending} className="gap-2">
-          {runFullSync.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-          {runFullSync.isPending ? "Syncing all..." : "Full Sync Now"}
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {sfStatus?.connected && sfStatus?.instance_url && (
+            <Button
+              variant="outline"
+              onClick={() => window.open(sfStatus.instance_url, "_blank", "noopener,noreferrer")}
+              className="gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open Salesforce
+            </Button>
+          )}
+          <Button onClick={() => runFullSync.mutate()} disabled={runFullSync.isPending} className="gap-2">
+            {runFullSync.isPending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+            {runFullSync.isPending ? "Syncing all..." : "Full Sync Now"}
+          </Button>
+        </div>
       </div>
 
       {/* Connection Status */}
