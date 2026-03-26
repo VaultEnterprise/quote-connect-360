@@ -29,24 +29,6 @@ export default function PlanDataValidation({ plans }) {
   return (
     <Card>
         {/* Summary */}
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div className="p-2 rounded-lg bg-red-50">
-            <p className="text-xl font-bold text-red-600">{critical.length}</p>
-            <p className="text-xs text-red-600">Critical</p>
-          </div>
-          <div className="p-2 rounded-lg bg-orange-50">
-            <p className="text-xl font-bold text-orange-600">{errors.length}</p>
-            <p className="text-xs text-orange-600">Errors</p>
-          </div>
-          <div className="p-2 rounded-lg bg-amber-50">
-            <p className="text-xl font-bold text-amber-600">{warnings.length}</p>
-            <p className="text-xs text-amber-600">Warnings</p>
-          </div>
-          <div className="p-2 rounded-lg bg-green-50">
-            <p className="text-xl font-bold text-green-600">{complete.length}</p>
-            <p className="text-xs text-green-600">Complete</p>
-          </div>
-        </div>
 
         {/* Overall score bar */}
         <div>
