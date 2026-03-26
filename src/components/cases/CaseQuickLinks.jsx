@@ -6,16 +6,16 @@ import { getCaseRouteContext } from "@/contracts/routeContracts";
 import { buildRoute } from "@/lib/routing/buildRoute";
 
 const links = [
-  { key: "case", label: "Case", icon: Briefcase, getTo: (caseData, context) => buildRoute("caseDetail", { caseId: context.caseId }) },
-  { key: "census", label: "Census", icon: Users, getTo: (caseData, context) => buildRoute("census", context) },
-  { key: "quotes", label: "Quotes", icon: FileText, getTo: (caseData, context) => buildRoute("quotes", context) },
-  { key: "proposals", label: "Proposals", icon: FileText, getTo: (caseData, context) => buildRoute("proposals", context) },
-  { key: "enrollment", label: "Enrollment", icon: ClipboardCheck, getTo: (caseData, context) => buildRoute("enrollment", context) },
-  { key: "employer", label: "Employer", icon: Building2, getTo: (caseData, context) => buildRoute("employers", context) },
-  { key: "employees", label: "Employees", icon: Users, getTo: (caseData, context) => buildRoute("employeeManagement", context) },
-  { key: "tasks", label: "Tasks", icon: CheckSquare, getTo: (caseData, context) => buildRoute("tasks", context) },
-  { key: "exceptions", label: "Exceptions", icon: TriangleAlert, getTo: (caseData, context) => buildRoute("exceptions", context) },
-  { key: "renewals", label: "Renewals", icon: Briefcase, getTo: (caseData, context) => buildRoute("renewals", context) },
+  { key: "case", label: "Case", icon: Briefcase, getTo: (_, context) => buildRoute("caseDetail", { caseId: context.caseId }) },
+  { key: "census", label: "Census", icon: Users, getTo: (_, context) => buildRoute("census", { caseId: context.caseId, employerId: context.employerId }) },
+  { key: "quotes", label: "Quotes", icon: FileText, getTo: (_, context) => buildRoute("quotes", { caseId: context.caseId, employerId: context.employerId }) },
+  { key: "proposals", label: "Proposals", icon: FileText, getTo: (_, context) => buildRoute("proposals", { caseId: context.caseId, employerId: context.employerId }) },
+  { key: "enrollment", label: "Enrollment", icon: ClipboardCheck, getTo: (_, context) => buildRoute("enrollment", { caseId: context.caseId, employerId: context.employerId }) },
+  { key: "employer", label: "Employer", icon: Building2, getTo: (_, context) => buildRoute("employers", { caseId: context.caseId, employerId: context.employerId }) },
+  { key: "employees", label: "Employees", icon: Users, getTo: (_, context) => buildRoute("employeeManagement", { caseId: context.caseId, employerId: context.employerId }) },
+  { key: "tasks", label: "Tasks", icon: CheckSquare, getTo: (_, context) => buildRoute("tasks", { caseId: context.caseId }) },
+  { key: "exceptions", label: "Exceptions", icon: TriangleAlert, getTo: (_, context) => buildRoute("exceptions", { caseId: context.caseId }) },
+  { key: "renewals", label: "Renewals", icon: Briefcase, getTo: (_, context) => buildRoute("renewals", { caseId: context.caseId, employerId: context.employerId }) },
 ];
 
 export default function CaseQuickLinks({ caseData }) {
