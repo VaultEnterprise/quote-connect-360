@@ -16,7 +16,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import useRouteContext from "@/hooks/useRouteContext";
-import { buildRoute } from "@/contracts/routeContracts";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import { differenceInDays, parseISO, isAfter } from "date-fns";
@@ -183,7 +182,7 @@ function EmployerModal({ employer, open, onClose, agencies }) {
 }
 
 export default function Employers() {
-  const routeContext = useRouteContext("employers");
+  const routeContext = useRouteContext();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -392,7 +391,7 @@ export default function Employers() {
                         <QuickCreateCase employer={eg} />
                         {caseCount > 0 && (
                           firstCaseId ? (
-                            <Link to={buildRoute("caseDetail", { caseId: firstCaseId })}>
+                            <Link to={`/cases/${firstCaseId}`}>
                               <Badge variant="outline" className="text-[10px] cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors">
                                 {caseCount} case{caseCount !== 1 ? "s" : ""} →
                               </Badge>

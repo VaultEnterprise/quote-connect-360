@@ -29,7 +29,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function Renewals() {
-  const routeContext = useRouteContext("renewals");
+  const routeContext = useRouteContext();
   const caseScope = routeContext.caseId || "";
   const employerScope = routeContext.employerId || "";
   const [selectedRenewal, setSelectedRenewal] = useState(null);

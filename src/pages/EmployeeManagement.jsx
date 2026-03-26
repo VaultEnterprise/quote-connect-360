@@ -17,7 +17,7 @@ import useRouteContext from "@/hooks/useRouteContext";
 
 export default function EmployeeManagement() {
   const { user } = useAuth();
-  const routeContext = useRouteContext("employeeManagement");
+  const routeContext = useRouteContext();
   const [activeTab, setActiveTab] = useState("roster");
 
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({

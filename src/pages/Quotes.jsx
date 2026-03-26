@@ -27,7 +27,7 @@ import useRouteContext from "@/hooks/useRouteContext";
 export default function Quotes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const routeContext = useRouteContext("quotes");
+  const routeContext = useRouteContext();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

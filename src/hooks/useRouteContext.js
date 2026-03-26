@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { getSharedRouteContext, resolveRouteContext } from "@/lib/routing/resolveRouteContext";
+import { getSharedRouteContext } from "@/lib/routing/resolveRouteContext";
 
-export default function useRouteContext(routeKey = null) {
+export default function useRouteContext() {
   const location = useLocation();
-  return useMemo(() => routeKey ? resolveRouteContext(routeKey, location.search) : getSharedRouteContext(location.search), [routeKey, location.search]);
+  return useMemo(() => getSharedRouteContext(location.search), [location.search]);
 }

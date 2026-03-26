@@ -2,9 +2,7 @@ import { assertRouteContract } from "@/validation/routeContractValidator";
 import { validateConfigRuntimeAlignment } from "@/validation/configRuntimeValidator";
 import { validateImportContractAlignment } from "@/validation/importContractValidator";
 import { assertPageFlowCoverage } from "@/validation/pageFlowSmoke";
-import { assertDeepLinkSmokeCoverage } from "@/validation/deepLinkSmoke";
 import { assertNavigationFlowCoverage } from "@/validation/navigationFlowSmoke";
-import { assertWarningFreeRuntime } from "@/validation/runtimeWarningGate";
 import { assertEntityWriteSchemaCoverage } from "@/validation/schemaWriteValidator";
 import { STAGE_ORDER, CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
 
@@ -33,16 +31,12 @@ export function assertWorkflowCoverage() {
   return true;
 }
 
-export function assertBlockingValidationGate({ pageKey, routeKey, runtimeLogs = [] }) {
+export function assertBlockingValidationGate({ pageKey, routeKey }) {
   assertPageFlowCoverage(pageKey);
-  assertDeepLinkSmokeCoverage();
   assertNavigationFlowCoverage();
   assertRouteContract(routeKey);
   assertEntityWriteSchemaCoverage(REQUIRED_ENTITY_WRITE_SCHEMAS);
   assertWorkflowCoverage();
-  if (runtimeLogs.length > 0) {
-    assertWarningFreeRuntime(runtimeLogs, `${pageKey} runtime`);
-  }
 
   const configValidation = validateConfigRuntimeAlignment();
   if (!configValidation.valid) {

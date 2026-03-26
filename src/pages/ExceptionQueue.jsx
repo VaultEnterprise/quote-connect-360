@@ -175,7 +175,7 @@ function CreateExceptionModal({ open, onClose, caseContext }) {
 
 export default function ExceptionQueue() {
   const { user } = useAuth();
-  const routeContext = useRouteContext("exceptions");
+  const routeContext = useRouteContext();
   const caseScope = routeContext.caseId || "";
 
   const [search, setSearch] = useState("");
