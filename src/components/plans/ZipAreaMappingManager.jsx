@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Upload, Search, Trash2, MapPin } from "lucide-react";
+import { Plus, Upload, Search, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
@@ -43,16 +43,29 @@ export default function ZipAreaMappingManager({ plans }) {
   const [csvText, setCsvText] = useState("");
   const [csvPlanId, setCsvPlanId] = useState("");
   const [newRow, setNewRow] = useState({ zip_code: "", state_code: "", county: "", city: "", rating_area_code: "", plan_id: "" });
+  const [page, setPage] = useState(1);
+  const pageSize = 200;
 
   const { data: mappings = [], isLoading } = useQuery({
     queryKey: ["zip-area-maps"],
     queryFn: () => base44.entities.PlanZipAreaMap.list("-created_date", 50000),
   });
 
-  const filtered = mappings.filter(m =>
+  const filtered = useMemo(() => mappings.filter(m =>
     (stateFilter === "all" || m.state_code === stateFilter) &&
     (!search || m.zip_code?.includes(search) || m.rating_area_code?.toLowerCase().includes(search.toLowerCase()) || m.county?.toLowerCase().includes(search.toLowerCase()))
-  );
+  ), [mappings, search, stateFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedMappings = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, stateFilter]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const addMutation = useMutation({
     mutationFn: () => base44.entities.PlanZipAreaMap.create({ ...newRow, plan_id: newRow.plan_id || null, is_active: true, source: "manual" }),
@@ -162,7 +175,7 @@ export default function ZipAreaMappingManager({ plans }) {
               <tr><td colSpan={7} className="text-center py-6 text-muted-foreground">Loading...</td></tr>
             ) : filtered.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">No ZIP mappings found.</td></tr>
-            ) : filtered.slice(0, 200).map(m => (
+            ) : pagedMappings.map(m => (
               <tr key={m.id} className="border-b last:border-0 hover:bg-muted/20">
                 <td className="px-3 py-1.5 font-mono font-bold">{m.zip_code}</td>
                 <td className="px-3 py-1.5"><Badge variant="outline" className="text-xs h-4 px-1">{m.state_code}</Badge></td>
@@ -175,7 +188,22 @@ export default function ZipAreaMappingManager({ plans }) {
             ))}
           </tbody>
         </table>
-        {filtered.length > 200 && <p className="text-xs text-center text-muted-foreground py-2">Showing 200 of {filtered.length} — refine search to see more</p>}
+        {filtered.length > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t bg-background px-3 py-2 text-xs text-muted-foreground">
+            <p>
+              Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filtered.length)} of {filtered.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
+                <ChevronLeft className="w-3 h-3" />Prev
+              </Button>
+              <span>Page {page} of {totalPages}</span>
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
+                Next<ChevronRight className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
