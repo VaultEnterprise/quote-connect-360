@@ -33,6 +33,7 @@ import AgingReport from "@/components/cases/AgingReport";
 import RevenueForecast from "@/components/cases/RevenueForecast";
 import RenewalPipelineView from "@/components/cases/RenewalPipelineView";
 import ActivityFeed from "@/components/cases/ActivityFeed";
+import SeedDataButton from "@/components/cases/SeedDataButton";
 import { exportToCSV } from "@/utils/export-import";
 
 const STAGE_OPTIONS = [
@@ -193,7 +194,8 @@ export default function Cases() {
         title="Cases"
         description={`${cases.length} total benefit cases`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <SeedDataButton />
             <Button size="sm" variant="outline" onClick={() => setShowAnalytics(!showAnalytics)} className="gap-1">
               <Eye className="w-3.5 h-3.5" /> {showAnalytics ? "Hide" : "Show"} Analytics
             </Button>
