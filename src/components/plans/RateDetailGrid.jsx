@@ -55,6 +55,8 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
   const fileInputRef = useRef(null);
   const [scheduleId, setScheduleId] = useState(initialScheduleId || "");
   const [newRow, setNewRow] = useState({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
+  const [editingRowId, setEditingRowId] = useState("");
+  const [editingRow, setEditingRow] = useState({ age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
   const [csvText, setCsvText] = useState("");
   const [showCsvImport, setShowCsvImport] = useState(false);
 
@@ -96,6 +98,21 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.PlanRateDetail.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["rate-detail", scheduleId] }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () => base44.entities.PlanRateDetail.update(editingRowId, {
+      ...editingRow,
+      monthly_rate: parseFloat(editingRow.monthly_rate),
+      annual_rate: parseFloat(editingRow.monthly_rate) * 12,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["rate-detail", scheduleId] });
+      setEditingRowId("");
+      setEditingRow({ age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
+      toast.success("Rate row updated");
+    },
+    onError: (error) => toast.error(error.message || "Could not save the rate row"),
   });
 
   const importMutation = useMutation({
@@ -143,6 +160,21 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
     const tmpl = "rating_area_code,age_band_code,tier_code,monthly_rate,tobacco_flag\nCA001,Under25,EE,312.50,false\nCA001,Under25,ES,625.00,false\nCA001,Under25,EC,562.00,false\nCA001,Under25,FAM,875.00,false";
     const blob = new Blob([tmpl], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "rate_detail_template.csv"; a.click();
+  };
+
+  const startEditing = (row) => {
+    setEditingRowId(row.id);
+    setEditingRow({
+      age_band_code: row.age_band_code,
+      tier_code: row.tier_code,
+      monthly_rate: String(row.monthly_rate ?? ""),
+      tobacco_flag: !!row.tobacco_flag,
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingRowId("");
+    setEditingRow({ age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
   };
 
   const byArea = rates.reduce((m, r) => {
@@ -327,21 +359,55 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
                             const bi = AGE_BANDS.indexOf(a.age_band_code) - AGE_BANDS.indexOf(b.age_band_code);
                             return bi !== 0 ? bi : TIERS.indexOf(a.tier_code) - TIERS.indexOf(b.tier_code);
                           })
-                          .map(r => (
-                            <tr key={r.id} className="border-b last:border-0 hover:bg-muted/20">
-                              <td className="px-3 py-1.5 font-mono">{r.age_band_code}</td>
-                              <td className="px-3 py-1.5 text-center"><Badge className="text-xs h-4 px-1">{r.tier_code}</Badge></td>
-                              <td className="px-3 py-1.5 text-center text-muted-foreground">{TIER_LABELS[r.tier_code]}</td>
-                              <td className="px-3 py-1.5 text-center">{r.tobacco_flag ? <Badge className="bg-amber-100 text-amber-700 text-[10px] h-4 px-1">Y</Badge> : <span className="text-muted-foreground">—</span>}</td>
-                              <td className="px-3 py-1.5 text-right font-semibold">${r.monthly_rate?.toFixed(2)}</td>
-                              <td className="px-3 py-1.5 text-right text-muted-foreground">${(r.monthly_rate * 12)?.toFixed(2)}</td>
-                              <td className="px-2">
-                                <Button size="icon" variant="ghost" className="h-5 w-5 text-muted-foreground hover:text-destructive" onClick={() => deleteMutation.mutate(r.id)}>
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
+                          .map(r => {
+                            const isEditing = editingRowId === r.id;
+                            return (
+                              <tr key={r.id} className={`border-b last:border-0 hover:bg-muted/20 cursor-pointer ${isEditing ? "bg-primary/5 ring-1 ring-primary/20" : ""}`} onClick={() => !isEditing && startEditing(r)}>
+                                <td className="px-3 py-1.5 font-mono">
+                                  {isEditing ? (
+                                    <Select value={editingRow.age_band_code} onValueChange={v => setEditingRow(p => ({ ...p, age_band_code: v }))}>
+                                      <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                                      <SelectContent>{AGE_BANDS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                  ) : r.age_band_code}
+                                </td>
+                                <td className="px-3 py-1.5 text-center">
+                                  {isEditing ? (
+                                    <Select value={editingRow.tier_code} onValueChange={v => setEditingRow(p => ({ ...p, tier_code: v }))}>
+                                      <SelectTrigger className="h-7 text-xs w-28 mx-auto"><SelectValue /></SelectTrigger>
+                                      <SelectContent>{TIERS.map(t => <SelectItem key={t} value={t}>{t} — {TIER_LABELS[t]}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                  ) : <Badge className="text-xs h-4 px-1">{r.tier_code}</Badge>}
+                                </td>
+                                <td className="px-3 py-1.5 text-center text-muted-foreground">{TIER_LABELS[isEditing ? editingRow.tier_code : r.tier_code]}</td>
+                                <td className="px-3 py-1.5 text-center">
+                                  {isEditing ? (
+                                    <input type="checkbox" checked={!!editingRow.tobacco_flag} onChange={e => setEditingRow(p => ({ ...p, tobacco_flag: e.target.checked }))} onClick={(e) => e.stopPropagation()} className="w-3.5 h-3.5" />
+                                  ) : r.tobacco_flag ? <Badge className="bg-amber-100 text-amber-700 text-[10px] h-4 px-1">Y</Badge> : <span className="text-muted-foreground">—</span>}
+                                </td>
+                                <td className="px-3 py-1.5 text-right font-semibold">
+                                  {isEditing ? (
+                                    <Input type="number" step="0.01" value={editingRow.monthly_rate} onChange={e => setEditingRow(p => ({ ...p, monthly_rate: e.target.value }))} onClick={(e) => e.stopPropagation()} className="h-7 text-xs w-24 ml-auto" />
+                                  ) : `$${r.monthly_rate?.toFixed(2)}`}
+                                </td>
+                                <td className="px-3 py-1.5 text-right text-muted-foreground">{isEditing ? `$${((parseFloat(editingRow.monthly_rate) || 0) * 12).toFixed(2)}` : `$${(r.monthly_rate * 12)?.toFixed(2)}`}</td>
+                                <td className="px-2">
+                                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                    {isEditing ? (
+                                      <>
+                                        <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => updateMutation.mutate()} disabled={!editingRow.age_band_code || !editingRow.monthly_rate || updateMutation.isPending}>Save</Button>
+                                        <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={cancelEditing}>Cancel</Button>
+                                      </>
+                                    ) : (
+                                      <Button size="icon" variant="ghost" className="h-5 w-5 text-muted-foreground hover:text-destructive" onClick={() => deleteMutation.mutate(r.id)}>
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>
