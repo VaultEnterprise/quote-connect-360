@@ -24,6 +24,7 @@ export default function PlanFormModal({ plan, open, onClose, defaultType = "medi
     network_type: plan?.network_type || "",
     state: plan?.state || "",
     effective_date: plan?.effective_date || "",
+    policy_expiration_date: plan?.policy_expiration_date || "",
     deductible_individual: plan?.deductible_individual ?? "",
     deductible_family: plan?.deductible_family ?? "",
     oop_max_individual: plan?.oop_max_individual ?? "",
@@ -118,6 +119,10 @@ export default function PlanFormModal({ plan, open, onClose, defaultType = "medi
               <div>
                 <Label>Effective Date</Label>
                 <Input className="mt-1" type="date" value={form.effective_date} onChange={e => set("effective_date", e.target.value)} />
+              </div>
+              <div>
+                <Label>Policy Expiration Date</Label>
+                <Input className="mt-1" type="date" value={form.policy_expiration_date} onChange={e => set("policy_expiration_date", e.target.value)} />
               </div>
               {isMedical && (
                 <div className="col-span-2 flex items-center gap-3">
