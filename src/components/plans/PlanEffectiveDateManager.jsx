@@ -17,8 +17,8 @@ function getDateStatus(plan) {
     }
   }
 
-  if (plan.termination_date) {
-    const term = parseISO(plan.termination_date);
+  if (plan.policy_expiration_date) {
+    const term = parseISO(plan.policy_expiration_date);
     if (isValid(term)) {
       const daysToTerm = differenceInDays(term, today);
       if (daysToTerm >= 0 && daysToTerm <= 90) alerts.push({ type: "expiration", days: daysToTerm, label: `Expires in ${daysToTerm} day(s)`, severity: daysToTerm <= 14 ? "critical" : daysToTerm <= 30 ? "high" : "warning", date: format(term, "MMM d, yyyy") });
@@ -61,7 +61,7 @@ export default function PlanEffectiveDateManager({ plans }) {
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-amber-600" />
-          <CardTitle className="text-sm text-amber-800">Effective Date Alerts</CardTitle>
+          <CardTitle className="text-sm text-amber-800">Policy Date Alerts</CardTitle>
           <Badge className="bg-amber-100 text-amber-700 ml-auto">{allAlerts.length}</Badge>
         </div>
       </CardHeader>

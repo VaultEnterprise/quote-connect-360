@@ -28,12 +28,13 @@ export default function PlanWorkbookImportModal({ open, onClose, onImported }) {
     network_type: "PPO",
     plan_type: "medical",
     effective_date: "",
+    policy_expiration_date: "",
     market_segment: "small_group",
     funding_type: "fully_insured",
     notes: "",
   });
 
-  const canSubmit = useMemo(() => !!file && !!form.carrier && !!form.plan_name && !!form.effective_date, [file, form]);
+  const canSubmit = useMemo(() => !!file && !!form.carrier && !!form.plan_name && !!form.effective_date && !!form.policy_expiration_date, [file, form]);
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const importMutation = useMutation({
@@ -105,6 +106,10 @@ export default function PlanWorkbookImportModal({ open, onClose, onImported }) {
             <div>
               <Label>Effective Date *</Label>
               <Input className="mt-1" type="date" value={form.effective_date} onChange={(e) => setField("effective_date", e.target.value)} />
+            </div>
+            <div>
+              <Label>Policy Expiration Date *</Label>
+              <Input className="mt-1" type="date" value={form.policy_expiration_date} onChange={(e) => setField("policy_expiration_date", e.target.value)} />
             </div>
             <div>
               <Label>Plan Type</Label>

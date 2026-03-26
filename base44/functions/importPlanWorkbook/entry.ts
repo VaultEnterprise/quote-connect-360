@@ -101,8 +101,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const planDraft = body.planDraft || {};
     if (!body.file_url) return Response.json({ error: 'file_url is required' }, { status: 400 });
-    if (!planDraft.carrier || !planDraft.plan_name || !planDraft.effective_date) {
-      return Response.json({ error: 'carrier, plan_name, and effective_date are required' }, { status: 400 });
+    if (!planDraft.carrier || !planDraft.plan_name || !planDraft.effective_date || !planDraft.policy_expiration_date) {
+      return Response.json({ error: 'carrier, plan_name, effective_date, and policy_expiration_date are required' }, { status: 400 });
     }
 
     const workbookResponse = await fetch(body.file_url);
@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
     const stateScope = [...new Set(zipRows.map((row) => normalizeStateCode(row.State)).filter(Boolean))].sort();
     const hasTobaccoRates = rateRows.some((row) => normalizeTobacco(row.Tobacco));
     const effectiveDate = planDraft.effective_date;
+    const policyExpirationDate = planDraft.policy_expiration_date;
     const planName = String(planDraft.plan_name || inferPlanName(body.sourceFileName)).trim();
 
     const plan = await base44.asServiceRole.entities.BenefitPlan.create({
@@ -132,6 +133,7 @@ Deno.serve(async (req) => {
       network_type: planDraft.network_type ? String(planDraft.network_type).trim() : undefined,
       state: planDraft.state ? String(planDraft.state).trim().toUpperCase() : stateScope.length === 1 ? stateScope[0] : '',
       effective_date: effectiveDate,
+      policy_expiration_date: policyExpirationDate,
       hsa_eligible: !!planDraft.hsa_eligible,
       notes: planDraft.notes ? String(planDraft.notes).trim() : `Imported from workbook: ${body.sourceFileName || 'uploaded workbook'}`,
       status: 'active',
@@ -141,7 +143,7 @@ Deno.serve(async (req) => {
       plan_id: plan.id,
       schedule_name: planDraft.schedule_name ? String(planDraft.schedule_name).trim() : `${planName} Rates`,
       effective_date: effectiveDate,
-      termination_date: planDraft.termination_date || endOfYear(effectiveDate),
+      termination_date: planDraft.termination_date || policyExpirationDate || endOfYear(effectiveDate),
       rating_basis: 'age_band_area_tier',
       tobacco_mode: hasTobaccoRates ? 'separate_rate' : 'none',
       tobacco_rating_flag: hasTobaccoRates,

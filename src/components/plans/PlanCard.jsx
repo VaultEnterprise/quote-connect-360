@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
+import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar } from "lucide-react";
 import RateTableEditor from "./RateTableEditor";
 
 const TYPE_COLORS = {
@@ -64,6 +64,17 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
             {plan.oop_max_individual != null && <span className="text-muted-foreground">OOP Max: <span className="text-foreground font-medium">${plan.oop_max_individual.toLocaleString()}</span></span>}
             {plan.copay_pcp != null && <span className="text-muted-foreground">PCP: <span className="text-foreground font-medium">${plan.copay_pcp}</span></span>}
             {plan.coinsurance != null && <span className="text-muted-foreground">Coins: <span className="text-foreground font-medium">{plan.coinsurance}%</span></span>}
+          </div>
+        )}
+
+        {(plan.effective_date || plan.policy_expiration_date) && (
+          <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 font-medium text-foreground">
+              <Calendar className="w-3.5 h-3.5 text-primary" />
+              Policy Dates
+            </div>
+            {plan.effective_date && <p className="text-muted-foreground">Effective: <span className="text-foreground font-medium">{plan.effective_date}</span></p>}
+            {plan.policy_expiration_date && <p className="text-muted-foreground">Expires: <span className="text-foreground font-medium">{plan.policy_expiration_date}</span></p>}
           </div>
         )}
 
