@@ -15,13 +15,7 @@ export default function PlanComparisonTool({ plans, medical = false }) {
   const selectedPlans = plans.filter(p => selected.includes(p.id));
 
   if (selectedPlans.length === 0) {
-    return (
-      <Card className="bg-muted/30 border-dashed">
-        <CardContent className="p-6 text-center text-xs text-muted-foreground">
-          Select up to 2 plans to compare side-by-side.
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   const fields = medical
