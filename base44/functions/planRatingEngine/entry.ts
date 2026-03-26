@@ -12,36 +12,94 @@ const ACA_STANDARD_BANDS = [
   { code: '60-64', label: '60–64', min: 60, max: 64, sort: 9 },
   { code: '65+', label: '65+', min: 65, max: 999, sort: 10 },
 ];
-
 const TIER_MAP = {
   single: 'EE', ee: 'EE', 'employee only': 'EE', employee: 'EE',
   'ee+sp': 'ES', 'ee + sp': 'ES', 'ee+spouse': 'ES', 'employee+spouse': 'ES', 'employee + spouse': 'ES', 'ee/spouse': 'ES', 'employee/spouse': 'ES',
   'ee+ch': 'EC', 'ee + ch': 'EC', 'ee+child': 'EC', 'ee+children': 'EC', 'ee+ch(ren)': 'EC', 'ee + ch(ren)': 'EC', 'employee+child': 'EC', 'employee + children': 'EC', 'ee/child(ren)': 'EC', 'ee + children': 'EC',
   family: 'FAM', fam: 'FAM', 'ee+fam': 'FAM', 'ee + family': 'FAM', 'ee/family': 'FAM',
 };
-
 const VALID_TIERS = ['EE', 'ES', 'EC', 'FAM'];
 const ACTION_CONTRACTS = {
-  zipToArea: { required: ['zip'], allowed: ['action', 'zip', 'planId', 'effectiveDate'] },
-  dobToAgeBand: { required: ['dob'], allowed: ['action', 'dob', 'effectiveDate'] },
-  tierNormalize: { required: ['tier'], allowed: ['action', 'tier'] },
-  rateResolve: { required: ['planId', 'ratingAreaCode', 'ageBandCode', 'tierCode'], allowed: ['action', 'planId', 'rateScheduleId', 'ratingAreaCode', 'ageBandCode', 'tierCode', 'tobaccoFlag'] },
-  rateCensus: { required: ['caseId', 'planId'], allowed: ['action', 'caseId', 'planId', 'rateScheduleId', 'effectiveDate'] },
-  importRateRows: { required: ['rows', 'rateScheduleId', 'planId'], allowed: ['action', 'rows', 'rateScheduleId', 'planId', 'sourceFileName'] },
-  importZipRows: { required: ['rows'], allowed: ['action', 'rows', 'planId', 'sourceFileName'] },
-  validateRateSchedule: { required: ['rateScheduleId'], allowed: ['action', 'rateScheduleId'] },
-  seedAgeBandSchema: { required: [], allowed: ['action'] },
+  zipToArea: {
+    required: ['zip'],
+    allowed: ['action', 'zip', 'planId', 'effectiveDate'],
+    successKeys: ['rating_area_code', 'state_code', 'county', 'zip_code'],
+    errorKeys: ['error', 'code'],
+  },
+  dobToAgeBand: {
+    required: ['dob'],
+    allowed: ['action', 'dob', 'effectiveDate'],
+    successKeys: ['age', 'band_code', 'band_label'],
+    errorKeys: ['error', 'code'],
+  },
+  tierNormalize: {
+    required: ['tier'],
+    allowed: ['action', 'tier'],
+    successKeys: ['normalized', 'input'],
+    errorKeys: ['error', 'code'],
+  },
+  rateResolve: {
+    required: ['planId', 'ratingAreaCode', 'ageBandCode', 'tierCode'],
+    allowed: ['action', 'planId', 'rateScheduleId', 'ratingAreaCode', 'ageBandCode', 'tierCode', 'tobaccoFlag'],
+    successKeys: ['monthly_rate', 'rate_record_id'],
+    errorKeys: ['error', 'code'],
+  },
+  rateCensus: {
+    required: ['caseId', 'planId'],
+    allowed: ['action', 'caseId', 'planId', 'rateScheduleId', 'effectiveDate'],
+    successKeys: ['run_id', 'status', 'total_members_rated', 'total_members_failed', 'total_monthly_premium', 'ee_monthly', 'es_monthly', 'ec_monthly', 'fam_monthly', 'tier_breakdown', 'rating_area_breakdown', 'member_results', 'warnings'],
+    errorKeys: ['error', 'run_id'],
+  },
+  importRateRows: {
+    required: ['rows', 'rateScheduleId', 'planId'],
+    allowed: ['action', 'rows', 'rateScheduleId', 'planId', 'sourceFileName'],
+    successKeys: ['run_id', 'status', 'success', 'errors', 'warnings', 'total'],
+    errorKeys: ['error', 'code'],
+  },
+  importZipRows: {
+    required: ['rows'],
+    allowed: ['action', 'rows', 'planId', 'sourceFileName'],
+    successKeys: ['run_id', 'status', 'success', 'errors', 'warnings', 'total'],
+    errorKeys: ['error', 'code'],
+  },
+  validateRateSchedule: {
+    required: ['rateScheduleId'],
+    allowed: ['action', 'rateScheduleId'],
+    successKeys: ['status', 'error_count', 'errors', 'row_count'],
+    errorKeys: ['error', 'code'],
+  },
+  seedAgeBandSchema: {
+    required: [],
+    allowed: ['action'],
+    successKeys: ['message', 'count'],
+    errorKeys: ['error', 'code'],
+    adminOnly: true,
+  },
 };
 
+function stripUndefined(input) {
+  return Object.fromEntries(Object.entries(input || {}).filter(([, value]) => value !== undefined));
+}
 function validatePayload(body) {
   const contract = ACTION_CONTRACTS[body.action];
   if (!contract) throw new Error(`Unknown action: ${body.action}`);
-  const unknownKeys = Object.keys(body).filter((key) => !contract.allowed.includes(key));
+  const unknownKeys = Object.keys(stripUndefined(body)).filter((key) => !contract.allowed.includes(key));
   if (unknownKeys.length > 0) throw new Error(`Unsupported keys for ${body.action}: ${unknownKeys.join(', ')}`);
   const missingKeys = contract.required.filter((key) => body[key] === undefined || body[key] === null || body[key] === '');
   if (missingKeys.length > 0) throw new Error(`Missing required keys for ${body.action}: ${missingKeys.join(', ')}`);
+  return contract;
 }
-
+function validateActionResponse(action, result) {
+  const contract = ACTION_CONTRACTS[action];
+  if (!contract) throw new Error(`Missing response contract for ${action}`);
+  const allowedKeys = [...new Set([...contract.successKeys, ...contract.errorKeys])];
+  const unknownKeys = Object.keys(stripUndefined(result)).filter((key) => !allowedKeys.includes(key));
+  if (unknownKeys.length > 0) throw new Error(`Unsupported response keys for ${action}: ${unknownKeys.join(', ')}`);
+  if (result.error) return result;
+  const missingSuccessKeys = contract.successKeys.filter((key) => result[key] === undefined);
+  if (missingSuccessKeys.length > 0) throw new Error(`Missing response keys for ${action}: ${missingSuccessKeys.join(', ')}`);
+  return result;
+}
 function dobToAge(dob, asOfDate) {
   const dobDate = new Date(dob);
   const referenceDate = new Date(asOfDate);
@@ -50,23 +108,19 @@ function dobToAge(dob, asOfDate) {
   if (monthDelta < 0 || (monthDelta === 0 && referenceDate.getDate() < dobDate.getDate())) age -= 1;
   return age;
 }
-
 function ageToBand(age) {
   return ACA_STANDARD_BANDS.find((band) => age >= band.min && age <= band.max) || null;
 }
-
 function tierNormalizer(rawTier) {
   if (!rawTier) return null;
   const normalized = rawTier.toString().toLowerCase().trim();
   return TIER_MAP[normalized] || null;
 }
-
 function normalizeZip(rawZip) {
   if (!rawZip) return null;
   const normalized = rawZip.toString().replace(/\D/g, '').padStart(5, '0');
   return normalized.length === 5 ? normalized : null;
 }
-
 function normalizeDob(rawDob) {
   if (!rawDob) return null;
   if (typeof rawDob === 'number') {
@@ -78,7 +132,6 @@ function normalizeDob(rawDob) {
   if (Number.isNaN(date.getTime()) || date > new Date()) return null;
   return date.toISOString().slice(0, 10);
 }
-
 async function createImportRun(base44, payload) {
   return await base44.asServiceRole.entities.ImportRun.create({
     import_type: payload.importType,
@@ -96,7 +149,6 @@ async function createImportRun(base44, payload) {
     rollback_available: true,
   });
 }
-
 async function finalizeRun(base44, runId, payload) {
   return await base44.asServiceRole.entities.ImportRun.update(runId, {
     status: payload.status,
@@ -107,7 +159,6 @@ async function finalizeRun(base44, runId, payload) {
     warning_rows: payload.warningRows,
   });
 }
-
 async function logException(base44, payload) {
   return await base44.asServiceRole.entities.ImportException.create({
     import_run_id: payload.importRunId,
@@ -122,7 +173,6 @@ async function logException(base44, payload) {
     resolved: false,
   });
 }
-
 async function zipToAreaResolver(base44, payload) {
   const normalizedZip = normalizeZip(payload.zip);
   if (!normalizedZip) return { error: `Invalid ZIP: ${payload.zip}`, code: 'INVALID_ZIP' };
@@ -131,7 +181,6 @@ async function zipToAreaResolver(base44, payload) {
   if (!match) return { error: `No rating area found for ZIP ${normalizedZip}`, code: 'NO_ZIP_AREA_MATCH' };
   return { rating_area_code: match.rating_area_code, state_code: match.state_code, county: match.county, zip_code: normalizedZip };
 }
-
 async function planRateResolver(base44, payload) {
   const filters = {
     plan_id: payload.planId,
@@ -141,13 +190,11 @@ async function planRateResolver(base44, payload) {
     is_active: true,
   };
   if (payload.rateScheduleId) filters.rate_schedule_id = payload.rateScheduleId;
-
   const rates = await base44.asServiceRole.entities.PlanRateDetail.filter(filters);
   if (!rates.length) return { error: `No rate found: area=${payload.ratingAreaCode} band=${payload.ageBandCode} tier=${payload.tierCode}`, code: 'NO_RATE_MATCH' };
   const match = payload.tobaccoFlag ? (rates.find((row) => row.tobacco_flag === true) || rates[0]) : (rates.find((row) => !row.tobacco_flag) || rates[0]);
   return { monthly_rate: match.monthly_rate, rate_record_id: match.id };
 }
-
 async function importRateRows(base44, payload, user) {
   const run = await createImportRun(base44, { importType: 'rate_detail', sourceFileName: payload.sourceFileName, planId: payload.planId, rateScheduleId: payload.rateScheduleId, createdBy: user.email });
   const seenKeys = new Set();
@@ -155,14 +202,12 @@ async function importRateRows(base44, payload, user) {
   let success = 0;
   let errors = 0;
   let warnings = 0;
-
   for (let index = 0; index < payload.rows.length; index++) {
     const row = payload.rows[index];
     const rowNumber = index + 2;
     const normalizedTier = VALID_TIERS.includes(row.tier_code) ? row.tier_code : tierNormalizer(row.tier_code);
     const monthlyRate = Number(row.monthly_rate);
     const key = `${payload.rateScheduleId}|${row.rating_area_code}|${row.age_band_code}|${normalizedTier}|${row.tobacco_flag || false}`;
-
     if (!row.rating_area_code || !row.age_band_code || !row.tier_code || row.monthly_rate === undefined || row.monthly_rate === '') {
       await logException(base44, { importRunId: run.id, entityName: 'PlanRateDetail', sourceRowNumber: rowNumber, errorCode: 'MISSING_REQUIRED_FIELD', errorMessage: 'Missing required rate detail field', rawPayload: row });
       errors += 1;
@@ -183,12 +228,10 @@ async function importRateRows(base44, payload, user) {
       errors += 1;
       continue;
     }
-
     if (!ACA_STANDARD_BANDS.map((band) => band.code).includes(row.age_band_code)) {
       await logException(base44, { importRunId: run.id, entityName: 'PlanRateDetail', sourceRowNumber: rowNumber, errorCode: 'INVALID_AGE_BAND', errorMessage: `Unknown age band: ${row.age_band_code}`, severity: 'warning', rawPayload: row, fieldName: 'age_band_code' });
       warnings += 1;
     }
-
     seenKeys.add(key);
     writeRows.push({
       rate_schedule_id: payload.rateScheduleId,
@@ -206,7 +249,6 @@ async function importRateRows(base44, payload, user) {
     });
     success += 1;
   }
-
   if (writeRows.length > 0) {
     await base44.asServiceRole.entities.PlanRateDetail.bulkCreate(writeRows);
     await base44.asServiceRole.entities.PlanRateSchedule.update(payload.rateScheduleId, {
@@ -214,12 +256,10 @@ async function importRateRows(base44, payload, user) {
       validation_status: errors > 0 ? 'has_errors' : warnings > 0 ? 'has_warnings' : 'valid',
     });
   }
-
   const status = errors > 0 && success === 0 ? 'failed' : errors > 0 || warnings > 0 ? 'completed_with_warnings' : 'completed';
   await finalizeRun(base44, run.id, { status, totalRows: payload.rows.length, successRows: success, errorRows: errors, warningRows: warnings });
   return { run_id: run.id, status, success, errors, warnings, total: payload.rows.length };
 }
-
 async function importZipRows(base44, payload, user) {
   const run = await createImportRun(base44, { importType: 'zip_area_map', sourceFileName: payload.sourceFileName, planId: payload.planId, createdBy: user.email });
   const seenKeys = new Set();
@@ -227,13 +267,11 @@ async function importZipRows(base44, payload, user) {
   let success = 0;
   let errors = 0;
   let warnings = 0;
-
   for (let index = 0; index < payload.rows.length; index++) {
     const row = payload.rows[index];
     const rowNumber = index + 2;
     const zip = normalizeZip(row.zip_code || row.zip);
     const duplicateKey = `${payload.planId || 'global'}|${zip}|${row.effective_date || ''}`;
-
     if (!zip) {
       await logException(base44, { importRunId: run.id, entityName: 'PlanZipAreaMap', sourceRowNumber: rowNumber, errorCode: 'INVALID_ZIP', errorMessage: `Invalid ZIP: ${row.zip_code || row.zip}`, rawPayload: row, fieldName: 'zip_code' });
       errors += 1;
@@ -253,7 +291,6 @@ async function importZipRows(base44, payload, user) {
       await logException(base44, { importRunId: run.id, entityName: 'PlanZipAreaMap', sourceRowNumber: rowNumber, errorCode: 'INVALID_STATE_CODE', errorMessage: 'Missing state code', severity: 'warning', rawPayload: row });
       warnings += 1;
     }
-
     seenKeys.add(duplicateKey);
     writeRows.push({
       plan_id: payload.planId || undefined,
@@ -269,13 +306,11 @@ async function importZipRows(base44, payload, user) {
     });
     success += 1;
   }
-
   if (writeRows.length > 0) await base44.asServiceRole.entities.PlanZipAreaMap.bulkCreate(writeRows);
   const status = errors > 0 && success === 0 ? 'failed' : errors > 0 || warnings > 0 ? 'completed_with_warnings' : 'completed';
   await finalizeRun(base44, run.id, { status, totalRows: payload.rows.length, successRows: success, errorRows: errors, warningRows: warnings });
   return { run_id: run.id, status, success, errors, warnings, total: payload.rows.length };
 }
-
 async function caseRatingEngine(base44, payload, user) {
   const run = await createImportRun(base44, { importType: 'census_members', planId: payload.planId, caseId: payload.caseId, createdBy: user.email });
   const members = await base44.asServiceRole.entities.CensusMember.filter({ case_id: payload.caseId });
@@ -283,7 +318,6 @@ async function caseRatingEngine(base44, payload, user) {
     await finalizeRun(base44, run.id, { status: 'failed', totalRows: 0, successRows: 0, errorRows: 1, warningRows: 0 });
     return { error: 'No census members found for this case', run_id: run.id };
   }
-
   const memberResults = [];
   const errors = [];
   const warnings = [];
@@ -293,7 +327,6 @@ async function caseRatingEngine(base44, payload, user) {
   let failedCount = 0;
   let totalAge = 0;
   let ageCount = 0;
-
   for (let index = 0; index < members.length; index++) {
     const member = members[index];
     const result = { member_id: member.id, name: `${member.first_name} ${member.last_name}`, errors: [] };
@@ -306,7 +339,6 @@ async function caseRatingEngine(base44, payload, user) {
       memberResults.push(result);
       continue;
     }
-
     const areaResolution = await zipToAreaResolver(base44, { zip, planId: payload.planId, effectiveDate: payload.effectiveDate });
     if (areaResolution.error) {
       result.errors.push(areaResolution.error);
@@ -315,7 +347,6 @@ async function caseRatingEngine(base44, payload, user) {
       memberResults.push(result);
       continue;
     }
-
     const normalizedDob = normalizeDob(member.date_of_birth);
     if (!normalizedDob) {
       const message = `Invalid DOB for ${member.first_name} ${member.last_name}`;
@@ -325,7 +356,6 @@ async function caseRatingEngine(base44, payload, user) {
       memberResults.push(result);
       continue;
     }
-
     const age = dobToAge(normalizedDob, payload.effectiveDate);
     const ageBand = ageToBand(age);
     if (!ageBand) {
@@ -336,7 +366,6 @@ async function caseRatingEngine(base44, payload, user) {
       memberResults.push(result);
       continue;
     }
-
     const rawTier = member.coverage_tier || 'EE';
     const tierCode = VALID_TIERS.includes(rawTier) ? rawTier : tierNormalizer(String(rawTier).replace(/_/g, ' '));
     if (!tierCode) {
@@ -347,7 +376,6 @@ async function caseRatingEngine(base44, payload, user) {
       memberResults.push(result);
       continue;
     }
-
     const rateResolution = await planRateResolver(base44, {
       planId: payload.planId,
       rateScheduleId: payload.rateScheduleId,
@@ -363,7 +391,6 @@ async function caseRatingEngine(base44, payload, user) {
       memberResults.push(result);
       continue;
     }
-
     result.rating_area_code = areaResolution.rating_area_code;
     result.age = age;
     result.age_band_code = ageBand.code;
@@ -379,7 +406,6 @@ async function caseRatingEngine(base44, payload, user) {
     areaBreakdown[areaResolution.rating_area_code].premium += rateResolution.monthly_rate;
     memberResults.push(result);
   }
-
   const ratedCount = memberResults.length - failedCount;
   const status = failedCount === memberResults.length ? 'failed' : 'completed';
   await base44.asServiceRole.entities.CaseRatedResult.create({
@@ -404,17 +430,14 @@ async function caseRatingEngine(base44, payload, user) {
     status,
     rated_by: user.email,
   });
-
   await finalizeRun(base44, run.id, { status: failedCount === memberResults.length ? 'failed' : failedCount > 0 ? 'completed_with_warnings' : 'completed', totalRows: members.length, successRows: ratedCount, errorRows: failedCount, warningRows: warnings.length });
   return { run_id: run.id, status, total_members_rated: ratedCount, total_members_failed: failedCount, total_monthly_premium: Math.round(totalPremium * 100) / 100, ee_monthly: Math.round(tierBreakdown.EE.premium * 100) / 100, es_monthly: Math.round(tierBreakdown.ES.premium * 100) / 100, ec_monthly: Math.round(tierBreakdown.EC.premium * 100) / 100, fam_monthly: Math.round(tierBreakdown.FAM.premium * 100) / 100, tier_breakdown: tierBreakdown, rating_area_breakdown: areaBreakdown, member_results: memberResults, warnings };
 }
-
 async function validateRateSchedule(base44, payload) {
   const rates = await base44.asServiceRole.entities.PlanRateDetail.filter({ rate_schedule_id: payload.rateScheduleId });
   const errors = [];
   const seenKeys = new Set();
   const tiersByAreaBand = {};
-
   rates.forEach((rate, index) => {
     if (!rate.monthly_rate || rate.monthly_rate <= 0) errors.push(`Row ${index + 1}: Missing or zero monthly_rate`);
     if (!rate.rating_area_code) errors.push(`Row ${index + 1}: Missing rating_area_code`);
@@ -427,22 +450,37 @@ async function validateRateSchedule(base44, payload) {
     if (!tiersByAreaBand[areaBandKey]) tiersByAreaBand[areaBandKey] = new Set();
     tiersByAreaBand[areaBandKey].add(rate.tier_code);
   });
-
   Object.entries(tiersByAreaBand).forEach(([areaBandKey, tiers]) => {
     const missingTiers = VALID_TIERS.filter((tier) => !tiers.has(tier));
     if (missingTiers.length > 0) errors.push(`Missing tiers for ${areaBandKey}: ${missingTiers.join(', ')}`);
   });
-
   const status = errors.length === 0 ? 'valid' : 'has_errors';
   await base44.asServiceRole.entities.PlanRateSchedule.update(payload.rateScheduleId, { validation_status: status, validation_errors: errors.slice(0, 100), row_count: rates.length });
   return { status, error_count: errors.length, errors: errors.slice(0, 100), row_count: rates.length };
 }
-
 async function seedAgeBandSchema(base44) {
   const existing = await base44.asServiceRole.entities.AgeBandSchema.filter({ schema_code: 'ACA_STANDARD_10' });
   if (existing.length >= ACA_STANDARD_BANDS.length) return { message: 'Already seeded', count: existing.length };
   await base44.asServiceRole.entities.AgeBandSchema.bulkCreate(ACA_STANDARD_BANDS.map((band) => ({ schema_code: 'ACA_STANDARD_10', schema_name: 'ACA Standard 10-Band', age_min: band.min, age_max: band.max, band_label: band.label, band_code: band.code, sort_order: band.sort, is_active: true })));
   return { message: 'Seeded', count: ACA_STANDARD_BANDS.length };
+}
+async function executeAction(base44, user, body) {
+  if (body.action === 'zipToArea') return zipToAreaResolver(base44, { zip: body.zip, planId: body.planId, effectiveDate: body.effectiveDate || new Date().toISOString().slice(0, 10) });
+  if (body.action === 'dobToAgeBand') {
+    const normalizedDob = normalizeDob(body.dob);
+    if (!normalizedDob) return { error: 'Invalid DOB', code: 'INVALID_DOB' };
+    const age = dobToAge(normalizedDob, body.effectiveDate || new Date().toISOString().slice(0, 10));
+    const band = ageToBand(age);
+    return { age, band_code: band?.code || null, band_label: band?.label || null };
+  }
+  if (body.action === 'tierNormalize') return { normalized: tierNormalizer(body.tier), input: body.tier };
+  if (body.action === 'rateResolve') return planRateResolver(base44, body);
+  if (body.action === 'rateCensus') return caseRatingEngine(base44, { ...body, effectiveDate: body.effectiveDate || new Date().toISOString().slice(0, 10) }, user);
+  if (body.action === 'importRateRows') return importRateRows(base44, body, user);
+  if (body.action === 'importZipRows') return importZipRows(base44, body, user);
+  if (body.action === 'validateRateSchedule') return validateRateSchedule(base44, body);
+  if (body.action === 'seedAgeBandSchema') return seedAgeBandSchema(base44);
+  throw new Error(`Unknown action: ${body.action}`);
 }
 
 Deno.serve(async (req) => {
@@ -450,31 +488,16 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
     const body = await req.json();
-    validatePayload(body);
-
-    if (body.action === 'zipToArea') return Response.json(await zipToAreaResolver(base44, { zip: body.zip, planId: body.planId, effectiveDate: body.effectiveDate || new Date().toISOString().slice(0, 10) }));
-    if (body.action === 'dobToAgeBand') {
-      const normalizedDob = normalizeDob(body.dob);
-      if (!normalizedDob) return Response.json({ error: 'Invalid DOB' }, { status: 400 });
-      const age = dobToAge(normalizedDob, body.effectiveDate || new Date().toISOString().slice(0, 10));
-      const band = ageToBand(age);
-      return Response.json({ age, band_code: band?.code || null, band_label: band?.label || null });
+    const contract = validatePayload(body);
+    if (contract.adminOnly && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required', code: 'FORBIDDEN' }, { status: 403 });
     }
-    if (body.action === 'tierNormalize') return Response.json({ normalized: tierNormalizer(body.tier), input: body.tier });
-    if (body.action === 'rateResolve') return Response.json(await planRateResolver(base44, body));
-    if (body.action === 'rateCensus') return Response.json(await caseRatingEngine(base44, { ...body, effectiveDate: body.effectiveDate || new Date().toISOString().slice(0, 10) }, user));
-    if (body.action === 'importRateRows') return Response.json(await importRateRows(base44, body, user));
-    if (body.action === 'importZipRows') return Response.json(await importZipRows(base44, body, user));
-    if (body.action === 'validateRateSchedule') return Response.json(await validateRateSchedule(base44, body));
-    if (body.action === 'seedAgeBandSchema') {
-      if (user.role !== 'admin') return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-      return Response.json(await seedAgeBandSchema(base44));
-    }
-
-    return Response.json({ error: `Unknown action: ${body.action}` }, { status: 400 });
+    const result = validateActionResponse(body.action, await executeAction(base44, user, body));
+    if (result.error) return Response.json(result, { status: 400 });
+    return Response.json(result);
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    const status = /Unknown action|Unsupported keys|Missing required keys|Unsupported response keys|Missing response keys/i.test(error.message) ? 400 : 500;
+    return Response.json({ error: error.message, code: status === 400 ? 'VALIDATION_ERROR' : 'UNHANDLED_ERROR' }, { status });
   }
 });

@@ -16,6 +16,14 @@ export const ENTITY_WRITE_SCHEMAS = {
   RenewalCycle: ["case_id", "employer_group_id", "renewal_date", "status", "current_premium", "renewal_premium", "rate_change_percent", "disruption_score", "recommendation", "decision", "decision_date", "employer_name", "assigned_to", "notes"],
 };
 
+export function assertEntityWriteSchemaCoverage(entityNames = []) {
+  const missingSchemas = entityNames.filter((entityName) => !ENTITY_WRITE_SCHEMAS[entityName]);
+  if (missingSchemas.length > 0) {
+    throw new Error(`Missing entity write schemas: ${missingSchemas.join(", ")}`);
+  }
+  return true;
+}
+
 export function validateEntityWrite(entityName, payload, requiredKeys = []) {
   const allowedKeys = ENTITY_WRITE_SCHEMAS[entityName];
   if (!allowedKeys) throw new Error(`No write schema registered for ${entityName}`);
