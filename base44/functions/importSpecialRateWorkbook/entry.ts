@@ -62,7 +62,7 @@ function normalizeAgeBand(value) {
   if (/^(0?50)\s*-\s*(0?54)$/i.test(normalized)) return AGE_BANDS['50-54'];
   if (/^(0?55)\s*-\s*(0?59)$/i.test(normalized)) return AGE_BANDS['55-59'];
   if (/^(0?60)\s*-\s*(0?64)$/i.test(normalized)) return AGE_BANDS['60-64'];
-  if (/^(65\+|65 and over|65 or over)$/i.test(normalized)) return AGE_BANDS['65+'];
+  if (/^(0?65\+|0?65 and over|0?65 or over)$/i.test(normalized)) return AGE_BANDS['65+'];
   return null;
 }
 
