@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, MapPin, BarChart2, History, Lock, TrendingUp, ShieldCheck, Database, Table2, FileCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import MultiStateRateEditor from "@/components/plans/MultiStateRateEditor";
@@ -59,6 +59,8 @@ export default function PlanRateEditor() {
   });
 
   const plans = allPlans.filter((plan) => plan.status === "active");
+  const medicalPlans = plans.filter((plan) => plan.plan_type === "medical");
+  const ancillaryPlans = plans.filter((plan) => plan.plan_type !== "medical");
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const planSchedules = allSchedules.filter(s => s.plan_id === selectedPlanId);
   const lockedRates = stateRates.filter(r => r.is_locked && r.lock_expiration_date);
@@ -84,13 +86,29 @@ export default function PlanRateEditor() {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 max-w-xs">
           <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
-            <SelectTrigger><SelectValue placeholder="Select a plan..." /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select a policy..." /></SelectTrigger>
             <SelectContent>
-              {plans.map(p => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.plan_name} — {p.carrier}
-                </SelectItem>
-              ))}
+              {medicalPlans.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>Medical Policies</SelectLabel>
+                  {medicalPlans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.plan_name} — {p.carrier}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
+              {medicalPlans.length > 0 && ancillaryPlans.length > 0 && <SelectSeparator />}
+              {ancillaryPlans.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>Ancillary Policies</SelectLabel>
+                  {ancillaryPlans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.plan_name} — {p.carrier}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
             </SelectContent>
           </Select>
         </div>
