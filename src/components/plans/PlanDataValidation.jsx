@@ -1,11 +1,7 @@
 import React, { useMemo } from "react";
-import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, AlertTriangle, ShieldCheck, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 
 const REQUIRED_FIELDS = ["plan_name", "carrier", "plan_type", "network_type", "deductible_individual", "oop_max_individual", "copay_pcp"];
 const RECOMMENDED_FIELDS = ["deductible_family", "oop_max_family", "copay_specialist", "copay_er", "coinsurance", "rx_tier1"];
@@ -20,30 +16,8 @@ function computeScore(plan) {
 }
 
 export default function PlanDataValidation({ plans }) {
-  const qc = useQueryClient();
-
   const planValidations = useMemo(() =>
     plans.map(p => ({ ...p, ...computeScore(p) })), [plans]);
-
-  const runValidation = useMutation({
-    mutationFn: async () => {
-      for (const p of planValidations) {
-        const existing = await base44.entities.DataCompletenessFlag.filter({ plan_id: p.id });
-        const data = {
-          plan_id: p.id,
-          missing_fields: [...p.missing, ...p.missingRec],
-          severity: p.missing.length > 3 ? "critical" : p.missing.length > 0 ? "error" : p.missingRec.length > 0 ? "warning" : "ok",
-          completeness_score: p.score,
-          can_be_quoted: p.missing.length === 0,
-          last_checked: new Date().toISOString(),
-        };
-        if (existing.length > 0) await base44.entities.DataCompletenessFlag.update(existing[0].id, data);
-        else await base44.entities.DataCompletenessFlag.create(data);
-      }
-      qc.invalidateQueries({ queryKey: ["data-completeness-flags"] });
-      toast.success("Validation complete");
-    },
-  });
 
   const critical = planValidations.filter(p => p.missing.length > 3);
   const errors = planValidations.filter(p => p.missing.length > 0 && p.missing.length <= 3);
@@ -54,18 +28,7 @@ export default function PlanDataValidation({ plans }) {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-primary" />
-            <CardTitle className="text-sm">Data Completeness Engine</CardTitle>
-          </div>
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => runValidation.mutate()} disabled={runValidation.isPending}>
-            <RefreshCw className={`w-3 h-3 ${runValidation.isPending ? "animate-spin" : ""}`} /> Run Validation
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         {/* Summary */}
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-red-50">
