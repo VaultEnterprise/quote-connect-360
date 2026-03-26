@@ -46,7 +46,7 @@ export default function ZipAreaMappingManager({ plans }) {
 
   const { data: mappings = [], isLoading } = useQuery({
     queryKey: ["zip-area-maps"],
-    queryFn: () => base44.entities.PlanZipAreaMap.list("-created_date", 500),
+    queryFn: () => base44.entities.PlanZipAreaMap.list("-created_date", 50000),
   });
 
   const filtered = mappings.filter(m =>
