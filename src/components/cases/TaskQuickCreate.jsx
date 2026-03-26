@@ -27,6 +27,8 @@ export default function TaskQuickCreate({ isOpen, caseId, onClose, onSuccess }) 
         ...(dueDate && { due_date: dueDate }),
       });
       queryClient.invalidateQueries({ queryKey: ["caseTask", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["cases-related"] });
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
       setTitle("");
       setType("action_required");
       setPriority("normal");

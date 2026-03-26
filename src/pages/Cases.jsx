@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import { CaseListSkeleton } from "@/components/shared/LoadingSkeleton";
-import CaseListCard from "@/components/cases/CaseListCard";
+import CaseEnhancedCard from "@/components/cases/CaseEnhancedCard";
 import CasePipelineView from "@/components/cases/CasePipelineView";
 import BulkActionsBar from "@/components/shared/BulkActionsBar";
 import BulkAssignModal from "@/components/cases/BulkAssignModal";
@@ -84,6 +84,7 @@ export default function Cases() {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showAssignDueDate, setShowAssignDueDate] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [quickView, setQuickView] = useState("all");
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
@@ -93,6 +94,41 @@ export default function Cases() {
   const { data: censusMembers = [] } = useQuery({
     queryKey: ["case-census-members"],
     queryFn: () => base44.entities.CensusMember.list("-created_date", 500),
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: quoteScenarios = [] } = useQuery({
+    queryKey: ["cases-related", "quotes"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500),
+  });
+
+  const { data: proposals = [] } = useQuery({
+    queryKey: ["cases-related", "proposals"],
+    queryFn: () => base44.entities.Proposal.list("-created_date", 500),
+  });
+
+  const { data: caseTasks = [] } = useQuery({
+    queryKey: ["cases-related", "tasks"],
+    queryFn: () => base44.entities.CaseTask.list("-created_date", 500),
+  });
+
+  const { data: exceptionItems = [] } = useQuery({
+    queryKey: ["cases-related", "exceptions"],
+    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
+  });
+
+  const { data: enrollmentWindows = [] } = useQuery({
+    queryKey: ["cases-related", "enrollment-windows"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300),
+  });
+
+  const { data: documents = [] } = useQuery({
+    queryKey: ["cases-related", "documents"],
+    queryFn: () => base44.entities.Document.list("-created_date", 500),
   });
 
   // Keyboard shortcuts
@@ -115,7 +151,18 @@ export default function Cases() {
       const matchDate = !dateFilter || (c.effective_date && new Date(c.effective_date) >= dateFilter.start && new Date(c.effective_date) <= dateFilter.end);
       const matchActivity = activityFilter === "all" || (activityFilter === "none" ? !c.last_activity_date : c.last_activity_date);
       const matchEmployee = !employeeFilter || (c.employee_count && c.employee_count >= employeeFilter.min && c.employee_count <= employeeFilter.max);
-      return matchSearch && matchStage && matchType && matchPriority && matchAssignee && matchDate && matchActivity && matchEmployee;
+      const daysSinceActivity = c.last_activity_date ? (Date.now() - new Date(c.last_activity_date).getTime()) / 86400000 : null;
+      const daysUntilEffective = c.effective_date ? Math.ceil((new Date(c.effective_date).getTime() - Date.now()) / 86400000) : null;
+      const matchQuickView =
+        quickView === "all" ||
+        (quickView === "my_cases" && currentUser?.email && c.assigned_to === currentUser.email) ||
+        (quickView === "unassigned" && !c.assigned_to) ||
+        (quickView === "stalled" && daysSinceActivity !== null && daysSinceActivity > 7 && !["active", "closed"].includes(c.stage)) ||
+        (quickView === "ready_for_quote" && c.stage === "ready_for_quote") ||
+        (quickView === "employer_review" && c.stage === "employer_review") ||
+        (quickView === "enrollment_open" && c.stage === "enrollment_open") ||
+        (quickView === "renewals" && (c.case_type === "renewal" || (daysUntilEffective !== null && daysUntilEffective >= 0 && daysUntilEffective <= 60)));
+      return matchSearch && matchStage && matchType && matchPriority && matchAssignee && matchDate && matchActivity && matchEmployee && matchQuickView;
     });
 
     result = [...result].sort((a, b) => {
@@ -128,7 +175,7 @@ export default function Cases() {
     });
 
     return result;
-  }, [cases, search, stageFilter, typeFilter, priorityFilter, assignedToFilter, sortBy, dateFilter, activityFilter, employeeFilter]);
+  }, [cases, search, stageFilter, typeFilter, priorityFilter, assignedToFilter, sortBy, dateFilter, activityFilter, employeeFilter, quickView, currentUser]);
 
   const employeePreviewByCase = useMemo(() => {
     return censusMembers.reduce((acc, member) => {
@@ -147,8 +194,61 @@ export default function Cases() {
     }, {});
   }, [censusMembers]);
 
-  const activeFilters = [stageFilter, typeFilter, priorityFilter, assignedToFilter, dateFilter, employeeFilter].filter(f => f !== "all" && f !== null).length;
-  const clearFilters = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setAssignedToFilter("all"); setDateFilter(null); setActivityFilter("all"); setEmployeeFilter(null); setSearch(""); };
+  const caseMetaById = useMemo(() => {
+    const meta = {};
+    const ensure = (caseId) => {
+      if (!caseId) return null;
+      if (!meta[caseId]) {
+        meta[caseId] = {
+          quoteCount: 0,
+          proposalCount: 0,
+          taskCount: 0,
+          openTaskCount: 0,
+          exceptionCount: 0,
+          documentCount: 0,
+          enrollmentCount: 0,
+        };
+      }
+      return meta[caseId];
+    };
+
+    quoteScenarios.forEach((item) => {
+      const entry = ensure(item.case_id);
+      if (entry) entry.quoteCount += 1;
+    });
+
+    proposals.forEach((item) => {
+      const entry = ensure(item.case_id);
+      if (entry) entry.proposalCount += 1;
+    });
+
+    caseTasks.forEach((item) => {
+      const entry = ensure(item.case_id);
+      if (!entry) return;
+      entry.taskCount += 1;
+      if (!["completed", "cancelled"].includes(item.status)) entry.openTaskCount += 1;
+    });
+
+    exceptionItems.forEach((item) => {
+      const entry = ensure(item.case_id);
+      if (entry && !["resolved", "dismissed"].includes(item.status)) entry.exceptionCount += 1;
+    });
+
+    enrollmentWindows.forEach((item) => {
+      const entry = ensure(item.case_id);
+      if (entry) entry.enrollmentCount += 1;
+    });
+
+    documents.forEach((item) => {
+      const entry = ensure(item.case_id);
+      if (entry) entry.documentCount += 1;
+    });
+
+    return meta;
+  }, [quoteScenarios, proposals, caseTasks, exceptionItems, enrollmentWindows, documents]);
+
+  const activeFilters = [quickView, stageFilter, typeFilter, priorityFilter, assignedToFilter, dateFilter, employeeFilter].filter(f => f !== "all" && f !== null).length;
+  const clearFilters = () => { setQuickView("all"); setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setAssignedToFilter("all"); setDateFilter(null); setActivityFilter("all"); setEmployeeFilter(null); setSearch(""); };
 
   const handleLoadPreset = (filters) => {
     if (filters.search !== undefined) setSearch(filters.search || "");
@@ -180,6 +280,11 @@ export default function Cases() {
     const selectedCases = filtered.filter(c => selectedIds.has(c.id));
     const columns = ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"];
     exportToCSV(selectedCases, "cases-export.csv", columns);
+  };
+
+  const handleFilteredExport = () => {
+    const columns = ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"];
+    exportToCSV(filtered, "filtered-cases.csv", columns);
   };
 
   const handleBulkDelete = async () => {
@@ -218,6 +323,9 @@ export default function Cases() {
         actions={
           <div className="flex gap-2 flex-wrap">
             <SeedDataButton />
+            <Button size="sm" variant="outline" onClick={handleFilteredExport} className="gap-1">
+              <Download className="w-3.5 h-3.5" /> Export Filtered
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setShowAnalytics(!showAnalytics)} className="gap-1">
               <Eye className="w-3.5 h-3.5" /> {showAnalytics ? "Hide" : "Show"} Analytics
             </Button>
@@ -273,7 +381,31 @@ export default function Cases() {
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: "all", label: "All Cases" },
+            currentUser?.email ? { value: "my_cases", label: "My Cases" } : null,
+            { value: "unassigned", label: "Unassigned" },
+            { value: "stalled", label: "Stalled" },
+            { value: "ready_for_quote", label: "Ready for Quote" },
+            { value: "employer_review", label: "Employer Review" },
+            { value: "enrollment_open", label: "Enrollment Open" },
+            { value: "renewals", label: "Renewals / 60 Days" },
+          ].filter(Boolean).map((view) => (
+            <Button
+              key={view.value}
+              size="sm"
+              variant={quickView === view.value ? "default" : "outline"}
+              className="h-8 text-xs"
+              onClick={() => setQuickView(view.value)}
+            >
+              {view.label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -347,6 +479,7 @@ export default function Cases() {
             </Button>
           </div>
         )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -357,11 +490,22 @@ export default function Cases() {
         <CasePipelineView cases={filtered} />
       ) : (
         <div className="space-y-2 pb-20">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <span className="text-xs text-muted-foreground">{filtered.length} visible case{filtered.length === 1 ? "" : "s"}</span>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={toggleSelectAll}>
+              {selectedIds.size === filtered.length ? "Deselect all visible" : "Select all visible"}
+            </Button>
+          </div>
           {filtered.map(c => (
             <div key={c.id} className="flex items-center gap-2">
               <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 rounded border border-input" />
               <div className="flex-1">
-                <CaseListCard c={c} employees={employeePreviewByCase[c.id] || []} employeeCount={employeeCountByCase[c.id] || 0} />
+                <CaseEnhancedCard
+                  c={c}
+                  employees={employeePreviewByCase[c.id] || []}
+                  employeeCount={employeeCountByCase[c.id] || 0}
+                  meta={caseMetaById[c.id] || {}}
+                />
               </div>
             </div>
           ))}
