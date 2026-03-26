@@ -140,11 +140,13 @@ export default function CaseEnhancedCard({ c, employees = [], employeeCount = 0,
 
           <CaseEmployeePreview employees={employees} employeeCount={employeeCount} />
 
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
               <CaseQuickLinks caseData={c} />
             </div>
-            <CaseActionMenu caseData={c} />
+            <div className="pt-2">
+              <CaseActionMenu caseData={c} />
+            </div>
           </div>
         </CardContent>
       </Card>

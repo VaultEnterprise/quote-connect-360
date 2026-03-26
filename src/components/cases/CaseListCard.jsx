@@ -1,16 +1,15 @@
-import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, AlertTriangle, ChevronRight, Clock, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Calendar, Users, AlertTriangle, ChevronRight, Clock } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseHealthScore from "./CaseHealthScore";
 import InlineDetailDrawer from "./InlineDetailDrawer";
 import EnrollmentCountdown from "./EnrollmentCountdown";
-import TaskQuickCreate from "./TaskQuickCreate";
 import RelatedItemsBadge from "./RelatedItemsBadge";
 import CaseEmployeePreview from "./CaseEmployeePreview";
+import CaseQuickLinks from "./CaseQuickLinks";
+import CaseActionMenu from "./CaseActionMenu";
 import { format, differenceInDays, parseISO, isAfter } from "date-fns";
 
 const PRIORITY_DOT = {
@@ -29,7 +28,6 @@ const STAGE_PROGRESS = {
 
 export default function CaseListCard({ c, employees = [], employeeCount = 0 }) {
   const [showDrawer, setShowDrawer] = useState(false);
-  const [showTaskCreate, setShowTaskCreate] = useState(false);
   const isOverdue = c.effective_date && isAfter(new Date(), parseISO(c.effective_date));
   const daysUntilEffective = c.effective_date ? Math.ceil((parseISO(c.effective_date) - new Date()) / 86400000) : null;
   const daysSince = c.last_activity_date ? differenceInDays(new Date(), new Date(c.last_activity_date)) : null;
@@ -123,16 +121,16 @@ export default function CaseListCard({ c, employees = [], employeeCount = 0 }) {
 
           <CaseEmployeePreview employees={employees} employeeCount={employeeCount} />
 
-          {/* Quick Action Buttons */}
-          <div className="flex gap-2 pt-2 border-t">
-            <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={(e) => { e.preventDefault(); setShowDrawer(true); }}>View Details</Button>
-            <Button size="sm" variant="outline" className="h-7 text-xs flex-1 gap-1" onClick={(e) => { e.preventDefault(); setShowTaskCreate(true); }}><Plus className="w-3 h-3" /> Task</Button>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <CaseQuickLinks caseData={c} />
+            </div>
+            <CaseActionMenu caseData={c} />
           </div>
         </CardContent>
       </Card>
 
       <InlineDetailDrawer isOpen={showDrawer} onClose={() => setShowDrawer(false)} caseData={c} />
-      <TaskQuickCreate isOpen={showTaskCreate} caseId={c.id} onClose={() => setShowTaskCreate(false)} />
     </>
   );
 }
