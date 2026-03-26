@@ -36,6 +36,6 @@ export function getDashboardPageModel({
     windowBounds,
     scopedData,
     summary: getDashboardSummaryMetrics(scopedData),
-    charts: getDashboardCharts(scopedData.currentCases, scopedData.currentRenewals),
+    charts: getDashboardCharts(scopedData.currentCases),
   };
 }

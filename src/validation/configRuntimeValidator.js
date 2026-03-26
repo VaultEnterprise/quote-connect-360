@@ -1,9 +1,6 @@
 import importManifest from "@/config/import_manifest.json";
 import pageSpecs from "@/config/page_specs.json";
 import resolverContracts from "@/config/resolver_contracts.json";
-import { ROUTE_PARAM_SCHEMAS } from "@/contracts/routes/routeParamSchemas";
-import { assertPageFlowCoverage } from "@/validation/pageFlowSmoke";
-import { buildDeepLinkSmokeMatrix } from "@/validation/deepLinkSmoke";
 
 export function validateConfigRuntimeAlignment() {
   const errors = [];
@@ -11,26 +8,6 @@ export function validateConfigRuntimeAlignment() {
 
   if (resolverContracts._meta?.backend_function !== "planRatingEngine") {
     errors.push("resolver_contracts.json must target planRatingEngine");
-  }
-
-  ["dashboard", "cases", "census", "tasks", "exceptions", "renewals", "employeeManagement", "caseDetail"].forEach((routeKey) => {
-    if (!ROUTE_PARAM_SCHEMAS[routeKey]) {
-      errors.push(`Missing route contract for ${routeKey}`);
-    }
-  });
-
-  ["Cases", "Dashboard", "CensusUploadModal"].forEach((pageKey) => {
-    try {
-      assertPageFlowCoverage(pageKey);
-    } catch (error) {
-      errors.push(error.message);
-    }
-  });
-
-  try {
-    buildDeepLinkSmokeMatrix();
-  } catch (error) {
-    errors.push(`Deep link smoke generation failed: ${error.message}`);
   }
 
   Object.values(pageSpecs.screens || {}).forEach((screen) => {

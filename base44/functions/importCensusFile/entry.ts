@@ -1,73 +1,20 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const NUMERIC_FIELDS = ["hours_per_week", "annual_salary", "dependent_count"];
+const REQUIRED_FIELDS = ["first_name", "last_name"];
 const ALLOWED_FIELDS = [
   "employee_id", "first_name", "last_name", "date_of_birth", "gender", "ssn_last4", "email", "phone", "address", "city", "state", "zip", "hire_date", "employment_status", "employment_type", "hours_per_week", "annual_salary", "job_title", "department", "class_code", "is_eligible", "dependent_count", "coverage_tier", "validation_status", "validation_issues",
 ];
-const AUTOMAP_HINTS = {
-  first_name: ["first_name", "first name", "firstname", "fname", "given name", "given_name"],
-  last_name: ["last_name", "last name", "lastname", "lname", "surname", "family name"],
-  date_of_birth: ["date_of_birth", "dob", "birth date", "birthdate", "birth_date", "date of birth"],
-  gender: ["gender", "sex"],
-  email: ["email", "email address", "e-mail", "work email"],
-  phone: ["phone", "phone number", "mobile", "cell", "telephone"],
-  employee_id: ["employee_id", "emp id", "emp_id", "employee id", "staff id"],
-  ssn_last4: ["ssn", "ssn4", "ssn_last4", "last 4", "last4", "social security"],
-  hire_date: ["hire_date", "hire date", "start date", "start_date", "date hired"],
-  employment_status: ["employment_status", "emp status", "status", "active"],
-  employment_type: ["employment_type", "emp type", "type", "full time", "part time"],
-  hours_per_week: ["hours", "hours_per_week", "hours per week", "weekly hours"],
-  annual_salary: ["salary", "annual_salary", "annual salary", "compensation", "wage"],
-  job_title: ["job_title", "title", "position", "job title", "role"],
-  department: ["department", "dept", "division", "team"],
-  address: ["address", "street", "address1", "street address"],
-  city: ["city", "town"],
-  state: ["state", "st", "province"],
-  zip: ["zip", "zip_code", "postal", "postal_code", "zipcode"],
-  coverage_tier: ["coverage_tier", "coverage", "tier", "plan tier", "coverage type"],
-  dependent_count: ["dependents", "dependent_count", "dep count"],
-  class_code: ["class", "class_code", "employee class", "grade"],
-};
-const ALLOWED_MODES = ["inspect", "validate", "import"];
-const ALLOWED_REQUEST_KEYS = ["mode", "caseId", "fileUrl", "fileName", "mapping", "notes", "currentVersionCount"];
-
-function stripUndefined(input) {
-  return Object.fromEntries(Object.entries(input || {}).filter(([, value]) => value !== undefined));
-}
-
-function assertKnownKeys(input, allowedKeys, context) {
-  const unknownKeys = Object.keys(stripUndefined(input)).filter((key) => !allowedKeys.includes(key));
-  if (unknownKeys.length > 0) throw new Error(`${context} contains unsupported keys: ${unknownKeys.join(', ')}`);
-}
-
-function assertRequiredKeys(input, requiredKeys, context) {
-  const missingKeys = requiredKeys.filter((key) => {
-    const value = input?.[key];
-    return value === undefined || value === null || value === '';
-  });
-  if (missingKeys.length > 0) throw new Error(`${context} is missing required keys: ${missingKeys.join(', ')}`);
-}
-
-function validateRequest(body) {
-  assertKnownKeys(body, ALLOWED_REQUEST_KEYS, 'census import request');
-  assertRequiredKeys(body, ['mode', 'fileUrl'], 'census import request');
-  if (!ALLOWED_MODES.includes(body.mode)) throw new Error(`Unsupported census import mode: ${body.mode}`);
-  if (["validate", "import"].includes(body.mode)) {
-    assertRequiredKeys(body, ['caseId', 'mapping'], 'census import request');
-    Object.keys(body.mapping || {}).forEach((fieldKey) => {
-      if (!ALLOWED_FIELDS.includes(fieldKey)) throw new Error(`Unsupported mapped field: ${fieldKey}`);
-    });
-  }
-  return body;
-}
 
 function parseCsvLine(line) {
   const values = [];
   let current = '';
   let inQuotes = false;
+
   for (let i = 0; i < line.length; i++) {
     const character = line[i];
     const nextCharacter = line[i + 1];
+
     if (character === '"') {
       if (inQuotes && nextCharacter === '"') {
         current += '"';
@@ -77,13 +24,16 @@ function parseCsvLine(line) {
       }
       continue;
     }
+
     if (character === ',' && !inQuotes) {
       values.push(current.trim());
       current = '';
       continue;
     }
+
     current += character;
   }
+
   values.push(current.trim());
   return values;
 }
@@ -102,19 +52,6 @@ function parseCsv(text) {
   }).filter((row) => Object.values(row).some(Boolean));
 
   return { headers, rows };
-}
-
-function autoMap(headers) {
-  const mapping = {};
-  headers.forEach((header) => {
-    const normalizedHeader = header.toLowerCase().replace(/[_\s-]+/g, ' ').trim();
-    Object.entries(AUTOMAP_HINTS).forEach(([fieldKey, hints]) => {
-      if (mapping[fieldKey]) return;
-      const matched = hints.some((hint) => hint.replace(/[_\s-]+/g, ' ').trim() === normalizedHeader);
-      if (matched) mapping[fieldKey] = header;
-    });
-  });
-  return mapping;
 }
 
 function normalizeDate(value) {
@@ -169,7 +106,7 @@ function validateMember(member) {
 }
 
 function analyzeFieldStats(rows, mapping) {
-  return Object.entries(mapping || {}).reduce((accumulator, [fieldKey, columnName]) => {
+  return Object.entries(mapping).reduce((accumulator, [fieldKey, columnName]) => {
     if (!columnName) return accumulator;
     const populated = rows.filter((row) => row[columnName]).length;
     accumulator[fieldKey] = {
@@ -203,86 +140,68 @@ async function logImportExceptions(base44, importRunId, issuesByRow) {
   await Promise.all(writes);
 }
 
-function buildPreview(rows, mapping) {
-  const duplicates = [];
-  const seenIdentity = new Map();
-  const issuesByRow = [];
-  let errorCount = 0;
-  let warningCount = 0;
-
-  const transformedRows = rows.map((rawRow, index) => {
-    const member = { is_eligible: true };
-    Object.entries(mapping || {}).forEach(([fieldKey, columnName]) => {
-      member[fieldKey] = transformField(fieldKey, rawRow[columnName]);
-    });
-
-    const issues = validateMember(member);
-    const identity = member.email || member.employee_id;
-    if (identity && seenIdentity.has(identity)) {
-      duplicates.push({ row: index, prevRow: seenIdentity.get(identity), identity });
-      issues.push({ field: 'employee_id', type: 'warning', message: 'Potential duplicate employee' });
-    } else if (identity) {
-      seenIdentity.set(identity, index);
-    }
-
-    errorCount += issues.filter((issue) => issue.type === 'error').length;
-    warningCount += issues.filter((issue) => issue.type === 'warning').length;
-    issuesByRow.push({ rowNumber: index + 2, issues, rawRow });
-
-    return {
-      ...Object.fromEntries(Object.entries(member).filter(([key, value]) => ALLOWED_FIELDS.includes(key) && value !== undefined)),
-      validation_issues: issues,
-      validation_status: issues.some((issue) => issue.type === 'error') ? 'has_errors' : issues.some((issue) => issue.type === 'warning') ? 'has_warnings' : 'valid',
-    };
-  });
-
-  return {
-    preview: {
-      row_count: rows.length,
-      validation_summary: { total: rows.length, errors: errorCount, warnings: warningCount },
-      field_stats: analyzeFieldStats(rows, mapping),
-      duplicates,
-      transformed_preview: transformedRows.slice(0, 5),
-    },
-    transformedRows,
-    issuesByRow,
-    errorCount,
-    warningCount,
-  };
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = validateRequest(await req.json());
+    const body = await req.json();
+    if (!body.caseId || !body.fileUrl || !body.mapping) {
+      return Response.json({ error: 'caseId, fileUrl, and mapping are required' }, { status: 400 });
+    }
+
+    const unsupportedFields = Object.keys(body.mapping).filter((fieldKey) => !ALLOWED_FIELDS.includes(fieldKey));
+    if (unsupportedFields.length > 0) {
+      return Response.json({ error: `Unsupported mapped fields: ${unsupportedFields.join(', ')}` }, { status: 400 });
+    }
+
     const fileResponse = await fetch(body.fileUrl);
     if (!fileResponse.ok) return Response.json({ error: 'Unable to read uploaded file' }, { status: 400 });
 
     const text = await fileResponse.text();
-    const { headers, rows } = parseCsv(text);
+    const { rows } = parseCsv(text);
+    const duplicates = [];
+    const seenIdentity = new Map();
+    const issuesByRow = [];
+    let errorCount = 0;
+    let warningCount = 0;
 
-    if (body.mode === 'inspect') {
-      return Response.json({
-        file_name: body.fileName || 'census.csv',
-        headers,
-        row_count: rows.length,
-        sample_rows: rows.slice(0, 5),
-        suggested_mapping: autoMap(headers),
+    const transformedRows = rows.map((rawRow, index) => {
+      const member = { is_eligible: true };
+      Object.entries(body.mapping).forEach(([fieldKey, columnName]) => {
+        member[fieldKey] = transformField(fieldKey, rawRow[columnName]);
       });
-    }
 
-    const { preview, transformedRows, issuesByRow, errorCount, warningCount } = buildPreview(rows, body.mapping || {});
+      const issues = validateMember(member);
+      const identity = member.email || member.employee_id;
+      if (identity && seenIdentity.has(identity)) {
+        duplicates.push({ row: index, prevRow: seenIdentity.get(identity), identity });
+        issues.push({ field: 'employee_id', type: 'warning', message: 'Potential duplicate employee' });
+      } else if (identity) {
+        seenIdentity.set(identity, index);
+      }
 
-    if (body.mode === 'validate') {
-      return Response.json(preview);
-    }
+      errorCount += issues.filter((issue) => issue.type === 'error').length;
+      warningCount += issues.filter((issue) => issue.type === 'warning').length;
+      issuesByRow.push({ rowNumber: index + 2, issues, rawRow });
 
-    if (errorCount > 0) {
-      return Response.json({ ...preview, error: 'Validation failed. Fix blocking errors before import.' }, { status: 400 });
-    }
+      return {
+        ...Object.fromEntries(Object.entries(member).filter(([key, value]) => ALLOWED_FIELDS.includes(key) && value !== undefined)),
+        validation_issues: issues,
+        validation_status: issues.some((issue) => issue.type === 'error') ? 'has_errors' : issues.some((issue) => issue.type === 'warning') ? 'has_warnings' : 'valid',
+      };
+    });
+
+    const preview = {
+      row_count: rows.length,
+      validation_summary: { total: rows.length, errors: errorCount, warnings: warningCount },
+      field_stats: analyzeFieldStats(rows, body.mapping),
+      duplicates,
+      transformed_preview: transformedRows.slice(0, 5),
+    };
+
+    if (body.dryRun) return Response.json(preview);
 
     const importRun = await base44.asServiceRole.entities.ImportRun.create({
       import_type: 'census_members',
@@ -306,7 +225,7 @@ Deno.serve(async (req) => {
       version_number: Number(body.currentVersionCount || 0) + 1,
       file_url: body.fileUrl,
       file_name: body.fileName || 'census.csv',
-      status: warningCount > 0 ? 'has_issues' : 'validated',
+      status: errorCount > 0 ? 'has_issues' : 'validated',
       total_employees: transformedRows.length,
       eligible_employees: transformedRows.filter((member) => member.is_eligible).length,
       validation_errors: errorCount,
@@ -327,12 +246,12 @@ Deno.serve(async (req) => {
     }
 
     await base44.entities.BenefitCase.update(body.caseId, {
-      census_status: warningCount > 0 ? 'issues_found' : 'validated',
+      census_status: errorCount > 0 ? 'issues_found' : 'validated',
       stage: 'census_in_progress',
     });
 
     await base44.asServiceRole.entities.ImportRun.update(importRun.id, {
-      status: warningCount > 0 ? 'completed_with_warnings' : 'completed',
+      status: errorCount > 0 ? 'completed_with_warnings' : 'completed',
       completed_at: new Date().toISOString(),
       success_rows: transformedRows.length,
       error_rows: errorCount,
@@ -341,7 +260,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ ...preview, import_run_id: importRun.id, census_version_id: version.id });
   } catch (error) {
-    const status = /census import request|Unsupported mapped field|Unsupported census import mode/i.test(error.message) ? 400 : 500;
-    return Response.json({ error: error.message }, { status });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

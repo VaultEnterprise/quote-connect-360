@@ -70,7 +70,7 @@ export function getDashboardSummaryMetrics(scopedData) {
   };
 }
 
-export function getDashboardCharts(currentCases, currentRenewals = []) {
+export function getDashboardCharts(currentCases) {
   const pipelineData = CASE_STAGE_GROUPS.map((group) => ({
     name: group.label,
     count: currentCases.filter((item) => group.match(item.stage)).length,
@@ -98,7 +98,7 @@ export function getDashboardCharts(currentCases, currentRenewals = []) {
     };
   });
 
-  const upcomingRenewals = currentRenewals.filter((item) => item.renewal_date && differenceInDays(new Date(item.renewal_date), new Date()) <= 90 && differenceInDays(new Date(item.renewal_date), new Date()) >= 0).length;
+  const upcomingRenewals = (renewals) => renewals.filter((item) => item.renewal_date && differenceInDays(new Date(item.renewal_date), new Date()) <= 90 && differenceInDays(new Date(item.renewal_date), new Date()) >= 0).length;
 
   return { pipelineData, typeData, monthlyData, upcomingRenewals };
 }

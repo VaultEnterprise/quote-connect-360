@@ -9,21 +9,9 @@ export const ROUTE_CONTEXT_KEYS = [
   "priorityFilter",
   "quickView",
   "stageGroup",
-  "viewMode",
-  "dateRange",
-  "owner",
-  "team",
-  "agencyId",
-  "caseType",
-  "stage",
 ];
 
 export const ROUTE_PARAM_SCHEMAS = {
-  dashboard: {
-    path: () => "/",
-    required: [],
-    queryKeys: ["viewMode", "dateRange", "owner", "team", "agencyId", "employerId", "caseType", "stage"],
-  },
   caseDetail: {
     path: ({ caseId }) => `/cases/${caseId}`,
     required: ["caseId"],
