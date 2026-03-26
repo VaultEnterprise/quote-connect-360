@@ -59,12 +59,13 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
   const [showCsvImport, setShowCsvImport] = useState(false);
 
   useEffect(() => {
-    if (scheduleId && schedules.some((schedule) => schedule.id === scheduleId)) return;
-    if (initialScheduleId && schedules.some((schedule) => schedule.id === initialScheduleId)) {
+    if (scheduleId && schedules.some((schedule) => schedule.id === scheduleId && schedule.is_active)) return;
+    if (initialScheduleId && schedules.some((schedule) => schedule.id === initialScheduleId && schedule.is_active)) {
       setScheduleId(initialScheduleId);
       return;
     }
-    if (schedules.length === 1) setScheduleId(schedules[0].id);
+    const activeSchedules = schedules.filter((schedule) => schedule.is_active);
+    if (activeSchedules.length === 1) setScheduleId(activeSchedules[0].id);
   }, [initialScheduleId, scheduleId, schedules]);
 
   const schedule = schedules.find(s => s.id === scheduleId);
@@ -235,7 +236,9 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
       {!scheduleId && (
         <Card className="border-dashed">
           <CardContent className="p-8 text-center text-muted-foreground text-sm">
-            Select a rate schedule to view and manage its rate detail rows.
+            {schedules.some((schedule) => schedule.is_active)
+              ? "Select a rate schedule to view and manage its rate detail rows."
+              : "No active rate schedules are available to show rate details."}
           </CardContent>
         </Card>
       )}
