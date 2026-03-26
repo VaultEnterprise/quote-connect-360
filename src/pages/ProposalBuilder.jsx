@@ -39,7 +39,7 @@ const DATE_RANGE_OPTIONS = [
 
 export default function ProposalBuilder() {
   const queryClient = useQueryClient();
-  const routeContext = useRouteContext();
+  const routeContext = useRouteContext("proposals");
   const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

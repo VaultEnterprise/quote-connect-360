@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   ArrowLeft, Users, FileText, ClipboardCheck, Calendar,
   Clock, FileCheck, AlertTriangle, Briefcase, Pencil, X, Copy
@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/AuthContext";
+import useRouteParamsContract from "@/hooks/useRouteParamsContract";
+import { STAGE_LABELS, getNextStage } from "@/contracts/workflowRegistry";
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -36,31 +38,9 @@ import AuditTrailViewer  from "@/components/shared/AuditTrailViewer";
 // ── AI ───────────────────────────────────────────────────────────────────────
 import AIAssistant from "@/components/ai/AIAssistant";
 
-// ── Constants ────────────────────────────────────────────────────────────────
-const STAGE_ORDER = [
-  "draft", "census_in_progress", "census_validated", "ready_for_quote",
-  "quoting", "proposal_ready", "employer_review", "approved_for_enrollment",
-  "enrollment_open", "enrollment_complete", "install_in_progress", "active",
-];
-
-const STAGE_LABELS = {
-  draft: "Draft",
-  census_in_progress: "Census",
-  census_validated: "Validated",
-  ready_for_quote: "Quote Ready",
-  quoting: "Quoting",
-  proposal_ready: "Proposal",
-  employer_review: "Review",
-  approved_for_enrollment: "Approved",
-  enrollment_open: "Enrollment",
-  enrollment_complete: "Enrolled",
-  install_in_progress: "Install",
-  active: "Active",
-};
-
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function CaseDetail() {
-  const { id: caseId } = useParams();
+  const { caseId } = useRouteParamsContract("caseDetail");
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -144,10 +124,7 @@ export default function CaseDetail() {
   );
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const currentStageIndex = STAGE_ORDER.indexOf(caseData.stage);
-  const nextStage = currentStageIndex >= 0 && currentStageIndex < STAGE_ORDER.length - 1
-    ? STAGE_ORDER[currentStageIndex + 1]
-    : null;
+  const nextStage = getNextStage(caseData.stage);
 
   const aiContext = {
     employer:         caseData.employer_name,

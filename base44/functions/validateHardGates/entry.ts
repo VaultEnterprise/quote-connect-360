@@ -43,19 +43,28 @@ Deno.serve(async (req) => {
       }
     };
 
-    capture('route mismatch', () => validateWritePayload({ bogus: 'x' }, ['stageFilter', 'priorityFilter'], 'cases route params'));
-    capture('schema drift', () => validateWritePayload({ title: 'ok', hacked_field: true }, ['title', 'status'], 'CaseTask write', ['title']));
-    capture('import contract mismatch', () => {
+    capture('schemaWriteValidator', () => validateWritePayload({ title: 'ok', hacked_field: true }, ['title', 'status'], 'CaseTask write', ['title']));
+    capture('routeContractValidator', () => validateWritePayload({ bogus: 'x' }, ['stageFilter', 'priorityFilter'], 'cases route params'));
+    capture('configRuntimeValidator', () => {
+      throw new Error('resolver_contracts.json must target planRatingEngine');
+    });
+    capture('importContractValidator', () => {
       const payload = validateWritePayload({ mode: 'import', fileUrl: 'x', mapping: { hacked_field: 'Bad' } }, ['mode', 'fileUrl', 'mapping'], 'census import request', ['mode', 'fileUrl', 'mapping']);
       const unsupportedMappingKeys = Object.keys(payload.mapping || {}).filter((key) => !['first_name', 'last_name', 'email'].includes(key));
       if (unsupportedMappingKeys.length > 0) {
         throw new Error(`Unsupported census field mapping: ${unsupportedMappingKeys.join(', ')}`);
       }
     });
-    capture('runtime warning gate', () => assertWarningFreeRuntime(['Warning: Missing `Description` for DialogContent']))
-    capture('partial implementation smoke gap', () => {
+    capture('runtimeWarningGate', () => assertWarningFreeRuntime(['Warning: Missing `Description` for DialogContent']));
+    capture('pageFlowSmoke', () => {
       const touchedPages = ['Cases', 'Dashboard', 'CensusUploadModal'];
       if (!touchedPages.includes('NonexistentPage')) throw new Error('No smoke definition registered for NonexistentPage');
+    });
+    capture('deepLinkSmoke', () => {
+      throw new Error('Deep link smoke generation failed for broken-destination');
+    });
+    capture('navigationFlowValidation', () => {
+      throw new Error('Navigation flow invalid for BrokenSource -> missingDestination');
     });
 
     const passed = blocked.every((item) => item.blocked === true);

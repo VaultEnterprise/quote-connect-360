@@ -11,3 +11,13 @@ export function buildDeepLinkSmokeMatrix() {
     { key: "renewals-case", route: buildRoute("renewals", { caseId: "example-case", employerId: "example-employer" }) },
   ];
 }
+
+export function assertDeepLinkSmokeCoverage() {
+  const matrix = buildDeepLinkSmokeMatrix();
+  matrix.forEach(({ key, route }) => {
+    if (!route || typeof route !== "string" || !route.startsWith("/")) {
+      throw new Error(`Deep link smoke generation failed for ${key}`);
+    }
+  });
+  return matrix;
+}

@@ -200,7 +200,7 @@ function GroupedSection({ title, tasks, collapsed, onToggle, onEdit, onDelete, o
 }
 
 export default function Tasks() {
-  const routeContext = useRouteContext();
+  const routeContext = useRouteContext("tasks");
   const caseScope = routeContext.caseId || "";
   const [statusFilter, setStatusFilter] = useState("active");
   const [priorityFilter, setPriorityFilter] = useState("all");

@@ -3,7 +3,7 @@ import pageSpecs from "@/config/page_specs.json";
 import resolverContracts from "@/config/resolver_contracts.json";
 import { ROUTE_PARAM_SCHEMAS } from "@/contracts/routes/routeParamSchemas";
 import { assertPageFlowCoverage } from "@/validation/pageFlowSmoke";
-import { buildDeepLinkSmokeMatrix } from "@/validation/deepLinkSmoke";
+import { assertDeepLinkSmokeCoverage } from "@/validation/deepLinkSmoke";
 
 export function validateConfigRuntimeAlignment() {
   const errors = [];
@@ -28,7 +28,7 @@ export function validateConfigRuntimeAlignment() {
   });
 
   try {
-    buildDeepLinkSmokeMatrix();
+    assertDeepLinkSmokeCoverage();
   } catch (error) {
     errors.push(`Deep link smoke generation failed: ${error.message}`);
   }

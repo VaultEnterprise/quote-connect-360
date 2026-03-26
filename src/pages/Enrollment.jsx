@@ -16,7 +16,7 @@ import useRouteContext from "@/hooks/useRouteContext";
 const STATUS_ORDER = { open: 0, closing_soon: 1, scheduled: 2, closed: 3, finalized: 4 };
 
 export default function Enrollment() {
-  const routeContext = useRouteContext();
+  const routeContext = useRouteContext("enrollment");
   const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");

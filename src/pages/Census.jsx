@@ -16,7 +16,7 @@ import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel
 import useRouteContext from "@/hooks/useRouteContext";
 
 export default function Census() {
-  const routeContext = useRouteContext();
+  const routeContext = useRouteContext("census");
   const [search, setSearch] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState(routeContext.caseId || "");
   const [showUpload, setShowUpload] = useState(false);

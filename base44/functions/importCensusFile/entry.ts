@@ -30,6 +30,24 @@ const AUTOMAP_HINTS = {
 };
 const ALLOWED_MODES = ["inspect", "validate", "import"];
 const ALLOWED_REQUEST_KEYS = ["mode", "caseId", "fileUrl", "fileName", "mapping", "notes", "currentVersionCount"];
+const RESPONSE_CONTRACTS = {
+  inspect: {
+    allowed: ["file_name", "headers", "row_count", "sample_rows", "suggested_mapping"],
+    required: ["file_name", "headers", "row_count", "sample_rows", "suggested_mapping"],
+  },
+  validate: {
+    allowed: ["row_count", "validation_summary", "field_stats", "duplicates", "transformed_preview"],
+    required: ["row_count", "validation_summary", "field_stats", "duplicates", "transformed_preview"],
+  },
+  import: {
+    allowed: ["row_count", "validation_summary", "field_stats", "duplicates", "transformed_preview", "import_run_id", "census_version_id"],
+    required: ["row_count", "validation_summary", "field_stats", "duplicates", "transformed_preview", "import_run_id", "census_version_id"],
+  },
+  importError: {
+    allowed: ["row_count", "validation_summary", "field_stats", "duplicates", "transformed_preview", "error"],
+    required: ["row_count", "validation_summary", "field_stats", "duplicates", "transformed_preview", "error"],
+  },
+};
 
 function stripUndefined(input) {
   return Object.fromEntries(Object.entries(input || {}).filter(([, value]) => value !== undefined));
@@ -59,6 +77,13 @@ function validateRequest(body) {
     });
   }
   return body;
+}
+
+function validateResponseShape(payload, contractKey) {
+  const contract = RESPONSE_CONTRACTS[contractKey];
+  assertKnownKeys(payload, contract.allowed, `${contractKey} response`);
+  assertRequiredKeys(payload, contract.required, `${contractKey} response`);
+  return payload;
 }
 
 function parseCsvLine(line) {
@@ -265,23 +290,24 @@ Deno.serve(async (req) => {
     const { headers, rows } = parseCsv(text);
 
     if (body.mode === 'inspect') {
-      return Response.json({
+      const response = validateResponseShape({
         file_name: body.fileName || 'census.csv',
         headers,
         row_count: rows.length,
         sample_rows: rows.slice(0, 5),
         suggested_mapping: autoMap(headers),
-      });
+      }, 'inspect');
+      return Response.json(response);
     }
 
     const { preview, transformedRows, issuesByRow, errorCount, warningCount } = buildPreview(rows, body.mapping || {});
 
     if (body.mode === 'validate') {
-      return Response.json(preview);
+      return Response.json(validateResponseShape(preview, 'validate'));
     }
 
     if (errorCount > 0) {
-      return Response.json({ ...preview, error: 'Validation failed. Fix blocking errors before import.' }, { status: 400 });
+      return Response.json(validateResponseShape({ ...preview, error: 'Validation failed. Fix blocking errors before import.' }, 'importError'), { status: 400 });
     }
 
     const importRun = await base44.asServiceRole.entities.ImportRun.create({
@@ -339,7 +365,7 @@ Deno.serve(async (req) => {
       warning_rows: warningCount,
     });
 
-    return Response.json({ ...preview, import_run_id: importRun.id, census_version_id: version.id });
+    return Response.json(validateResponseShape({ ...preview, import_run_id: importRun.id, census_version_id: version.id }, 'import'));
   } catch (error) {
     const status = /census import request|Unsupported mapped field|Unsupported census import mode/i.test(error.message) ? 400 : 500;
     return Response.json({ error: error.message }, { status });
