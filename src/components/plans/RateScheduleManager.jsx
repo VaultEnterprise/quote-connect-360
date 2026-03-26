@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, CheckCircle, AlertTriangle, Clock, Archive, Copy, Edit2, X } from "lucide-react";
+import { Plus, CheckCircle, AlertTriangle, Clock, Archive, Copy, Edit2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
@@ -95,6 +95,17 @@ export default function RateScheduleManager({ plans, schedules, defaultPlanId })
     onSuccess: () => qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] }),
   });
 
+  const deleteSchedule = useMutation({
+    mutationFn: (id) => base44.entities.PlanRateSchedule.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] });
+      toast.success("Rate schedule deleted");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Could not delete the rate schedule");
+    },
+  });
+
   const addStateScope = () => {
     const s = stateInput.toUpperCase().trim();
     if (!s || form.state_scope.includes(s)) { setStateInput(""); return; }
@@ -165,6 +176,9 @@ export default function RateScheduleManager({ plans, schedules, defaultPlanId })
                     </Button>
                     <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => toggleActive.mutate({ id: s.id, is_active: s.is_active })}>
                       <Archive className="w-3 h-3" />{s.is_active ? "Archive" : "Restore"}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => deleteSchedule.mutate(s.id)}>
+                      <Trash2 className="w-3 h-3" />Delete
                     </Button>
                   </div>
                 </CardContent>
