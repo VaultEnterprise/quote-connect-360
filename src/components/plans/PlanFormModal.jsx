@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 const PLAN_TYPES = ["medical","dental","vision","life","std","ltd","voluntary"];
 const NETWORK_TYPES = ["HMO","PPO","EPO","HDHP","POS","indemnity","other"];
@@ -16,6 +18,8 @@ const CARRIERS = ["Aetna","Anthem","BlueCross BlueShield","Cigna","Humana","Kais
 
 export default function PlanFormModal({ plan, open, onClose, defaultType = "medical" }) {
   const queryClient = useQueryClient();
+  const uploadInputRef = useRef(null);
+  const [scheduleFile, setScheduleFile] = useState(null);
   const [form, setForm] = useState({
     plan_type: plan?.plan_type || defaultType,
     carrier: plan?.carrier || "",
@@ -46,15 +50,22 @@ export default function PlanFormModal({ plan, open, onClose, defaultType = "medi
   const numFields = ["deductible_individual","deductible_family","oop_max_individual","oop_max_family","copay_pcp","copay_specialist","copay_er","coinsurance","rx_tier1","rx_tier2","rx_tier3","rx_tier4"];
 
   const saveMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const payload = { ...form };
       numFields.forEach(k => { if (payload[k] !== "") payload[k] = parseFloat(payload[k]); else delete payload[k]; });
+      if (scheduleFile) {
+        const upload = await base44.integrations.Core.UploadFile({ file: scheduleFile });
+        payload.schedule_of_benefits_url = upload.file_url;
+      }
       if (plan?.id) return base44.entities.BenefitPlan.update(plan.id, payload);
       return base44.entities.BenefitPlan.create(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["benefit-plans"] });
       onClose();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Could not save plan");
     },
   });
 
@@ -125,9 +136,30 @@ export default function PlanFormModal({ plan, open, onClose, defaultType = "medi
                 <Label>Policy Expiration Date</Label>
                 <Input className="mt-1" type="date" value={form.policy_expiration_date} onChange={e => set("policy_expiration_date", e.target.value)} />
               </div>
-              <div className="col-span-2">
-                <Label>Schedule of Benefits Link</Label>
-                <Input className="mt-1" type="url" value={form.schedule_of_benefits_url} onChange={e => set("schedule_of_benefits_url", e.target.value)} placeholder="https://..." />
+              <div className="col-span-2 space-y-3">
+                <div>
+                  <Label>Schedule of Benefits Link</Label>
+                  <Input className="mt-1" type="url" value={form.schedule_of_benefits_url} onChange={e => set("schedule_of_benefits_url", e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <Label>Schedule of Benefits Upload</Label>
+                  <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Button type="button" variant="outline" onClick={() => uploadInputRef.current?.click()} className="gap-2 sm:w-auto w-full">
+                      <Upload className="w-4 h-4" />
+                      {scheduleFile ? "Change File" : "Upload File"}
+                    </Button>
+                    <input
+                      ref={uploadInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                      className="hidden"
+                      onChange={(e) => setScheduleFile(e.target.files?.[0] || null)}
+                    />
+                    <span className="text-sm text-muted-foreground truncate">
+                      {scheduleFile ? `${scheduleFile.name} will be saved with this plan` : form.schedule_of_benefits_url ? "A file or link is already saved for this plan" : "No file selected"}
+                    </span>
+                  </div>
+                </div>
               </div>
               {isMedical && (
                 <div className="col-span-2 flex items-center gap-3">
@@ -186,7 +218,8 @@ export default function PlanFormModal({ plan, open, onClose, defaultType = "medi
 
         <div className="flex justify-end gap-2 pt-2 border-t">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.plan_name || !form.carrier}>
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.plan_name || !form.carrier} className="gap-2">
+            {saveMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             {saveMutation.isPending ? "Saving..." : plan ? "Save Changes" : "Add to Library"}
           </Button>
         </div>
