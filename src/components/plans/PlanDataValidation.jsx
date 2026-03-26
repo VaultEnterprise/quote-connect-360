@@ -28,7 +28,6 @@ export default function PlanDataValidation({ plans }) {
 
   return (
     <Card>
-      <CardContent className="space-y-4 pt-6">
         {/* Summary */}
         <div className="grid grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-red-50">
@@ -85,7 +84,6 @@ export default function PlanDataValidation({ plans }) {
             <span>{complete.length} plan(s) fully complete and quote-ready</span>
           </div>
         )}
-      </CardContent>
     </Card>
   );
 }
