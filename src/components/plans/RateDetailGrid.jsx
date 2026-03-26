@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Upload, Download, Trash2, AlertTriangle, FileUp } from "lucide-react";
 import { toast } from "sonner";
+import SpecialRateImporter from "@/components/plans/SpecialRateImporter";
 
 const AGE_BANDS = ["Under25","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65+"];
 const TIERS = ["EE","ES","EC","FAM"];
@@ -176,6 +177,11 @@ export default function RateDetailGrid({ plans, schedules }) {
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => fileInputRef.current?.click()}>
               <FileUp className="w-3 h-3" />Upload File
             </Button>
+            <SpecialRateImporter
+              planId={schedule?.plan_id}
+              rateScheduleId={scheduleId}
+              scheduleName={schedule?.schedule_name}
+            />
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={exportCSV}>
               <Download className="w-3 h-3" />Export
             </Button>
