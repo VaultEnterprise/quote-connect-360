@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ const TYPE_COLORS = {
 };
 
 export default function PlanCard({ plan, onEdit, onArchive }) {
+  const navigate = useNavigate();
   const [showRates, setShowRates] = useState(false);
 
   const { data: rateTables = [] } = useQuery({
@@ -29,7 +31,7 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
   const primaryRate = rateTables[0];
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/plans/${plan.id}`)}>
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -44,10 +46,10 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
             <p className="text-xs text-muted-foreground mt-0.5">{plan.carrier}{plan.plan_code ? ` · ${plan.plan_code}` : ""}</p>
           </div>
           <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(plan)}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(plan); }}>
               <Pencil className="w-3 h-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onArchive}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); onArchive(); }}>
               <Archive className="w-3 h-3" />
             </Button>
           </div>
@@ -74,14 +76,16 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
           variant="ghost"
           size="sm"
           className="w-full h-7 text-xs text-muted-foreground hover:text-foreground justify-between px-2"
-          onClick={() => setShowRates(!showRates)}
+          onClick={(e) => { e.stopPropagation(); setShowRates(!showRates); }}
         >
           <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> Rate Table</span>
           {showRates ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </Button>
 
         {showRates && (
-          <RateTableEditor planId={plan.id} rateTables={rateTables} />
+          <div onClick={(e) => e.stopPropagation()}>
+            <RateTableEditor planId={plan.id} rateTables={rateTables} />
+          </div>
         )}
       </CardContent>
     </Card>

@@ -41,9 +41,9 @@ export default function PlanRateEditor() {
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
   }, [queryClient]);
 
-  const { data: plans = [] } = useQuery({
+  const { data: allPlans = [] } = useQuery({
     queryKey: ["benefit-plans"],
-    queryFn: () => base44.entities.BenefitPlan.filter({ status: "active" }),
+    queryFn: () => base44.entities.BenefitPlan.list("-created_date", 500),
   });
 
   const { data: allSchedules = [] } = useQuery({
@@ -58,6 +58,7 @@ export default function PlanRateEditor() {
     enabled: !!selectedPlanId,
   });
 
+  const plans = allPlans.filter((plan) => plan.status === "active");
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const planSchedules = allSchedules.filter(s => s.plan_id === selectedPlanId);
   const lockedRates = stateRates.filter(r => r.is_locked && r.lock_expiration_date);

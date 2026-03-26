@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Upload, BookOpen, FileDown, BarChart2, Scale, GitBranch, Layers, Settings, FileText, Calculator, HandCoins } from "lucide-react";
+import { Plus, Search, Upload, BookOpen, FileDown, BarChart2, Scale, GitBranch, Layers, Settings, FileText, Calculator, HandCoins, Sparkles } from "lucide-react";
 import PlanSummaryGenerator from "@/components/plans/PlanSummaryGenerator";
 import PlanCostCalculator from "@/components/plans/PlanCostCalculator";
 import BenefitsGlossaryPanel from "@/components/plans/BenefitsGlossaryPanel";
@@ -15,12 +15,12 @@ import NegotiationTracker from "@/components/plans/NegotiationTracker";
 import PlanReportBuilder from "@/components/plans/PlanReportBuilder";
 import RateCardGenerator from "@/components/plans/RateCardGenerator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import PlanCard from "@/components/plans/PlanCard";
 import PlanFormModal from "@/components/plans/PlanFormModal";
-import PlanImportModal from "@/components/plans/PlanImportModal";
+import PlanWorkbookImportModal from "@/components/plans/PlanWorkbookImportModal";
 import PlanAnalyticsPanel from "@/components/plans/PlanAnalyticsPanel";
 import PlanComparisonTool from "@/components/plans/PlanComparisonTool";
 import PlanBulkActionsPanel from "@/components/plans/PlanBulkActionsPanel";
@@ -41,6 +41,7 @@ const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
 
 export default function PlanLibrary() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [carrierFilter, setCarrierFilter] = useState("all");
   const [networkFilter, setNetworkFilter] = useState("all");
@@ -100,6 +101,9 @@ export default function PlanLibrary() {
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link to="/plan-analytics" className="flex items-center gap-1.5"><BarChart2 className="w-4 h-4" />Analytics</Link>
+            </Button>
+            <Button variant="outline" onClick={() => setShowImport(true)}>
+              <Sparkles className="w-4 h-4 mr-2" /> Special Import
             </Button>
             <Button variant="outline" onClick={() => setShowBulkUpload(!showBulkUpload)}>
               <Upload className="w-4 h-4 mr-2" /> Bulk Upload
@@ -254,7 +258,13 @@ export default function PlanLibrary() {
           onClose={() => { setShowForm(false); setEditingPlan(null); }}
         />
       )}
-      {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
+      {showImport && (
+        <PlanWorkbookImportModal
+          open={showImport}
+          onClose={() => setShowImport(false)}
+          onImported={(planId) => navigate(`/plans/${planId}`)}
+        />
+      )}
       {showCompareDrawer && (
         <PlanCompareDrawer
           plans={plans.filter(p => selectedForCompare.includes(p.id))}

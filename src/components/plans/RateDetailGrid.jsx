@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,13 +50,22 @@ function parseCSVRates(text, scheduleId, planId) {
   return rows;
 }
 
-export default function RateDetailGrid({ plans, schedules }) {
+export default function RateDetailGrid({ plans, schedules, initialScheduleId = "" }) {
   const qc = useQueryClient();
   const fileInputRef = useRef(null);
-  const [scheduleId, setScheduleId] = useState("");
+  const [scheduleId, setScheduleId] = useState(initialScheduleId || "");
   const [newRow, setNewRow] = useState({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
   const [csvText, setCsvText] = useState("");
   const [showCsvImport, setShowCsvImport] = useState(false);
+
+  useEffect(() => {
+    if (scheduleId && schedules.some((schedule) => schedule.id === scheduleId)) return;
+    if (initialScheduleId && schedules.some((schedule) => schedule.id === initialScheduleId)) {
+      setScheduleId(initialScheduleId);
+      return;
+    }
+    if (schedules.length === 1) setScheduleId(schedules[0].id);
+  }, [initialScheduleId, scheduleId, schedules]);
 
   const schedule = schedules.find(s => s.id === scheduleId);
   const plan = plans.find(p => p.id === schedule?.plan_id);
