@@ -16,6 +16,77 @@ const agencySeed = {
   },
 };
 
+const workforceTargets = {
+  redwood: { employeeCount: 52, eligibleCount: 50, totalDependents: 24, prefix: 'RWD', startNumber: 1001, domain: 'redwoodcreative.example.com', city: 'Newport Beach', state: 'CA', zip: '92660', location: 'Newport Beach HQ', departments: ['Creative', 'Client Success', 'Operations', 'Design'], titles: ['Creative Strategist', 'Account Manager', 'Designer', 'Operations Lead'] },
+  sierra: { employeeCount: 74, eligibleCount: 68, totalDependents: 37, prefix: 'SIE', startNumber: 2001, domain: 'sierraprecision.example.com', city: 'Reno', state: 'NV', zip: '89502', location: 'Reno Plant', departments: ['Production', 'Finance', 'Engineering', 'Operations'], titles: ['Production Supervisor', 'Plant Analyst', 'Process Engineer', 'Operations Manager'] },
+  harbor: { employeeCount: 58, eligibleCount: 54, totalDependents: 22, prefix: 'HWC', startNumber: 3001, domain: 'harborwellness.example.com', city: 'Laguna Beach', state: 'CA', zip: '92651', location: 'Laguna Beach Clinic', departments: ['Clinical', 'Care Coordination', 'Administration', 'Wellness'], titles: ['Nurse Practitioner', 'Care Coordinator', 'Clinic Manager', 'Wellness Specialist'] },
+};
+
+const firstNames = ['Jordan', 'Mia', 'Olivia', 'Priya', 'Ethan', 'Sophia', 'Noah', 'Ava', 'Lucas', 'Emma', 'Mason', 'Isabella'];
+const lastNames = ['Lee', 'Gomez', 'Turner', 'Nair', 'Brooks', 'Patel', 'Foster', 'Kim', 'Reed', 'Shah', 'Ortiz', 'Carter'];
+const coverageTiers = ['employee_only', 'employee_spouse', 'employee_children', 'family'];
+
+const employeeOverrides = {
+  redwood: {
+    0: { first_name: 'Jordan', last_name: 'Lee', date_of_birth: '1992-04-18', gender: 'male', ssn_last4: '4102', email: 'jlee@redwoodcreative.example.com', phone: '(949) 555-1011', address: '12 Bayview Lane', city: 'Costa Mesa', zip: '92627', hire_date: '2021-02-01', annual_salary: 88000, job_title: 'Creative Director', department: 'Creative', dependent_count: 0, coverage_tier: 'employee_only' },
+    1: { first_name: 'Mia', last_name: 'Gomez', date_of_birth: '1987-11-02', gender: 'female', ssn_last4: '8221', email: 'mgomez@redwoodcreative.example.com', phone: '(949) 555-1012', address: '88 Seaside Drive', city: 'Irvine', zip: '92618', hire_date: '2019-08-12', annual_salary: 102000, job_title: 'Account Strategist', department: 'Client Success', dependent_count: 3, coverage_tier: 'family', location: 'Hybrid' },
+  },
+  sierra: {
+    0: { first_name: 'Olivia', last_name: 'Turner', date_of_birth: '1985-01-14', gender: 'female', ssn_last4: '2041', email: 'oturner@sierraprecision.example.com', phone: '(775) 555-2011', address: '510 Arrowhead Way', city: 'Reno', zip: '89511', hire_date: '2018-03-19', annual_salary: 94000, job_title: 'Plant Controller', department: 'Finance', dependent_count: 2, coverage_tier: 'family' },
+  },
+  harbor: {
+    0: { first_name: 'Priya', last_name: 'Nair', date_of_birth: '1990-12-12', gender: 'female', ssn_last4: '4411', email: 'pnair@harborwellness.example.com', phone: '(949) 555-3011', address: '17 Temple Hills Drive', city: 'Laguna Beach', zip: '92651', hire_date: '2020-06-15', annual_salary: 99000, job_title: 'Nurse Practitioner', department: 'Clinical', dependent_count: 0, coverage_tier: 'employee_only' },
+  },
+};
+
+const buildCensusMemberSeeds = (censusVersionMap, caseMap) => {
+  return Object.entries(workforceTargets).flatMap(([key, config]) => {
+    return Array.from({ length: config.employeeCount }, (_, index) => {
+      const override = employeeOverrides[key]?.[index] || {};
+      const employeeNumber = config.startNumber + index;
+      const firstName = override.first_name || firstNames[index % firstNames.length];
+      const lastName = override.last_name || lastNames[(index + 3) % lastNames.length];
+      const dependentCount = override.dependent_count ?? (index % 5 === 0 ? 3 : index % 4 === 0 ? 2 : index % 3 === 0 ? 1 : 0);
+      const coverageTier = override.coverage_tier || coverageTiers[Math.min(dependentCount, 3)];
+      const month = String((index % 12) + 1).padStart(2, '0');
+      const day = String((index % 28) + 1).padStart(2, '0');
+      const hireMonth = String(((index + 2) % 12) + 1).padStart(2, '0');
+      const hireDay = String(((index + 5) % 28) + 1).padStart(2, '0');
+
+      return {
+        census_version_id: censusVersionMap[key].id,
+        case_id: caseMap[key].id,
+        employee_id: `${config.prefix}-${employeeNumber}`,
+        first_name: firstName,
+        last_name: lastName,
+        date_of_birth: override.date_of_birth || `${1981 + (index % 16)}-${month}-${day}`,
+        gender: override.gender || (index % 2 === 0 ? 'female' : 'male'),
+        ssn_last4: override.ssn_last4 || String(1000 + ((index * 137) % 9000)),
+        email: override.email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}${index + 1}@${config.domain}`,
+        phone: override.phone || `(555) 01${String(employeeNumber).slice(-2)}-${String(10 + (index % 90)).padStart(2, '0')}`,
+        address: override.address || `${100 + index} Market Street`,
+        city: override.city || config.city,
+        state: config.state,
+        zip: override.zip || config.zip,
+        hire_date: override.hire_date || `${2016 + (index % 9)}-${hireMonth}-${hireDay}`,
+        employment_status: 'active',
+        employment_type: 'full_time',
+        hours_per_week: 40,
+        annual_salary: override.annual_salary || 62000 + (index * 1750),
+        job_title: override.job_title || config.titles[index % config.titles.length],
+        department: override.department || config.departments[index % config.departments.length],
+        location: override.location || config.location,
+        class_code: 'FT',
+        is_eligible: index < config.eligibleCount,
+        dependent_count: dependentCount,
+        coverage_tier: coverageTier,
+        validation_status: 'valid',
+        validation_issues: [],
+      };
+    });
+  });
+};
+
 const employerSeeds = [
   {
     name: 'Redwood Creative Studio',
@@ -29,8 +100,8 @@ const employerSeeds = [
     zip: '92660',
     phone: '(949) 555-1100',
     website: 'https://redwoodcreative.example.com',
-    employee_count: 32,
-    eligible_count: 29,
+    employee_count: workforceTargets.redwood.employeeCount,
+    eligible_count: workforceTargets.redwood.eligibleCount,
     effective_date: '2026-06-01',
     renewal_date: '2027-06-01',
     status: 'prospect',
@@ -50,8 +121,8 @@ const employerSeeds = [
     zip: '89502',
     phone: '(775) 555-2200',
     website: 'https://sierraprecision.example.com',
-    employee_count: 74,
-    eligible_count: 68,
+    employee_count: workforceTargets.sierra.employeeCount,
+    eligible_count: workforceTargets.sierra.eligibleCount,
     effective_date: '2026-07-01',
     renewal_date: '2027-07-01',
     status: 'active',
@@ -71,8 +142,8 @@ const employerSeeds = [
     zip: '92651',
     phone: '(949) 555-3300',
     website: 'https://harborwellness.example.com',
-    employee_count: 21,
-    eligible_count: 19,
+    employee_count: workforceTargets.harbor.employeeCount,
+    eligible_count: workforceTargets.harbor.eligibleCount,
     effective_date: '2026-08-01',
     renewal_date: '2027-08-01',
     status: 'active',
@@ -221,10 +292,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const counts = { created: {}, existing: {} };
+    const counts = { created: {}, existing: {}, updated: {} };
 
     const bump = (bucket, name) => {
       bucket[name] = (bucket[name] || 0) + 1;
+    };
+
+    const bumpBy = (bucket, name, amount) => {
+      bucket[name] = (bucket[name] || 0) + amount;
     };
 
     const listEntities = async (entityName, limit = 200) => {
@@ -241,6 +316,25 @@ Deno.serve(async (req) => {
       cache.unshift(created);
       bump(counts.created, entityName);
       return created;
+    };
+
+    const updateRecordIfNeeded = async (entityName, cache, record, updates) => {
+      const changedFields = Object.fromEntries(
+        Object.entries(updates).filter(([key, value]) => JSON.stringify(record[key]) !== JSON.stringify(value)),
+      );
+
+      if (Object.keys(changedFields).length === 0) {
+        return record;
+      }
+
+      await base44.asServiceRole.entities[entityName].update(record.id, changedFields);
+      const updatedRecord = { ...record, ...changedFields };
+      const recordIndex = cache.findIndex((item) => item.id === record.id);
+      if (recordIndex >= 0) {
+        cache[recordIndex] = updatedRecord;
+      }
+      bump(counts.updated, entityName);
+      return updatedRecord;
     };
 
     const [
@@ -300,12 +394,16 @@ Deno.serve(async (req) => {
 
     const employerMap = {};
     for (const seed of employerSeeds) {
-      employerMap[seed.name] = await ensureRecord(
+      const employerRecord = await ensureRecord(
         'EmployerGroup',
         employers,
         (item) => item.name === seed.name,
         { ...seed, agency_id: agency.id },
       );
+      employerMap[seed.name] = await updateRecordIfNeeded('EmployerGroup', employers, employerRecord, {
+        employee_count: seed.employee_count,
+        eligible_count: seed.eligible_count,
+      });
     }
 
     const caseMap = {};
@@ -322,7 +420,7 @@ Deno.serve(async (req) => {
         products_requested: ['medical', 'dental', 'vision'],
         notes: 'Redwood is comparing a richer PPO option against an HSA-led strategy before finalist presentations.',
         employer_name: 'Redwood Creative Studio',
-        employee_count: 32,
+        employee_count: workforceTargets.redwood.employeeCount,
         census_status: 'validated',
         quote_status: 'in_progress',
         enrollment_status: 'not_started',
@@ -341,7 +439,7 @@ Deno.serve(async (req) => {
         products_requested: ['medical', 'dental', 'vision', 'life'],
         notes: 'Sierra is moving off a legacy carrier and is in active employee enrollment with a July 1 effective date.',
         employer_name: 'Sierra Precision Manufacturing',
-        employee_count: 74,
+        employee_count: workforceTargets.sierra.employeeCount,
         census_status: 'validated',
         quote_status: 'completed',
         enrollment_status: 'open',
@@ -360,7 +458,7 @@ Deno.serve(async (req) => {
         products_requested: ['medical', 'life', 'std'],
         notes: 'Harbor Wellness is reviewing renewal options with a focus on minimizing disruption while controlling renewal increase.',
         employer_name: 'Harbor Wellness Clinic',
-        employee_count: 21,
+        employee_count: workforceTargets.harbor.employeeCount,
         census_status: 'validated',
         quote_status: 'completed',
         enrollment_status: 'not_started',
@@ -370,7 +468,7 @@ Deno.serve(async (req) => {
     ];
 
     for (const seed of caseSeeds) {
-      caseMap[seed.key] = await ensureRecord(
+      const caseRecord = await ensureRecord(
         'BenefitCase',
         cases,
         (item) => item.case_number === seed.case_number,
@@ -380,6 +478,9 @@ Deno.serve(async (req) => {
           employer_group_id: employerMap[seed.employerName].id,
         },
       );
+      caseMap[seed.key] = await updateRecordIfNeeded('BenefitCase', cases, caseRecord, {
+        employee_count: seed.employee_count,
+      });
     }
 
     const planMap = {};
@@ -400,9 +501,9 @@ Deno.serve(async (req) => {
         version_number: 1,
         file_name: 'redwood_census_q2_2026.xlsx',
         status: 'validated',
-        total_employees: 32,
-        total_dependents: 11,
-        eligible_employees: 29,
+        total_employees: workforceTargets.redwood.employeeCount,
+        total_dependents: workforceTargets.redwood.totalDependents,
+        eligible_employees: workforceTargets.redwood.eligibleCount,
         validation_errors: 0,
         validation_warnings: 1,
         uploaded_by: user.email,
@@ -415,9 +516,9 @@ Deno.serve(async (req) => {
         version_number: 1,
         file_name: 'sierra_takeover_census_2026.xlsx',
         status: 'validated',
-        total_employees: 74,
-        total_dependents: 37,
-        eligible_employees: 68,
+        total_employees: workforceTargets.sierra.employeeCount,
+        total_dependents: workforceTargets.sierra.totalDependents,
+        eligible_employees: workforceTargets.sierra.eligibleCount,
         validation_errors: 0,
         validation_warnings: 2,
         uploaded_by: user.email,
@@ -430,9 +531,9 @@ Deno.serve(async (req) => {
         version_number: 1,
         file_name: 'harbor_renewal_census_2026.xlsx',
         status: 'validated',
-        total_employees: 21,
-        total_dependents: 6,
-        eligible_employees: 19,
+        total_employees: workforceTargets.harbor.employeeCount,
+        total_dependents: workforceTargets.harbor.totalDependents,
+        eligible_employees: workforceTargets.harbor.eligibleCount,
         validation_errors: 0,
         validation_warnings: 0,
         uploaded_by: user.email,
@@ -442,144 +543,41 @@ Deno.serve(async (req) => {
     ];
 
     for (const seed of censusSeeds) {
-      censusVersionMap[seed.key] = await ensureRecord(
+      const censusVersionRecord = await ensureRecord(
         'CensusVersion',
         censusVersions,
         (item) => item.case_id === seed.case_id && item.version_number === seed.version_number,
         seed,
       );
+      censusVersionMap[seed.key] = await updateRecordIfNeeded('CensusVersion', censusVersions, censusVersionRecord, {
+        total_employees: seed.total_employees,
+        total_dependents: seed.total_dependents,
+        eligible_employees: seed.eligible_employees,
+      });
     }
 
-    const censusMemberSeeds = [
-      {
-        census_version_id: censusVersionMap.redwood.id,
-        case_id: caseMap.redwood.id,
-        employee_id: 'RWD-1001',
-        first_name: 'Jordan',
-        last_name: 'Lee',
-        date_of_birth: '1992-04-18',
-        gender: 'male',
-        ssn_last4: '4102',
-        email: 'jlee@redwoodcreative.example.com',
-        phone: '(949) 555-1011',
-        address: '12 Bayview Lane',
-        city: 'Costa Mesa',
-        state: 'CA',
-        zip: '92627',
-        hire_date: '2021-02-01',
-        employment_status: 'active',
-        employment_type: 'full_time',
-        hours_per_week: 40,
-        annual_salary: 88000,
-        job_title: 'Creative Director',
-        department: 'Creative',
-        location: 'Newport Beach HQ',
-        class_code: 'FT',
-        is_eligible: true,
-        dependent_count: 0,
-        coverage_tier: 'employee_only',
-        validation_status: 'valid',
-        validation_issues: [],
-      },
-      {
-        census_version_id: censusVersionMap.redwood.id,
-        case_id: caseMap.redwood.id,
-        employee_id: 'RWD-1002',
-        first_name: 'Mia',
-        last_name: 'Gomez',
-        date_of_birth: '1987-11-02',
-        gender: 'female',
-        ssn_last4: '8221',
-        email: 'mgomez@redwoodcreative.example.com',
-        phone: '(949) 555-1012',
-        address: '88 Seaside Drive',
-        city: 'Irvine',
-        state: 'CA',
-        zip: '92618',
-        hire_date: '2019-08-12',
-        employment_status: 'active',
-        employment_type: 'full_time',
-        hours_per_week: 40,
-        annual_salary: 102000,
-        job_title: 'Account Strategist',
-        department: 'Client Success',
-        location: 'Hybrid',
-        class_code: 'FT',
-        is_eligible: true,
-        dependent_count: 3,
-        coverage_tier: 'family',
-        validation_status: 'valid',
-        validation_issues: [],
-      },
-      {
-        census_version_id: censusVersionMap.sierra.id,
-        case_id: caseMap.sierra.id,
-        employee_id: 'SIE-2001',
-        first_name: 'Olivia',
-        last_name: 'Turner',
-        date_of_birth: '1985-01-14',
-        gender: 'female',
-        ssn_last4: '2041',
-        email: 'oturner@sierraprecision.example.com',
-        phone: '(775) 555-2011',
-        address: '510 Arrowhead Way',
-        city: 'Reno',
-        state: 'NV',
-        zip: '89511',
-        hire_date: '2018-03-19',
-        employment_status: 'active',
-        employment_type: 'full_time',
-        hours_per_week: 40,
-        annual_salary: 94000,
-        job_title: 'Plant Controller',
-        department: 'Finance',
-        location: 'Reno Plant',
-        class_code: 'FT',
-        is_eligible: true,
-        dependent_count: 2,
-        coverage_tier: 'family',
-        validation_status: 'valid',
-        validation_issues: [],
-      },
-      {
-        census_version_id: censusVersionMap.harbor.id,
-        case_id: caseMap.harbor.id,
-        employee_id: 'HWC-3001',
-        first_name: 'Priya',
-        last_name: 'Nair',
-        date_of_birth: '1990-12-12',
-        gender: 'female',
-        ssn_last4: '4411',
-        email: 'pnair@harborwellness.example.com',
-        phone: '(949) 555-3011',
-        address: '17 Temple Hills Drive',
-        city: 'Laguna Beach',
-        state: 'CA',
-        zip: '92651',
-        hire_date: '2020-06-15',
-        employment_status: 'active',
-        employment_type: 'full_time',
-        hours_per_week: 40,
-        annual_salary: 99000,
-        job_title: 'Nurse Practitioner',
-        department: 'Clinical',
-        location: 'Laguna Beach Clinic',
-        class_code: 'FT',
-        is_eligible: true,
-        dependent_count: 0,
-        coverage_tier: 'employee_only',
-        validation_status: 'valid',
-        validation_issues: [],
-      },
-    ];
+    const censusMemberSeeds = buildCensusMemberSeeds(censusVersionMap, caseMap);
 
-    for (const seed of censusMemberSeeds) {
-      await ensureRecord(
-        'CensusMember',
-        censusMembers,
-        (item) => item.census_version_id === seed.census_version_id && item.employee_id === seed.employee_id,
-        seed,
-      );
+    const existingCensusMemberKeys = new Set(
+      censusMembers.map((item) => `${item.census_version_id}:${item.employee_id}`),
+    );
+    const missingCensusMembers = censusMemberSeeds.filter((seed) => {
+      const key = `${seed.census_version_id}:${seed.employee_id}`;
+      if (existingCensusMemberKeys.has(key)) {
+        bump(counts.existing, 'CensusMember');
+        return false;
+      }
+      existingCensusMemberKeys.add(key);
+      return true;
+    });
+
+    if (missingCensusMembers.length > 0) {
+      for (let i = 0; i < missingCensusMembers.length; i += 25) {
+        const batch = missingCensusMembers.slice(i, i + 25);
+        const createdBatch = await base44.asServiceRole.entities.CensusMember.bulkCreate(batch);
+        censusMembers.unshift(...createdBatch);
+      }
+      bumpBy(counts.created, 'CensusMember', missingCensusMembers.length);
     }
 
     const scenarioMap = {};
@@ -1231,12 +1229,14 @@ Deno.serve(async (req) => {
 
     const totalCreated = Object.values(counts.created).reduce((sum, value) => sum + value, 0);
     const totalExisting = Object.values(counts.existing).reduce((sum, value) => sum + value, 0);
+    const totalUpdated = Object.values(counts.updated).reduce((sum, value) => sum + value, 0);
 
     return Response.json({
       success: true,
-      message: totalCreated > 0 ? 'Logical seed data added successfully.' : 'Logical seed data already exists.',
+      message: totalCreated > 0 || totalUpdated > 0 ? 'Logical seed data added successfully.' : 'Logical seed data already exists.',
       totalCreated,
       totalExisting,
+      totalUpdated,
       counts,
       seededCases: Object.values(caseMap).map((item) => ({ id: item.id, employer_name: item.employer_name, case_number: item.case_number })),
     });
