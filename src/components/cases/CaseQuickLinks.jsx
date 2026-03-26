@@ -2,7 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Users, FileText, ClipboardCheck, Building2, TriangleAlert, CheckSquare } from "lucide-react";
-import { buildRoute, getCaseRouteContext } from "@/contracts/routeContracts";
+import { getCaseRouteContext } from "@/contracts/routeContracts";
+import { buildRoute } from "@/lib/routing/buildRoute";
 
 const links = [
   { key: "case", label: "Case", icon: Briefcase, getTo: (caseData, context) => buildRoute("caseDetail", { caseId: context.caseId }) },

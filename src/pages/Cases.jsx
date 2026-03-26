@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users, Layers, Flag, Download, Trash2, Calendar, Briefcase } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import { CaseListSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -25,13 +25,8 @@ import ActivityFeed from "@/components/cases/ActivityFeed";
 import CasesToolbar from "@/components/cases/CasesToolbar";
 import CasesSummaryBar from "@/components/cases/CasesSummaryBar";
 import CasesList from "@/components/cases/CasesList";
-import {
-  buildCaseMetaById,
-  buildEmployeeCountByCase,
-  buildEmployeePreviewByCase,
-  filterCases,
-  getCaseKpis,
-} from "@/services/cases/casesDomain";
+import { getCasesPageModel } from "@/domain/cases/useCasesDomain";
+import { resolveRouteContext } from "@/lib/routing/resolveRouteContext";
 import { exportToCSV } from "@/utils/export-import";
 
 const DEFAULT_FILTER_STATE = {
@@ -46,10 +41,12 @@ const DEFAULT_FILTER_STATE = {
   activityFilter: "all",
   employeeFilter: null,
   quickView: "all",
+  stageGroup: "all",
 };
 
 export default function Cases() {
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkAction, setBulkAction] = useState(null);
@@ -71,6 +68,37 @@ export default function Cases() {
   const { data: enrollmentWindows = [] } = useQuery({ queryKey: ["cases-related", "enrollment-windows"], queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300) });
   const { data: documents = [] } = useQuery({ queryKey: ["cases-related", "documents"], queryFn: () => base44.entities.Document.list("-created_date", 500) });
 
+  const routeFilters = useMemo(() => resolveRouteContext("cases", location.search), [location.search]);
+
+  useEffect(() => {
+    setFilters((current) => ({
+      ...current,
+      stageFilter: routeFilters.stageFilter || DEFAULT_FILTER_STATE.stageFilter,
+      priorityFilter: routeFilters.priorityFilter || DEFAULT_FILTER_STATE.priorityFilter,
+      quickView: routeFilters.quickView || DEFAULT_FILTER_STATE.quickView,
+      stageGroup: routeFilters.stageGroup || DEFAULT_FILTER_STATE.stageGroup,
+    }));
+  }, [routeFilters]);
+
+  const casePageModel = useMemo(() => getCasesPageModel({
+    cases,
+    censusMembers,
+    currentUser,
+    quoteScenarios,
+    proposals,
+    caseTasks,
+    exceptionItems,
+    enrollmentWindows,
+    documents,
+    filters,
+  }), [cases, censusMembers, currentUser, quoteScenarios, proposals, caseTasks, exceptionItems, enrollmentWindows, documents, filters]);
+
+  const filtered = casePageModel.filteredCases;
+  const employeePreviewByCase = casePageModel.employeePreviewByCase;
+  const employeeCountByCase = casePageModel.employeeCountByCase;
+  const caseMetaById = casePageModel.caseMetaById;
+  const kpis = casePageModel.kpis;
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "n" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); setShowQuickCreate(true); }
@@ -80,13 +108,7 @@ export default function Cases() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [filtered]);
 
-  const filtered = useMemo(() => filterCases(cases, filters, currentUser), [cases, filters, currentUser]);
-  const employeePreviewByCase = useMemo(() => buildEmployeePreviewByCase(censusMembers), [censusMembers]);
-  const employeeCountByCase = useMemo(() => buildEmployeeCountByCase(censusMembers), [censusMembers]);
-  const caseMetaById = useMemo(() => buildCaseMetaById(quoteScenarios, proposals, caseTasks, exceptionItems, enrollmentWindows, documents), [quoteScenarios, proposals, caseTasks, exceptionItems, enrollmentWindows, documents]);
-  const kpis = useMemo(() => getCaseKpis(cases), [cases]);
-
-  const activeFilters = [filters.quickView, filters.stageFilter, filters.typeFilter, filters.priorityFilter, filters.assignedToFilter, filters.dateFilter, filters.employeeFilter].filter((item) => item !== "all" && item !== null).length;
+  const activeFilters = [filters.quickView, filters.stageFilter, filters.stageGroup, filters.typeFilter, filters.priorityFilter, filters.assignedToFilter, filters.dateFilter, filters.employeeFilter].filter((item) => item !== "all" && item !== null).length;
   const clearFilters = () => setFilters(DEFAULT_FILTER_STATE);
   const setFilterState = (nextState) => setFilters((current) => ({ ...current, ...nextState }));
 

@@ -27,8 +27,8 @@ import ComplianceAlerts from "@/components/dashboard/ComplianceAlerts";
 import CarrierDistribution from "@/components/dashboard/CarrierDistribution";
 import EnrollmentForecast from "@/components/dashboard/EnrollmentForecast";
 import CycleTiming from "@/components/dashboard/CycleTiming";
-import { DEFAULT_DASHBOARD_FILTERS, buildDashboardOptions, getDateRangeWindow } from "@/utils/dashboardControls";
-import { getDashboardCharts, getDashboardScopedData, getDashboardSummaryMetrics } from "@/services/dashboard/dashboardMetrics";
+import { DEFAULT_DASHBOARD_FILTERS } from "@/utils/dashboardControls";
+import { getDashboardPageModel } from "@/domain/dashboard/useDashboardMetrics";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
@@ -73,11 +73,23 @@ export default function Dashboard() {
     setHasInitializedPreferences(true);
   }, [hasInitializedPreferences, presets, presetsFetched, user]);
 
-  const options = useMemo(() => buildDashboardOptions(cases, agencies), [cases, agencies]);
-  const windowBounds = useMemo(() => getDateRangeWindow(filters.dateRange), [filters.dateRange]);
-  const scopedData = useMemo(() => getDashboardScopedData({ cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, filters, user, windowBounds }), [cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, filters, user, windowBounds]);
-  const summary = useMemo(() => getDashboardSummaryMetrics(scopedData), [scopedData]);
-  const charts = useMemo(() => getDashboardCharts(scopedData.currentCases), [scopedData.currentCases]);
+  const dashboardPageModel = useMemo(() => getDashboardPageModel({
+    cases,
+    tasks,
+    enrollments,
+    renewals,
+    scenarios,
+    exceptions,
+    proposals,
+    agencies,
+    filters,
+    user,
+  }), [cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, agencies, filters, user]);
+
+  const options = dashboardPageModel.options;
+  const scopedData = dashboardPageModel.scopedData;
+  const summary = dashboardPageModel.summary;
+  const charts = dashboardPageModel.charts;
 
   const lastUpdated = useMemo(() => {
     const timestamps = [casesUpdatedAt, tasksUpdatedAt, enrollmentsUpdatedAt, renewalsUpdatedAt, scenariosUpdatedAt, exceptionsUpdatedAt, proposalsUpdatedAt, agenciesUpdatedAt, presetsUpdatedAt].filter(Boolean);

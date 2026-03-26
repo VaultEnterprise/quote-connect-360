@@ -2,14 +2,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Briefcase, Upload, ClipboardCheck, Users, FileText, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { buildRoute } from "@/lib/routing/buildRoute";
 
 const ACTIONS = [
   { label: "New Case", icon: Briefcase, href: "/cases/new", variant: "default" },
-  { label: "Upload Census", icon: Upload, href: "/census", variant: "outline" },
-  { label: "Start Enrollment", icon: ClipboardCheck, href: "/enrollment", variant: "outline" },
-  { label: "Add Employer", icon: Users, href: "/employers", variant: "outline" },
-  { label: "Build Quote", icon: FileText, href: "/quotes", variant: "outline" },
-  { label: "View Renewals", icon: RefreshCw, href: "/renewals", variant: "outline" },
+  { label: "Upload Census", icon: Upload, href: buildRoute("census"), variant: "outline" },
+  { label: "Start Enrollment", icon: ClipboardCheck, href: buildRoute("enrollment"), variant: "outline" },
+  { label: "Add Employer", icon: Users, href: buildRoute("employers"), variant: "outline" },
+  { label: "Build Quote", icon: FileText, href: buildRoute("quotes"), variant: "outline" },
+  { label: "View Renewals", icon: RefreshCw, href: buildRoute("renewals"), variant: "outline" },
 ];
 
 export default function QuickActions() {

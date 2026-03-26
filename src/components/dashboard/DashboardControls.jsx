@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DATE_RANGE_OPTIONS, DASHBOARD_VIEW_OPTIONS } from "@/utils/dashboardControls";
+import { STAGE_OPTIONS } from "@/contracts/workflowRegistry";
 
 const CASE_TYPE_OPTIONS = [
   { value: "new_business", label: "New Business" },
@@ -18,25 +19,9 @@ const CASE_TYPE_OPTIONS = [
   { value: "takeover", label: "Takeover" },
 ];
 
-const STAGE_OPTIONS = [
-  "draft",
-  "census_in_progress",
-  "census_validated",
-  "ready_for_quote",
-  "quoting",
-  "proposal_ready",
-  "employer_review",
-  "approved_for_enrollment",
-  "enrollment_open",
-  "enrollment_complete",
-  "install_in_progress",
-  "active",
-  "renewal_pending",
-  "renewed",
-  "closed",
-];
-
 function FilterSelect({ value, onValueChange, placeholder, options }) {
+  const dedupedOptions = options.filter((option, index) => options.findIndex((candidate) => candidate.value === option.value) === index);
+
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="h-9 bg-background">
@@ -44,7 +29,7 @@ function FilterSelect({ value, onValueChange, placeholder, options }) {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All</SelectItem>
-        {options.map((option, index) => (
+        {dedupedOptions.map((option, index) => (
           <SelectItem key={`${option.value}-${index}`} value={option.value}>
             {option.label}
           </SelectItem>
@@ -138,7 +123,7 @@ export default function DashboardControls({
           value={filters.stage}
           onValueChange={(value) => onChange("stage", value)}
           placeholder="Stage"
-          options={STAGE_OPTIONS.map((value) => ({ value, label: value.replace(/_/g, " ") }))}
+          options={STAGE_OPTIONS.filter((option) => option.value !== "all")}
         />
       </div>
 

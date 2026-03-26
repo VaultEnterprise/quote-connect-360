@@ -1,3 +1,5 @@
+import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
+
 export const SORT_OPTIONS = [
   { value: "created_desc", label: "Newest First" },
   { value: "created_asc", label: "Oldest First" },
@@ -30,8 +32,10 @@ export function filterCases(cases, filters, currentUser) {
       (filters.quickView === "employer_review" && item.stage === "employer_review") ||
       (filters.quickView === "enrollment_open" && item.stage === "enrollment_open") ||
       (filters.quickView === "renewals" && (item.case_type === "renewal" || (daysUntilEffective !== null && daysUntilEffective >= 0 && daysUntilEffective <= 60)));
+    const stageGroup = CASE_STAGE_GROUPS.find((group) => group.key === filters.stageGroup);
+    const matchStageGroup = filters.stageGroup === "all" || !filters.stageGroup ? true : stageGroup?.match(item.stage);
 
-    return matchSearch && matchStage && matchType && matchPriority && matchAssignee && matchDate && matchActivity && matchEmployee && matchQuickView;
+    return matchSearch && matchStage && matchType && matchPriority && matchAssignee && matchDate && matchActivity && matchEmployee && matchQuickView && matchStageGroup;
   });
 
   return [...filtered].sort((a, b) => {

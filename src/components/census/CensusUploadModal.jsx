@@ -12,7 +12,7 @@ import MappingProfileManager from "./MappingProfileManager";
 import DataQualityInsights from "./DataQualityInsights";
 import { generateCensusTemplate } from "@/utils/censusHelpers";
 import { CENSUS_FIELDS } from "@/contracts/importContracts";
-import { inspectCensusFile, runCensusImport } from "@/services/import/censusImportClient";
+import { inspectCensusFile, runCensusImport } from "@/domain/imports/useImportRuns";
 
 const STEPS = ["upload", "mapping", "validate", "done"];
 

@@ -3,22 +3,15 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, ArrowRight, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
-
-const STAGE_GROUPS = [
-  { key: "draft", label: "Draft", color: "#94a3b8", bgClass: "bg-slate-100", textClass: "text-slate-600", match: (s) => s === "draft" },
-  { key: "census", label: "Census", color: "#60a5fa", bgClass: "bg-blue-100", textClass: "text-blue-700", match: (s) => s?.includes("census") },
-  { key: "quoting", label: "Quoting", color: "#f59e0b", bgClass: "bg-amber-100", textClass: "text-amber-700", match: (s) => ["ready_for_quote", "quoting"].includes(s) },
-  { key: "proposal", label: "Proposal", color: "#a78bfa", bgClass: "bg-purple-100", textClass: "text-purple-700", match: (s) => ["proposal_ready", "employer_review"].includes(s) },
-  { key: "enrollment", label: "Enrollment", color: "#34d399", bgClass: "bg-emerald-100", textClass: "text-emerald-700", match: (s) => s?.includes("enrollment") },
-  { key: "active", label: "Active", color: "#10b981", bgClass: "bg-green-100", textClass: "text-green-700", match: (s) => ["install_in_progress", "active", "renewal_pending"].includes(s) },
-];
+import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
+import { buildRoute } from "@/lib/routing/buildRoute";
 
 export default function InteractivePipeline({ cases = [] }) {
   const [activeStage, setActiveStage] = useState(null);
 
-  const stageData = STAGE_GROUPS.map(g => ({
+  const stageData = CASE_STAGE_GROUPS.map(g => ({
     ...g,
     cases: cases.filter(c => g.match(c.stage)),
     count: cases.filter(c => g.match(c.stage)).length,
@@ -92,7 +85,7 @@ export default function InteractivePipeline({ cases = [] }) {
                 </Badge>
               </div>
               <div className="flex items-center gap-1">
-                <Link to={`/cases`}>
+                <Link to={buildRoute("cases", { stageGroup: selectedGroup.key })}>
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
                     View all <ExternalLink className="w-3 h-3" />
                   </Button>
@@ -105,7 +98,7 @@ export default function InteractivePipeline({ cases = [] }) {
 
             <div className="divide-y divide-border max-h-56 overflow-y-auto">
               {selectedGroup.cases.slice(0, 10).map(c => (
-                <Link key={c.id} to={`/cases/${c.id}`} className="block">
+                <Link key={c.id} to={buildRoute("caseDetail", { caseId: c.id })} className="block">
                   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors group">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
@@ -129,7 +122,7 @@ export default function InteractivePipeline({ cases = [] }) {
                 </Link>
               ))}
               {selectedGroup.count > 10 && (
-                <Link to="/cases" className="block">
+                <Link to={buildRoute("cases", { stageGroup: selectedGroup.key })} className="block">
                   <div className="px-4 py-2.5 text-center text-xs text-muted-foreground hover:text-primary hover:bg-muted/30 transition-colors">
                     +{selectedGroup.count - 10} more cases → View all
                   </div>

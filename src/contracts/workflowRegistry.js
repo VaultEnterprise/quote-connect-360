@@ -1,54 +1,12 @@
-export const STAGE_ORDER = [
-  "draft",
-  "census_in_progress",
-  "census_validated",
-  "ready_for_quote",
-  "quoting",
-  "proposal_ready",
-  "employer_review",
-  "approved_for_enrollment",
-  "enrollment_open",
-  "enrollment_complete",
-  "install_in_progress",
-  "active",
-  "renewal_pending",
-  "renewed",
-  "closed",
-];
+import { STAGE_ORDER, STAGE_LABELS, STAGE_OPTIONS } from "@/contracts/workflow/stageDefinitions";
+import { CASE_STAGE_GROUPS } from "@/contracts/workflow/statusMappings";
+import { getAllowedTransitions } from "@/lib/workflow/getAllowedTransitions";
 
-export const STAGE_LABELS = {
-  draft: "Draft",
-  census_in_progress: "Census In Progress",
-  census_validated: "Census Validated",
-  ready_for_quote: "Ready for Quote",
-  quoting: "Quoting",
-  proposal_ready: "Proposal Ready",
-  employer_review: "Employer Review",
-  approved_for_enrollment: "Approved for Enrollment",
-  enrollment_open: "Enrollment Open",
-  enrollment_complete: "Enrollment Complete",
-  install_in_progress: "Install In Progress",
-  active: "Active",
-  renewal_pending: "Renewal Pending",
-  renewed: "Renewed",
-  closed: "Closed",
-};
-
-export const STAGE_OPTIONS = [{ value: "all", label: "All Stages" }, ...STAGE_ORDER.map((value) => ({ value, label: STAGE_LABELS[value] }))];
-
-export const CASE_STAGE_GROUPS = [
-  { key: "draft", label: "Draft", color: "#94a3b8", match: (stage) => stage === "draft" },
-  { key: "census", label: "Census", color: "#60a5fa", match: (stage) => stage?.includes("census") },
-  { key: "quoting", label: "Quoting", color: "#f59e0b", match: (stage) => ["ready_for_quote", "quoting"].includes(stage) },
-  { key: "proposal", label: "Proposal", color: "#a78bfa", match: (stage) => ["proposal_ready", "employer_review"].includes(stage) },
-  { key: "enrollment", label: "Enrollment", color: "#34d399", match: (stage) => stage?.includes("enrollment") },
-  { key: "active", label: "Active", color: "#10b981", match: (stage) => ["install_in_progress", "active", "renewal_pending"].includes(stage) },
-];
+export { STAGE_ORDER, STAGE_LABELS, STAGE_OPTIONS, CASE_STAGE_GROUPS };
 
 export function getNextStage(stage) {
-  const currentIndex = STAGE_ORDER.indexOf(stage || "draft");
-  if (currentIndex < 0 || currentIndex >= STAGE_ORDER.length - 1) return null;
-  return STAGE_ORDER[currentIndex + 1];
+  const [nextStage] = getAllowedTransitions(stage);
+  return nextStage || null;
 }
 
 export function getNextStageLabel(stage) {

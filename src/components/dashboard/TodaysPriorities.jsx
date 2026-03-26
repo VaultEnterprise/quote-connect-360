@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, Clock, Pause, CalendarX, ArrowRight } from "lucide-react";
+import { AlertCircle, Clock, Pause } from "lucide-react";
+import { buildRoute } from "@/lib/routing/buildRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays, format } from "date-fns";
@@ -16,7 +17,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: t.title,
       sub: t.employer_name,
       urgency: "high",
-      href: "/tasks",
+      href: buildRoute("tasks", { caseId: t.case_id || undefined, taskId: t.id }),
       meta: `Due ${format(new Date(t.due_date), "MMM d")}`,
     }));
 
@@ -28,7 +29,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: e.title,
       sub: e.employer_name,
       urgency: e.severity === "critical" ? "critical" : "high",
-      href: "/exceptions",
+      href: buildRoute("exceptions", { caseId: e.case_id || undefined, exceptionId: e.id }),
       meta: e.severity,
     }));
 
@@ -44,7 +45,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: c.employer_name || "Unnamed Case",
       sub: c.stage?.replace(/_/g, " "),
       urgency: "medium",
-      href: `/cases/${c.id}`,
+      href: buildRoute("caseDetail", { caseId: c.id }),
       meta: `${differenceInDays(now, new Date(c.last_activity_date || c.updated_date || c.created_date))}d idle`,
     }));
 
@@ -56,7 +57,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: `${e.employer_name || "Enrollment"} closing`,
       sub: `${e.enrolled_count ?? 0}/${e.total_eligible ?? "?"} enrolled`,
       urgency: "high",
-      href: "/enrollment",
+      href: buildRoute("enrollment", { caseId: e.case_id || undefined }),
       meta: `${differenceInDays(new Date(e.end_date), now)}d left`,
     }));
 
