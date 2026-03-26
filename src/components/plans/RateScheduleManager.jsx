@@ -85,6 +85,9 @@ export default function RateScheduleManager({ plans, schedules, defaultPlanId })
       setForm({ ...EMPTY_FORM, plan_id: defaultPlanId || "" });
       setEditId(null);
     },
+    onError: (error) => {
+      toast.error(error.message || "Could not save the rate schedule");
+    },
   });
 
   const toggleActive = useMutation({

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +18,28 @@ import RateValidationConsole from "@/components/plans/RateValidationConsole";
 import { format, differenceInDays } from "date-fns";
 
 export default function PlanRateEditor() {
+  const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const planIdFromUrl = urlParams.get("plan_id");
   const [selectedPlanId, setSelectedPlanId] = useState(planIdFromUrl || "");
+
+  useEffect(() => {
+    const nextUrl = new URL(window.location.href);
+    if (selectedPlanId) nextUrl.searchParams.set("plan_id", selectedPlanId);
+    else nextUrl.searchParams.delete("plan_id");
+    window.history.replaceState({}, "", nextUrl.toString());
+  }, [selectedPlanId]);
+
+  useEffect(() => {
+    const unsubscribers = [
+      base44.entities.BenefitPlan.subscribe(() => queryClient.invalidateQueries({ queryKey: ["benefit-plans"] })),
+      base44.entities.PlanRateSchedule.subscribe(() => queryClient.invalidateQueries({ queryKey: ["plan-rate-schedules"] })),
+      base44.entities.PlanRateByState.subscribe(() => queryClient.invalidateQueries({ queryKey: ["plan-rates-by-state"] })),
+      base44.entities.PlanRateDetail.subscribe(() => queryClient.invalidateQueries({ queryKey: ["plan-rate-schedules"] })),
+    ];
+
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+  }, [queryClient]);
 
   const { data: plans = [] } = useQuery({
     queryKey: ["benefit-plans"],

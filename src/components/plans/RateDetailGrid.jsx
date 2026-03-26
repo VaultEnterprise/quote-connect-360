@@ -81,6 +81,7 @@ export default function RateDetailGrid({ plans, schedules }) {
       setNewRow({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
       toast.success("Rate row added");
     },
+    onError: (error) => toast.error(error.message || "Could not save the rate row"),
   });
 
   const deleteMutation = useMutation({

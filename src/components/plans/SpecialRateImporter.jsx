@@ -17,18 +17,23 @@ export default function SpecialRateImporter({ planId, rateScheduleId, scheduleNa
   const handleImport = async () => {
     if (!file) return;
     setImporting(true);
-    const upload = await base44.integrations.Core.UploadFile({ file });
-    const response = await base44.functions.invoke("importSpecialRateWorkbook", {
-      file_url: upload.file_url,
-      planId,
-      rateScheduleId,
-      sourceFileName: file.name,
-    });
-    setResult(response.data);
-    qc.invalidateQueries({ queryKey: ["rate-detail", rateScheduleId] });
-    qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] });
-    toast.success(`Imported ${response.data.imported_rate_rows} rate rows and ${response.data.imported_zip_rows} ZIP mappings`);
-    setImporting(false);
+    try {
+      const upload = await base44.integrations.Core.UploadFile({ file });
+      const response = await base44.functions.invoke("importSpecialRateWorkbook", {
+        file_url: upload.file_url,
+        planId,
+        rateScheduleId,
+        sourceFileName: file.name,
+      });
+      setResult(response.data);
+      qc.invalidateQueries({ queryKey: ["rate-detail", rateScheduleId] });
+      qc.invalidateQueries({ queryKey: ["plan-rate-schedules"] });
+      toast.success(`Imported ${response.data.imported_rate_rows} rate rows and ${response.data.imported_zip_rows} ZIP mappings`);
+    } catch (error) {
+      toast.error(error.message || "Special importer failed");
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
