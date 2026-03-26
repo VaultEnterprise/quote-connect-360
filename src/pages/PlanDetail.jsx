@@ -27,6 +27,12 @@ export default function PlanDetail() {
     enabled: !!id,
   });
 
+  const { data: zipMappings = [], isLoading: loadingZipMappings } = useQuery({
+    queryKey: ["plan-zip-mappings", id],
+    queryFn: () => base44.entities.PlanZipAreaMap.filter({ plan_id: id }),
+    enabled: !!id,
+  });
+
   const plan = allPlans.find((item) => item.id === id);
   const sortedSchedules = useMemo(() => {
     return [...schedules].sort((a, b) => {
@@ -37,7 +43,7 @@ export default function PlanDetail() {
 
   const initialScheduleId = sortedSchedules.find((schedule) => schedule.is_active)?.id || sortedSchedules[0]?.id || "";
 
-  if (loadingPlan || loadingSchedules) {
+  if (loadingPlan || loadingSchedules || loadingZipMappings) {
     return <div className="p-6"><div className="h-48 rounded-xl bg-muted animate-pulse" /></div>;
   }
 
@@ -97,6 +103,17 @@ export default function PlanDetail() {
             <h2 className="text-lg font-semibold">Rate details</h2>
             <p className="text-sm text-muted-foreground">Review imported rates, upload special workbooks, and manage schedule rows.</p>
           </div>
+          <Card>
+            <CardContent className="p-4 text-sm">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="font-medium">Imported ZIP codes</p>
+                  <p className="text-muted-foreground text-sm">ZIP-to-rating-area mappings saved with this plan.</p>
+                </div>
+                <div className="text-2xl font-bold">{zipMappings.length}</div>
+              </div>
+            </CardContent>
+          </Card>
           <RateDetailGrid plans={[plan]} schedules={sortedSchedules} initialScheduleId={initialScheduleId} />
         </section>
       </div>

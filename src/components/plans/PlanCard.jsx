@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar } from "lucide-react";
+import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar, MapPin } from "lucide-react";
 import RateTableEditor from "./RateTableEditor";
 
 const TYPE_COLORS = {
@@ -29,6 +29,11 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
   });
 
   const primaryRate = rateTables[0];
+
+  const { data: zipMappings = [] } = useQuery({
+    queryKey: ["plan-zip-count", plan.id],
+    queryFn: () => base44.entities.PlanZipAreaMap.filter({ plan_id: plan.id }),
+  });
 
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/plans/${plan.id}`)}>
@@ -77,6 +82,16 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
             {plan.policy_expiration_date && <p className="text-muted-foreground">Expires: <span className="text-foreground font-medium">{plan.policy_expiration_date}</span></p>}
           </div>
         )}
+
+        <div className="rounded-lg border bg-muted/20 px-3 py-2 text-xs">
+          <div className="flex items-center gap-1.5 font-medium text-foreground mb-1">
+            <MapPin className="w-3.5 h-3.5 text-primary" />
+            ZIP Mapping
+          </div>
+          <p className="text-muted-foreground">
+            Imported ZIP codes: <span className="text-foreground font-medium">{zipMappings.length}</span>
+          </p>
+        </div>
 
         {/* Rate preview */}
         {!showRates && primaryRate == null && (
