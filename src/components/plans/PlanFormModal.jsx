@@ -83,10 +83,16 @@ export default function PlanFormModal({ plan, open, onClose, defaultType = "medi
               </div>
               <div>
                 <Label>Carrier *</Label>
-                <Select value={form.carrier} onValueChange={v => set("carrier", v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select carrier" /></SelectTrigger>
-                  <SelectContent>{CARRIERS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
+                <Input
+                  className="mt-1"
+                  value={form.carrier}
+                  onChange={e => set("carrier", e.target.value)}
+                  placeholder="Select or type carrier name"
+                  list="carrier-options"
+                />
+                <datalist id="carrier-options">
+                  {CARRIERS.map(c => <option key={c} value={c} />)}
+                </datalist>
               </div>
               <div className="col-span-2">
                 <Label>Plan Name *</Label>
