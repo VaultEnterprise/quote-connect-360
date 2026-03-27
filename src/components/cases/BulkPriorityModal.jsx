@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader } from "lucide-react";
+import { createCaseAuditEvent } from "@/services/cases/caseOps";
+import { toast } from "@/components/ui/use-toast";
 
 export default function BulkPriorityModal({ isOpen, caseIds, onClose, onSuccess }) {
   const [priority, setPriority] = useState("");
@@ -14,10 +16,14 @@ export default function BulkPriorityModal({ isOpen, caseIds, onClose, onSuccess 
     setLoading(true);
     try {
       for (const id of caseIds) {
-        await base44.entities.BenefitCase.update(id, { priority });
+        await base44.entities.BenefitCase.update(id, { priority, last_activity_date: new Date().toISOString() });
+        await createCaseAuditEvent(id, "priority_updated", "Priority updated.", { new_value: priority });
       }
       onSuccess?.();
       onClose();
+      toast({ title: "Priority updated", description: `${caseIds.length} case(s) were updated.` });
+    } catch (error) {
+      toast({ title: "Bulk priority update failed", description: error.message || "The selected cases could not be updated.", variant: "destructive" });
     } finally {
       setLoading(false);
     }

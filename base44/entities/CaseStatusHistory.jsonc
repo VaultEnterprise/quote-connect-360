@@ -1,0 +1,36 @@
+{
+  "name": "CaseStatusHistory",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "from_status": {
+      "type": "string"
+    },
+    "to_status": {
+      "type": "string"
+    },
+    "changed_by_user_id": {
+      "type": "string"
+    },
+    "changed_by_email": {
+      "type": "string"
+    },
+    "changed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "details_json": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "case_id",
+    "to_status",
+    "changed_at"
+  ]
+}

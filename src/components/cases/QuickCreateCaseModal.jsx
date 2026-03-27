@@ -4,29 +4,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { base44 } from "@/api/base44Client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/components/ui/use-toast";
+import { createCaseAuditEvent, replaceCaseValidationResults } from "@/services/cases/caseOps";
 
 export default function QuickCreateCaseModal({ isOpen, onClose }) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const { data: agencies = [] } = useQuery({ queryKey: ["quick-case-agencies"], queryFn: () => base44.entities.Agency.list("name", 200) });
+  const { data: employers = [] } = useQuery({ queryKey: ["quick-case-employers"], queryFn: () => base44.entities.EmployerGroup.list("name", 500) });
   const [form, setForm] = useState({ employer_name: "", case_type: "new_business", priority: "normal", employee_count: "" });
 
   const handleCreate = async () => {
     if (!form.employer_name.trim()) return;
     setLoading(true);
     try {
-      await base44.entities.BenefitCase.create({
-        employer_name: form.employer_name,
+      const matchedEmployer = employers.find((item) => item.name?.toLowerCase() === form.employer_name.trim().toLowerCase());
+      const created = await base44.entities.BenefitCase.create({
+        employer_name: form.employer_name.trim(),
         case_type: form.case_type,
         priority: form.priority,
         employee_count: form.employee_count ? parseInt(form.employee_count) : null,
         stage: "draft",
-        agency_id: "",
-        employer_group_id: "",
+        agency_id: matchedEmployer?.agency_id || agencies[0]?.id || "",
+        employer_group_id: matchedEmployer?.id || "",
+        last_activity_date: new Date().toISOString(),
       });
+      await replaceCaseValidationResults(created, {});
+      await createCaseAuditEvent(created.id, "case_created", "Case created successfully.", { detail: "Quick create flow" });
       queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["case-validation-results", created.id] });
       setForm({ employer_name: "", case_type: "new_business", priority: "normal", employee_count: "" });
+      toast({ title: "Case created successfully.", description: "The new case is now available in the queue." });
       onClose();
+    } catch (error) {
+      toast({ title: "Create case failed", description: error.message || "The case could not be created.", variant: "destructive" });
     } finally {
       setLoading(false);
     }

@@ -28,6 +28,9 @@ import CaseCloseModal    from "@/components/cases/CaseCloseModal";
 import StageAdvanceModal from "@/components/cases/StageAdvanceModal";
 import DocumentsTab      from "@/components/cases/DocumentsTab";
 import ActivityTab       from "@/components/cases/ActivityTab";
+import CaseNotesPanel    from "@/components/cases/CaseNotesPanel";
+import CaseValidationPanel from "@/components/cases/CaseValidationPanel";
+import CaseOperationsBar from "@/components/cases/CaseOperationsBar";
 import StageValidationWarnings from "@/components/cases/StageValidationWarnings";
 import DependencyCheckPanel from "@/components/cases/DependencyCheckPanel";
 import CloneCaseModal    from "@/components/cases/CloneCaseModal";
@@ -226,8 +229,9 @@ export default function CaseDetail() {
 
       {/* ── Stage progress bar ── */}
       <Card>
-        <CardContent className="py-3">
+        <CardContent className="py-3 space-y-4">
           <StageProgress currentStage={caseData.stage} />
+          <CaseOperationsBar caseData={caseData} tasks={tasks} scenarios={scenarios} />
         </CardContent>
       </Card>
 
@@ -240,6 +244,8 @@ export default function CaseDetail() {
           <TabsTrigger value="tasks">Tasks ({tasks.length})</TabsTrigger>
           <TabsTrigger value="documents">Docs ({docs.length})</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="validation">Validation</TabsTrigger>
         </TabsList>
 
         {/* Overview */}
@@ -348,6 +354,14 @@ export default function CaseDetail() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-4">
+          <CaseNotesPanel caseId={caseId} />
+        </TabsContent>
+
+        <TabsContent value="validation" className="mt-4">
+          <CaseValidationPanel caseId={caseId} />
         </TabsContent>
       </Tabs>
 
