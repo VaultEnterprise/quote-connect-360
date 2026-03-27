@@ -6,11 +6,20 @@ const IMPORT_REQUEST_KEYS = ["caseId", "fileUrl", "fileName", "mapping", "notes"
 
 export async function inspectCensusFile(file) {
   const { file_url } = await base44.integrations.Core.UploadFile({ file });
-  const response = await base44.functions.invoke("inspectCensusFile", {
-    fileUrl: file_url,
-    fileName: file.name,
-  });
-  return { fileUrl: file_url, ...response.data };
+  try {
+    const response = await base44.functions.invoke("inspectCensusFile", {
+      fileUrl: file_url,
+      fileName: file.name,
+    });
+    return { fileUrl: file_url, ...response.data };
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Could not inspect file"
+    );
+  }
 }
 
 export async function runCensusImport(request) {

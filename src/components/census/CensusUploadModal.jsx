@@ -50,56 +50,65 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
 
   const handleFile = async (nextFile) => {
     setLoading(true);
-    const inspection = await inspectCensusFile(nextFile);
-    setFile(nextFile);
-    setFileUrl(inspection.fileUrl);
-    setHeaders(inspection.headers || []);
-    setSampleRows(inspection.sample_rows || []);
-    setRowCount(inspection.row_count || 0);
-    setMapping(inspection.suggested_mapping || {});
-    setStep("mapping");
-    setLoading(false);
+    try {
+      const inspection = await inspectCensusFile(nextFile);
+      setFile(nextFile);
+      setFileUrl(inspection.fileUrl);
+      setHeaders(inspection.headers || []);
+      setSampleRows(inspection.sample_rows || []);
+      setRowCount(inspection.row_count || 0);
+      setMapping(inspection.suggested_mapping || {});
+      setStep("mapping");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleValidate = async () => {
     setLoading(true);
-    const result = await runCensusImport({
-      caseId,
-      fileUrl,
-      fileName: file?.name,
-      mapping,
-      notes,
-      currentVersionCount,
-      dryRun: true,
-    });
-    setValidationSummary(result.validation_summary || null);
-    setFieldStats(result.field_stats || null);
-    setDuplicates(result.duplicates || []);
-    setTransformedPreview(result.transformed_preview || []);
-    setStep("validate");
-    setLoading(false);
+    try {
+      const result = await runCensusImport({
+        caseId,
+        fileUrl,
+        fileName: file?.name,
+        mapping,
+        notes,
+        currentVersionCount,
+        dryRun: true,
+      });
+      setValidationSummary(result.validation_summary || null);
+      setFieldStats(result.field_stats || null);
+      setDuplicates(result.duplicates || []);
+      setTransformedPreview(result.transformed_preview || []);
+      setStep("validate");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImport = async () => {
     setLoading(true);
-    await runCensusImport({
-      caseId,
-      fileUrl,
-      fileName: file?.name,
-      mapping,
-      notes,
-      currentVersionCount,
-      dryRun: false,
-    });
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] }),
-      queryClient.invalidateQueries({ queryKey: ["census-all"] }),
-      queryClient.invalidateQueries({ queryKey: ["census-members"] }),
-      queryClient.invalidateQueries({ queryKey: ["cases"] }),
-      queryClient.invalidateQueries({ queryKey: ["case", caseId] }),
-    ]);
-    setStep("done");
-    setLoading(false);
+    try {
+      await runCensusImport({
+        caseId,
+        fileUrl,
+        fileName: file?.name,
+        mapping,
+        notes,
+        currentVersionCount,
+        dryRun: false,
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["census-all"] }),
+        queryClient.invalidateQueries({ queryKey: ["census-members"] }),
+        queryClient.invalidateQueries({ queryKey: ["cases"] }),
+        queryClient.invalidateQueries({ queryKey: ["case", caseId] }),
+      ]);
+      setStep("done");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const downloadTemplate = () => {
