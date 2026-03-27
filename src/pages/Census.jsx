@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Users, FileUp, Search } from "lucide-react";
+import { Users, FileUp, Search, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,7 @@ export default function Census() {
   const [selectedCaseId, setSelectedCaseId] = useState(routeContext.caseId || "");
   const [showUpload, setShowUpload] = useState(false);
   const [viewingVersionId, setViewingVersionId] = useState(null);
+  const [importSuccessMessage, setImportSuccessMessage] = useState("");
 
   // Fetch all cases
   const { data: cases = [] } = useQuery({
@@ -93,6 +94,16 @@ export default function Census() {
         </CardContent>
       </Card>
 
+      {importSuccessMessage && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 mt-0.5" />
+            <span>{importSuccessMessage}</span>
+          </div>
+          <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-green-800 hover:text-green-900" onClick={() => setImportSuccessMessage("")}>Dismiss</Button>
+        </div>
+      )}
+
       {/* Selected Case Info */}
       {selectedCase && (
         <Card>
@@ -120,6 +131,7 @@ export default function Census() {
           onComplete={(censusVersionId) => {
             setViewingVersionId(censusVersionId);
             setShowUpload(false);
+            setImportSuccessMessage("Import completed successfully. Your new census version is now available in Import History.");
           }}
         />
       ) : !selectedCaseId ? (
