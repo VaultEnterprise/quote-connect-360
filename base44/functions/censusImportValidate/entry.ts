@@ -15,6 +15,8 @@ const FIELD_RULES = {
 };
 const VALID_TIERS = ['employee_only', 'employee_spouse', 'employee_children', 'family', 'ee', 'es', 'ec', 'fam'];
 const VALID_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+const VALID_EMPLOYMENT_STATUS = ['active', 'leave', 'terminated'];
+const VALID_EMPLOYMENT_TYPE = ['full_time', 'part_time', 'contractor'];
 
 function normalizeDate(value) {
   const raw = String(value ?? '').trim();
@@ -34,6 +36,22 @@ function normalizeTier(value) {
 
 function normalizeState(value) {
   return String(value ?? '').trim().toUpperCase();
+}
+
+function normalizeEmploymentStatus(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return '';
+  if (raw.includes('term')) return 'terminated';
+  if (raw.includes('leave')) return 'leave';
+  return 'active';
+}
+
+function normalizeEmploymentType(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return '';
+  if (raw.includes('part')) return 'part_time';
+  if (raw.includes('contract')) return 'contractor';
+  return 'full_time';
 }
 
 function buildError({ rowNumber, sourceColumn, applicationField, rawValue, normalizedValue, errorCode, errorMessage, severity = 'error', suggestedFix }) {
@@ -95,6 +113,8 @@ Deno.serve(async (req) => {
         if (fieldRule.type === 'tier') normalizedValue = normalizeTier(rawValue);
         if (fieldRule.type === 'state') normalizedValue = normalizeState(rawValue);
         if (fieldRule.type === 'number') normalizedValue = rawValue === '' || rawValue == null ? '' : Number(String(rawValue).replace(/[$,]/g, ''));
+        if (mapping.application_field_code === 'employment_status') normalizedValue = normalizeEmploymentStatus(rawValue);
+        if (mapping.application_field_code === 'employment_type') normalizedValue = normalizeEmploymentType(rawValue);
 
         normalizedRow[mapping.application_field_code] = normalizedValue;
 
@@ -126,6 +146,12 @@ Deno.serve(async (req) => {
         if (fieldRule.type === 'number' && rawValue !== '' && rawValue != null && Number.isNaN(normalizedValue)) {
           errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: mapping.source_column_name || '', applicationField: mapping.application_field_code, rawValue, normalizedValue, errorCode: 'UNSUPPORTED_DATA_TYPE', errorMessage: 'Value must be numeric.', suggestedFix: 'Remove text and keep numeric characters only.' }));
         }
+        if (mapping.application_field_code === 'employment_status' && normalizedValue && !VALID_EMPLOYMENT_STATUS.includes(normalizedValue)) {
+          errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: mapping.source_column_name || '', applicationField: mapping.application_field_code, rawValue, normalizedValue, errorCode: 'INVALID_EMPLOYMENT_STATUS', errorMessage: 'Employment status is not supported.', suggestedFix: 'Use active, leave, or terminated.' }));
+        }
+        if (mapping.application_field_code === 'employment_type' && normalizedValue && !VALID_EMPLOYMENT_TYPE.includes(normalizedValue)) {
+          errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: mapping.source_column_name || '', applicationField: mapping.application_field_code, rawValue, normalizedValue, errorCode: 'INVALID_EMPLOYMENT_TYPE', errorMessage: 'Employment type is not supported.', suggestedFix: 'Use full_time, part_time, or contractor.' }));
+        }
       }
 
       const employeeId = String(normalizedRow.employee_id || '').trim();
@@ -134,6 +160,10 @@ Deno.serve(async (req) => {
           errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: 'employee_id', applicationField: 'employee_id', rawValue: employeeId, normalizedValue: employeeId, errorCode: 'DUPLICATE_EMPLOYEE_ID', errorMessage: 'Employee ID is duplicated in this import file.', suggestedFix: 'Use one unique employee ID per row.' }));
         }
         seenEmployeeIds.add(employeeId);
+      }
+
+      if (normalizedRow.zip && normalizedRow.state && String(normalizedRow.zip).startsWith('00')) {
+        warnings.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: 'zip', applicationField: 'zip', rawValue: normalizedRow.zip, normalizedValue: normalizedRow.zip, errorCode: 'ZIP_NEEDS_REVIEW', errorMessage: 'ZIP looks unusual and should be reviewed.', severity: 'warning', suggestedFix: 'Confirm the ZIP was exported correctly from the source file.' }));
       }
 
       const validationStatus = errors.length > 0 ? 'error' : warnings.length > 0 ? 'warning' : 'valid';
@@ -174,6 +204,12 @@ Deno.serve(async (req) => {
       row_error_count: errorRowCount,
       top_validation_issues: validationIssues.slice(0, 25),
       rows: stagedRows,
+      prompts: {
+        validation_complete: 'Validation complete.',
+        warnings_found: warningRowCount > 0 ? 'Some rows contain warnings.' : '',
+        errors_found: errorRowCount > 0 ? 'Some rows contain errors and must be corrected before import.' : '',
+        import_ready: errorRowCount === 0 ? 'Your file is ready to import.' : 'You can continue with valid rows only, or return to correct the file.'
+      }
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

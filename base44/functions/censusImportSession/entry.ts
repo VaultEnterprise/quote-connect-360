@@ -98,11 +98,38 @@ function detectHeaderRow(matrix) {
   candidates.sort((a, b) => b.score - a.score);
   const best = candidates[0];
   const second = candidates[1];
-  const confidence = best ? Math.min(1, best.score / ((second?.score || 1) + 1)) : 0;
+  const confidenceRatio = best ? best.score / Math.max(second?.score || 1, 1) : 0;
+  const confidence = Math.min(1, confidenceRatio / 1.5);
   return {
     headerRowNumber: best ? best.index + 1 : 1,
     confidence,
-    needsUserSelection: confidence < 1.15,
+    needsUserSelection: confidence < 0.75,
+  };
+}
+
+function buildPromptState({ extension, sheetNames, headerDetection, columnRecords, dataRows }) {
+  const duplicateHeaders = columnRecords.filter((column) => column.detected_as_duplicate).map((column) => column.source_column_name);
+  const promptMessages = [];
+
+  if (sheetNames.length > 1) {
+    promptMessages.push('This workbook contains multiple sheets. Select the sheet you want to import.');
+  }
+  if (!dataRows.length) {
+    promptMessages.push('No usable worksheet data was found.');
+  }
+  if (headerDetection.needsUserSelection) {
+    promptMessages.push('We could not confidently identify the header row. Please choose the row that contains the column names.');
+  }
+  if (duplicateHeaders.length) {
+    promptMessages.push('Duplicate column names were found. Please review the selected header row.');
+  }
+
+  return {
+    duplicate_headers: duplicateHeaders,
+    prompt_messages: promptMessages,
+    needs_sheet_selection: sheetNames.length > 1,
+    needs_header_selection: headerDetection.needsUserSelection,
+    file_format_message: `Supported import detected: .${extension}`,
   };
 }
 
@@ -220,6 +247,15 @@ Deno.serve(async (req) => {
     const requiredConfig = await getRequiredFieldConfig(base44, body.caseId);
     const inferredMappings = inferMappings(headers, requiredConfig);
     const columnRecords = buildColumns(headers, dataRows);
+    const promptState = buildPromptState({ extension, sheetNames, headerDetection, columnRecords, dataRows });
+
+    if (!dataRows.length) {
+      await base44.entities.ImportSession.update(importSession.id, {
+        parse_status: 'failed',
+        notes_json: { case_id: body.caseId, file_url: body.fileUrl, prompt_state: promptState }
+      });
+      return Response.json({ error: 'No usable worksheet data was found.' }, { status: 400 });
+    }
 
     await Promise.all(columnRecords.map((column) => base44.entities.ImportSessionColumn.create({
       import_session_id: importSession.id,
@@ -238,6 +274,7 @@ Deno.serve(async (req) => {
       commit_status: 'ready',
       total_rows: dataRows.length,
       total_columns: headers.length,
+      notes_json: { case_id: body.caseId, file_url: body.fileUrl, prompt_state: promptState }
     });
 
     return Response.json({
@@ -258,8 +295,16 @@ Deno.serve(async (req) => {
       total_rows: dataRows.length,
       total_columns: headers.length,
       required_field_rules: requiredConfig,
+      prompt_state: promptState,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    const message = String(error?.message || '');
+    if (message.includes('WORKSHEET_NOT_FOUND')) {
+      return Response.json({ error: 'The selected worksheet could not be found. Please choose another sheet.' }, { status: 400 });
+    }
+    if (message.includes('UNSUPPORTED_FILE_FORMAT')) {
+      return Response.json({ error: 'This file type is not supported.' }, { status: 400 });
+    }
+    return Response.json({ error: 'We could not read this file. Please verify the file is not corrupt.' }, { status: 500 });
   }
 });

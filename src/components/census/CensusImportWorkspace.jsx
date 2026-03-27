@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, FileUp, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, FileUp, RefreshCw, Upload } from "lucide-react";
 
 const IMPORT_MODES = [
   { value: "validate_only", label: "Validate only" },
@@ -120,6 +120,8 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   });
 
   const previewHeaders = useMemo(() => importSession?.columns?.map((column) => column.source_column_name) || [], [importSession]);
+  const promptMessages = importSession?.prompt_state?.prompt_messages || [];
+  const unresolvedRequiredFields = mappings.filter((mapping) => mapping.is_required_for_run && !mapping.source_column_name && !(mapping.default_value || "").trim());
   const canCommit = Boolean(validationResult) && importMode !== "validate_only";
 
   const updateMapping = (fieldCode, updates) => {
@@ -145,6 +147,27 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     setImportMode("validate_only");
   };
 
+  const downloadErrorReport = () => {
+    if (!validationResult?.rows?.length) return;
+    const issueRows = validationResult.rows.flatMap((row) => ([...(row.errors_json || []), ...(row.warnings_json || [])]));
+    const header = ["row_number", "field", "code", "message", "severity", "suggested_fix"];
+    const lines = [header.join(",")].concat(issueRows.map((issue) => ([
+      issue.row_number,
+      issue.application_field,
+      issue.error_code,
+      JSON.stringify(issue.error_message || ""),
+      issue.severity,
+      JSON.stringify(issue.suggested_fix || "")
+    ].join(","))));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "census-import-errors.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -163,6 +186,20 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
         <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-700 rounded-full animate-spin"></div>
           <span>Uploading and reading your file...</span>
+        </div>
+      )}
+
+      {!importSession && !uploadMutation.isPending && (
+        <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          Upload a census file to begin.
+        </div>
+      )}
+
+      {promptMessages.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-1">
+          {promptMessages.map((message) => (
+            <div key={message}>{message}</div>
+          ))}
         </div>
       )}
 
@@ -207,12 +244,15 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
           </div>
 
           {importSession?.sheet_names?.length > 1 && (
-            <div>
+            <div className="space-y-2">
               <Label>Worksheet</Label>
               <Select value={selectedSheetName} onValueChange={setSelectedSheetName}>
                 <SelectTrigger><SelectValue placeholder="Choose worksheet" /></SelectTrigger>
                 <SelectContent>{importSession.sheet_names.map((sheet) => <SelectItem key={sheet} value={sheet}>{sheet}</SelectItem>)}</SelectContent>
               </Select>
+              <Button variant="outline" size="sm" onClick={() => uploadMutation.mutate()} disabled={uploadMutation.isPending}>
+                Change sheet
+              </Button>
             </div>
           )}
         </CardContent>
@@ -238,6 +278,12 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
               <CardTitle className="text-sm">Field Mapping</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              {unresolvedRequiredFields.length > 0 && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  The following required fields are not yet mapped: {unresolvedRequiredFields.map((field) => field.application_field_label).join(", ")}.
+                </div>
+              )}
+
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
@@ -327,6 +373,17 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
                   <div className="rounded-lg border p-4"><div className="text-xs text-muted-foreground">Warnings</div><div className="text-2xl font-semibold">{validationResult.row_warning_count}</div></div>
                   <div className="rounded-lg border p-4"><div className="text-xs text-muted-foreground">Errors</div><div className="text-2xl font-semibold">{validationResult.row_error_count}</div></div>
                 </div>
+                <div className="rounded-lg border bg-muted/20 px-4 py-3 text-sm space-y-1">
+                  <div className="font-medium">{validationResult.prompts?.validation_complete}</div>
+                  {validationResult.prompts?.warnings_found && <div>{validationResult.prompts.warnings_found}</div>}
+                  {validationResult.prompts?.errors_found && <div>{validationResult.prompts.errors_found}</div>}
+                  {validationResult.prompts?.import_ready && <div>{validationResult.prompts.import_ready}</div>}
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={downloadErrorReport}>
+                    <Download className="w-4 h-4 mr-2" /> Download error report
+                  </Button>
+                </div>
                 <div className="rounded-lg border overflow-hidden">
                   <table className="w-full text-xs">
                     <thead className="bg-muted/50"><tr><th className="px-3 py-2 text-left">Row</th><th className="px-3 py-2 text-left">Field</th><th className="px-3 py-2 text-left">Code</th><th className="px-3 py-2 text-left">Message</th></tr></thead>
@@ -349,9 +406,13 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
       )}
 
       <div className="flex flex-wrap gap-3 justify-end">
+        <Button variant="outline" onClick={resetState}>
+          <RefreshCw className="w-4 h-4 mr-2" /> Retry import
+        </Button>
         <Button variant="outline" onClick={() => { resetState(); onCancel?.(); }}>Cancel</Button>
         {importSession && <Button variant="outline" onClick={() => validateMutation.mutate()} disabled={validateMutation.isPending}>{validateMutation.isPending ? "Validating..." : "Validate Import"}</Button>}
-        {canCommit && <Button onClick={() => commitMutation.mutate()} disabled={commitMutation.isPending}>{commitMutation.isPending ? "Importing..." : "Commit Import"}</Button>}
+        {validationResult && validationResult.row_error_count > 0 && <Button variant="outline" onClick={() => setValidationResult(null)}>Return to mapping</Button>}
+        {canCommit && <Button onClick={() => commitMutation.mutate()} disabled={commitMutation.isPending || unresolvedRequiredFields.length > 0}>{commitMutation.isPending ? "Importing..." : "Commit Import"}</Button>}
       </div>
     </div>
   );
