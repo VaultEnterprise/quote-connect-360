@@ -1,0 +1,110 @@
+{
+  "name": "ImportSession",
+  "type": "object",
+  "properties": {
+    "module_code": {
+      "type": "string"
+    },
+    "page_code": {
+      "type": "string"
+    },
+    "source_file_name": {
+      "type": "string"
+    },
+    "source_format": {
+      "type": "string"
+    },
+    "source_mime_type": {
+      "type": "string"
+    },
+    "upload_user_id": {
+      "type": "string"
+    },
+    "upload_timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "selected_sheet_name": {
+      "type": "string"
+    },
+    "header_row_number": {
+      "type": "number"
+    },
+    "parse_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "uploaded",
+        "parsed",
+        "needs_sheet_selection",
+        "needs_header_selection",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "ready",
+        "validated",
+        "has_errors",
+        "has_warnings"
+      ],
+      "default": "not_started"
+    },
+    "commit_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "ready",
+        "committed",
+        "partially_committed",
+        "blocked",
+        "failed"
+      ],
+      "default": "not_started"
+    },
+    "total_rows": {
+      "type": "number",
+      "default": 0
+    },
+    "total_columns": {
+      "type": "number",
+      "default": 0
+    },
+    "valid_row_count": {
+      "type": "number",
+      "default": 0
+    },
+    "warning_row_count": {
+      "type": "number",
+      "default": 0
+    },
+    "error_row_count": {
+      "type": "number",
+      "default": 0
+    },
+    "mapping_template_id": {
+      "type": "string"
+    },
+    "import_mode": {
+      "type": "string",
+      "enum": [
+        "validate_only",
+        "import_valid_rows_only",
+        "import_all_and_flag_errors",
+        "block_on_any_error"
+      ],
+      "default": "validate_only"
+    },
+    "notes_json": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "module_code",
+    "page_code",
+    "source_file_name"
+  ]
+}

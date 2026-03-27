@@ -1,0 +1,51 @@
+{
+  "name": "ImportTemplate",
+  "type": "object",
+  "properties": {
+    "template_name": {
+      "type": "string"
+    },
+    "module_code": {
+      "type": "string"
+    },
+    "page_code": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "is_global": {
+      "type": "boolean",
+      "default": false
+    },
+    "source_format_family": {
+      "type": "string"
+    },
+    "header_row_number": {
+      "type": "number"
+    },
+    "field_mapping_json": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "default_required_flags_json": {
+      "type": "object"
+    },
+    "default_values_json": {
+      "type": "object"
+    },
+    "transform_rules_json": {
+      "type": "object"
+    },
+    "created_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "template_name",
+    "module_code",
+    "page_code"
+  ]
+}

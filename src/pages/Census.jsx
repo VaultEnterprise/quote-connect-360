@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
-import CensusUploadModal from "@/components/census/CensusUploadModal";
+import CensusImportWorkspace from "@/components/census/CensusImportWorkspace";
 import CensusVersionHistory from "@/components/census/CensusVersionHistory";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import RiskDashboard from "@/components/census/RiskDashboard";
@@ -171,15 +171,13 @@ export default function Census() {
 
       {/* Upload Modal */}
       {selectedCaseId && (
-        <CensusUploadModal
+        <CensusImportWorkspace
           caseId={selectedCaseId}
-          currentVersionCount={selectedVersionCount}
           open={showUpload}
-          onClose={(result) => {
+          onClose={() => setShowUpload(false)}
+          onComplete={(censusVersionId) => {
+            setViewingVersionId(censusVersionId);
             setShowUpload(false);
-            if (result?.censusVersionId) {
-              setViewingVersionId(result.censusVersionId);
-            }
           }}
         />
       )}
