@@ -178,12 +178,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
             <span className="text-xs text-muted-foreground mt-1">We preserve raw columns and guide you through mapping before import.</span>
             <input type="file" accept=".xls,.xlsx,.csv,.tsv,.txt,.xlsm" className="hidden" onChange={(event) => setFile(event.target.files?.[0] || null)} />
           </label>
-          {file && (
-            <div className="rounded-lg border bg-muted/30 px-3 py-2">
-              <div className="text-xs text-muted-foreground">Uploaded file</div>
-              <div className="text-sm font-medium text-foreground truncate">{file.name}</div>
-            </div>
-          )}
+          {file && <div className="text-xs text-muted-foreground">Selected: {file.name}</div>}
 
           <div className="grid md:grid-cols-4 gap-3">
             <div>
