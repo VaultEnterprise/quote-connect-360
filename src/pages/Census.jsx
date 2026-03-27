@@ -47,6 +47,7 @@ export default function Census() {
 
   const selectedCase = cases.find(c => c.id === selectedCaseId);
   const selectedVersionCount = filteredVersions.length;
+  const activeVersionId = viewingVersionId || filteredVersions[0]?.id || null;
 
   return (
     <div className="space-y-6">
@@ -135,14 +136,14 @@ export default function Census() {
           />
 
           {/* Risk Dashboard */}
-          {viewingVersionId && (
-            <RiskDashboard censusVersionId={viewingVersionId} caseId={selectedCaseId} />
+          {activeVersionId && (
+            <RiskDashboard censusVersionId={activeVersionId} caseId={selectedCaseId} />
           )}
 
-          {/* GradientAI Analysis — show for the latest version as soon as a case is selected */}
-          {filteredVersions.length > 0 && (
+          {/* GradientAI Analysis */}
+          {activeVersionId && (
             <GradientAIAnalysisPanel 
-              censusVersionId={viewingVersionId || filteredVersions[0].id} 
+              censusVersionId={activeVersionId} 
               caseId={selectedCaseId}
               onAnalysisComplete={() => {}}
             />
@@ -174,9 +175,11 @@ export default function Census() {
           caseId={selectedCaseId}
           currentVersionCount={selectedVersionCount}
           open={showUpload}
-          onClose={() => {
+          onClose={(result) => {
             setShowUpload(false);
-            // Refetch versions to see new upload
+            if (result?.censusVersionId) {
+              setViewingVersionId(result.censusVersionId);
+            }
           }}
         />
       )}

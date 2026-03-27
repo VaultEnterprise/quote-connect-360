@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
   const [fieldStats, setFieldStats] = useState(null);
   const [duplicates, setDuplicates] = useState([]);
   const [transformedPreview, setTransformedPreview] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [importResult, setImportResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const resetState = () => {
@@ -45,11 +47,20 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
     setFieldStats(null);
     setDuplicates([]);
     setTransformedPreview([]);
+    setErrorMessage("");
+    setImportResult(null);
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (!open) {
+      resetState();
+    }
+  }, [open]);
+
   const handleFile = async (nextFile) => {
     setLoading(true);
+    setErrorMessage("");
     try {
       const inspection = await inspectCensusFile(nextFile);
       setFile(nextFile);
@@ -59,6 +70,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
       setRowCount(inspection.row_count || 0);
       setMapping(inspection.suggested_mapping || {});
       setStep("mapping");
+    } catch (error) {
+      setErrorMessage(error.message || "Could not inspect file.");
     } finally {
       setLoading(false);
     }
@@ -66,6 +79,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
 
   const handleValidate = async () => {
     setLoading(true);
+    setErrorMessage("");
     try {
       const result = await runCensusImport({
         caseId,
@@ -81,6 +95,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
       setDuplicates(result.duplicates || []);
       setTransformedPreview(result.transformed_preview || []);
       setStep("validate");
+    } catch (error) {
+      setErrorMessage(error.message || "Validation failed.");
     } finally {
       setLoading(false);
     }
@@ -88,8 +104,9 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
 
   const handleImport = async () => {
     setLoading(true);
+    setErrorMessage("");
     try {
-      await runCensusImport({
+      const result = await runCensusImport({
         caseId,
         fileUrl,
         fileName: file?.name,
@@ -98,6 +115,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
         currentVersionCount,
         dryRun: false,
       });
+      setImportResult(result);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] }),
         queryClient.invalidateQueries({ queryKey: ["census-all"] }),
@@ -106,6 +124,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
         queryClient.invalidateQueries({ queryKey: ["case", caseId] }),
       ]);
       setStep("done");
+    } catch (error) {
+      setErrorMessage(error.message || "Import failed.");
     } finally {
       setLoading(false);
     }
@@ -123,8 +143,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
   };
 
   const handleClose = () => {
-    resetState();
-    onClose();
+    onClose(importResult ? { censusVersionId: importResult.census_version_id } : undefined);
   };
 
   const mappedRequired = CENSUS_FIELDS.filter((field) => field.required && !mapping[field.key]);
@@ -134,6 +153,11 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
+          {errorMessage && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
           <DialogTitle>Upload Census File</DialogTitle>
           <div className="flex items-center gap-2 pt-2">
             {["Upload", "Map Fields", "Validate", "Done"].map((label, index) => {
