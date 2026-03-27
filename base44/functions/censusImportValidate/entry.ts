@@ -103,13 +103,13 @@ Deno.serve(async (req) => {
         if (!local) return Promise.resolve();
         return base44.asServiceRole.entities.ImportFieldMapping.update(item.id, {
           source_column_name: local.source_column_name || '',
-          source_column_index: typeof local.source_column_index === 'number' ? local.source_column_index : undefined,
+          source_column_index: typeof local.source_column_index === 'number' && local.source_column_index >= 0 ? local.source_column_index : undefined,
           default_value: local.default_value || '',
           transform_rule_code: local.transform_rule_code || '',
           is_required_for_run: !!local.is_required_for_run,
           is_hard_required: !!local.is_hard_required,
           required_reason: local.required_reason || '',
-          mapping_confidence: local.mapping_confidence || 0,
+          mapping_confidence: local.source_column_name ? Math.max(local.mapping_confidence || 0, 1) : 0,
           validation_rule_set: local.validation_rule_set || []
         });
       })

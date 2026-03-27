@@ -126,13 +126,26 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   const unresolvedSourceWarnings = mappings.filter((mapping) => mapping.mapping_confidence < 0.5 && !mapping.source_column_name && !mapping.default_value);
 
   const updateMapping = (fieldCode, updates) => {
-    setMappings((current) => current.map((mapping) => mapping.application_field_code === fieldCode ? { ...mapping, ...updates } : mapping));
+    setMappings((current) => current.map((mapping) => {
+      if (mapping.application_field_code !== fieldCode) return mapping;
+      const nextSourceColumnName = Object.prototype.hasOwnProperty.call(updates, "source_column_name") ? updates.source_column_name : mapping.source_column_name;
+      return {
+        ...mapping,
+        ...updates,
+        source_column_index: nextSourceColumnName ? previewHeaders.indexOf(nextSourceColumnName) : undefined,
+        mapping_confidence: nextSourceColumnName ? Math.max(mapping.mapping_confidence || 0, 1) : 0,
+      };
+    }));
   };
 
   const applyTemplate = (templateId) => {
     const template = templates.find((item) => item.id === templateId);
     if (!template) return;
-    setMappings(template.field_mapping_json || []);
+    setMappings((template.field_mapping_json || []).map((mapping) => ({
+      ...mapping,
+      source_column_index: mapping.source_column_name ? previewHeaders.indexOf(mapping.source_column_name) : undefined,
+      mapping_confidence: mapping.source_column_name ? Math.max(mapping.mapping_confidence || 0, 1) : 0,
+    })));
     if (template.header_row_number) setHeaderRowNumber(template.header_row_number);
   };
 
