@@ -20,11 +20,14 @@ export default function GradientAIAnalysisPanel({ censusVersionId, caseId, onAna
       setResult(response.data);
       setLastAnalyzed(new Date());
       
-      // Create high-risk exceptions
-      await base44.functions.invoke('createHighRiskExceptions', {
-        census_version_id: censusVersionId,
-        case_id: caseId
-      });
+      try {
+        await base44.functions.invoke('createHighRiskExceptions', {
+          census_version_id: censusVersionId,
+          case_id: caseId
+        });
+      } catch (exceptionError) {
+        console.error('High-risk exception creation failed:', exceptionError);
+      }
 
       onAnalysisComplete?.();
     } catch (error) {
