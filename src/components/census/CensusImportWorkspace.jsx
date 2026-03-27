@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, Download, FileUp, RefreshCw, Upload } from "lucide-react";
+import CensusMemberTable from "@/components/census/CensusMemberTable";
 
 const IMPORT_MODES = [
   { value: "validate_only", label: "Validate only" },
@@ -27,6 +28,9 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   const [validationResult, setValidationResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [templateName, setTemplateName] = useState("");
+  const [importedVersionId, setImportedVersionId] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: templates = [] } = useQuery({
     queryKey: ["import-templates", "census"],
@@ -95,6 +99,10 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
       return response.data;
     },
     onSuccess: (data) => {
+      setImportedVersionId(data.census_version_id);
+      setSuccessMessage(data.message || "Census imported successfully.");
+      queryClient.invalidateQueries({ queryKey: ["census-all"] });
+      queryClient.invalidateQueries({ queryKey: ["census-members", data.census_version_id] });
       onComplete?.(data.census_version_id, data.message);
     },
     onError: (error) => setErrorMessage(error?.response?.data?.error || error.message || "Commit failed."),
@@ -162,6 +170,8 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     setErrorMessage("");
     setTemplateName("");
     setImportMode("validate_only");
+    setImportedVersionId(null);
+    setSuccessMessage("");
   };
 
   const downloadErrorReport = () => {
@@ -196,6 +206,13 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 mt-0.5" />
           <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start gap-2">
+          <CheckCircle2 className="w-4 h-4 mt-0.5" />
+          <span>{successMessage}</span>
         </div>
       )}
 
@@ -423,6 +440,17 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
                     </tbody>
                   </table>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {importedVersionId && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Imported Census Data</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CensusMemberTable censusVersionId={importedVersionId} caseId={caseId} />
               </CardContent>
             </Card>
           )}

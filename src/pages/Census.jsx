@@ -130,7 +130,6 @@ export default function Census() {
           onCancel={() => setShowUpload(false)}
           onComplete={(censusVersionId, message) => {
             setViewingVersionId(censusVersionId);
-            setShowUpload(false);
             setImportSuccessMessage(message || "Import completed successfully.");
           }}
         />
