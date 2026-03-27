@@ -142,6 +142,11 @@ export default function Census() {
           <CensusVersionHistory
             versions={filteredVersions}
             onViewMembers={version => setViewingVersionId(version.id)}
+            onDeleteVersion={(version) => {
+              if (viewingVersionId === version.id) {
+                setViewingVersionId(null);
+              }
+            }}
           />
 
           {/* Risk Dashboard */}

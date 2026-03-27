@@ -1,17 +1,35 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, AlertCircle, CheckCircle2, GitCompare } from "lucide-react";
+import { Calendar, Users, AlertCircle, GitCompare, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CensusVersionComparison from "./CensusVersionComparison";
 
-export default function CensusVersionHistory({ versions, onViewMembers }) {
+export default function CensusVersionHistory({ versions, onViewMembers, onDeleteVersion }) {
+  const queryClient = useQueryClient();
   const [compareMode, setCompareMode] = useState(false);
   const [version1Id, setVersion1Id] = useState(null);
   const [version2Id, setVersion2Id] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (version) => {
+      const members = await base44.entities.CensusMember.filter({ census_version_id: version.id }, "-created_date", 1000);
+      if (members.length) {
+        await Promise.all(members.map((member) => base44.entities.CensusMember.delete(member.id)));
+      }
+      await base44.entities.CensusVersion.delete(version.id);
+      return version;
+    },
+    onSuccess: (version) => {
+      queryClient.invalidateQueries({ queryKey: ["census-all"] });
+      onDeleteVersion?.(version);
+    },
+  });
 
   const handleCompare = (v1, v2) => {
     setVersion1Id(v1.id);
@@ -100,14 +118,29 @@ export default function CensusVersionHistory({ versions, onViewMembers }) {
                      </Badge>
                    )}
                    {!compareMode && (
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={() => onViewMembers?.(version)}
-                       className="text-xs"
-                     >
-                       View Members
-                     </Button>
+                     <div className="flex gap-2">
+                                             <Button
+                                               variant="outline"
+                                               size="sm"
+                                               onClick={() => onViewMembers?.(version)}
+                                               className="text-xs"
+                                             >
+                                               View Members
+                                             </Button>
+                                             <Button
+                                               variant="outline"
+                                               size="sm"
+                                               onClick={(event) => {
+                                                 event.stopPropagation();
+                                                 deleteMutation.mutate(version);
+                                               }}
+                                               disabled={deleteMutation.isPending}
+                                               className="text-xs text-destructive hover:text-destructive"
+                                             >
+                                               <Trash2 className="w-3 h-3 mr-1" />
+                                               Delete
+                                             </Button>
+                                           </div>
                    )}
                  </div>
               </div>
