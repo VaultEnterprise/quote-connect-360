@@ -159,6 +159,13 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
         </div>
       )}
 
+      {uploadMutation.isPending && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-700 rounded-full animate-spin"></div>
+          <span>Uploading and reading your file...</span>
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-sm">File Intake</CardTitle>
