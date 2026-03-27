@@ -58,10 +58,12 @@
       "enum": [
         "not_started",
         "ready",
+        "running",
         "committed",
         "partially_committed",
         "blocked",
-        "failed"
+        "failed",
+        "cancelled"
       ],
       "default": "not_started"
     },
@@ -85,6 +87,22 @@
       "type": "number",
       "default": 0
     },
+    "created_row_count": {
+      "type": "number",
+      "default": 0
+    },
+    "updated_row_count": {
+      "type": "number",
+      "default": 0
+    },
+    "skipped_row_count": {
+      "type": "number",
+      "default": 0
+    },
+    "failed_row_count": {
+      "type": "number",
+      "default": 0
+    },
     "mapping_template_id": {
       "type": "string"
     },
@@ -97,6 +115,17 @@
         "block_on_any_error"
       ],
       "default": "validate_only"
+    },
+    "execution_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "execution_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_error_message": {
+      "type": "string"
     },
     "notes_json": {
       "type": "object"

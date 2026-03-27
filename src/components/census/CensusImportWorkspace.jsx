@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Download, FileUp, RefreshCw, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, FileUp, RefreshCw, Upload, X } from "lucide-react";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 
 const IMPORT_MODES = [
@@ -30,6 +30,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   const [templateName, setTemplateName] = useState("");
   const [importedVersionId, setImportedVersionId] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [hasUnsavedProgress, setHasUnsavedProgress] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: templates = [] } = useQuery({
@@ -62,6 +63,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
       setMappings(data.inferred_mappings || []);
       setValidationResult(null);
       setErrorMessage("");
+      setHasUnsavedProgress(true);
     },
     onError: (error) => setErrorMessage(error?.response?.data?.error || error.message || "Upload failed."),
   });
@@ -78,6 +80,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     onSuccess: (data) => {
       setValidationResult(data);
       setErrorMessage("");
+      setHasUnsavedProgress(true);
     },
     onError: (error) => {
       const responseData = error?.response?.data;
@@ -101,6 +104,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     onSuccess: (data) => {
       setImportedVersionId(data.census_version_id);
       setSuccessMessage(data.message || "Census imported successfully.");
+      setHasUnsavedProgress(false);
       queryClient.invalidateQueries({ queryKey: ["census-all"] });
       queryClient.invalidateQueries({ queryKey: ["census-members", data.census_version_id] });
       onComplete?.(data.census_version_id, data.message);
@@ -137,6 +141,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   const unresolvedSourceWarnings = mappings.filter((mapping) => mapping.mapping_confidence < 0.5 && !mapping.source_column_name && !mapping.default_value);
 
   const updateMapping = (fieldCode, updates) => {
+    setHasUnsavedProgress(true);
     setMappings((current) => current.map((mapping) => {
       if (mapping.application_field_code !== fieldCode) return mapping;
       const nextSourceColumnName = Object.prototype.hasOwnProperty.call(updates, "source_column_name") ? updates.source_column_name : mapping.source_column_name;
@@ -152,6 +157,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   const applyTemplate = (templateId) => {
     const template = templates.find((item) => item.id === templateId);
     if (!template) return;
+    setHasUnsavedProgress(true);
     setMappings((template.field_mapping_json || []).map((mapping) => ({
       ...mapping,
       source_column_index: mapping.source_column_name ? previewHeaders.indexOf(mapping.source_column_name) : undefined,
@@ -172,6 +178,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     setImportMode("validate_only");
     setImportedVersionId(null);
     setSuccessMessage("");
+    setHasUnsavedProgress(false);
   };
 
   const downloadErrorReport = () => {
@@ -197,9 +204,22 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Census Import Workspace</h2>
-        <p className="text-sm text-muted-foreground mt-1">Upload, map, validate, and commit census files in a full-page workflow.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">Census Import Workspace</h2>
+          <p className="text-sm text-muted-foreground mt-1">Upload, map, validate, and commit census files in a full-page workflow.</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            if (hasUnsavedProgress && !window.confirm('Closing now will discard your current import setup. Continue?')) return;
+            resetState();
+            onCancel?.();
+          }}
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
 
       {errorMessage && (
@@ -213,6 +233,15 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start gap-2">
           <CheckCircle2 className="w-4 h-4 mt-0.5" />
           <span>{successMessage}</span>
+        </div>
+      )}
+
+      {importSession && (
+        <div className="grid md:grid-cols-4 gap-3">
+          <div className="rounded-lg border bg-card px-4 py-3"><div className="text-xs text-muted-foreground">Rows detected</div><div className="text-lg font-semibold">{importSession.total_rows || 0}</div></div>
+          <div className="rounded-lg border bg-card px-4 py-3"><div className="text-xs text-muted-foreground">Valid rows</div><div className="text-lg font-semibold">{validationResult?.row_pass_count || importSession.valid_row_count || 0}</div></div>
+          <div className="rounded-lg border bg-card px-4 py-3"><div className="text-xs text-muted-foreground">Warnings</div><div className="text-lg font-semibold">{validationResult?.row_warning_count || importSession.warning_row_count || 0}</div></div>
+          <div className="rounded-lg border bg-card px-4 py-3"><div className="text-xs text-muted-foreground">Errors</div><div className="text-lg font-semibold">{validationResult?.row_error_count || importSession.error_row_count || 0}</div></div>
         </div>
       )}
 
@@ -461,10 +490,14 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
         <Button variant="outline" onClick={resetState}>
           <RefreshCw className="w-4 h-4 mr-2" /> Retry import
         </Button>
-        <Button variant="outline" onClick={() => { resetState(); onCancel?.(); }}>Cancel</Button>
+        <Button variant="outline" onClick={() => {
+          if (hasUnsavedProgress && !window.confirm('Closing now will discard your current import setup. Continue?')) return;
+          resetState();
+          onCancel?.();
+        }}>Cancel</Button>
         {importSession && <Button variant="outline" onClick={() => validateMutation.mutate()} disabled={validateMutation.isPending}>{validateMutation.isPending ? "Validating..." : "Validate Import"}</Button>}
         {validationResult && validationResult.row_error_count > 0 && <Button variant="outline" onClick={() => setValidationResult(null)}>Return to mapping</Button>}
-        {canCommit && <Button onClick={() => commitMutation.mutate()} disabled={commitMutation.isPending || unresolvedRequiredFields.length > 0}>{commitMutation.isPending ? "Importing..." : "Commit Import"}</Button>}
+        {canCommit && <Button onClick={() => commitMutation.mutate()} disabled={commitMutation.isPending || unresolvedRequiredFields.length > 0 || !!validationResult?.row_error_count}>{commitMutation.isPending ? "Importing..." : "Commit Import"}</Button>}
       </div>
     </div>
   );
