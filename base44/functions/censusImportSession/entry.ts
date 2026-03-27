@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
       needs_header_selection: headerDetection.needsUserSelection,
       columns: columnRecords,
       inferred_mappings: inferredMappings,
-      preview_rows: dataRows.slice(0, 10).map((row, rowIndex) => ({
+      preview_rows: dataRows.map((row, rowIndex) => ({
         row_number: headerIndex + 2 + rowIndex,
         raw_row_json: Object.fromEntries(headers.map((header, index) => [header, row[index] ?? '']))
       })),

@@ -131,7 +131,7 @@ export default function Census() {
           onComplete={(censusVersionId) => {
             setViewingVersionId(censusVersionId);
             setShowUpload(false);
-            setImportSuccessMessage("Import completed successfully. Your new census version is now available in Import History.");
+            setImportSuccessMessage("Import Successful");
           }}
         />
       ) : !selectedCaseId ? (

@@ -20,8 +20,23 @@ Deno.serve(async (req) => {
     }
 
     const session = await base44.entities.ImportSession.get(body.importSessionId);
-    const stagedRows = await base44.asServiceRole.entities.ImportRowStaging.filter({ import_session_id: body.importSessionId }, 'source_row_number', 5000);
-    const mappings = await base44.asServiceRole.entities.ImportFieldMapping.filter({ import_session_id: body.importSessionId }, 'created_date', 200);
+    const stagedRows = [];
+    let stagedRowOffset = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.ImportRowStaging.filter({ import_session_id: body.importSessionId }, 'source_row_number', 5000, stagedRowOffset);
+      stagedRows.push(...batch);
+      if (batch.length < 5000) break;
+      stagedRowOffset += 5000;
+    }
+
+    const mappings = [];
+    let mappingOffset = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.ImportFieldMapping.filter({ import_session_id: body.importSessionId }, 'created_date', 200, mappingOffset);
+      mappings.push(...batch);
+      if (batch.length < 200) break;
+      mappingOffset += 200;
+    }
 
     const hasErrors = stagedRows.some((row) => row.validation_status === 'error');
     if (body.importMode === 'block_on_any_error' && hasErrors) {

@@ -65,7 +65,17 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    await base44.asServiceRole.entities.ImportRowStaging.delete?.();
+    const existingRows = [];
+    let existingOffset = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.ImportRowStaging.filter({ import_session_id: body.importSessionId }, 'source_row_number', 5000, existingOffset);
+      existingRows.push(...batch);
+      if (batch.length < 5000) break;
+      existingOffset += 5000;
+    }
+    if (existingRows.length) {
+      await Promise.all(existingRows.map((row) => base44.asServiceRole.entities.ImportRowStaging.delete(row.id)));
+    }
 
     const stagedRows = [];
     const validationIssues = [];
@@ -163,7 +173,7 @@ Deno.serve(async (req) => {
       row_warning_count: warningRowCount,
       row_error_count: errorRowCount,
       top_validation_issues: validationIssues.slice(0, 25),
-      rows: stagedRows.slice(0, 50),
+      rows: stagedRows,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
