@@ -128,10 +128,10 @@ export default function Census() {
         <CensusImportWorkspace
           caseId={selectedCaseId}
           onCancel={() => setShowUpload(false)}
-          onComplete={(censusVersionId) => {
+          onComplete={(censusVersionId, message) => {
             setViewingVersionId(censusVersionId);
             setShowUpload(false);
-            setImportSuccessMessage("Import completed successfully.");
+            setImportSuccessMessage(message || "Import completed successfully.");
           }}
         />
       ) : !selectedCaseId ? (

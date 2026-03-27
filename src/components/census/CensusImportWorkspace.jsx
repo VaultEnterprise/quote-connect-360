@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
       return response.data;
     },
     onSuccess: (data) => {
-      onComplete?.(data.census_version_id);
+      onComplete?.(data.census_version_id, data.message);
     },
     onError: (error) => setErrorMessage(error?.response?.data?.error || error.message || "Commit failed."),
   });
@@ -135,32 +135,6 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     setMappings(template.field_mapping_json || []);
     if (template.header_row_number) setHeaderRowNumber(template.header_row_number);
   };
-
-  useEffect(() => {
-    if (!importSession?.import_session_id || mappings.length === 0) return;
-    const timer = setTimeout(async () => {
-      const persistedMappings = await base44.entities.ImportFieldMapping.filter({ import_session_id: importSession.import_session_id }, "created_date", 200);
-      await Promise.all(
-        persistedMappings.map((item) => {
-          const local = mappings.find((mapping) => mapping.application_field_code === item.application_field_code);
-          if (!local) return Promise.resolve();
-          return base44.entities.ImportFieldMapping.update(item.id, {
-            source_column_name: local.source_column_name || "",
-            source_column_index: local.source_column_name ? previewHeaders.indexOf(local.source_column_name) : undefined,
-            default_value: local.default_value || "",
-            transform_rule_code: local.transform_rule_code || "",
-            is_required_for_run: !!local.is_required_for_run,
-            is_hard_required: !!local.is_hard_required,
-            required_reason: local.required_reason || "",
-            mapping_confidence: local.mapping_confidence || 0,
-            validation_rule_set: local.validation_rule_set || []
-          });
-        })
-      );
-    }, 250);
-
-    return () => clearTimeout(timer);
-  }, [mappings, importSession?.import_session_id, previewHeaders]);
 
   const resetState = () => {
     setFile(null);

@@ -88,6 +88,33 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
+    const existingMappings = [];
+    let existingMappingOffset = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.ImportFieldMapping.filter({ import_session_id: body.importSessionId }, 'created_date', 200, existingMappingOffset);
+      existingMappings.push(...batch);
+      if (batch.length < 200) break;
+      existingMappingOffset += 200;
+    }
+
+    await Promise.all(
+      existingMappings.map((item) => {
+        const local = body.mappings.find((mapping) => mapping.application_field_code === item.application_field_code);
+        if (!local) return Promise.resolve();
+        return base44.asServiceRole.entities.ImportFieldMapping.update(item.id, {
+          source_column_name: local.source_column_name || '',
+          source_column_index: typeof local.source_column_index === 'number' ? local.source_column_index : undefined,
+          default_value: local.default_value || '',
+          transform_rule_code: local.transform_rule_code || '',
+          is_required_for_run: !!local.is_required_for_run,
+          is_hard_required: !!local.is_hard_required,
+          required_reason: local.required_reason || '',
+          mapping_confidence: local.mapping_confidence || 0,
+          validation_rule_set: local.validation_rule_set || []
+        });
+      })
+    );
+
     const existingRows = [];
     let existingOffset = 0;
     while (true) {
