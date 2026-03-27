@@ -113,7 +113,16 @@ export default function Census() {
       )}
 
       {/* Content */}
-      {!selectedCaseId ? (
+      {showUpload && selectedCaseId ? (
+        <CensusImportWorkspace
+          caseId={selectedCaseId}
+          onCancel={() => setShowUpload(false)}
+          onComplete={(censusVersionId) => {
+            setViewingVersionId(censusVersionId);
+            setShowUpload(false);
+          }}
+        />
+      ) : !selectedCaseId ? (
         <EmptyState
           icon={Users}
           title="Select a Case"
@@ -169,18 +178,6 @@ export default function Census() {
         </div>
       )}
 
-      {/* Upload Modal */}
-      {selectedCaseId && (
-        <CensusImportWorkspace
-          caseId={selectedCaseId}
-          open={showUpload}
-          onClose={() => setShowUpload(false)}
-          onComplete={(censusVersionId) => {
-            setViewingVersionId(censusVersionId);
-            setShowUpload(false);
-          }}
-        />
-      )}
     </div>
   );
 }
