@@ -132,8 +132,7 @@ export default function CensusVersionHistory({ versions, onViewMembers, onDelete
                                                size="sm"
                                                onClick={(event) => {
                                                  event.stopPropagation();
-                                                 if (!window.confirm('Delete this census version and its members?')) return;
-                                                  deleteMutation.mutate(version);
+                                                 deleteMutation.mutate(version);
                                                }}
                                                disabled={deleteMutation.isPending}
                                                className="text-xs text-destructive hover:text-destructive"

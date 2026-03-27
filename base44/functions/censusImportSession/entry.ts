@@ -5,8 +5,6 @@ const MODULE_CODE = 'census';
 const PAGE_CODE = 'census_manager';
 const SUPPORTED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'tsv', 'txt', 'xlsm'];
 const DELIMITER_BY_EXTENSION = { csv: ',', tsv: '\t', txt: null };
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-
 const CENSUS_FIELDS = [
   { code: 'employee_id', label: 'Employee ID', data_type: 'string' },
   { code: 'first_name', label: 'First Name', data_type: 'string' },
@@ -30,9 +28,7 @@ const CENSUS_FIELDS = [
   { code: 'ssn_last4', label: 'Tobacco', data_type: 'string' }
 ];
 const AUTOMAP_HINTS = {
-  employee_id: ['employee id', 'employee_id', 'emp id', 'member id', 'subscriber id'],
-  ssn_last4: ['ssn', 'ssn last 4', 'last4', 'ssn_last4'],
-  hire_date: ['hire date', 'effective date', 'coverage effective date', 'eligibility date'],
+  employee_id: ['employee id', 'employee_id', 'emp id', 'member id'],
   first_name: ['first name', 'first_name', 'firstname'],
   last_name: ['last name', 'last_name', 'lastname'],
   date_of_birth: ['dob', 'date of birth', 'birth date', 'date_of_birth'],
@@ -212,12 +208,7 @@ Deno.serve(async (req) => {
 
     const fileResponse = await fetch(body.fileUrl);
     if (!fileResponse.ok) {
-      return Response.json({ error: 'Could not download the uploaded file. Please upload it again.' }, { status: 400 });
-    }
-
-    const contentLength = Number(fileResponse.headers.get('content-length') || 0);
-    if (contentLength && contentLength > MAX_FILE_SIZE_BYTES) {
-      return Response.json({ error: 'This file is too large to import. Please upload a file smaller than 10 MB.' }, { status: 400 });
+      return Response.json({ error: 'Could not download uploaded file' }, { status: 400 });
     }
 
     const importSession = body.importSessionId
@@ -258,9 +249,7 @@ Deno.serve(async (req) => {
     const headerIndex = Math.max(0, (body.headerRowNumber || headerDetection.headerRowNumber) - 1);
     const rawHeaders = matrix[headerIndex] || [];
     const headers = rawHeaders.map((header, index) => normalizeHeader(header, index));
-    const dataRows = matrix.slice(headerIndex + 1)
-      .map((row) => row.slice(0, headers.length))
-      .filter((row) => row.some((cell) => String(cell ?? '').trim() !== ''));
+    const dataRows = matrix.slice(headerIndex + 1).filter((row) => row.some((cell) => String(cell ?? '').trim() !== ''));
     const requiredConfig = await getRequiredFieldConfig(base44, body.caseId);
     const inferredMappings = inferMappings(headers, requiredConfig);
     const columnRecords = buildColumns(headers, dataRows);
@@ -332,18 +321,7 @@ Deno.serve(async (req) => {
       commit_status: 'ready',
       total_rows: dataRows.length,
       total_columns: headers.length,
-      created_row_count: 0,
-      updated_row_count: 0,
-      skipped_row_count: 0,
-      failed_row_count: 0,
-      last_error_message: '',
-      notes_json: {
-        case_id: body.caseId,
-        file_url: body.fileUrl,
-        prompt_state: promptState,
-        available_sheet_names: sheetNames,
-        structure_warnings: promptState.prompt_messages
-      }
+      notes_json: { case_id: body.caseId, file_url: body.fileUrl, prompt_state: promptState }
     });
 
     return Response.json({

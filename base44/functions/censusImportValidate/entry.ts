@@ -17,19 +17,6 @@ const VALID_TIERS = ['employee_only', 'employee_spouse', 'employee_children', 'f
 const VALID_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 const VALID_EMPLOYMENT_STATUS = ['active', 'leave', 'terminated'];
 const VALID_EMPLOYMENT_TYPE = ['full_time', 'part_time', 'contractor'];
-const VALID_GENDERS = ['male', 'female', 'other'];
-
-function normalizeGender(value) {
-  const raw = String(value ?? '').trim().toLowerCase();
-  if (!raw) return '';
-  if (raw === 'm' || raw === 'male') return 'male';
-  if (raw === 'f' || raw === 'female') return 'female';
-  return 'other';
-}
-
-function buildFingerprint(normalizedRow) {
-  return [normalizedRow.employee_id, normalizedRow.first_name, normalizedRow.last_name, normalizedRow.date_of_birth].map((value) => String(value || '').trim().toLowerCase()).join('|');
-}
 
 function normalizeDate(value) {
   const raw = String(value ?? '').trim();
@@ -143,7 +130,6 @@ Deno.serve(async (req) => {
     const stagedRows = [];
     const validationIssues = [];
     const seenEmployeeIds = new Set();
-    const seenFingerprints = new Set();
     const sourceRows = body.previewRows;
 
     for (const previewRow of sourceRows) {
@@ -162,7 +148,6 @@ Deno.serve(async (req) => {
         if (fieldRule.type === 'number') normalizedValue = rawValue === '' || rawValue == null ? '' : Number(String(rawValue).replace(/[$,]/g, ''));
         if (mapping.application_field_code === 'employment_status') normalizedValue = normalizeEmploymentStatus(rawValue);
         if (mapping.application_field_code === 'employment_type') normalizedValue = normalizeEmploymentType(rawValue);
-        if (mapping.application_field_code === 'gender') normalizedValue = normalizeGender(rawValue);
 
         normalizedRow[mapping.application_field_code] = normalizedValue;
 
@@ -200,9 +185,6 @@ Deno.serve(async (req) => {
         if (mapping.application_field_code === 'employment_type' && normalizedValue && !VALID_EMPLOYMENT_TYPE.includes(normalizedValue)) {
           errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: mapping.source_column_name || '', applicationField: mapping.application_field_code, rawValue, normalizedValue, errorCode: 'INVALID_EMPLOYMENT_TYPE', errorMessage: 'Employment type is not supported.', suggestedFix: 'Use full_time, part_time, or contractor.' }));
         }
-        if (mapping.application_field_code === 'gender' && normalizedValue && !VALID_GENDERS.includes(normalizedValue)) {
-          errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: mapping.source_column_name || '', applicationField: mapping.application_field_code, rawValue, normalizedValue, errorCode: 'INVALID_GENDER', errorMessage: 'Gender is not supported.', suggestedFix: 'Use male, female, or other.' }));
-        }
       }
 
       const employeeId = String(normalizedRow.employee_id || '').trim();
@@ -211,18 +193,6 @@ Deno.serve(async (req) => {
           errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: 'employee_id', applicationField: 'employee_id', rawValue: employeeId, normalizedValue: employeeId, errorCode: 'DUPLICATE_EMPLOYEE_ID', errorMessage: 'Employee ID is duplicated in this import file.', suggestedFix: 'Use one unique employee ID per row.' }));
         }
         seenEmployeeIds.add(employeeId);
-      }
-
-      const rowFingerprint = buildFingerprint(normalizedRow);
-      if (rowFingerprint !== '|||') {
-        if (seenFingerprints.has(rowFingerprint)) {
-          warnings.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: 'employee_id', applicationField: 'employee_id', rawValue: rowFingerprint, normalizedValue: rowFingerprint, errorCode: 'POSSIBLE_DUPLICATE_PERSON', errorMessage: 'This row appears to be a duplicate person record in the file.', severity: 'warning', suggestedFix: 'Review duplicate people before importing.' }));
-        }
-        seenFingerprints.add(rowFingerprint);
-      }
-
-      if (!Object.values(normalizedRow).some((value) => String(value ?? '').trim())) {
-        errors.push(buildError({ rowNumber: previewRow.row_number, sourceColumn: '', applicationField: '', rawValue: '', normalizedValue: '', errorCode: 'BLANK_ROW', errorMessage: 'The row is blank after mapping and cannot be imported.', suggestedFix: 'Remove empty rows from the source file.' }));
       }
 
       if (normalizedRow.zip && normalizedRow.state && String(normalizedRow.zip).startsWith('00')) {
@@ -237,13 +207,11 @@ Deno.serve(async (req) => {
         raw_row_json: previewRow.raw_row_json,
         normalized_row_json: normalizedRow,
         validation_status: validationStatus,
-        action_type: validationStatus === 'error' ? 'reject' : 'create',
         error_count: errors.length,
         warning_count: warnings.length,
         errors_json: errors,
         warnings_json: warnings,
         commit_status: 'not_started',
-        row_fingerprint: buildFingerprint(normalizedRow),
       });
     }
 

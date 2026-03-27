@@ -4,8 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader, AlertCircle } from "lucide-react";
-import { transitionCase } from "@/services/cases/caseOps";
-import { toast } from "@/components/ui/use-toast";
 
 const STAGE_OPTIONS = [
   "draft", "census_in_progress", "census_validated", "ready_for_quote",
@@ -21,18 +19,11 @@ export default function BulkStageModal({ isOpen, caseIds, onClose, onSuccess }) 
     if (!newStage) return;
     setLoading(true);
     try {
-      const selectedCases = await Promise.all(caseIds.map((id) => base44.entities.BenefitCase.filter({ id }).then((rows) => rows[0])));
-      for (const caseRecord of selectedCases.filter(Boolean)) {
-        await transitionCase(caseRecord, newStage, {
-          reason: "Bulk stage update",
-          context: { openTaskCount: 0, quoteCount: 1 },
-        });
+      for (const id of caseIds) {
+        await base44.entities.BenefitCase.update(id, { stage: newStage });
       }
       onSuccess?.();
       onClose();
-      toast({ title: "Status updated", description: `${caseIds.length} case(s) moved to ${newStage.replace(/_/g, " ")}.` });
-    } catch (error) {
-      toast({ title: "Bulk stage update failed", description: error.message || "The selected action is blocked by the current case status.", variant: "destructive" });
     } finally {
       setLoading(false);
     }

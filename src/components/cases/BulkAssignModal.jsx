@@ -4,29 +4,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { assignCase } from "@/services/cases/caseOps";
-import { toast } from "@/components/ui/use-toast";
 
 export default function BulkAssignModal({ isOpen, caseIds, onClose, onSuccess }) {
   const [assignee, setAssignee] = useState("");
   const [loading, setLoading] = useState(false);
-  const { data: users = [] } = useQuery({ queryKey: ["bulk-assign-users"], queryFn: () => base44.entities.User.list() });
 
   const handleAssign = async () => {
     if (!assignee) return;
     setLoading(true);
     try {
-      const selectedCases = await Promise.all(caseIds.map((id) => base44.entities.BenefitCase.filter({ id }).then((rows) => rows[0])));
-      const nextUser = users.find((user) => user.email === assignee) || { email: assignee };
-      for (const caseRecord of selectedCases.filter(Boolean)) {
-        await assignCase(caseRecord, nextUser, "Bulk assignment");
+      for (const id of caseIds) {
+        await base44.entities.BenefitCase.update(id, { assigned_to: assignee });
       }
       onSuccess?.();
       onClose();
-      toast({ title: "Assignment updated.", description: `${caseIds.length} case(s) were reassigned.` });
-    } catch (error) {
-      toast({ title: "Bulk assign failed", description: error.message || "The selected cases could not be reassigned.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -44,14 +35,16 @@ export default function BulkAssignModal({ isOpen, caseIds, onClose, onSuccess })
               <SelectValue placeholder="Select assignee..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {users.map((user) => <SelectItem key={user.id} value={user.email}>{user.full_name || user.email}</SelectItem>)}
+              <SelectItem value="john@example.com">John Broker</SelectItem>
+              <SelectItem value="jane@example.com">Jane Broker</SelectItem>
+              <SelectItem value="mike@example.com">Mike Manager</SelectItem>
+              <SelectItem value={null}>Unassigned</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleAssign} disabled={loading || assignee === ""}>
+          <Button onClick={handleAssign} disabled={!assignee || loading}>
             {loading && <Loader className="w-4 h-4 mr-2 animate-spin" />}
             Assign
           </Button>

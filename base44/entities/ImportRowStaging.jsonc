@@ -24,16 +24,6 @@
       ],
       "default": "pending"
     },
-    "action_type": {
-      "type": "string",
-      "enum": [
-        "create",
-        "update",
-        "skip",
-        "reject"
-      ],
-      "default": "create"
-    },
     "error_count": {
       "type": "number",
       "default": 0
@@ -65,9 +55,6 @@
       "default": "not_started"
     },
     "committed_entity_id": {
-      "type": "string"
-    },
-    "row_fingerprint": {
       "type": "string"
     }
   },
