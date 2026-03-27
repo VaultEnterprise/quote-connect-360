@@ -279,8 +279,9 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
             </CardHeader>
             <CardContent className="space-y-3">
               {unresolvedRequiredFields.length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                  The following required fields are not yet mapped: {unresolvedRequiredFields.map((field) => field.application_field_label).join(", ")}.
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 space-y-1">
+                  <div>The following required fields are not yet mapped: {unresolvedRequiredFields.map((field) => field.application_field_label).join(", ")}.</div>
+                  <div className="text-red-700">Match each one to a source column, or enter a default value where allowed, before you continue.</div>
                 </div>
               )}
 
