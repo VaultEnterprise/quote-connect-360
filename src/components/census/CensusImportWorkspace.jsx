@@ -36,12 +36,15 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const isReloadingExistingSession = !!importSession?.import_session_id && !file;
+      const fileUrl = isReloadingExistingSession ? importSession.file_url : (await base44.integrations.Core.UploadFile({ file })).file_url;
       const response = await base44.functions.invoke("censusImportSession", {
         caseId,
-        fileUrl: file_url,
-        fileName: file.name,
-        fileType: file.type,
+        importSessionId: importSession?.import_session_id,
+        existingMappings: mappings,
+        fileUrl,
+        fileName: isReloadingExistingSession ? importSession.source_file_name : file.name,
+        fileType: isReloadingExistingSession ? importSession.source_mime_type : file.type,
         selectedSheetName: selectedSheetName || undefined,
         headerRowNumber: headerRowNumber || undefined,
         importMode,
@@ -265,7 +268,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
                 <SelectContent>{importSession.sheet_names.map((sheet) => <SelectItem key={sheet} value={sheet}>{sheet}</SelectItem>)}</SelectContent>
               </Select>
               <Button variant="outline" size="sm" onClick={() => uploadMutation.mutate()} disabled={uploadMutation.isPending}>
-                Change sheet
+                Reload sheet
               </Button>
             </div>
           )}

@@ -211,20 +211,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Could not download uploaded file' }, { status: 400 });
     }
 
-    const importSession = await base44.entities.ImportSession.create({
-      module_code: MODULE_CODE,
-      page_code: PAGE_CODE,
-      source_file_name: body.fileName,
-      source_format: extension,
-      source_mime_type: body.fileType || '',
-      upload_user_id: user.id,
-      upload_timestamp: new Date().toISOString(),
-      parse_status: 'uploaded',
-      validation_status: 'not_started',
-      commit_status: 'not_started',
-      import_mode: body.importMode || 'validate_only',
-      notes_json: { case_id: body.caseId, file_url: body.fileUrl }
-    });
+    const importSession = body.importSessionId
+      ? await base44.entities.ImportSession.get(body.importSessionId)
+      : await base44.entities.ImportSession.create({
+          module_code: MODULE_CODE,
+          page_code: PAGE_CODE,
+          source_file_name: body.fileName,
+          source_format: extension,
+          source_mime_type: body.fileType || '',
+          upload_user_id: user.id,
+          upload_timestamp: new Date().toISOString(),
+          parse_status: 'uploaded',
+          validation_status: 'not_started',
+          commit_status: 'not_started',
+          import_mode: body.importMode || 'validate_only',
+          notes_json: { case_id: body.caseId, file_url: body.fileUrl }
+        });
+
+    if (!importSession) {
+      return Response.json({ error: 'Import session was not found.' }, { status: 404 });
+    }
 
     let workbook;
     if (['xlsx', 'xls', 'xlsm'].includes(extension)) {
@@ -257,14 +263,55 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No usable worksheet data was found.' }, { status: 400 });
     }
 
+    const existingColumns = await base44.asServiceRole.entities.ImportSessionColumn.filter({ import_session_id: importSession.id }, 'created_date', 500);
+    if (existingColumns.length) {
+      await Promise.all(existingColumns.map((column) => base44.asServiceRole.entities.ImportSessionColumn.delete(column.id)));
+    }
     await Promise.all(columnRecords.map((column) => base44.entities.ImportSessionColumn.create({
       import_session_id: importSession.id,
       ...column,
     })));
-    await Promise.all(inferredMappings.map((mapping) => base44.entities.ImportFieldMapping.create({
-      import_session_id: importSession.id,
-      ...mapping,
-    })));
+
+    const existingFieldMappings = await base44.asServiceRole.entities.ImportFieldMapping.filter({ import_session_id: importSession.id }, 'created_date', 200);
+    const mergedMappings = inferredMappings.map((mapping) => {
+      const existingMapping = (body.existingMappings || []).find((item) => item.application_field_code === mapping.application_field_code);
+      if (!existingMapping) return mapping;
+      return {
+        ...mapping,
+        source_column_name: existingMapping.source_column_name || '',
+        source_column_index: typeof existingMapping.source_column_index === 'number' ? existingMapping.source_column_index : mapping.source_column_index,
+        default_value: existingMapping.default_value || '',
+        transform_rule_code: existingMapping.transform_rule_code || mapping.transform_rule_code,
+        is_required_for_run: typeof existingMapping.is_required_for_run === 'boolean' ? existingMapping.is_required_for_run : mapping.is_required_for_run,
+        mapping_confidence: existingMapping.source_column_name ? Math.max(existingMapping.mapping_confidence || 0, 1) : mapping.mapping_confidence,
+      };
+    });
+
+    if (existingFieldMappings.length) {
+      await Promise.all(existingFieldMappings.map((item) => {
+        const nextMapping = mergedMappings.find((mapping) => mapping.application_field_code === item.application_field_code);
+        if (!nextMapping) return base44.asServiceRole.entities.ImportFieldMapping.delete(item.id);
+        return base44.asServiceRole.entities.ImportFieldMapping.update(item.id, {
+          source_column_name: nextMapping.source_column_name || '',
+          source_column_index: typeof nextMapping.source_column_index === 'number' ? nextMapping.source_column_index : undefined,
+          default_value: nextMapping.default_value || '',
+          transform_rule_code: nextMapping.transform_rule_code || '',
+          is_required_for_run: !!nextMapping.is_required_for_run,
+          is_hard_required: !!nextMapping.is_hard_required,
+          required_reason: nextMapping.required_reason || '',
+          mapping_confidence: nextMapping.mapping_confidence || 0,
+          validation_rule_set: nextMapping.validation_rule_set || []
+        });
+      }));
+    }
+
+    const missingMappings = mergedMappings.filter((mapping) => !existingFieldMappings.some((item) => item.application_field_code === mapping.application_field_code));
+    if (missingMappings.length) {
+      await Promise.all(missingMappings.map((mapping) => base44.entities.ImportFieldMapping.create({
+        import_session_id: importSession.id,
+        ...mapping,
+      })));
+    }
 
     await base44.entities.ImportSession.update(importSession.id, {
       selected_sheet_name: sheetName,
@@ -287,13 +334,15 @@ Deno.serve(async (req) => {
       header_detection_confidence: headerDetection.confidence,
       needs_header_selection: headerDetection.needsUserSelection,
       columns: columnRecords,
-      inferred_mappings: inferredMappings,
+      inferred_mappings: mergedMappings,
       preview_rows: dataRows.map((row, rowIndex) => ({
         row_number: headerIndex + 2 + rowIndex,
         raw_row_json: Object.fromEntries(headers.map((header, index) => [header, row[index] ?? '']))
       })),
       total_rows: dataRows.length,
       total_columns: headers.length,
+      file_url: body.fileUrl,
+      source_mime_type: body.fileType || '',
       required_field_rules: requiredConfig,
       prompt_state: promptState,
     });
