@@ -38,6 +38,13 @@ Deno.serve(async (req) => {
       mappingOffset += 200;
     }
 
+    if (!session) {
+      return Response.json({ error: 'Import session was not found.' }, { status: 404 });
+    }
+    if (!stagedRows.length && body.importMode !== 'validate_only') {
+      return Response.json({ error: 'Please validate the file before importing.' }, { status: 400 });
+    }
+
     const hasErrors = stagedRows.some((row) => row.validation_status === 'error');
     if (body.importMode === 'block_on_any_error' && hasErrors) {
       await base44.entities.ImportSession.update(body.importSessionId, { commit_status: 'blocked' });
@@ -50,6 +57,11 @@ Deno.serve(async (req) => {
       if (body.importMode === 'import_all_and_flag_errors') return true;
       return row.validation_status !== 'error';
     });
+
+    if (!rowsToCommit.length && body.importMode !== 'validate_only') {
+      await base44.entities.ImportSession.update(body.importSessionId, { commit_status: 'blocked' });
+      return Response.json({ error: 'No rows are ready to import. Please review the validation results and correct the file.' }, { status: 400 });
+    }
 
     const currentVersions = await base44.entities.CensusVersion.filter({ case_id: body.caseId }, '-created_date', 200);
     const version = await base44.entities.CensusVersion.create({
@@ -117,6 +129,7 @@ Deno.serve(async (req) => {
       census_version_id: version.id,
       committed_rows: rowsToCommit.length,
       skipped_rows: stagedRows.length - rowsToCommit.length,
+      message: hasErrors ? 'Import completed with warnings.' : 'Import completed successfully.'
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

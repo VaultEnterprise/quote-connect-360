@@ -69,6 +69,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'importSessionId, mappings, and previewRows are required' }, { status: 400 });
     }
 
+    const importSession = await base44.entities.ImportSession.get(body.importSessionId);
+    if (!importSession) {
+      return Response.json({ error: 'Import session was not found.' }, { status: 404 });
+    }
+
     const requiredMappings = body.mappings.filter((mapping) => mapping.is_required_for_run);
     const unmappedRequired = requiredMappings.filter((mapping) => !mapping.source_column_name && !mapping.default_value);
     if (unmappedRequired.length > 0) {
@@ -98,8 +103,9 @@ Deno.serve(async (req) => {
     const stagedRows = [];
     const validationIssues = [];
     const seenEmployeeIds = new Set();
+    const sourceRows = body.previewRows;
 
-    for (const previewRow of body.previewRows) {
+    for (const previewRow of sourceRows) {
       const normalizedRow = {};
       const errors = [];
       const warnings = [];
@@ -199,6 +205,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       import_session_id: body.importSessionId,
+      total_rows_detected: sourceRows.length,
       row_pass_count: validRowCount,
       row_warning_count: warningRowCount,
       row_error_count: errorRowCount,

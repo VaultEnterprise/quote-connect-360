@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -123,6 +123,7 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
   const promptMessages = importSession?.prompt_state?.prompt_messages || [];
   const unresolvedRequiredFields = mappings.filter((mapping) => mapping.is_required_for_run && !mapping.source_column_name && !(mapping.default_value || "").trim());
   const canCommit = Boolean(validationResult) && importMode !== "validate_only";
+  const unresolvedSourceWarnings = mappings.filter((mapping) => mapping.mapping_confidence < 0.5 && !mapping.source_column_name && !mapping.default_value);
 
   const updateMapping = (fieldCode, updates) => {
     setMappings((current) => current.map((mapping) => mapping.application_field_code === fieldCode ? { ...mapping, ...updates } : mapping));
@@ -134,6 +135,32 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
     setMappings(template.field_mapping_json || []);
     if (template.header_row_number) setHeaderRowNumber(template.header_row_number);
   };
+
+  useEffect(() => {
+    if (!importSession?.import_session_id || mappings.length === 0) return;
+    const timer = setTimeout(async () => {
+      const persistedMappings = await base44.entities.ImportFieldMapping.filter({ import_session_id: importSession.import_session_id }, "created_date", 200);
+      await Promise.all(
+        persistedMappings.map((item) => {
+          const local = mappings.find((mapping) => mapping.application_field_code === item.application_field_code);
+          if (!local) return Promise.resolve();
+          return base44.entities.ImportFieldMapping.update(item.id, {
+            source_column_name: local.source_column_name || "",
+            source_column_index: local.source_column_name ? previewHeaders.indexOf(local.source_column_name) : undefined,
+            default_value: local.default_value || "",
+            transform_rule_code: local.transform_rule_code || "",
+            is_required_for_run: !!local.is_required_for_run,
+            is_hard_required: !!local.is_hard_required,
+            required_reason: local.required_reason || "",
+            mapping_confidence: local.mapping_confidence || 0,
+            validation_rule_set: local.validation_rule_set || []
+          });
+        })
+      );
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [mappings, importSession?.import_session_id, previewHeaders]);
 
   const resetState = () => {
     setFile(null);
@@ -282,6 +309,12 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 space-y-1">
                   <div>The following required fields are not yet mapped: {unresolvedRequiredFields.map((field) => field.application_field_label).join(", ")}.</div>
                   <div className="text-red-700">Match each one to a source column, or enter a default value where allowed, before you continue.</div>
+                </div>
+              )}
+
+              {unresolvedSourceWarnings.length > 0 && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  Some fields could not be matched automatically. Please review the unmapped rows before validating.
                 </div>
               )}
 
