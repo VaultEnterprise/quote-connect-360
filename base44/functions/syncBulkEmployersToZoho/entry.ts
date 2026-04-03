@@ -5,7 +5,7 @@
  * Usage: base44.functions.invoke('syncBulkEmployersToZoho', { agency_id: 'xyz' })
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
