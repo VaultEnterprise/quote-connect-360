@@ -81,6 +81,11 @@ function EmployerModal({ employer, open, onClose, agencies }) {
           throw new Error("EIN must be 9 digits (format: XX-XXXXXXX).");
         }
       }
+      // ELIGIBLE_GT_EMPLOYEE: eligible employees cannot exceed total
+      if (form.eligible_count && form.employee_count &&
+          Number(form.eligible_count) > Number(form.employee_count)) {
+        throw new Error("Eligible employee count cannot exceed total employee count.");
+      }
 
       const payload = {
         ...form,
