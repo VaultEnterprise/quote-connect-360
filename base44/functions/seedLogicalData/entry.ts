@@ -1255,6 +1255,7 @@ Deno.serve(async (req) => {
       seededCases: Object.values(caseMap).map((item) => ({ id: item.id, employer_name: item.employer_name, case_number: item.case_number })),
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
