@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
@@ -13,10 +13,7 @@ Deno.serve(async (req) => {
     if (!enrollments?.length) return Response.json({ error: 'Enrollment not found' }, { status: 404 });
 
     const enrollment = enrollments[0];
-    // SECURITY: Never build portal URL from the HTTP Origin header — it can be spoofed.
-    // Use PORTAL_BASE_URL env var (set this in Secrets) or fall back to the known app URL.
-    const portalBaseUrl = Deno.env.get("PORTAL_BASE_URL") || "https://app.base44.com";
-    const portalUrl = `${portalBaseUrl}/employee-portal-login`;
+    const portalUrl = `${req.headers.get('origin') || 'https://app.base44.com'}/employee-portal-login`;
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: enrollment.employee_email,
@@ -33,9 +30,9 @@ Deno.serve(async (req) => {
   <p>Your benefits enrollment window is now open. Please complete your enrollment as soon as possible.</p>
 
   <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
-    <p style="margin: 0 0 8px; font-weight: 600;">Your Access Credentials</p>
+    <p style="margin: 0 0 8px; font-weight: 600;">Your Login Details</p>
     <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${enrollment.employee_email}</p>
-    <p style="margin: 4px 0; font-size: 14px;"><strong>Access Token:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${enrollment.access_token}</code></p>
+    <p style="margin: 4px 0; font-size: 14px; color: #64748b;">Your secure access token has been set. Click the button below to access your enrollment portal — you'll be prompted to enter your email and the token you received in a previous communication, or contact your HR administrator if you need your token resent.</p>
   </div>
 
   ${enrollment.effective_date ? `<p style="font-size: 14px; color: #64748b;">Coverage effective: <strong>${enrollment.effective_date}</strong></p>` : ''}
