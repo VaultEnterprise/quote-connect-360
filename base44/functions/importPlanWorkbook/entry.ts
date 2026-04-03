@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin role required' }, { status: 403 });
+
 
     const body = await req.json();
     const planDraft = body.planDraft || {};
@@ -329,6 +331,7 @@ Deno.serve(async (req) => {
         });
       } catch (_) {}
     }
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
