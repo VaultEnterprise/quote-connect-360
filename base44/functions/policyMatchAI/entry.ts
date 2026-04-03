@@ -152,6 +152,7 @@ Be specific, data-driven, and realistic. If the group has favorable risk indicat
       avg_age: avgAge,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
