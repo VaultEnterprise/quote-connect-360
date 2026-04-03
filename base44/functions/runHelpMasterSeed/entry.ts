@@ -279,6 +279,10 @@ async function bulkUpsertByCode(entitySDK, codeKey, records) {
 // ─── MAIN HANDLER ────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  const seedSecret = Deno.env.get("SEED_SECRET");
+  if (!seedSecret || req.headers.get("x-seed-secret") !== seedSecret) {
+    return Response.json({ error: "Unauthorized: set SEED_SECRET and pass X-Seed-Secret header." }, { status: 401 });
+  }
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
   if (user?.role !== "admin") {
