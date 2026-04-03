@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error syncing to Zoho:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
