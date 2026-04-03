@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const PAGES_TO_GENERATE = [
   { code: "DASHBOARD", title: "Dashboard", desc: "Main landing page with KPIs, metrics, and quick actions" },
