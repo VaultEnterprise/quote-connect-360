@@ -13,6 +13,8 @@ export const STAGE_ORDER = [
   "active",
   "renewal_pending",
   "renewed",
+  "on_hold",
+  "lost",
   "closed",
 ];
 
@@ -31,6 +33,8 @@ export const STAGE_LABELS = {
   active: "Active",
   renewal_pending: "Renewal Pending",
   renewed: "Renewed",
+  on_hold: "On Hold",
+  lost: "Lost / Declined",
   closed: "Closed",
 };
 
