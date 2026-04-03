@@ -1,17 +1,19 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Heart, Loader, Mail } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 /**
  * EmployeePortalLogin
  * Token-based portal access — employees use access token to unlock enrollment without app login.
  * Resolves enrollment record and validates token + email match.
+ *
+ * Session key: "portal_session" (JSON object with enrollment_id, case_id, employee_email, employee_name)
+ * This must match EmployeeEnrollment.jsx and EmployeeBenefits.jsx.
  */
 export default function EmployeePortalLogin() {
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ export default function EmployeePortalLogin() {
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showResend, setShowResend] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
   const handleSubmit = async (e) => {
@@ -30,8 +32,8 @@ export default function EmployeePortalLogin() {
     try {
       // 1. Verify token against EmployeeEnrollment
       const enrollments = await base44.entities.EmployeeEnrollment.filter({
-        employee_email: email,
-        access_token: token,
+        employee_email: email.toLowerCase().trim(),
+        access_token: token.trim(),
       });
 
       if (!enrollments || enrollments.length === 0) {
@@ -42,7 +44,7 @@ export default function EmployeePortalLogin() {
 
       const enrollment = enrollments[0];
 
-      // 2. Verify enrollment window is still open
+      // 2. Verify enrollment window exists
       const enrollmentWindows = await base44.entities.EnrollmentWindow.filter({
         id: enrollment.enrollment_window_id,
       });
@@ -55,38 +57,44 @@ export default function EmployeePortalLogin() {
 
       const window = enrollmentWindows[0];
 
-      // 3. Check if enrollment period is still active or has ended
+      // 3. Check if enrollment period is still active
+      // Use OR: block if EITHER the date has passed OR status is explicitly closed
       const now = new Date();
-      const endDate = new Date(window.end_date);
-      
-      if (now > endDate && window.status === "closed") {
+      const endDate = window.end_date ? new Date(window.end_date) : null;
+
+      if (endDate && now > endDate) {
         setError("This enrollment period has ended.");
         setLoading(false);
         return;
       }
+      if (window.status === "closed" || window.status === "finalized") {
+        setError("This enrollment window is closed.");
+        setLoading(false);
+        return;
+      }
 
-      // 4. Verify case exists and is active
-      const cases = await base44.entities.BenefitCase.filter({
-        id: enrollment.case_id,
-      });
-
+      // 4. Verify case exists
+      const cases = await base44.entities.BenefitCase.filter({ id: enrollment.case_id });
       if (!cases || cases.length === 0) {
         setError("Case not found. Please contact your administrator.");
         setLoading(false);
         return;
       }
 
-      // 5. Store secure session token (NOT access_token in plain text)
-      const sessionToken = btoa(`${enrollment.id}:${token}:${Date.now()}`);
-      sessionStorage.setItem("portal_session_token", sessionToken);
-      sessionStorage.setItem("portal_enrollment_id", enrollment.id);
-      sessionStorage.setItem("portal_case_id", enrollment.case_id);
-      sessionStorage.setItem("portal_session_timestamp", new Date().toISOString());
+      // 5. Store session as a unified JSON object under "portal_session"
+      //    This key is read by EmployeeEnrollment.jsx and EmployeeBenefits.jsx
+      const sessionData = {
+        enrollment_id: enrollment.id,
+        case_id: enrollment.case_id,
+        employee_email: enrollment.employee_email,
+        employee_name: enrollment.employee_name || email,
+        employer_name: enrollment.employer_name || "",
+        authenticated_at: new Date().toISOString(),
+      };
+      sessionStorage.setItem("portal_session", JSON.stringify(sessionData));
 
       // 6. Redirect based on enrollment status
-      if (enrollment.status === "invited" || enrollment.status === "started") {
-        navigate("/employee-enrollment", { replace: true });
-      } else if (enrollment.status === "completed" || enrollment.status === "waived") {
+      if (enrollment.status === "completed" || enrollment.status === "waived") {
         navigate("/employee-benefits", { replace: true });
       } else {
         navigate("/employee-enrollment", { replace: true });
@@ -135,7 +143,7 @@ export default function EmployeePortalLogin() {
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Use the email address associated with your enrollment invitation.
+                Use the email address from your enrollment invitation.
               </p>
             </div>
 
@@ -172,12 +180,12 @@ export default function EmployeePortalLogin() {
               <p className="font-semibold mb-1.5">Need Help?</p>
               <div className="space-y-1.5">
                 <button
-                  onClick={() => setShowPasswordReset(!showPasswordReset)}
+                  onClick={() => setShowResend(!showResend)}
                   className="flex items-center gap-1.5 text-primary hover:underline text-xs font-medium"
                 >
                   <Mail className="w-3 h-3" /> Resend Invitation Email
                 </button>
-                {showPasswordReset && (
+                {showResend && (
                   <div className="mt-2 p-2 rounded bg-primary/5 border border-primary/10 space-y-2">
                     <input
                       type="email"
