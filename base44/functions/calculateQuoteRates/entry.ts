@@ -127,6 +127,8 @@ Deno.serve(async (req) => {
 
     // Update scenario with calculated totals — flag if incomplete
     await base44.asServiceRole.entities.QuoteScenario.update(scenario_id, {
+      has_incomplete_rates: skippedCount > 0,
+      skipped_plan_count: skippedCount,
       total_monthly_premium: totalMonthlyPremium,
       employer_monthly_cost: totalEmployerCost,
       employee_monthly_cost_avg: totalMembers > 0 ? totalEmployeeCost / totalMembers : 0,
