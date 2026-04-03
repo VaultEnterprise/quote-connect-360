@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { AlertTriangle,  base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -197,6 +197,15 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
 
   return (
     <div className="space-y-6">
+      {/* ── PHI / HIPAA Notice ─────────────────────────────────────────────── */}
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
+        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="text-xs text-amber-800 leading-relaxed">
+          <strong>PHI Notice:</strong> This file may contain Protected Health Information (PHI).
+          Handle in compliance with HIPAA. Do not upload full Social Security Numbers —
+          last 4 digits only are accepted. Ensure this file is stored and transmitted securely.
+        </div>
+      </div>
       <div>
         <h2 className="text-xl font-semibold">Census Import Workspace</h2>
         <p className="text-sm text-muted-foreground mt-1">Upload, map, validate, and commit census files in a full-page workflow.</p>
