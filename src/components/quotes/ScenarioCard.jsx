@@ -121,6 +121,11 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold">{scenario.name}</p>
               <StatusBadge status={scenario.status} />
+              {scenario.has_incomplete_rates && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 rounded px-1.5 py-0.5">
+                  ⚠ Incomplete Rates
+                </span>
+              )}
               {scenario.is_recommended && (
                 <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
                   <Star className="w-2.5 h-2.5 mr-0.5" fill="currentColor" /> Recommended
