@@ -15,19 +15,23 @@ Deno.serve(async (req) => {
   try {
     const body = await req.text();
 
-    // Optional HMAC validation
+    // HMAC validation — required when DOCUSIGN_WEBHOOK_SECRET is set.
+    // If the secret is configured but no signature header is present, reject the request.
     const webhookSecret = Deno.env.get("DOCUSIGN_WEBHOOK_SECRET");
     if (webhookSecret) {
       const signature = req.headers.get("x-docusign-signature-1");
-      if (signature) {
-        const keyData = new TextEncoder().encode(webhookSecret);
-        const cryptoKey = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
-        const msgData = new TextEncoder().encode(body);
-        const sigBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
-        const valid = await crypto.subtle.verify("HMAC", cryptoKey, sigBytes, msgData);
-        if (!valid) {
-          return Response.json({ error: "Invalid signature" }, { status: 401 });
-        }
+      if (!signature) {
+        console.warn("DocuSign webhook: secret configured but no signature header — rejecting");
+        return Response.json({ error: "Missing HMAC signature" }, { status: 401 });
+      }
+      const keyData = new TextEncoder().encode(webhookSecret);
+      const cryptoKey = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+      const msgData = new TextEncoder().encode(body);
+      const sigBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+      const valid = await crypto.subtle.verify("HMAC", cryptoKey, sigBytes, msgData);
+      if (!valid) {
+        console.warn("DocuSign webhook: HMAC signature invalid — rejecting");
+        return Response.json({ error: "Invalid signature" }, { status: 401 });
       }
     }
 
@@ -142,8 +146,9 @@ Deno.serve(async (req) => {
     return Response.json({ received: true, envelope_id: envelopeId, event: eventType });
   } catch (error) {
     console.error("DocuSign webhook error:", error);
-    // Always return 200 to prevent DocuSign from retrying with bad data
-    return Response.json({ received: true, error: error.message });
+    // Return 500 so DocuSign retries on genuine server errors.
+    // We only return 200 for "envelope not found" cases (handled above).
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
 
