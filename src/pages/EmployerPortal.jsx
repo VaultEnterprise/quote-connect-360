@@ -38,6 +38,9 @@ export default function EmployerPortal() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Data ────────────────────────────────────────────────────────────────────
+  // TODO: This query should be scoped by the employer's user account via backend RLS.
+  // For now we limit to 50 records. Proper fix: implement employer-specific auth tokens
+  // or filter by employer_group_id linked to the authenticated user's account.
   const { data: cases = [] } = useQuery({
     queryKey: ["employer-cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 50),
@@ -125,28 +128,12 @@ export default function EmployerPortal() {
           </p>
         </div>
 
-        {/* Case switcher — responsive */}
+        {/* Case status display — no cross-employer switcher for security */}
         <div className="flex gap-2 flex-shrink-0">
-          {cases.length > 1 ? (
-            <Select value={selectedCaseId || cases[0]?.id} onValueChange={setSelectedCaseId}>
-              <SelectTrigger className="w-48 sm:w-60 text-xs sm:text-sm">
-                <Building2 className="w-4 h-4 mr-2 text-muted-foreground hidden sm:inline" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {cases.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.employer_name} — {c.case_number || c.id.slice(-6)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
               <StatusBadge status={activeCase?.stage} />
               {activeCase?.priority !== "normal" && <StatusBadge status={activeCase?.priority} />}
             </div>
-          )}
           {/* Mobile sidebar toggle */}
           <Button
             variant="ghost"
