@@ -59,14 +59,14 @@ export default function Cases() {
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   const { data: cases = [], isLoading } = useQuery({ queryKey: ["cases"], queryFn: () => base44.entities.BenefitCase.list("-created_date", 200) });
-  const { data: censusMembers = [] } = useQuery({ queryKey: ["case-census-members"], queryFn: () => base44.entities.CensusMember.list("-created_date", 500) });
+  const { data: censusMembers = [] } = useQuery({ queryKey: ["case-census-members"], queryFn: () => base44.entities.CensusMember.list("-created_date", 200) });
   const { data: currentUser } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
-  const { data: quoteScenarios = [] } = useQuery({ queryKey: ["cases-related", "quotes"], queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500) });
-  const { data: proposals = [] } = useQuery({ queryKey: ["cases-related", "proposals"], queryFn: () => base44.entities.Proposal.list("-created_date", 500) });
-  const { data: caseTasks = [] } = useQuery({ queryKey: ["cases-related", "tasks"], queryFn: () => base44.entities.CaseTask.list("-created_date", 500) });
-  const { data: exceptionItems = [] } = useQuery({ queryKey: ["cases-related", "exceptions"], queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500) });
+  const { data: quoteScenarios = [] } = useQuery({ queryKey: ["cases-related", "quotes"], queryFn: () => base44.entities.QuoteScenario.list("-created_date", 200) });
+  const { data: proposals = [] } = useQuery({ queryKey: ["cases-related", "proposals"], queryFn: () => base44.entities.Proposal.list("-created_date", 200) });
+  const { data: caseTasks = [] } = useQuery({ queryKey: ["cases-related", "tasks"], queryFn: () => base44.entities.CaseTask.list("-created_date", 200) });
+  const { data: exceptionItems = [] } = useQuery({ queryKey: ["cases-related", "exceptions"], queryFn: () => base44.entities.ExceptionItem.list("-created_date", 200) });
   const { data: enrollmentWindows = [] } = useQuery({ queryKey: ["cases-related", "enrollment-windows"], queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300) });
-  const { data: documents = [] } = useQuery({ queryKey: ["cases-related", "documents"], queryFn: () => base44.entities.Document.list("-created_date", 500) });
+  const { data: documents = [] } = useQuery({ queryKey: ["cases-related", "documents"], queryFn: () => base44.entities.Document.list("-created_date", 200) });
 
   const routeFilters = useMemo(() => resolveRouteContext("cases", location.search), [location.search]);
 
