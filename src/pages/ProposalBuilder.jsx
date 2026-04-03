@@ -169,7 +169,10 @@ export default function ProposalBuilder() {
   });
 
   const bulkDelete = useMutation({
-    mutationFn: (ids) => Promise.all(ids.map(id => base44.entities.Proposal.delete(id))),
+    mutationFn: async (ids) => {
+      if (!window.confirm(`Permanently delete ${ids.length} proposal(s)? This cannot be undone.`)) return;
+      return Promise.all(ids.map(id => base44.entities.Proposal.delete(id)));
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["proposals"] }); setSelectedIds([]); },
   });
 
