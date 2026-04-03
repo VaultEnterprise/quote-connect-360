@@ -425,6 +425,7 @@ If no plan changes: confirm continuation with employees (simplified process).
     }
     return Response.json({ success: true, seed: "faq_bank", created, updated, total: topics.length, errors });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
