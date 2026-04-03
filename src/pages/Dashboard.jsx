@@ -1,8 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { format, differenceInDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,13 +99,27 @@ export default function Dashboard() {
     return timestamps.length === 0 ? "" : format(new Date(Math.max(...timestamps)), "MMM d, yyyy h:mm a");
   }, [casesUpdatedAt, tasksUpdatedAt, enrollmentsUpdatedAt, renewalsUpdatedAt, scenariosUpdatedAt, exceptionsUpdatedAt, proposalsUpdatedAt, agenciesUpdatedAt, presetsUpdatedAt]);
 
+  const [showSaveViewDialog, setShowSaveViewDialog] = useState(false);
+  const [saveViewName, setSaveViewName] = useState("");
+
   const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
   const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([["cases"],["tasks-pending"],["enrollments"],["renewals"],["scenarios-all"],["exceptions"],["proposals"],["agencies"],DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
-  const handleSaveView = async () => {
-    const name = window.prompt("Name this dashboard view");
-    if (!name) return;
-    await base44.entities.DashboardViewPreset.create({ name, view_mode: filters.viewMode, date_range: filters.dateRange, filters: { owner: filters.owner, team: filters.team, agencyId: filters.agencyId, employerId: filters.employerId, caseType: filters.caseType, stage: filters.stage }, is_default: false });
+  const handleSaveView = () => {
+    setSaveViewName("");
+    setShowSaveViewDialog(true);
+  };
+
+  const handleSaveViewConfirm = async () => {
+    if (!saveViewName.trim()) return;
+    await base44.entities.DashboardViewPreset.create({
+      name: saveViewName.trim(),
+      view_mode: filters.viewMode,
+      date_range: filters.dateRange,
+      filters: { owner: filters.owner, team: filters.team, agencyId: filters.agencyId, employerId: filters.employerId, caseType: filters.caseType, stage: filters.stage },
+      is_default: false,
+    });
     await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
+    setShowSaveViewDialog(false);
   };
   const handlePresetChange = (presetId) => {
     if (presetId === "none") { setSelectedPresetId("none"); return; }
@@ -151,6 +168,29 @@ export default function Dashboard() {
           <CardContent><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{scopedData.currentRenewals.slice(0, 6).map((item) => { const daysUntil = item.renewal_date ? differenceInDays(new Date(item.renewal_date), new Date()) : null; return <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors"><div><p className="text-sm font-medium">{item.employer_name || "Unknown"}</p><p className="text-xs text-muted-foreground">{item.renewal_date ? format(new Date(item.renewal_date), "MMM d, yyyy") : "TBD"}</p></div><div className="flex items-center gap-2">{daysUntil !== null && <Badge className={`text-[10px] ${daysUntil <= 30 ? "bg-red-100 text-red-700" : daysUntil <= 60 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{daysUntil}d</Badge>}<StatusBadge status={item.status} /></div></div>; })}</div></CardContent>
         </Card>
       )}
+      <Dialog open={showSaveViewDialog} onOpenChange={setShowSaveViewDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Dashboard View</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Label htmlFor="view-name">View Name</Label>
+            <Input
+              id="view-name"
+              className="mt-1.5"
+              placeholder="e.g. My Open Cases View"
+              value={saveViewName}
+              onChange={(e) => setSaveViewName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSaveViewConfirm(); }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveViewDialog(false)}>Cancel</Button>
+            <Button onClick={handleSaveViewConfirm} disabled={!saveViewName.trim()}>Save View</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
