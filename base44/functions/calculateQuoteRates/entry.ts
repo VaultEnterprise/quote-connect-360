@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
@@ -157,6 +157,7 @@ Deno.serve(async (req) => {
         : undefined,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
