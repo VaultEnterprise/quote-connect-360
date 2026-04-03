@@ -49,7 +49,10 @@ export default function useRenewalsPageModel({
   });
 
   const bulkDelete = useMutation({
-    mutationFn: (ids) => deleteManyEntityRecords("RenewalCycle", ids),
+    mutationFn: async (ids) => {
+      if (!window.confirm(`Permanently delete ${ids.length} renewal(s)? This cannot be undone.`)) return;
+      return deleteManyEntityRecords("RenewalCycle", ids);
+    },
     onSuccess: invalidateRenewals,
   });
 
