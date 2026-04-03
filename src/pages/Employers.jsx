@@ -73,12 +73,31 @@ function EmployerModal({ employer, open, onClose, agencies }) {
   });
 
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      // Validate EIN format (XX-XXXXXXX or 9 digits)
+      if (form.ein) {
+        const einClean = form.ein.replace(/\D/g, "");
+        if (einClean.length !== 9) {
+          throw new Error("EIN must be 9 digits (format: XX-XXXXXXX).");
+        }
+      }
+
       const payload = {
         ...form,
+        // Normalize EIN to XX-XXXXXXX format if provided
+        ein: form.ein ? form.ein.replace(/\D/g, "").replace(/^(\d{2})(\d{7})$/, "$1-$2") : undefined,
         employee_count: Number(form.employee_count) || undefined,
         eligible_count: Number(form.eligible_count) || undefined,
       };
+
+      // Check for duplicate EIN when creating (skip for edits)
+      if (!isEdit && payload.ein) {
+        const existing = await base44.entities.EmployerGroup.filter({ ein: payload.ein });
+        if (existing && existing.length > 0) {
+          throw new Error(`An employer with EIN ${payload.ein} already exists: "${existing[0].name}". Please check for duplicates.`);
+        }
+      }
+
       return isEdit
         ? base44.entities.EmployerGroup.update(employer.id, payload)
         : base44.entities.EmployerGroup.create(payload);
@@ -171,6 +190,9 @@ function EmployerModal({ employer, open, onClose, agencies }) {
           </div>
         </div>
         <DialogFooter>
+          {save.isError && (
+            <p className="text-xs text-destructive text-left flex-1 mr-2">{save.error?.message}</p>
+          )}
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>
             {save.isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Employer"}
