@@ -28,7 +28,10 @@ function exportToCSV(models, cases, scenarios) {
     "Annual Employer Cost", "ACA Compliant", "ACA % of Income",
     "Notes"
   ];
-  const MEDIAN = 60000;
+  // NOTE: $60,000 is used as a reference median income for the ACA % column in CSV exports.
+  // This is illustrative only — actual affordability must be calculated per-employee using
+  // the W-2, Rate of Pay, or FPL safe harbor against each employee's actual contribution.
+  const REFERENCE_MEDIAN_INCOME = 60000;
   const rows = models.map(m => {
     const c = caseMap[m.case_id];
     const s = scenarioMap[m.scenario_id];
@@ -39,7 +42,7 @@ function exportToCSV(models, cases, scenarios) {
       ? avgPremiumPerEE * ((m.ee_contribution_pct ?? 80) / 100) * eeCount
       : (m.ee_contribution_flat ?? 0) * eeCount;
     const avgEECost = eeCount > 0 ? Math.max(0, totalPremium - employerMonthly) / eeCount : 0;
-    const acaPct = avgEECost > 0 ? ((avgEECost * 12) / MEDIAN) * 100 : 0;
+    const acaPct = avgEECost > 0 ? ((avgEECost * 12) / REFERENCE_MEDIAN_INCOME) * 100 : 0;
     return [
       m.name,
       c?.employer_name || "",
@@ -186,7 +189,8 @@ export default function ContributionModeling() {
         <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <div>
           <span className="font-semibold">ACA Affordability Safe Harbor 2026:</span> Employee contribution for self-only coverage must not exceed {ACA_THRESHOLD_PCT}% of household income.
-          Monthly maximum at $60k median income: <span className="font-semibold">${((60000 * (ACA_THRESHOLD_PCT / 100)) / 12).toFixed(0)}/mo</span>.
+          W-2 Safe Harbor example at <strong>$60k income</strong>: <span className="font-semibold">${((60000 * (ACA_THRESHOLD_PCT / 100)) / 12).toFixed(0)}/mo</span>.
+          Actual affordability is calculated per-employee using their W-2 wages, rate of pay, or FPL — not a median.
           Employers with 50+ FTEs (ALEs) are subject to the employer mandate.
         </div>
       </div>
