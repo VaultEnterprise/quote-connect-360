@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
@@ -121,14 +121,23 @@ Deno.serve(async (req) => {
       totalEmployeeCost += planEmployeeCost;
     }
 
-    // Update scenario with calculated totals
+    // Determine if any plans were skipped (missing rate tables)
+    const skippedPlans = planResults.filter((p: any) => p.skipped === true);
+    const hasIncompletePlans = skippedPlans.length > 0;
+
+    // Update scenario with calculated totals — flag if incomplete
     await base44.asServiceRole.entities.QuoteScenario.update(scenario_id, {
       total_monthly_premium: totalMonthlyPremium,
       employer_monthly_cost: totalEmployerCost,
       employee_monthly_cost_avg: totalMembers > 0 ? totalEmployeeCost / totalMembers : 0,
       plan_count: scenarioPlans.length,
-      status: 'completed',
+      // IMPORTANT: Use 'incomplete' status if any plans were skipped — UI must show a warning
+      status: hasIncompletePlans ? 'incomplete' : 'completed',
       quoted_at: new Date().toISOString(),
+      incomplete_plan_ids: hasIncompletePlans ? skippedPlans.map((p: any) => p.plan_id) : [],
+      incomplete_reasons: hasIncompletePlans
+        ? skippedPlans.map((p: any) => `${p.plan_name || p.plan_id}: ${p.reason || 'No rate table'}`)
+        : [],
     });
 
     return Response.json({
@@ -140,6 +149,12 @@ Deno.serve(async (req) => {
       plan_results: planResults,
       tier_distribution: tierDist,
       calculated_at: new Date().toISOString(),
+      // Surface incompleteness to the caller
+      has_incomplete_plans: hasIncompletePlans,
+      skipped_plans: skippedPlans,
+      warning: hasIncompletePlans
+        ? `${skippedPlans.length} plan(s) could not be calculated — missing rate tables. Totals are partial.`
+        : undefined,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
