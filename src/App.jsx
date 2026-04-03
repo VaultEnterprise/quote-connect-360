@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import AppLayout from '@/components/layout/AppLayout';
+import PortalLayout from '@/components/layout/PortalLayout';
+
 import Dashboard from '@/pages/Dashboard';
 import Cases from '@/pages/Cases';
 import CaseDetail from '@/pages/CaseDetail.jsx';
@@ -47,8 +49,8 @@ import SalesforceIntegration from '@/pages/SalesforceIntegration';
 
 /**
  * AdminRoute — renders children only for admin-role users.
- * All other users see a 404. This is enforced at the route level,
- * not just inside the component, so data queries never fire.
+ * All other authenticated users see PageNotFound.
+ * Enforced at route level so protected data queries never fire.
  */
 function AdminRoute({ user, children }) {
   if (user?.role !== "admin") return <PageNotFound />;
@@ -76,8 +78,12 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          BROKER ROUTES — full AppLayout (sidebar + topbar)
+      ───────────────────────────────────────────────────────────────── */}
       <Route element={<AppLayout />}>
-        {/* ── Standard authenticated routes ── */}
+        {/* Core Workflow */}
         <Route path="/" element={<Dashboard />} />
         <Route path="/cases" element={<Cases />} />
         <Route path="/cases/new" element={<CaseNew />} />
@@ -93,30 +99,51 @@ const AuthenticatedApp = () => {
         <Route path="/proposals" element={<ProposalBuilder />} />
         <Route path="/exceptions" element={<ExceptionQueue />} />
         <Route path="/contributions" element={<ContributionModeling />} />
-        <Route path="/employee-portal" element={<EmployeePortal />} />
+
+        {/* Employee Management — broker tool, stays in broker layout */}
         <Route path="/employee-management" element={<EmployeeManagement />} />
-        <Route path="/employee-enrollment" element={<EmployeeEnrollment />} />
-        <Route path="/employee-benefits" element={<EmployeeBenefits />} />
-        <Route path="/employer-portal" element={<EmployerPortal />} />
+
+        {/* Help */}
         <Route path="/help" element={<HelpCenter />} />
+
+        {/* Reference */}
         <Route path="/aca-library" element={<ACALibrary />} />
 
-        {/* ── Admin-only routes ── */}
-        <Route path="/help-admin" element={<AdminRoute user={user}><HelpAdmin /></AdminRoute>} />
-        <Route path="/help-dashboard" element={<AdminRoute user={user}><HelpDashboard /></AdminRoute>} />
-        <Route path="/help-coverage" element={<AdminRoute user={user}><HelpCoverageReport /></AdminRoute>} />
-        <Route path="/help-analytics" element={<AdminRoute user={user}><HelpSearchAnalytics /></AdminRoute>} />
-        <Route path="/help-target-registry" element={<AdminRoute user={user}><HelpTargetRegistry /></AdminRoute>} />
-        <Route path="/help-manual-manager" element={<AdminRoute user={user}><HelpManualManager /></AdminRoute>} />
-        <Route path="/plan-rate-editor" element={<AdminRoute user={user}><PlanRateEditor /></AdminRoute>} />
-        <Route path="/plan-analytics" element={<AdminRoute user={user}><PlanAnalyticsDashboard /></AdminRoute>} />
-        <Route path="/plan-compliance" element={<AdminRoute user={user}><PlanComplianceCenter /></AdminRoute>} />
-        <Route path="/plan-rating" element={<AdminRoute user={user}><PlanRatingEngine /></AdminRoute>} />
-        <Route path="/policymatch" element={<AdminRoute user={user}><PolicyMatchAI /></AdminRoute>} />
-        <Route path="/integration-infra" element={<AdminRoute user={user}><IntegrationInfrastructure /></AdminRoute>} />
-        <Route path="/salesforce" element={<AdminRoute user={user}><SalesforceIntegration /></AdminRoute>} />
+        {/* Settings */}
         <Route path="/settings" element={<Settings />} />
+
+        {/* Admin-only routes */}
+        <Route path="/help-admin"           element={<AdminRoute user={user}><HelpAdmin /></AdminRoute>} />
+        <Route path="/help-dashboard"       element={<AdminRoute user={user}><HelpDashboard /></AdminRoute>} />
+        <Route path="/help-coverage"        element={<AdminRoute user={user}><HelpCoverageReport /></AdminRoute>} />
+        <Route path="/help-analytics"       element={<AdminRoute user={user}><HelpSearchAnalytics /></AdminRoute>} />
+        <Route path="/help-target-registry" element={<AdminRoute user={user}><HelpTargetRegistry /></AdminRoute>} />
+        <Route path="/help-manual-manager"  element={<AdminRoute user={user}><HelpManualManager /></AdminRoute>} />
+        <Route path="/plan-rate-editor"     element={<AdminRoute user={user}><PlanRateEditor /></AdminRoute>} />
+        <Route path="/plan-analytics"       element={<AdminRoute user={user}><PlanAnalyticsDashboard /></AdminRoute>} />
+        <Route path="/plan-compliance"      element={<AdminRoute user={user}><PlanComplianceCenter /></AdminRoute>} />
+        <Route path="/plan-rating"          element={<AdminRoute user={user}><PlanRatingEngine /></AdminRoute>} />
+        <Route path="/policymatch"          element={<AdminRoute user={user}><PolicyMatchAI /></AdminRoute>} />
+        <Route path="/integration-infra"    element={<AdminRoute user={user}><IntegrationInfrastructure /></AdminRoute>} />
+        <Route path="/salesforce"           element={<AdminRoute user={user}><SalesforceIntegration /></AdminRoute>} />
       </Route>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          EXTERNAL PORTAL ROUTES — PortalLayout (no broker nav/sidebar)
+          Employees and employer contacts only see the brand header.
+      ───────────────────────────────────────────────────────────────── */}
+      <Route element={<PortalLayout />}>
+        <Route path="/employee-portal"    element={<EmployeePortal />} />
+        <Route path="/employee-enrollment" element={<EmployeeEnrollment />} />
+        <Route path="/employee-benefits"  element={<EmployeeBenefits />} />
+        <Route path="/employer-portal"    element={<EmployerPortal />} />
+      </Route>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          PUBLIC ROUTES — no layout at all (pre-auth screens)
+      ───────────────────────────────────────────────────────────────── */}
+      <Route path="/employee-portal-login" element={<EmployeePortalLogin />} />
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
