@@ -123,7 +123,11 @@ export default function Cases() {
   const handleFilteredExport = () => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]);
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Delete ${selectedIds.size} case(s)? This cannot be undone.`)) return;
+    if (currentUser?.role !== "admin") {
+      alert("Only administrators can delete cases.");
+      return;
+    }
+    if (!window.confirm(`Permanently delete ${selectedIds.size} case(s)? This cannot be undone.`)) return;
     setBulkAction("deleting");
     for (const id of selectedIds) await base44.entities.BenefitCase.delete(id);
     await queryClient.invalidateQueries({ queryKey: ["cases"] });
