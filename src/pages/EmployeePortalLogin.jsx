@@ -30,59 +30,28 @@ export default function EmployeePortalLogin() {
     setLoading(true);
 
     try {
-      // 1. Verify token against EmployeeEnrollment
-      const enrollments = await base44.entities.EmployeeEnrollment.filter({
-        employee_email: email.toLowerCase().trim(),
-        access_token: token.trim(),
+      /**
+       * SECURITY: Token verification is handled SERVER-SIDE via verifyEnrollmentToken.
+       * This prevents:
+       *   - Brute-force attacks (server-side rate limiting: 5 attempts / 10 min)
+       *   - Direct entity filter calls exposing access_token to client network
+       *   - Timing attacks on token comparison
+       * The raw access_token is NEVER returned to the browser.
+       */
+      const result = await base44.functions.verifyEnrollmentToken({
+        email: email.toLowerCase().trim(),
+        token: token.trim(),
       });
 
-      if (!enrollments || enrollments.length === 0) {
+      if (!result?.success || !result?.enrollment) {
         setError("Invalid email or access token. Please check and try again.");
         setLoading(false);
         return;
       }
 
-      const enrollment = enrollments[0];
+      const enrollment = result.enrollment;
 
-      // 2. Verify enrollment window exists
-      const enrollmentWindows = await base44.entities.EnrollmentWindow.filter({
-        id: enrollment.enrollment_window_id,
-      });
-
-      if (!enrollmentWindows || enrollmentWindows.length === 0) {
-        setError("This enrollment is no longer available.");
-        setLoading(false);
-        return;
-      }
-
-      const window = enrollmentWindows[0];
-
-      // 3. Check if enrollment period is still active
-      // Use OR: block if EITHER the date has passed OR status is explicitly closed
-      const now = new Date();
-      const endDate = window.end_date ? new Date(window.end_date) : null;
-
-      if (endDate && now > endDate) {
-        setError("This enrollment period has ended.");
-        setLoading(false);
-        return;
-      }
-      if (window.status === "closed" || window.status === "finalized") {
-        setError("This enrollment window is closed.");
-        setLoading(false);
-        return;
-      }
-
-      // 4. Verify case exists
-      const cases = await base44.entities.BenefitCase.filter({ id: enrollment.case_id });
-      if (!cases || cases.length === 0) {
-        setError("Case not found. Please contact your administrator.");
-        setLoading(false);
-        return;
-      }
-
-      // 5. Store session as a unified JSON object under "portal_session"
-      //    This key is read by EmployeeEnrollment.jsx and EmployeeBenefits.jsx
+      // Store session — access_token is intentionally excluded (server already verified it)
       const sessionData = {
         enrollment_id: enrollment.id,
         case_id: enrollment.case_id,
@@ -93,7 +62,7 @@ export default function EmployeePortalLogin() {
       };
       sessionStorage.setItem("portal_session", JSON.stringify(sessionData));
 
-      // 6. Redirect based on enrollment status
+      // Redirect based on enrollment status
       if (enrollment.status === "completed" || enrollment.status === "waived") {
         navigate("/employee-benefits", { replace: true });
       } else {
@@ -101,7 +70,14 @@ export default function EmployeePortalLogin() {
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "An error occurred. Please try again.");
+      if (err?.status === 429 || err?.message?.toLowerCase().includes("too many")) {
+        setError("Too many failed attempts. Please try again in 10 minutes.");
+      } else if (err?.status === 403) {
+        setError("This enrollment period has ended.");
+      } else {
+        // Generic message — don't reveal whether email exists
+        setError("Invalid email or access token. Please check and try again.");
+      }
     } finally {
       setLoading(false);
     }
