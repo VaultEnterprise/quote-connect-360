@@ -197,6 +197,10 @@ export default function Quotes() {
   };
 
   const handleBulkDelete = async () => {
+    if (currentUser?.role !== "admin") {
+      alert("Only administrators can delete quote scenarios.");
+      return;
+    }
     if (!window.confirm(`Permanently delete ${selectedIds.length} scenario(s)? This cannot be undone.`)) return;
     await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.delete(id)));
     queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
