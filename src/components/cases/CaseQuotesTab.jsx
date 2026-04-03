@@ -87,6 +87,17 @@ export default function CaseQuotesTab({ caseId, scenarios }) {
                       {s.plan_count && <span>{s.plan_count} plans</span>}
                       {s.carriers_included?.length > 0 && <span>{s.carriers_included.join(", ")}</span>}
                     </div>
+                    {s.status === "incomplete" && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                        <span className="text-amber-500">⚠</span>
+                        <span>
+                          <strong>Partial quote</strong> — {s.incomplete_reasons?.length
+                            ? `${s.incomplete_reasons.length} plan(s) missing rate tables: ${s.incomplete_reasons.join("; ")}`
+                            : "Some plans could not be calculated due to missing rate tables."}
+                          {" "}Totals shown may be incomplete.
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
