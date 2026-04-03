@@ -18,10 +18,16 @@ Deno.serve(async (req) => {
     // HMAC validation — required when DOCUSIGN_WEBHOOK_SECRET is set.
     // If the secret is configured but no signature header is present, reject the request.
     const webhookSecret = Deno.env.get("DOCUSIGN_WEBHOOK_SECRET");
-    if (webhookSecret) {
+    // HMAC_REQUIRED: DOCUSIGN_WEBHOOK_SECRET must be configured. Without it, the webhook
+    // would accept any POST from any source — a serious security risk.
+    if (!webhookSecret) {
+      console.error("DocuSign webhook: DOCUSIGN_WEBHOOK_SECRET not configured — rejecting all requests. Set this env var.");
+      return Response.json({ error: "Webhook not configured" }, { status: 503 });
+    }
+    {
       const signature = req.headers.get("x-docusign-signature-1");
       if (!signature) {
-        console.warn("DocuSign webhook: secret configured but no signature header — rejecting");
+        console.warn("DocuSign webhook: no signature header — rejecting");
         return Response.json({ error: "Missing HMAC signature" }, { status: 401 });
       }
       const keyData = new TextEncoder().encode(webhookSecret);
