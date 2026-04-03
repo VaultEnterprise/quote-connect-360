@@ -151,23 +151,31 @@ export default function Settings() {
               {agencyForm ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><Label>Organization Name</Label><Input value={agencyForm.name} onChange={e => setA("name", e.target.value)} className="mt-1.5" /></div>
-                    <div><Label>Organization Code</Label><Input value={agencyForm.code} onChange={e => setA("code", e.target.value)} className="mt-1.5" /></div>
+                    <div><Label>Organization Name</Label><Input value={agencyForm.name} onChange={e => isAdmin ? setA("name", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
+                    <div><Label>Organization Code</Label><Input value={agencyForm.code} onChange={e => isAdmin ? setA("code", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
                   </div>
-                  <div><Label>Address</Label><Input value={agencyForm.address} onChange={e => setA("address", e.target.value)} className="mt-1.5" /></div>
+                  <div><Label>Address</Label><Input value={agencyForm.address} onChange={e => isAdmin ? setA("address", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div><Label>City</Label><Input value={agencyForm.city} onChange={e => setA("city", e.target.value)} className="mt-1.5" /></div>
-                    <div><Label>State</Label><Input value={agencyForm.state} onChange={e => setA("state", e.target.value)} className="mt-1.5" maxLength={2} /></div>
-                    <div><Label>ZIP</Label><Input value={agencyForm.zip} onChange={e => setA("zip", e.target.value)} className="mt-1.5" /></div>
+                    <div><Label>City</Label><Input value={agencyForm.city} onChange={e => isAdmin ? setA("city", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
+                    <div><Label>State</Label><Input value={agencyForm.state} onChange={e => isAdmin ? setA("state", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" maxLength={2} /></div>
+                    <div><Label>ZIP</Label><Input value={agencyForm.zip} onChange={e => isAdmin ? setA("zip", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><Label>Phone</Label><Input value={agencyForm.phone} onChange={e => setA("phone", e.target.value)} className="mt-1.5" /></div>
-                    <div><Label>Email</Label><Input value={agencyForm.email} onChange={e => setA("email", e.target.value)} className="mt-1.5" /></div>
+                    <div><Label>Phone</Label><Input value={agencyForm.phone} onChange={e => isAdmin ? setA("phone", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
+                    <div><Label>Email</Label><Input value={agencyForm.email} onChange={e => isAdmin ? setA("email", e.target.value) : null} readOnly={!isAdmin} className="mt-1.5" /></div>
                   </div>
-                  <Button onClick={() => saveAgency.mutate()} disabled={saveAgency.isPending}>
-                    <Save className="w-4 h-4 mr-2" />{saveAgency.isPending ? "Saving..." : "Save Organization Info"}
-                  </Button>
-                  {saveAgency.isSuccess && <p className="text-sm text-green-600">Saved successfully.</p>}
+                  {isAdmin ? (
+                    <>
+                      <Button onClick={() => saveAgency.mutate()} disabled={saveAgency.isPending}>
+                        <Save className="w-4 h-4 mr-2" />{saveAgency.isPending ? "Saving..." : "Save Organization Info"}
+                      </Button>
+                      {saveAgency.isSuccess && <p className="text-sm text-green-600">Saved successfully.</p>}
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" /> Admin access required to edit organization info.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Loading organization data...</p>
