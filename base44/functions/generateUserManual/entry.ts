@@ -51,6 +51,7 @@ Make the content thorough, clear, and helpful for end users.`,
 
     return Response.json(response.data || response);
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
