@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     if (!proposals?.length) return Response.json({ error: 'Proposal not found' }, { status: 404 });
 
     const proposal = proposals[0];
-    const origin = req.headers.get('origin') || 'https://app.base44.com';
+    const origin = Deno.env.get('PORTAL_BASE_URL') || 'https://app.base44.com';
     const portalUrl = `${origin}/employer-portal?proposal=${proposal_id}`;
 
     await base44.asServiceRole.integrations.Core.SendEmail({
