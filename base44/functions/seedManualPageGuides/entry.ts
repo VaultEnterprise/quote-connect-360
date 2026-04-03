@@ -598,6 +598,7 @@ All previous analyses saved. Compare how risk profile changes over time (useful 
     }
     return Response.json({ success: true, seed: "page_guides", created, updated, total: topics.length, errors });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
