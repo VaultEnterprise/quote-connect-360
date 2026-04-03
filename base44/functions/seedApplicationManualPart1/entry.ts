@@ -605,6 +605,7 @@ Grid comparing top 4–6 recommended plans across: premium tiers, deductible, OO
     }
     return Response.json({ success: true, part: 1, created, updated, total: topics.length, errors });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
