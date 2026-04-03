@@ -3,7 +3,7 @@
  * Seeds Chapters 11–20 + HelpAI Index guide of the ConnectQuote 360 Application Manual.
  * Admin only. Safe to re-run (upserts by topic_code).
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
