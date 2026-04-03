@@ -658,6 +658,7 @@ Include in every record: exact field/button/page name | synonyms | common questi
     }
     return Response.json({ success: true, part: 2, created, updated, total: topics.length, errors });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[function' + '] error:', error.message, error.stack);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 });
