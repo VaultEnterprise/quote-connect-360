@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const ORPHANED_CODES = [
   "PAGE_HELP_REGISTRY", "PAGE_ACA_LIBRARY", "PAGE_HELP_DASHBOARD",
