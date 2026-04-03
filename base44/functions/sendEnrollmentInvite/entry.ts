@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     if (!enrollments?.length) return Response.json({ error: 'Enrollment not found' }, { status: 404 });
 
     const enrollment = enrollments[0];
-    const portalUrl = `${req.headers.get('origin') || 'https://app.base44.com'}/employee-portal-login`;
+    const portalUrl = `${Deno.env.get('APP_BASE_URL') || 'https://app.base44.com'}/employee-portal-login`;
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: enrollment.employee_email,
