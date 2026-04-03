@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/AuthContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import CrossPageNavigation from "@/components/shared/CrossPageNavigation";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Employer-specific components
 import ActionRequiredBanner from "@/components/employer/ActionRequiredBanner";
@@ -33,6 +33,8 @@ import PlanExplainerModal   from "@/components/employer/PlanExplainerModal";
 export default function EmployerPortal() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const employerGroupId = searchParams.get("employer_id") || null;
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -42,8 +44,10 @@ export default function EmployerPortal() {
   // For now we limit to 50 records. Proper fix: implement employer-specific auth tokens
   // or filter by employer_group_id linked to the authenticated user's account.
   const { data: cases = [] } = useQuery({
-    queryKey: ["employer-cases"],
-    queryFn: () => base44.entities.BenefitCase.list("-created_date", 50),
+    queryKey: ["employer-cases", employerGroupId],
+    queryFn: () => employerGroupId
+      ? base44.entities.BenefitCase.filter({ employer_group_id: employerGroupId }, "-created_date", 50)
+      : base44.entities.BenefitCase.list("-created_date", 50),
   });
 
   const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0];
