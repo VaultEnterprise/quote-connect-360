@@ -102,13 +102,18 @@ export default function EnrollmentWizard({
     },
   });
 
+  const [stepError, setStepError] = React.useState("");
+
   const handleNext = () => {
+    setStepError("");
     if (currentStep.id === "welcome" && isWaiving) {
       setCurrentStepIndex(1);
-    } else if (currentStep.id === "coverage" && !selectedPlans.medical) {
-      // Can't proceed without at least medical
     } else if (currentStep.id === "plans" && Object.keys(selectedPlans).length === 0) {
-      // Can't proceed without plans
+      setStepError("Please select at least one plan before continuing.");
+    } else if (currentStep.id === "waiver" && !waiverReason) {
+      setStepError("Please select a reason for waiving coverage.");
+    } else if (currentStep.id === "review" && !acknowledged) {
+      setStepError("Please confirm you have reviewed your selections.");
     } else {
       setCurrentStepIndex(Math.min(currentStepIndex + 1, steps.length - 1));
     }
@@ -127,14 +132,7 @@ export default function EnrollmentWizard({
     setSelectedPlans(prev => ({ ...prev, [plan.plan_type]: plan }));
   };
 
-  const canProceed = () => {
-    if (currentStep.id === "coverage") return true; // Always can proceed, has default
-    if (currentStep.id === "plans") return Object.keys(selectedPlans).length > 0;
-    if (currentStep.id === "dependents") return true; // Optional
-    if (currentStep.id === "waiver") return !!waiverReason;
-    if (currentStep.id === "review") return acknowledged;
-    return true;
-  };
+  // canProceed is now handled directly in handleNext with user-visible error messages
 
   if (showConfirmation) {
     return (
