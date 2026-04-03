@@ -45,6 +45,16 @@ import PlanComplianceCenter from '@/pages/PlanComplianceCenter';
 import PlanRatingEngine from '@/pages/PlanRatingEngine';
 import SalesforceIntegration from '@/pages/SalesforceIntegration';
 
+/**
+ * AdminRoute — renders children only for admin-role users.
+ * All other users see a 404. This is enforced at the route level,
+ * not just inside the component, so data queries never fire.
+ */
+function AdminRoute({ user, children }) {
+  if (user?.role !== "admin") return <PageNotFound />;
+  return children;
+}
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
@@ -53,7 +63,7 @@ const AuthenticatedApp = () => {
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-3 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-sm text-muted-foreground">Loading Connect Quote 360...</p>
+          <p className="text-sm text-muted-foreground">Loading Quote Connect 360...</p>
         </div>
       </div>
     );
@@ -67,6 +77,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<AppLayout />}>
+        {/* ── Standard authenticated routes ── */}
         <Route path="/" element={<Dashboard />} />
         <Route path="/cases" element={<Cases />} />
         <Route path="/cases/new" element={<CaseNew />} />
@@ -87,22 +98,24 @@ const AuthenticatedApp = () => {
         <Route path="/employee-enrollment" element={<EmployeeEnrollment />} />
         <Route path="/employee-benefits" element={<EmployeeBenefits />} />
         <Route path="/employer-portal" element={<EmployerPortal />} />
-        <Route path="/policymatch" element={<PolicyMatchAI />} />
-        <Route path="/integration-infra" element={<IntegrationInfrastructure />} />
-        <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<HelpCenter />} />
-        <Route path="/help-admin" element={user?.role === "admin" ? <HelpAdmin /> : <PageNotFound />} />
-        <Route path="/help-dashboard" element={<HelpDashboard />} />
-        <Route path="/help-coverage" element={<HelpCoverageReport />} />
-        <Route path="/help-analytics" element={<HelpSearchAnalytics />} />
-        <Route path="/help-target-registry" element={<HelpTargetRegistry />} />
-        <Route path="/help-manual-manager" element={<HelpManualManager />} />
         <Route path="/aca-library" element={<ACALibrary />} />
-        <Route path="/plan-rate-editor" element={<PlanRateEditor />} />
-        <Route path="/plan-analytics" element={<PlanAnalyticsDashboard />} />
-        <Route path="/plan-compliance" element={<PlanComplianceCenter />} />
-        <Route path="/plan-rating" element={<PlanRatingEngine />} />
-        <Route path="/salesforce" element={<SalesforceIntegration />} />
+
+        {/* ── Admin-only routes ── */}
+        <Route path="/help-admin" element={<AdminRoute user={user}><HelpAdmin /></AdminRoute>} />
+        <Route path="/help-dashboard" element={<AdminRoute user={user}><HelpDashboard /></AdminRoute>} />
+        <Route path="/help-coverage" element={<AdminRoute user={user}><HelpCoverageReport /></AdminRoute>} />
+        <Route path="/help-analytics" element={<AdminRoute user={user}><HelpSearchAnalytics /></AdminRoute>} />
+        <Route path="/help-target-registry" element={<AdminRoute user={user}><HelpTargetRegistry /></AdminRoute>} />
+        <Route path="/help-manual-manager" element={<AdminRoute user={user}><HelpManualManager /></AdminRoute>} />
+        <Route path="/plan-rate-editor" element={<AdminRoute user={user}><PlanRateEditor /></AdminRoute>} />
+        <Route path="/plan-analytics" element={<AdminRoute user={user}><PlanAnalyticsDashboard /></AdminRoute>} />
+        <Route path="/plan-compliance" element={<AdminRoute user={user}><PlanComplianceCenter /></AdminRoute>} />
+        <Route path="/plan-rating" element={<AdminRoute user={user}><PlanRatingEngine /></AdminRoute>} />
+        <Route path="/policymatch" element={<AdminRoute user={user}><PolicyMatchAI /></AdminRoute>} />
+        <Route path="/integration-infra" element={<AdminRoute user={user}><IntegrationInfrastructure /></AdminRoute>} />
+        <Route path="/salesforce" element={<AdminRoute user={user}><SalesforceIntegration /></AdminRoute>} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
