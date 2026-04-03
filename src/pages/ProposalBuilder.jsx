@@ -170,6 +170,10 @@ export default function ProposalBuilder() {
 
   const bulkDelete = useMutation({
     mutationFn: async (ids) => {
+      if (currentUser?.role !== "admin") {
+        alert("Only administrators can delete proposals.");
+        return;
+      }
       if (!window.confirm(`Permanently delete ${ids.length} proposal(s)? This cannot be undone.`)) return;
       return Promise.all(ids.map(id => base44.entities.Proposal.delete(id)));
     },
