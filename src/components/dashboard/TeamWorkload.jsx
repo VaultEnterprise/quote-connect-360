@@ -26,10 +26,12 @@ export default function TeamWorkload({ cases = [], tasks = [] }) {
     }
   });
 
+  const maxCases = Math.max(1, ...Object.values(assignedUsers).map((user) => user.cases));
+
   const userList = Object.entries(assignedUsers).map(([email, data]) => ({
     email,
     ...data,
-    load: Math.round((data.cases / Math.max(...Object.values(assignedUsers).map(u => u.cases))) * 100) || 0,
+    load: Math.round((data.cases / maxCases) * 100),
   }));
 
   return (
