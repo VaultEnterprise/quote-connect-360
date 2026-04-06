@@ -1,5 +1,4 @@
 import React from "react";
-import { differenceInDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function DashboardSecondaryMetrics({ summary, currentEnrollments, currentRenewals, upcomingRenewalsCount }) {
