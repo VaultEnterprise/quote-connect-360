@@ -110,7 +110,7 @@ export default function Quotes() {
     });
 
     return result;
-  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon]);
+  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon, carrierFilter]);
 
   const grouped = useMemo(() => {
     const groups = {};
