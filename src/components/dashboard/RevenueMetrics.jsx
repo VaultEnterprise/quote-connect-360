@@ -18,7 +18,9 @@ export default function RevenueMetrics({ scenarios = [] }) {
 
   const currentMonth = monthlyRevenue[5];
   const prevMonth = monthlyRevenue[4];
-  const trend = currentMonth && prevMonth ? ((currentMonth.revenue - prevMonth.revenue) / prevMonth.revenue * 100).toFixed(1) : 0;
+  const trend = currentMonth && prevMonth && prevMonth.revenue > 0
+    ? ((currentMonth.revenue - prevMonth.revenue) / prevMonth.revenue * 100).toFixed(1)
+    : 0;
 
   return (
     <Card>
