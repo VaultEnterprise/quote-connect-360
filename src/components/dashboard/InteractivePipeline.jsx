@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
-import { buildRoute } from "@/lib/routing/buildRoute";
 
 export default function InteractivePipeline({ cases = [] }) {
   const [activeStage, setActiveStage] = useState(null);
@@ -85,7 +84,7 @@ export default function InteractivePipeline({ cases = [] }) {
                 </Badge>
               </div>
               <div className="flex items-center gap-1">
-                <Link to={buildRoute("cases", { stageGroup: selectedGroup.key })}>
+                <Link to="/cases">
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
                     View all <ExternalLink className="w-3 h-3" />
                   </Button>
@@ -98,7 +97,7 @@ export default function InteractivePipeline({ cases = [] }) {
 
             <div className="divide-y divide-border max-h-56 overflow-y-auto">
               {selectedGroup.cases.slice(0, 10).map(c => (
-                <Link key={c.id} to={buildRoute("caseDetail", { caseId: c.id })} className="block">
+                <Link key={c.id} to={`/cases/${c.id}`} className="block">
                   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors group">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
