@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
-import { useAuth } from "@/lib/AuthContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -135,6 +134,7 @@ export default function EmployerPortal() {
             </div>
           {/* Mobile sidebar toggle */}
           <Button
+            type="button"
             variant="ghost"
             size="icon"
             className="lg:hidden h-9 w-9"
