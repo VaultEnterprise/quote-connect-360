@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, CheckCircle2, Clock } from "lucide-react";
 import MetricCard from "@/components/shared/MetricCard";
 

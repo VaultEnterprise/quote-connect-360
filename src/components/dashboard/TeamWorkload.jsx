@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Briefcase, AlertCircle } from "lucide-react";
+import { Users, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 export default function TeamWorkload({ cases = [], tasks = [] }) {
@@ -18,7 +18,7 @@ export default function TeamWorkload({ cases = [], tasks = [] }) {
   // Add overdue tasks per user
   const now = new Date();
   tasks.forEach(t => {
-    if (t.assigned_to && new Date(t.due_date) < now) {
+    if (t.assigned_to && t.due_date && new Date(t.due_date) < now) {
       if (!assignedUsers[t.assigned_to]) {
         assignedUsers[t.assigned_to] = { cases: 0, overdue: 0 };
       }
