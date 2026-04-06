@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Bookmark, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
