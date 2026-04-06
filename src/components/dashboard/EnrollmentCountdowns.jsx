@@ -30,7 +30,7 @@ export default function EnrollmentCountdowns({ enrollments }) {
             const participation = e.total_eligible > 0
               ? Math.round(((e.enrolled_count || 0) / e.total_eligible) * 100)
               : e.participation_rate || 0;
-            const urgency = daysLeft !== null && daysLeft <= 3 ? "text-red-600" : daysLeft <= 7 ? "text-amber-600" : "text-muted-foreground";
+            const urgency = daysLeft !== null && daysLeft <= 3 ? "text-red-600" : daysLeft !== null && daysLeft <= 7 ? "text-amber-600" : "text-muted-foreground";
 
             return (
               <Link key={e.id} to="/enrollment" className="block">
