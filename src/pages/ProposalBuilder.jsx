@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FileText, Plus, LayoutGrid, List, Search, Filter, AlertTriangle,
   ArrowUpDown, Download, X, CheckSquare, AlertOctagon
@@ -28,7 +28,6 @@ import ProposalWorkflowSuggestions from "@/components/proposals/ProposalWorkflow
 import ProposalDetailExpanded from "@/components/proposals/ProposalDetailExpanded";
 import { isAfter, addDays, parseISO, differenceInDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import useRouteContext from "@/hooks/useRouteContext";
-import { useAuth } from "@/lib/AuthContext";
 
 const DATE_RANGE_OPTIONS = [
   { value: "all",      label: "All Time" },
@@ -41,7 +40,6 @@ const DATE_RANGE_OPTIONS = [
 export default function ProposalBuilder() {
   const queryClient = useQueryClient();
   const routeContext = useRouteContext();
-  const { user: currentUser } = useAuth();
   const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -165,27 +163,10 @@ export default function ProposalBuilder() {
   const selectAll = () => setSelectedIds(filtered.map(p => p.id));
   const clearSelection = () => setSelectedIds([]);
 
-  const bulkStatusUpdate = useMutation({
-    mutationFn: ({ ids, status }) => Promise.all(ids.map(id => base44.entities.Proposal.update(id, { status }))),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["proposals"] }); setSelectedIds([]); },
-  });
-
-  const bulkDelete = useMutation({
-    mutationFn: async (ids) => {
-      if (currentUser?.role !== "admin") {
-        alert("Only administrators can delete proposals.");
-        return;
-      }
-      if (!window.confirm(`Permanently delete ${ids.length} proposal(s)? This cannot be undone.`)) return;
-      return Promise.all(ids.map(id => base44.entities.Proposal.delete(id)));
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["proposals"] }); setSelectedIds([]); },
-  });
-
-  const markAllExpired = useMutation({
-    mutationFn: () => Promise.all(overdueProposals.map(p => base44.entities.Proposal.update(p.id, { status: "expired" }))),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proposals"] }),
-  });
+  const handleMarkAllExpired = async () => {
+    await Promise.all(overdueProposals.map((p) => base44.entities.Proposal.update(p.id, { status: "expired" })));
+    queryClient.invalidateQueries({ queryKey: ["proposals"] });
+  };
 
   const handleExportCSV = () => {
     const rows = [
@@ -231,8 +212,7 @@ export default function ProposalBuilder() {
               variant="outline"
               size="sm"
               className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 text-xs"
-              onClick={() => { if (confirm(`Mark ${overdueProposals.length} overdue proposals as expired?`)) markAllExpired.mutate(); }}
-              disabled={markAllExpired.isPending}
+              onClick={() => { if (confirm(`Mark ${overdueProposals.length} overdue proposals as expired?`)) handleMarkAllExpired(); }}
             >
               <AlertOctagon className="w-3.5 h-3.5" />
               Mark {overdueProposals.length} Expired
