@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function DashboardSecondaryMetrics({ summary, currentEnrollments, currentRenewals, upcomingRenewalsCount }) {
+export default function DashboardSecondaryMetrics({ summary, currentEnrollments, upcomingRenewalsCount }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground mb-1">Monthly Premium (completed)</p><p className="text-xl font-bold text-primary">{summary.totalPremium > 0 ? `$${(summary.totalPremium / 1000).toFixed(0)}k` : "—"}</p><p className={`text-xs mt-1 ${summary.comparisons.totalPremium.trend === "up" ? "text-green-600" : summary.comparisons.totalPremium.trend === "down" ? "text-red-500" : "text-muted-foreground"}`}>{summary.comparisons.totalPremium.label}</p></CardContent></Card>

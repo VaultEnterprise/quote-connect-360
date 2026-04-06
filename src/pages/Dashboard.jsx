@@ -147,7 +147,7 @@ export default function Dashboard() {
       <CensusGapAlert cases={scopedData.currentCases} />
       <TodaysPriorities tasks={scopedData.currentTasks} exceptions={scopedData.currentExceptions} cases={scopedData.currentCases} enrollments={scopedData.currentEnrollments} />
       <DashboardMetricGrid summary={summary} />
-      <DashboardSecondaryMetrics summary={summary} currentEnrollments={scopedData.currentEnrollments} currentRenewals={scopedData.currentRenewals} upcomingRenewalsCount={charts.upcomingRenewals} />
+      <DashboardSecondaryMetrics summary={summary} currentEnrollments={scopedData.currentEnrollments} currentRenewals={scopedData.currentRenewals} upcomingRenewalsCount={charts.upcomingRenewals(scopedData.currentRenewals)} />
       <ProposalsKPI proposals={scopedData.currentProposals} />
       <ComplianceAlerts cases={scopedData.currentCases} scenarios={scopedData.currentScenarios} />
       <RevenueMetrics scenarios={scopedData.currentScenarios} />
