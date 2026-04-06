@@ -23,11 +23,13 @@ import SavedViewsPanel from "@/components/quotes/SavedViewsPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
 import useRouteContext from "@/hooks/useRouteContext";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const routeContext = useRouteContext();
+  const { user: currentUser } = useAuth();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

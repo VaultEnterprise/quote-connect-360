@@ -28,6 +28,7 @@ import ProposalWorkflowSuggestions from "@/components/proposals/ProposalWorkflow
 import ProposalDetailExpanded from "@/components/proposals/ProposalDetailExpanded";
 import { isAfter, addDays, parseISO, differenceInDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import useRouteContext from "@/hooks/useRouteContext";
+import { useAuth } from "@/lib/AuthContext";
 
 const DATE_RANGE_OPTIONS = [
   { value: "all",      label: "All Time" },
@@ -40,6 +41,7 @@ const DATE_RANGE_OPTIONS = [
 export default function ProposalBuilder() {
   const queryClient = useQueryClient();
   const routeContext = useRouteContext();
+  const { user: currentUser } = useAuth();
   const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

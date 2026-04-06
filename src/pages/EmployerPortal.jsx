@@ -6,21 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { useAuth } from "@/lib/AuthContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import CrossPageNavigation from "@/components/shared/CrossPageNavigation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Employer-specific components
 import ActionRequiredBanner from "@/components/employer/ActionRequiredBanner";
 import BrokerContactCard    from "@/components/employer/BrokerContactCard";
 import StatusTimeline       from "@/components/employer/StatusTimeline";
-import ProposalReviewPanel  from "@/components/employer/ProposalReviewPanel";
 import EnrollmentDrillDown  from "@/components/employer/EnrollmentDrillDown";
-import DocumentsPanel       from "@/components/employer/DocumentsPanel";
 import CaseLifecycleStatus  from "@/components/employer/CaseLifecycleStatus";
 import EnrollmentCountdown  from "@/components/employer/EnrollmentCountdown";
 import ProposalEnhanced     from "@/components/employer/ProposalEnhanced";
@@ -31,7 +27,6 @@ import DocumentsCenter      from "@/components/employer/DocumentsCenter";
 import PlanExplainerModal   from "@/components/employer/PlanExplainerModal";
 
 export default function EmployerPortal() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const employerGroupId = searchParams.get("employer_id") || null;
