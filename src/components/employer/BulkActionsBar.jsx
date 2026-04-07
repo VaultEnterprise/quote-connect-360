@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 
-export function BulkActionsBar({ selectedEmployers, onClearSelection, agencies }) {
+export function BulkActionsBar({ selectedEmployers, onClearSelection, agencies, canDelete = false }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showImportModal, setShowImportModal] = useState(false);
@@ -136,9 +136,11 @@ export function BulkActionsBar({ selectedEmployers, onClearSelection, agencies }
         Import
       </Button>
 
-      <Button size="sm" variant="destructive" onClick={handleDelete}>
-        Delete ({selectedEmployers.length})
-      </Button>
+      {canDelete && (
+        <Button size="sm" variant="destructive" onClick={handleDelete}>
+          Delete ({selectedEmployers.length})
+        </Button>
+      )}
 
       <Button size="sm" variant="ghost" onClick={onClearSelection}>
         Clear Selection

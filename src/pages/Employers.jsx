@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, Users,
   Pencil, AlertTriangle, Briefcase, Filter, X, Eye, CheckSquare, Upload
@@ -210,6 +211,7 @@ function EmployerModal({ employer, open, onClose, agencies }) {
 
 export default function Employers() {
   const routeContext = useRouteContext();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -321,6 +323,7 @@ export default function Employers() {
           selectedEmployers={selectedEmployers}
           onClearSelection={() => setSelectedEmployers([])}
           agencies={agencies}
+          canDelete={user?.role === "admin"}
         />
       )}
 

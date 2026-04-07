@@ -49,7 +49,7 @@ function carrierColor(name) {
   return colors[name.charCodeAt(0) % colors.length];
 }
 
-export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate }) {
+export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate, onShowDetails, onApproval, onContribution }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
@@ -311,6 +311,21 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                   <Star className="w-3.5 h-3.5 mr-2" />
                   {scenario.is_recommended ? "Remove Recommendation" : "Mark Recommended"}
                 </DropdownMenuItem>
+                {onShowDetails && (
+                  <DropdownMenuItem onClick={() => onShowDetails(scenario)}>
+                    <FileText className="w-3.5 h-3.5 mr-2" /> View Details
+                  </DropdownMenuItem>
+                )}
+                {onApproval && (
+                  <DropdownMenuItem onClick={() => onApproval(scenario)}>
+                    <Send className="w-3.5 h-3.5 mr-2" /> Approval
+                  </DropdownMenuItem>
+                )}
+                {onContribution && (
+                  <DropdownMenuItem onClick={() => onContribution(scenario)}>
+                    <Sliders className="w-3.5 h-3.5 mr-2" /> Adjust Contribution
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onEdit(scenario)}>
                   <Pencil className="w-3.5 h-3.5 mr-2" /> Edit Scenario
                 </DropdownMenuItem>

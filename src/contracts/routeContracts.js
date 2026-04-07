@@ -12,6 +12,6 @@ export function getCaseRouteContext(caseData) {
   };
 }
 
-export function getRouteContext(search = window.location.search) {
+export function getRouteContext(search) {
   return getSharedRouteContext(search);
 }
