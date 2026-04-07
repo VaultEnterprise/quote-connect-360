@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Heart, Loader, Mail } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -17,10 +18,12 @@ import { useNavigate } from "react-router-dom";
  */
 export default function EmployeePortalLogin() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendingInvite, setResendingInvite] = useState(false);
   const [showResend, setShowResend] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
@@ -80,6 +83,29 @@ export default function EmployeePortalLogin() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendInvite = async () => {
+    const normalizedEmail = resetEmail.toLowerCase().trim();
+    if (!normalizedEmail) return;
+
+    setResendingInvite(true);
+    try {
+      const matches = await base44.entities.EmployeeEnrollment.filter({ employee_email: normalizedEmail }, "-created_date", 1);
+      if (!matches?.length) {
+        toast({ title: "Invitation not found", description: "No enrollment invitation was found for that email.", variant: "destructive" });
+        return;
+      }
+
+      await base44.functions.invoke("sendEnrollmentInvite", { enrollment_id: matches[0].id });
+      toast({ title: "Invitation sent", description: "Your enrollment email has been resent." });
+      setShowResend(false);
+      setResetEmail("");
+    } catch (err) {
+      toast({ title: "Unable to resend", description: "Invitation email is not configured right now.", variant: "destructive" });
+    } finally {
+      setResendingInvite(false);
     }
   };
 
@@ -170,8 +196,12 @@ export default function EmployeePortalLogin() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       className="w-full px-2 py-1 text-xs border rounded"
                     />
-                    <button className="w-full px-2 py-1 text-xs bg-primary text-white rounded hover:opacity-90">
-                      Send Invitation
+                    <button
+                      onClick={handleResendInvite}
+                      disabled={resendingInvite || !resetEmail.trim()}
+                      className="w-full px-2 py-1 text-xs bg-primary text-white rounded hover:opacity-90 disabled:opacity-50"
+                    >
+                      {resendingInvite ? "Sending..." : "Send Invitation"}
                     </button>
                   </div>
                 )}
