@@ -54,7 +54,6 @@ export default function ProposalBuilder() {
   const [showExpiringOnly, setShowExpiringOnly] = useState(false);
   const [sortBy, setSortBy] = useState("created_desc");
   const [viewMode2, setViewMode2] = useState("list"); // "list", "analytics", "guide"
-  const [expandedProposalId, setExpandedProposalId] = useState(null);
 
   // KPI click filter
   const [kpiFilter, setKpiFilter] = useState(null);
@@ -399,17 +398,15 @@ export default function ProposalBuilder() {
           ) : (
             <div className="space-y-2.5">
               {filtered.map(p => (
-                <div key={p.id}>
-                  <ProposalCard
-                    proposal={p}
-                    onView={setViewing}
-                    onEdit={setEditing}
-                    onReject={setRejecting}
-                    isSelected={selectedIds.includes(p.id)}
-                    onToggleSelect={toggleSelect}
-                  />
-                  {expandedProposalId === p.id && <ProposalDetailExpanded proposal={p} />}
-                </div>
+              <ProposalCard
+              key={p.id}
+              proposal={p}
+              onView={setViewing}
+              onEdit={setEditing}
+              onReject={setRejecting}
+              isSelected={selectedIds.includes(p.id)}
+              onToggleSelect={toggleSelect}
+              />
               ))}
             </div>
           )}

@@ -148,19 +148,6 @@ export default function CaseNew() {
     }));
   };
 
-  const createAgency = useMutation({
-    mutationFn: async (data) => base44.entities.Agency.create({
-      name: data.name,
-      code: data.code,
-      status: "active",
-    }),
-    onSuccess: (agency) => {
-      queryClient.invalidateQueries({ queryKey: ["agencies"] });
-      setForm(prev => ({ ...prev, agency_id: agency.id }));
-      setNewAgency({ name: "", code: "" });
-    },
-  });
-
   const createCase = useMutation({
     mutationFn: async (data) => {
       let agencyId = data.agency_id;

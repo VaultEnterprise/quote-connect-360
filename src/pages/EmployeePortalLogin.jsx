@@ -38,18 +38,18 @@ export default function EmployeePortalLogin() {
        *   - Timing attacks on token comparison
        * The raw access_token is NEVER returned to the browser.
        */
-      const result = await base44.functions.verifyEnrollmentToken({
+      const result = await base44.functions.invoke("verifyEnrollmentToken", {
         email: email.toLowerCase().trim(),
         token: token.trim(),
       });
 
-      if (!result?.success || !result?.enrollment) {
+      if (!result?.data?.success || !result?.data?.enrollment) {
         setError("Invalid email or access token. Please check and try again.");
         setLoading(false);
         return;
       }
 
-      const enrollment = result.enrollment;
+      const enrollment = result.data.enrollment;
 
       // Store session — access_token is intentionally excluded (server already verified it)
       const sessionData = {

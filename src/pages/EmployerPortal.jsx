@@ -41,7 +41,7 @@ export default function EmployerPortal() {
     queryKey: ["employer-cases", employerGroupId],
     queryFn: () => employerGroupId
       ? base44.entities.BenefitCase.filter({ employer_group_id: employerGroupId }, "-created_date", 50)
-      : base44.entities.BenefitCase.list("-created_date", 50),
+      : Promise.resolve([]),
   });
 
   const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0];

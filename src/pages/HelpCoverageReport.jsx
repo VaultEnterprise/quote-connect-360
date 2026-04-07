@@ -59,7 +59,7 @@ export default function HelpCoverageReport() {
       ...HELP_TARGETS.map(t => {
         const c = contentMap[t.target_code];
         return [t.target_code, t.module_code, t.page_code, t.component_type, t.target_label,
-          c?.status || "missing", c?.status === "active" ? "Yes" : "No", c?.view_count || 0];
+          c?.content_status || "missing", c?.content_status === "active" ? "Yes" : "No", c?.view_count || 0];
       })
     ];
     const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");

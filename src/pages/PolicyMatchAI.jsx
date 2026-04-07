@@ -358,7 +358,6 @@ export default function PolicyMatchAIPage() {
   const [filterTier, setFilterTier]     = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy]             = useState("newest");
-  const [expandedResultId, setExpandedResultId] = useState(null);
 
   const { data: cases     = [] } = useQuery({ queryKey: ["cases"],        queryFn: () => base44.entities.BenefitCase.list("-created_date", 100) });
   const { data: scenarios = [] } = useQuery({ queryKey: ["scenarios-all"],queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100) });
@@ -594,10 +593,7 @@ export default function PolicyMatchAIPage() {
               ) : (
                 <div className="space-y-3">
                   {filteredResults.map(r => (
-                    <div key={r.id}>
-                      <ResultCard result={r} onAccept={handleAccept} onDecline={handleDecline} />
-                      {expandedResultId === r.id && <PolicyMatchDetailExpanded result={r} />}
-                    </div>
+                    <ResultCard key={r.id} result={r} onAccept={handleAccept} onDecline={handleDecline} />
                   ))}
                 </div>
               )}
