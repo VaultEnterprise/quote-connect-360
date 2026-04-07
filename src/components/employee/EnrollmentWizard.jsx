@@ -61,6 +61,15 @@ export default function EnrollmentWizard({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submittedEnrollment, setSubmittedEnrollment] = useState(null);
 
+  const { data: latestSubmittedEnrollment = [] } = useQuery({
+    queryKey: ["employee-enrollment-submitted", submittedEnrollment?.id],
+    queryFn: () => submittedEnrollment?.id
+      ? base44.entities.EmployeeEnrollment.filter({ id: submittedEnrollment.id }, "-created_date", 1)
+      : Promise.resolve([]),
+    enabled: !!submittedEnrollment?.id,
+    refetchInterval: showConfirmation ? 5000 : false,
+  });
+
   // Enrollment data
   const [coverageTier, setCoverageTier] = useState("employee_only");
   const [selectedPlans, setSelectedPlans] = useState({}); // { plan_type: Plan }
@@ -158,7 +167,7 @@ export default function EnrollmentWizard({
   if (showConfirmation) {
     return (
       <EnrollmentConfirmation
-        enrollment={submittedEnrollment || activeEnrollment}
+        enrollment={latestSubmittedEnrollment?.[0] || submittedEnrollment || activeEnrollment}
         isWaived={isWaiving}
         onDone={() => isWaiving ? onWaive() : onComplete()}
       />
