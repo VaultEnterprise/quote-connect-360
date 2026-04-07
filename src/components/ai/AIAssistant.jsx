@@ -69,7 +69,6 @@ export default function AIAssistant({ caseContext }) {
 
     const response = await base44.integrations.Core.InvokeLLM({
       prompt: conversationPrompt,
-      model: "claude_sonnet_4_6",
     });
 
     setMessages(prev => [...prev, { role: "assistant", content: response }]);

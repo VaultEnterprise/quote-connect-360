@@ -107,6 +107,10 @@ export default function GlobalSearch({ className }) {
     localStorage.setItem(RECENT_KEY, JSON.stringify(newRecent));
   };
 
+  const handleRecentSelect = (item) => {
+    handleSelect(item);
+  };
+
   const showDropdown = open && (results.length > 0 || (recent.length > 0 && !query) || loading);
 
   return (
@@ -145,7 +149,7 @@ export default function GlobalSearch({ className }) {
               {recent.map((r, i) => {
                 const Icon = RESULT_ICONS[r.type] || Search;
                 return (
-                  <button key={i} onClick={() => navigate(r.path)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/60 text-left transition-colors">
+                  <button key={i} onClick={() => handleRecentSelect(r)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/60 text-left transition-colors">
                     <Icon className={cn("w-4 h-4 flex-shrink-0", RESULT_COLORS[r.type])} />
                     <span className="text-sm truncate">{r.label}</span>
                     <span className="text-[10px] text-muted-foreground ml-auto capitalize">{r.type}</span>

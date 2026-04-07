@@ -13,25 +13,25 @@ function useAlerts() {
 
   const { data: tasks = [] } = useQuery({
     queryKey: ["alerts-tasks"],
-    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-due_date", 50),
+    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-due_date", 25),
     refetchInterval: 120000,
   });
 
   const { data: scenarios = [] } = useQuery({
     queryKey: ["alerts-scenarios"],
-    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 50),
+    queryFn: () => base44.entities.QuoteScenario.list("-expires_at", 25),
     refetchInterval: 120000,
   });
 
   const { data: enrollments = [] } = useQuery({
     queryKey: ["alerts-enrollments"],
-    queryFn: () => base44.entities.EnrollmentWindow.list("-end_date", 20),
+    queryFn: () => base44.entities.EnrollmentWindow.list("-end_date", 15),
     refetchInterval: 120000,
   });
 
   const { data: renewals = [] } = useQuery({
     queryKey: ["alerts-renewals"],
-    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 20),
+    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 15),
     refetchInterval: 120000,
   });
 
