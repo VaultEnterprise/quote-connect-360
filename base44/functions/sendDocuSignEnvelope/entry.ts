@@ -149,6 +149,7 @@ Deno.serve(async (req) => {
             name: enrollment.employee_name,
             recipientId: "1",
             routingOrder: "1",
+            clientUserId: enrollment_id,
             tabs: {
               signHereTabs: [
                 {

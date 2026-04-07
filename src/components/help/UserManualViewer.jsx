@@ -62,7 +62,7 @@ export default function UserManualViewer({ manual, onClose }) {
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">{cfg.icon}</span>
               <Badge>{cfg.label}</Badge>
-              <Badge variant="outline">{manual.module}</Badge>
+              <Badge variant="outline">{currentManual.module}</Badge>
             </div>
             <h2 className="text-2xl font-bold">{currentManual.title}</h2>
             <p className="text-sm text-muted-foreground mt-1">{currentManual.description}</p>
@@ -203,7 +203,7 @@ export default function UserManualViewer({ manual, onClose }) {
           {currentManual.related_manuals && currentManual.related_manuals.length > 0 && (
             <div className="border rounded-lg p-4 space-y-2 bg-blue-50/30 border-blue-200">
               <h3 className="font-semibold text-sm text-blue-900">📚 Related Topics</h3>
-              <p className="text-xs text-blue-800">See also: {manual.related_manuals.join(", ")}</p>
+              <p className="text-xs text-blue-800">See also: {currentManual.related_manuals.join(", ")}</p>
             </div>
           )}
         </CardContent>
