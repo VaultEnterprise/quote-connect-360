@@ -82,8 +82,8 @@ export default function EnrollmentConfirmation({ enrollment, isWaived, onDone })
       {needsSignature && (
         <DocuSignSigningPane
           enrollment={enrollment}
-          onSigned={() => {}}
-          onSkip={() => {}}
+          onSigned={onDone}
+          onSkip={onDone}
         />
       )}
 
