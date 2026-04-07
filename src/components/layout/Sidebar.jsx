@@ -2,107 +2,38 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import {
-  LayoutDashboard,
-  Briefcase,
-  Users,
-  BarChart2,
-  Award,
-  FileText,
-  ClipboardCheck,
-  RefreshCw,
-  AlertCircle,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Zap,
-  Building2,
-  BookOpen,
-  FileOutput,
-  TriangleAlert,
-  Calculator,
-  Heart,
-  Landmark,
-  UserCog,
-  Brain,
-  ServerCog,
-  HelpCircle,
-  ShieldCheck,
-  Scale,
-  CloudCog
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-
-const navGroups = [
-  {
-    label: "Core Workflow",
-    items: [
-      { path: "/", label: "Dashboard", icon: LayoutDashboard },
-      { path: "/cases", label: "Cases", icon: Briefcase },
-      { path: "/employers", label: "Employers", icon: Building2 },
-      { path: "/census", label: "Census", icon: Users },
-      { path: "/quotes", label: "Quotes", icon: FileText },
-      { path: "/contributions", label: "Contributions", icon: Calculator },
-      { path: "/proposals", label: "Proposals", icon: FileOutput },
-      { path: "/enrollment", label: "Enrollment", icon: ClipboardCheck },
-      { path: "/renewals", label: "Renewals", icon: RefreshCw },
-    ],
-  },
-  {
-    label: "Tools & Reference",
-    items: [
-      { path: "/plans", label: "Plan Library", icon: BookOpen },
-      { path: "/plan-rate-editor", label: "Rate Editor", icon: BarChart2 },
-      { path: "/plan-analytics", label: "Plan Analytics", icon: Award },
-      { path: "/plan-compliance", label: "Compliance Center", icon: ShieldCheck },
-      { path: "/plan-rating", label: "Rating Engine", icon: Zap },
-      { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
-      { path: "/tasks", label: "Tasks", icon: AlertCircle },
-      { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
-      { path: "/integration-infra", label: "Integration Infra", icon: ServerCog },
-      { path: "/salesforce", label: "Salesforce CRM", icon: CloudCog },
-      { path: "/aca-library", label: "ACA Library", icon: Scale },
-    ],
-  },
-  {
-    label: "Portals",
-    items: [
-      { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
-      { path: "/employee-portal", label: "Employee Portal", icon: Heart },
-      { path: "/employee-management", label: "Employee Mgmt", icon: UserCog },
-    ],
-  },
-];
-
-const bottomItems = [
-  { path: "/help", label: "Help Center", icon: HelpCircle },
-  { path: "/help-admin", label: "Help Console", icon: ShieldCheck },
-  { path: "/settings", label: "Settings", icon: Settings },
-];
+import { navGroups, bottomItems, sidebarBadgeConfigs } from "./sidebarConfig";
 
 export default function Sidebar({ collapsed, onToggle }) {
   const location = useLocation();
+
   const { data: pendingTasks = [] } = useQuery({
-    queryKey: ["tasks-pending"],
-    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 50),
+    queryKey: sidebarBadgeConfigs["/tasks"].queryKey,
+    queryFn: () => sidebarBadgeConfigs["/tasks"].queryFn(base44),
     refetchInterval: 60000,
   });
 
   const { data: openExceptions = [] } = useQuery({
-    queryKey: ["exceptions-open-count"],
-    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 100),
+    queryKey: sidebarBadgeConfigs["/exceptions"].queryKey,
+    queryFn: () => sidebarBadgeConfigs["/exceptions"].queryFn(base44),
     refetchInterval: 120000,
-    select: (data) => data.filter(e => !["resolved","dismissed"].includes(e.status)),
   });
 
   const { data: activeEnrollments = [] } = useQuery({
-    queryKey: ["enrollments-active-count"],
-    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 30),
+    queryKey: sidebarBadgeConfigs["/enrollment"].queryKey,
+    queryFn: () => sidebarBadgeConfigs["/enrollment"].queryFn(base44),
     refetchInterval: 120000,
-    select: (data) => data.filter(e => ["open","closing_soon"].includes(e.status)),
   });
+
+  const badgeCounts = {
+    "/tasks": sidebarBadgeConfigs["/tasks"].count(pendingTasks),
+    "/exceptions": sidebarBadgeConfigs["/exceptions"].count(openExceptions),
+    "/enrollment": sidebarBadgeConfigs["/enrollment"].count(activeEnrollments),
+  };
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
@@ -125,31 +56,25 @@ export default function Sidebar({ collapsed, onToggle }) {
         {!collapsed && (
           <span className="text-sm font-medium truncate flex-1">{item.label}</span>
         )}
-        {item.path === "/tasks" && pendingTasks.length > 0 && !collapsed && (
-          <span className="ml-auto text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-            {pendingTasks.length > 99 ? "99+" : pendingTasks.length}
+        {badgeCounts[item.path] > 0 && !collapsed && (
+          <span
+            className={cn(
+              "ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center",
+              sidebarBadgeConfigs[item.path]?.expandedClassName
+            )}
+          >
+            {badgeCounts[item.path] > 99 ? "99+" : badgeCounts[item.path]}
           </span>
         )}
-        {item.path === "/tasks" && pendingTasks.length > 0 && collapsed && (
-          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-destructive rounded-full border-2 border-sidebar" />
+        {badgeCounts[item.path] > 0 && collapsed && (
+          <span
+            className={cn(
+              "absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-sidebar",
+              sidebarBadgeConfigs[item.path]?.collapsedClassName
+            )}
+          />
         )}
-        {item.path === "/exceptions" && openExceptions.length > 0 && !collapsed && (
-          <span className="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-            {openExceptions.length > 99 ? "99+" : openExceptions.length}
-          </span>
-        )}
-        {item.path === "/exceptions" && openExceptions.length > 0 && collapsed && (
-          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-sidebar" />
-        )}
-        {item.path === "/enrollment" && activeEnrollments.length > 0 && !collapsed && (
-          <span className="ml-auto text-[10px] font-bold bg-blue-500 text-white rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-            {activeEnrollments.length}
-          </span>
-        )}
-        {item.path === "/enrollment" && activeEnrollments.length > 0 && collapsed && (
-          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-sidebar" />
-        )}
-        {active && !collapsed && pendingTasks.length === 0 && (
+        {active && !collapsed && !badgeCounts[item.path] && (
           <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-sidebar-primary-foreground/80" />
         )}
       </Link>
