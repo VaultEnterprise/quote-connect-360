@@ -1,133 +1,118 @@
-# Stage 1 — Application Route and Page Inventory
+# Stage 1 — Application Inventory
 
-Status: In Progress
-Date: 2026-04-06
-Scope: Full application inventory baseline for staged forensic validation
+## Executive Baseline
+- Audit date: 2026-04-07
+- Scope started: full application forensic validation
+- Current status: inventory established, page-by-page load validation in progress
 
-## Routes and Pages
+## Route Map
 
-### Broker Routes (AppLayout)
-- `/` — Dashboard
-- `/cases` — Cases
-- `/cases/new` — CaseNew
-- `/cases/:id` — CaseDetail
-- `/census` — Census
-- `/quotes` — Quotes
-- `/enrollment` — Enrollment
-- `/renewals` — Renewals
-- `/tasks` — Tasks
-- `/employers` — Employers
-- `/plans` — PlanLibrary
-- `/plans/:id` — PlanDetail
-- `/proposals` — ProposalBuilder
-- `/exceptions` — ExceptionQueue
-- `/contributions` — ContributionModeling
-- `/employee-management` — EmployeeManagement
-- `/help` — HelpCenter
-- `/aca-library` — ACALibrary
-- `/settings` — Settings
+### Broker routes — AppLayout
+| Page | Route | Parent navigation | Role visibility |
+|---|---|---|---|
+| Dashboard | `/` | Core Workflow > Dashboard | authenticated |
+| Cases | `/cases` | Core Workflow > Cases | authenticated |
+| New Case | `/cases/new` | contextual | authenticated |
+| Case Detail | `/cases/:id` | contextual from Cases | authenticated |
+| Census | `/census` | Core Workflow > Census | authenticated |
+| Quotes | `/quotes` | Core Workflow > Quotes | authenticated |
+| Enrollment | `/enrollment` | Core Workflow > Enrollment | authenticated |
+| Renewals | `/renewals` | Core Workflow > Renewals | authenticated |
+| Tasks | `/tasks` | Tools & Reference > Tasks | authenticated |
+| Employers | `/employers` | Core Workflow > Employers | authenticated |
+| Plan Library | `/plans` | Tools & Reference > Plan Library | authenticated |
+| Plan Detail | `/plans/:id` | contextual from Plan Library | authenticated |
+| Proposals | `/proposals` | Core Workflow > Proposals | authenticated |
+| Exceptions | `/exceptions` | Tools & Reference > Exceptions | authenticated |
+| Contributions | `/contributions` | Core Workflow > Contributions | authenticated |
+| Employee Management | `/employee-management` | Portals > Employee Mgmt | authenticated |
+| Help Center | `/help` | footer nav | authenticated |
+| ACA Library | `/aca-library` | Tools & Reference > ACA Library | authenticated |
+| Settings | `/settings` | footer nav | authenticated |
+| Help Admin | `/help-admin` | footer nav | admin only |
+| Help Dashboard | `/help-dashboard` | hidden admin route | admin only |
+| Help Coverage Report | `/help-coverage` | hidden admin route | admin only |
+| Help Analytics | `/help-analytics` | hidden admin route | admin only |
+| Help Target Registry | `/help-target-registry` | hidden admin route | admin only |
+| Help Manual Manager | `/help-manual-manager` | hidden admin route | admin only |
+| Plan Rate Editor | `/plan-rate-editor` | Tools & Reference > Rate Editor | admin only |
+| Plan Analytics | `/plan-analytics` | Tools & Reference > Plan Analytics | admin only |
+| Plan Compliance Center | `/plan-compliance` | Tools & Reference > Compliance Center | admin only |
+| Plan Rating Engine | `/plan-rating` | Tools & Reference > Rating Engine | admin only |
+| PolicyMatchAI | `/policymatch` | Tools & Reference > PolicyMatchAI | admin only |
+| Integration Infrastructure | `/integration-infra` | Tools & Reference > Integration Infra | admin only |
+| Salesforce CRM | `/salesforce` | Tools & Reference > Salesforce CRM | admin only |
 
-### Admin-Only Broker Routes
-- `/help-admin` — HelpAdmin
-- `/help-dashboard` — HelpDashboard
-- `/help-coverage` — HelpCoverageReport
-- `/help-analytics` — HelpSearchAnalytics
-- `/help-target-registry` — HelpTargetRegistry
-- `/help-manual-manager` — HelpManualManager
-- `/plan-rate-editor` — PlanRateEditor
-- `/plan-analytics` — PlanAnalyticsDashboard
-- `/plan-compliance` — PlanComplianceCenter
-- `/plan-rating` — PlanRatingEngine
-- `/policymatch` — PolicyMatchAI
-- `/integration-infra` — IntegrationInfrastructure
-- `/salesforce` — SalesforceIntegration
+### Portal routes — PortalLayout
+| Page | Route | Parent navigation | Role visibility |
+|---|---|---|---|
+| Employee Portal | `/employee-portal` | Portals > Employee Portal | external portal users |
+| Employee Enrollment | `/employee-enrollment` | contextual portal flow | external portal users |
+| Employee Benefits | `/employee-benefits` | contextual portal flow | external portal users |
+| Employer Portal | `/employer-portal` | Portals > Employer Portal | external portal users |
 
-### Portal Routes (PortalLayout)
-- `/employee-portal` — EmployeePortal
-- `/employee-enrollment` — EmployeeEnrollment
-- `/employee-benefits` — EmployeeBenefits
-- `/employer-portal` — EmployerPortal
+### Public routes
+| Page | Route | Parent navigation | Role visibility |
+|---|---|---|---|
+| Employee Portal Login | `/employee-portal-login` | direct/public | public |
+| Page Not Found | `*` | fallback | all |
 
-### Public Routes
-- `/employee-portal-login` — EmployeePortalLogin
+## Navigation Map
 
-## Feature Inventory by Page
+### Sidebar groups
+- Core Workflow: Dashboard, Cases, Employers, Census, Quotes, Contributions, Proposals, Enrollment, Renewals
+- Tools & Reference: Plan Library, Rate Editor, Plan Analytics, Compliance Center, Rating Engine, PolicyMatchAI, Tasks, Exceptions, Integration Infra, Salesforce CRM, ACA Library
+- Portals: Employer Portal, Employee Portal, Employee Mgmt
+- Footer: Help Center, Help Console, Settings
 
-- Dashboard: KPI dashboard, presets, refresh, filtered operational overview
-- Cases: list/pipeline views, bulk actions, analytics panels, quick create
-- CaseDetail: overview, stage advance, edit/clone/close, census/quotes/tasks/docs/activity tabs
-- Census: case selector, import workspace, version history, member table, risk and AI analysis
-- Quotes: scenario management, calculation, compare, bulk actions, saved views
-- Enrollment: enrollment windows, urgent filters, create modal
-- Renewals: list/pipeline/calendar, KPI filtering, bulk actions, detail modal
-- Tasks: grouped task operations, bulk complete/delete, task modal
-- Employers: employer CRUD, import, bulk actions, renewal dashboard, detail drawer
-- PlanLibrary: plan CRUD, imports, compare, analytics, reports, negotiation, guide modes
-- PlanDetail: plan workspace, schedules, rate detail, exports, edit
-- ProposalBuilder: proposal CRUD/view/reject, analytics, filters, bulk actions, pipeline
-- ExceptionQueue: exception queue, resolve/create, board, analytics, settings
-- ContributionModeling: model creation, ACA risk review, compare/export
-- EmployeePortal: enrollment entry/dashboard flow for employees
-- EmployeeManagement: roster, windows, status, DocuSign, analytics tabs
-- EmployeePortalLogin: token-based employee portal access
-- EmployeeEnrollment: portal enrollment wizard
-- EmployeeBenefits: portal benefits dashboard
-- EmployerPortal: employer-facing overview, proposals, enrollment, tasks, docs, communication
-- PolicyMatchAI: AI optimization runs, results, analytics, guide
-- IntegrationInfrastructure: infra reference and tooling panels
-- HelpCenter: searchable help topics and manual topics
-- HelpAdmin: help governance console and editor
-- HelpDashboard: help governance analytics dashboard
-- HelpCoverageReport: help coverage reporting
-- HelpSearchAnalytics: help search and AI analytics
-- HelpTargetRegistry: help target registry
-- HelpManualManager: long-form help topic manager
-- ACALibrary: ACA rules reference by state and federal rules
-- PlanRateEditor: rate schedule and legacy rate management
-- PlanAnalyticsDashboard: plan analytics
-- PlanComplianceCenter: plan compliance review
-- PlanRatingEngine: rating engine management
-- SalesforceIntegration: sync operations and sync visibility
-- Settings: settings panels (not yet fully inventoried)
+## Role / View Matrix
+- Authenticated standard user: broker pages except admin-only pages
+- Admin user: all broker pages including admin-only screens
+- External portal user: portal layout routes only
+- Public user: employee portal login, fallback routes
 
-## Workflow Inventory
-- Case creation
-- Case lifecycle progression
-- Census import and validation
-- Quote scenario calculation
-- Proposal creation/review/rejection
-- Enrollment window management
-- Employee enrollment portal workflow
-- Renewal planning and status management
-- Task assignment/completion
-- Employer CRUD and employer-to-case workflow
-- Plan creation/import/rating/compliance workflow
-- Exception triage and resolution
-- Contribution modeling and ACA review
-- Help authoring and AI-assisted help generation
-- Salesforce sync workflow
+## Shared Shell Dependencies
+- `App.jsx` — source-of-truth router and role gating
+- `components/layout/AppLayout.jsx` — broker shell
+- `components/layout/PortalLayout.jsx` — portal shell
+- `components/layout/Sidebar.jsx` + `components/layout/sidebarConfig.js` — primary navigation
+- `components/layout/TopBar.jsx` — global search, alerts, user menu
+- `components/shared/GlobalSearch.jsx` — cross-entity navigation helper
+- `components/shared/NotificationBell.jsx` — alert surface
+- `lib/routing/resolveRouteContext.js` / `hooks/useRouteContext.js` — shared route context
 
-## Role Access Matrix (Initial)
-- Admin-only route guard enforced in App.jsx for listed admin routes
-- Broker routes available to authenticated users
-- Employee/employer portal routes are separately laid out
-- Additional page-level role enforcement exists on some pages and requires further validation
+## Route Context Contracts
+- case-linked routes: Census, Quotes, Proposals, Enrollment, Employers, Employee Management, Tasks, Exceptions, Renewals
+- filter-linked route: Cases (`stageFilter`, `priorityFilter`, `quickView`, `stageGroup`)
+- detail route: Case Detail via path param only
 
-## Dependency Map (Initial)
-- Shared layouts: AppLayout, PortalLayout
-- Shared UI primitives: shadcn ui components
-- Shared data access: `base44.entities.*`, `base44.functions.invoke`, auth context
-- Domain models present for dashboard, cases, renewals, tasks, exceptions
-- Heavy use of modal/tab/drawer child components across page surfaces
-- Backend dependencies include quote calculation, help system functions, token verification, Salesforce sync, imports
+## High-Level Data Dependency Register
+- Dashboard: BenefitCase, CaseTask, EnrollmentWindow, RenewalCycle, Proposal, DashboardViewPreset
+- Cases: BenefitCase + related case-linked entities
+- Census: BenefitCase, CensusVersion, CensusMember, Document, ExceptionItem
+- Quotes: QuoteScenario, ScenarioPlan, ContributionModel, BenefitCase
+- Proposals: Proposal, QuoteScenario, BenefitCase
+- Enrollment: EnrollmentWindow, EnrollmentMember, EmployeeEnrollment, BenefitCase
+- Renewals: RenewalCycle, BenefitCase, EmployerGroup
+- Tasks: CaseTask, BenefitCase
+- Employers: EmployerGroup, BenefitCase
+- Plans / Rating: BenefitPlan, PlanRateSchedule, PlanRateDetail, PlanZipAreaMap, ImportRun, ImportException, CaseRatedResult
+- Exceptions: ExceptionItem, BenefitCase
+- Employee Management: EmployeeEnrollment, EnrollmentWindow, CensusMember
+- Help stack: Help* entities + manual content entities
+- Salesforce: Salesforce integration surface + employer/case linkage fields
 
-## Initial High-Risk Findings to Validate in Stage 2
-- Direct destructive actions still using browser confirm/alert in multiple pages
-- Several pages fetch broad datasets client-side and may need stronger backend/page-level role/data scoping validation
-- Some portal/help/infra surfaces appear documentation-heavy and need action-by-action validation, not load-only review
-- Some pages appear oversized and may hide incomplete subflows inside child components
+## Inventory Totals
+- Total explicit routed pages discovered: 37
+- Broker routed pages: 31
+- Portal routed pages: 4
+- Public/fallback routes: 2
+- Sidebar navigation links: 23
+- Hidden contextual/detail/admin routes: 14
 
-## Stage Boundary
-This document is inventory only.
-No major remediation is approved or completed yet.
-Next stage: page-by-page forensic inspection records and defect log.
+## Next Validation Sequence
+1. Broker core pages
+2. Admin-only broker pages
+3. Portal pages
+4. Public route pages
+5. Shared hidden/contextual routes and deep-link behavior
