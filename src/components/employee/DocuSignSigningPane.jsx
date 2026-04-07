@@ -53,11 +53,8 @@ export default function DocuSignSigningPane({ enrollment, onSigned, onSkip }) {
     if (["completed", "declined", "voided"].includes(status)) return;
     pollRef.current = setInterval(async () => {
       try {
-        const records = await base44.entities.EmployeeEnrollment.filter(
-          { employee_email: enrollment?.employee_email },
-          "-created_date",
-          1
-        );
+        if (!enrollment?.id) return;
+        const records = await base44.entities.EmployeeEnrollment.filter({ id: enrollment.id }, "-created_date", 1);
         const latest = records?.[0];
         if (latest?.docusign_status && latest.docusign_status !== status) {
           setStatus(latest.docusign_status);
