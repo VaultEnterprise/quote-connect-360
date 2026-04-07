@@ -192,7 +192,9 @@ export default function BenefitsDashboard({ enrollment, onPrint }) {
       </div>
 
       {/* Cost & OOP tracker (medical plans only) */}
-      {enrollment.selected_plan_name?.toLowerCase().includes("medical") && (
+      {(Array.isArray(enrollment.plan_elections)
+        ? enrollment.plan_elections.some((plan) => plan?.plan_type === "medical")
+        : !!enrollment.selected_plan_id) && (
         <div>
           <h2 className="text-sm font-semibold mb-3">Out-of-Pocket Tracker</h2>
           <Card>
