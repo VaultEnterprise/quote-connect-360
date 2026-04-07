@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,6 +74,18 @@ export default function EnrollmentWizard({
   const currentStep = steps[currentStepIndex];
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
+  const { data: availablePlans = [] } = useQuery({
+    queryKey: ["employee-enrollment-plans"],
+    queryFn: () => base44.entities.BenefitPlan.filter({ status: "active" }, "-created_date", 200),
+    enabled: !isWaiving,
+  });
+
+  const plansByType = useMemo(() => ({
+    medical: availablePlans.filter((plan) => plan.plan_type === "medical"),
+    dental: availablePlans.filter((plan) => plan.plan_type === "dental"),
+    vision: availablePlans.filter((plan) => plan.plan_type === "vision"),
+  }), [availablePlans]);
+
   const completeEnrollment = useMutation({
     mutationFn: () =>
       base44.entities.EmployeeEnrollment.update(activeEnrollment.id, {
@@ -132,7 +144,16 @@ export default function EnrollmentWizard({
     setSelectedPlans(prev => ({ ...prev, [plan.plan_type]: plan }));
   };
 
-  // canProceed is now handled directly in handleNext with user-visible error messages
+  const canProceed = () => {
+    if (currentStep.id === "welcome") return true;
+    if (currentStep.id === "coverage") return !!coverageTier;
+    if (currentStep.id === "plans") return Object.keys(selectedPlans).length > 0;
+    if (currentStep.id === "dependents") return true;
+    if (currentStep.id === "waiver") return !!waiverReason;
+    if (currentStep.id === "review") return !!acknowledged;
+    return true;
+  };
+
 
   if (showConfirmation) {
     return (
@@ -296,11 +317,7 @@ export default function EnrollmentWizard({
                 <div className="space-y-4 sm:space-y-6">
                   {/* Using enhanced plan selection with better comparison UX */}
                   <PlanSelectionEnhanced
-                    plans={{
-                      medical: [], // Will be populated from scenario data
-                      dental: [],
-                      vision: [],
-                    }}
+                    plans={plansByType}
                     selectedPlans={selectedPlans}
                     onSelect={handleSelectPlan}
                     onCompare={(plan) => {

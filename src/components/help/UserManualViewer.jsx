@@ -109,7 +109,7 @@ export default function UserManualViewer({ manual, onClose }) {
                 <span>📋</span> Setup Steps
               </h3>
               <div className="space-y-3">
-                {manual.setup_steps.map((step, i) => (
+                {currentManual.setup_steps.map((step, i) => (
                   <div key={i} className="flex gap-3">
                     <div className="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center flex-shrink-0 font-bold">
                       {step.step}
@@ -132,13 +132,13 @@ export default function UserManualViewer({ manual, onClose }) {
           )}
 
           {/* Best Practices */}
-          {manual.best_practices && manual.best_practices.length > 0 && (
+          {currentManual.best_practices && currentManual.best_practices.length > 0 && (
             <div className="border rounded-lg p-4 space-y-3 bg-emerald-50/30 border-emerald-200">
               <h3 className="font-semibold text-sm flex items-center gap-2 text-emerald-900">
                 <span>✨</span> Best Practices
               </h3>
               <ul className="text-xs text-emerald-800 space-y-2 ml-2">
-                {manual.best_practices.map((practice, i) => (
+                {currentManual.best_practices.map((practice, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="flex-shrink-0">✓</span>
                     <span>{practice}</span>
@@ -149,13 +149,13 @@ export default function UserManualViewer({ manual, onClose }) {
           )}
 
           {/* Common Issues */}
-          {manual.common_issues && manual.common_issues.length > 0 && (
+          {currentManual.common_issues && currentManual.common_issues.length > 0 && (
             <div className="border rounded-lg p-4 space-y-3 bg-amber-50/30 border-amber-200">
               <h3 className="font-semibold text-sm flex items-center gap-2 text-amber-900">
                 <span>🔧</span> Troubleshooting
               </h3>
               <div className="space-y-2">
-                {manual.common_issues.map((item, i) => (
+                {currentManual.common_issues.map((item, i) => (
                   <div key={i}>
                     <p className="text-xs font-semibold text-amber-900">Q: {item.issue}</p>
                     <p className="text-xs text-amber-800 mt-1">A: {item.solution}</p>
@@ -166,11 +166,11 @@ export default function UserManualViewer({ manual, onClose }) {
           )}
 
           {/* Screenshots */}
-          {manual.screenshot_urls && manual.screenshot_urls.length > 0 && (
+          {currentManual.screenshot_urls && currentManual.screenshot_urls.length > 0 && (
             <div className="border rounded-lg p-4 space-y-3">
               <h3 className="font-semibold text-sm">📸 Screenshots</h3>
               <div className="grid grid-cols-2 gap-3">
-                {manual.screenshot_urls.map((url, i) => (
+                {currentManual.screenshot_urls.map((url, i) => (
                   <img
                     key={i}
                     src={url}
@@ -183,13 +183,13 @@ export default function UserManualViewer({ manual, onClose }) {
           )}
 
           {/* Video */}
-          {manual.video_url && (
+          {currentManual.video_url && (
             <div className="border rounded-lg p-4 space-y-3">
               <h3 className="font-semibold text-sm">🎥 Tutorial Video</h3>
               <iframe
                 width="100%"
                 height="315"
-                src={manual.video_url}
+                src={currentManual.video_url}
                 title="Tutorial"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -200,7 +200,7 @@ export default function UserManualViewer({ manual, onClose }) {
           )}
 
           {/* Related Manuals */}
-          {manual.related_manuals && manual.related_manuals.length > 0 && (
+          {currentManual.related_manuals && currentManual.related_manuals.length > 0 && (
             <div className="border rounded-lg p-4 space-y-2 bg-blue-50/30 border-blue-200">
               <h3 className="font-semibold text-sm text-blue-900">📚 Related Topics</h3>
               <p className="text-xs text-blue-800">See also: {manual.related_manuals.join(", ")}</p>
