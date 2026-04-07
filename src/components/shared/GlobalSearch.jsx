@@ -73,23 +73,24 @@ export default function GlobalSearch({ className }) {
       const q = debouncedQuery.toLowerCase();
       try {
         const [cases, employers, proposals, tasks] = await Promise.all([
-          base44.entities.BenefitCase.list("-created_date", 100),
-          base44.entities.EmployerGroup.list("-created_date", 100),
-          base44.entities.Proposal.list("-created_date", 50),
-          base44.entities.CaseTask.list("-created_date", 50),
+          base44.entities.BenefitCase.list("-created_date", 40),
+          base44.entities.EmployerGroup.list("-created_date", 40),
+          base44.entities.Proposal.list("-created_date", 25),
+          base44.entities.CaseTask.list("-created_date", 25),
         ]);
 
+        const normalizedQuery = q.trim();
         const r = [];
-        cases.filter(c => c.employer_name?.toLowerCase().includes(q) || c.case_number?.toLowerCase().includes(q)).slice(0, 4).forEach(c =>
+        cases.filter(c => c.employer_name?.toLowerCase().includes(normalizedQuery) || c.case_number?.toLowerCase().includes(normalizedQuery)).slice(0, 4).forEach(c =>
           r.push({ type: "case", id: c.id, label: c.employer_name || "Unnamed", sub: c.case_number || `#${c.id.slice(-6)}`, badge: c.stage?.replace(/_/g, " "), path: `/cases/${c.id}` })
         );
-        employers.filter(e => e.name?.toLowerCase().includes(q) || e.ein?.includes(q)).slice(0, 3).forEach(e =>
+        employers.filter(e => e.name?.toLowerCase().includes(normalizedQuery) || e.ein?.includes(normalizedQuery)).slice(0, 3).forEach(e =>
           r.push({ type: "employer", id: e.id, label: e.name, sub: e.city ? `${e.city}, ${e.state}` : e.industry, path: `/employers` })
         );
-        proposals.filter(p => p.title?.toLowerCase().includes(q) || p.employer_name?.toLowerCase().includes(q)).slice(0, 3).forEach(p =>
+        proposals.filter(p => p.title?.toLowerCase().includes(normalizedQuery) || p.employer_name?.toLowerCase().includes(normalizedQuery)).slice(0, 3).forEach(p =>
           r.push({ type: "proposal", id: p.id, label: p.title, sub: p.employer_name, badge: p.status, path: `/proposals` })
         );
-        tasks.filter(t => t.title?.toLowerCase().includes(q) || t.employer_name?.toLowerCase().includes(q)).slice(0, 2).forEach(t =>
+        tasks.filter(t => t.title?.toLowerCase().includes(normalizedQuery) || t.employer_name?.toLowerCase().includes(normalizedQuery)).slice(0, 2).forEach(t =>
           r.push({ type: "task", id: t.id, label: t.title, sub: t.employer_name, badge: t.status, path: `/tasks` })
         );
         setResults(r);

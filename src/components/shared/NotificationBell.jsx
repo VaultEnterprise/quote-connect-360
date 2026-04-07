@@ -36,6 +36,9 @@ function useAlerts() {
   });
 
   const alerts = [];
+  const nextWeek = addDays(today, 7);
+  const nextFiveDays = addDays(today, 5);
+  const nextNinetyDays = addDays(today, 90);
 
   // Overdue tasks
   tasks.filter(t => t.due_date && isPast(new Date(t.due_date))).slice(0, 5).forEach(t =>
@@ -51,7 +54,7 @@ function useAlerts() {
   );
 
   // Expiring quotes (within 7 days)
-  scenarios.filter(s => s.expires_at && isWithinInterval(new Date(s.expires_at), { start: today, end: addDays(today, 7) })).slice(0, 3).forEach(s =>
+  scenarios.filter(s => s.expires_at && isWithinInterval(new Date(s.expires_at), { start: today, end: nextWeek })).slice(0, 3).forEach(s =>
     alerts.push({
       id: `quote-expiring-${s.id}`,
       type: "warning",
@@ -64,7 +67,7 @@ function useAlerts() {
   );
 
   // Closing enrollments
-  enrollments.filter(e => ["open","closing_soon"].includes(e.status) && e.end_date && isWithinInterval(new Date(e.end_date), { start: today, end: addDays(today, 5) })).slice(0, 3).forEach(e =>
+  enrollments.filter(e => ["open","closing_soon"].includes(e.status) && e.end_date && isWithinInterval(new Date(e.end_date), { start: today, end: nextFiveDays })).slice(0, 3).forEach(e =>
     alerts.push({
       id: `enroll-closing-${e.id}`,
       type: "warning",
@@ -77,7 +80,7 @@ function useAlerts() {
   );
 
   // Upcoming renewals (within 90 days)
-  renewals.filter(r => r.renewal_date && isWithinInterval(new Date(r.renewal_date), { start: today, end: addDays(today, 90) }) && !["completed"].includes(r.status)).slice(0, 3).forEach(r =>
+  renewals.filter(r => r.renewal_date && isWithinInterval(new Date(r.renewal_date), { start: today, end: nextNinetyDays }) && !["completed"].includes(r.status)).slice(0, 3).forEach(r =>
     alerts.push({
       id: `renewal-${r.id}`,
       type: "info",
