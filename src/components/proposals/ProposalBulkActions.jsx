@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, FileDown, Mail, Send } from "lucide-react";
 
-export default function ProposalBulkActions({ selectedCount, proposals, onBulkAction }) {
+export default function ProposalBulkActions({ selectedIds = [], selectedCount, proposals }) {
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
     setLoading(true);
-    const selectedProposals = proposals.filter(p => p.selected);
+    const selectedProposals = proposals.filter((p) => selectedIds.includes(p.id));
     const csv = [
       ["Title", "Employer", "Status", "Value", "Broker", "Sent Date"],
       ...selectedProposals.map(p => [
@@ -42,10 +42,10 @@ export default function ProposalBulkActions({ selectedCount, proposals, onBulkAc
           <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={handleExport} disabled={loading}>
             <FileDown className="w-3 h-3" /> Export CSV
           </Button>
-          <Button size="sm" variant="outline" className="text-xs h-7 gap-1">
+          <Button size="sm" variant="outline" className="text-xs h-7 gap-1" disabled>
             <Send className="w-3 h-3" /> Send Reminder
           </Button>
-          <Button size="sm" variant="outline" className="text-xs h-7 gap-1">
+          <Button size="sm" variant="outline" className="text-xs h-7 gap-1" disabled>
             <Mail className="w-3 h-3" /> Email Brokers
           </Button>
         </div>

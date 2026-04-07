@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function PolicyMatchComparisonMatrix({ results }) {
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(results.slice(0, 2).map((r) => r.id));
 
   const toggleResult = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(rid => rid !== id) : [...prev.slice(-2), id]);
@@ -18,7 +17,7 @@ export default function PolicyMatchComparisonMatrix({ results }) {
     return (
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="p-6 text-center text-xs text-muted-foreground">
-          Select up to 3 results to compare side-by-side details.
+          The first 2 results are auto-selected when available; remove any column to compare different results.
         </CardContent>
       </Card>
     );

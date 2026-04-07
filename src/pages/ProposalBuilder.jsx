@@ -374,7 +374,7 @@ export default function ProposalBuilder() {
       )}
 
           {/* Bulk action bar */}
-          {selectedIds.length > 0 && <ProposalBulkActions selectedCount={selectedIds.length} proposals={filtered} />}
+          {selectedIds.length > 0 && <ProposalBulkActions selectedIds={selectedIds} selectedCount={selectedIds.length} proposals={filtered} />}
 
           {/* Content */}
           {isLoading ? (
