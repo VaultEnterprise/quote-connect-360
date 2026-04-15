@@ -5,7 +5,6 @@ import { base44 } from "@/api/base44Client";
 import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { navGroups, bottomItems, sidebarBadgeConfigs } from "./sidebarConfig";
 
 export default function Sidebar({ collapsed, onToggle }) {
@@ -45,6 +44,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     const linkContent = (
       <Link
         to={item.path}
+        title={collapsed ? item.label : undefined}
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
           active
@@ -80,22 +80,10 @@ export default function Sidebar({ collapsed, onToggle }) {
       </Link>
     );
 
-    if (collapsed) {
-      return (
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-          <TooltipContent side="right" sideOffset={8}>
-            {item.label}
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-
     return linkContent;
   };
 
   return (
-    <TooltipProvider>
       <div
         className={cn(
           "fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border flex flex-col z-40 transition-all duration-300",
@@ -147,6 +135,5 @@ export default function Sidebar({ collapsed, onToggle }) {
           </Button>
         </div>
       </div>
-    </TooltipProvider>
   );
 }
