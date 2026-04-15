@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ClipboardCheck, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { differenceInDays, format } from "date-fns";
 
 export default function EnrollmentCountdowns({ enrollments }) {
@@ -44,7 +43,12 @@ export default function EnrollmentCountdowns({ enrollments }) {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Progress value={participation} className="h-1.5 flex-1" />
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all"
+                        style={{ width: `${Math.max(0, Math.min(participation, 100))}%` }}
+                      />
+                    </div>
                     <span className="text-[11px] text-muted-foreground flex-shrink-0 w-10 text-right">
                       {participation}%
                     </span>
