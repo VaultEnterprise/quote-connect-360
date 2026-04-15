@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
 import { buildRoute } from "@/lib/routing/buildRoute";
@@ -89,9 +88,13 @@ export default function InteractivePipeline({ cases = [] }) {
                 >
                   View all <ExternalLink className="w-3 h-3" />
                 </Link>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveStage(null)}>
+                <button
+                  type="button"
+                  className="flex h-7 w-7 items-center justify-center rounded-md p-0 transition-colors hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => setActiveStage(null)}
+                >
                   <ChevronUp className="w-4 h-4" />
-                </Button>
+                </button>
               </div>
             </div>
 
