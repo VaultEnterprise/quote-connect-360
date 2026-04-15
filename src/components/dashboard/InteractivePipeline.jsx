@@ -83,10 +83,11 @@ export default function InteractivePipeline({ cases = [] }) {
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <Link to="/cases">
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
-                    View all <ExternalLink className="w-3 h-3" />
-                  </Button>
+                <Link
+                  to="/cases"
+                  className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-foreground hover:bg-accent hover:text-accent-foreground"
+                >
+                  View all <ExternalLink className="w-3 h-3" />
                 </Link>
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveStage(null)}>
                   <ChevronUp className="w-4 h-4" />
