@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format, differenceInDays } from "date-fns";
@@ -102,14 +101,14 @@ export default function Dashboard() {
     return timestamps.length === 0 ? "" : format(new Date(Math.max(...timestamps)), "MMM d, yyyy h:mm a");
   }, [casesUpdatedAt, tasksUpdatedAt, enrollmentsUpdatedAt, renewalsUpdatedAt, scenariosUpdatedAt, exceptionsUpdatedAt, proposalsUpdatedAt, agenciesUpdatedAt, presetsUpdatedAt]);
 
-  const [showSaveViewDialog, setShowSaveViewDialog] = useState(false);
+  const [showSaveViewPanel, setShowSaveViewPanel] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
 
   const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
   const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([["cases"],["tasks-pending"],["enrollments"],["renewals"],["scenarios-all"],["exceptions"],["proposals"],["agencies"],DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
   const handleSaveView = () => {
     setSaveViewName("");
-    setShowSaveViewDialog(true);
+    setShowSaveViewPanel(true);
   };
 
   const handleSaveViewConfirm = async () => {
@@ -122,7 +121,7 @@ export default function Dashboard() {
       is_default: false,
     });
     await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
-    setShowSaveViewDialog(false);
+    setShowSaveViewPanel(false);
   };
   const handlePresetChange = (presetId) => {
     if (presetId === "none") { setSelectedPresetId("none"); return; }
@@ -179,6 +178,31 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" description="Benefits operations overview" />
       <DashboardControls filters={filters} options={options} presets={presets} selectedPresetId={selectedPresetId} onChange={handleFilterChange} onPresetChange={handlePresetChange} onSaveView={handleSaveView} onSetDefault={handleSetDefault} onRefresh={handleRefresh} isRefreshing={isRefreshing} lastUpdated={lastUpdated} />
       <QuickActions />
+      {showSaveViewPanel && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Save Dashboard View</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="view-name">View Name</Label>
+              <Input
+                id="view-name"
+                className="mt-1.5"
+                placeholder="e.g. My Open Cases View"
+                value={saveViewName}
+                onChange={(e) => setSaveViewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSaveViewConfirm(); }}
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowSaveViewPanel(false)}>Cancel</Button>
+              <Button onClick={handleSaveViewConfirm} disabled={!saveViewName.trim()}>Save View</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <CensusGapAlert cases={scopedData.currentCases} />
       <TodaysPriorities tasks={scopedData.currentTasks} exceptions={scopedData.currentExceptions} cases={scopedData.currentCases} enrollments={scopedData.currentEnrollments} />
       <DashboardMetricGrid summary={summary} />
@@ -203,29 +227,6 @@ export default function Dashboard() {
           <CardContent><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{scopedData.currentRenewals.slice(0, 6).map((item) => { const daysUntil = item.renewal_date ? differenceInDays(new Date(item.renewal_date), new Date()) : null; return <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors"><div><p className="text-sm font-medium">{item.employer_name || "Unknown"}</p><p className="text-xs text-muted-foreground">{item.renewal_date ? format(new Date(item.renewal_date), "MMM d, yyyy") : "TBD"}</p></div><div className="flex items-center gap-2">{daysUntil !== null && <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold ${daysUntil <= 30 ? "bg-red-100 text-red-700" : daysUntil <= 60 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{daysUntil}d</span>}<span className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground capitalize">{item.status?.replace(/_/g, " ") || "unknown"}</span></div></div>; })}</div></CardContent>
         </Card>
       )}
-      <Dialog open={showSaveViewDialog} onOpenChange={setShowSaveViewDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Save Dashboard View</DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <Label htmlFor="view-name">View Name</Label>
-            <Input
-              id="view-name"
-              className="mt-1.5"
-              placeholder="e.g. My Open Cases View"
-              value={saveViewName}
-              onChange={(e) => setSaveViewName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSaveViewConfirm(); }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSaveViewDialog(false)}>Cancel</Button>
-            <Button onClick={handleSaveViewConfirm} disabled={!saveViewName.trim()}>Save View</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
