@@ -45,13 +45,18 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: user, isLoading: isUserLoading } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
-  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases"], queryFn: () => base44.entities.BenefitCase.list("-created_date", 100) });
-  const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending"], queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) });
-  const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments"], queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100) });
-  const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals"], queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100) });
-  const { data: scenarios = [], dataUpdatedAt: scenariosUpdatedAt } = useQuery({ queryKey: ["scenarios-all"], queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100) });
-  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions"], queryFn: () => base44.entities.ExceptionItem.list("-created_date", 100) });
-  const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals"], queryFn: () => base44.entities.Proposal.list("-created_date", 100) });
+  const scopedList = (entity, sort, limit = 100) =>
+    user?.role === "admin"
+      ? base44.entities[entity].list(sort, limit)
+      : base44.entities[entity].filter({ assigned_to: user?.email }, sort, limit);
+
+  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("BenefitCase", "-created_date", 100) });
+  const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending", user?.email, user?.role], enabled: !!user, queryFn: () => user?.role === "admin" ? base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) : base44.entities.CaseTask.filter({ status: "pending", assigned_to: user?.email }, "-created_date", 200) });
+  const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("EnrollmentWindow", "-created_date", 100) });
+  const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("RenewalCycle", "-renewal_date", 100) });
+  const { data: scenarios = [], dataUpdatedAt: scenariosUpdatedAt } = useQuery({ queryKey: ["scenarios-all", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("QuoteScenario", "-created_date", 100) });
+  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("ExceptionItem", "-created_date", 100) });
+  const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("Proposal", "-created_date", 100) });
   const { data: agencies = [], dataUpdatedAt: agenciesUpdatedAt } = useQuery({ queryKey: ["agencies"], queryFn: () => base44.entities.Agency.list("name", 100) });
   const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({ queryKey: DASHBOARD_PRESET_QUERY_KEY, enabled: !!user?.email, queryFn: () => base44.entities.DashboardViewPreset.filter({ created_by: user.email }, "name", 50) });
 

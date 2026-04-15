@@ -52,13 +52,19 @@ export default function Quotes() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: scenarios = [], isLoading } = useQuery({
-    queryKey: ["scenarios-all"],
-    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 200),
+    queryKey: ["scenarios-all", currentUser?.email, currentUser?.role],
+    enabled: !!currentUser,
+    queryFn: () => currentUser?.role === "admin"
+      ? base44.entities.QuoteScenario.list("-created_date", 200)
+      : base44.entities.QuoteScenario.filter({ assigned_to: currentUser?.email }, "-created_date", 200),
   });
 
   const { data: cases = [] } = useQuery({
-    queryKey: ["cases"],
-    queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
+    queryKey: ["cases", currentUser?.email, currentUser?.role],
+    enabled: !!currentUser,
+    queryFn: () => currentUser?.role === "admin"
+      ? base44.entities.BenefitCase.list("-created_date", 100)
+      : base44.entities.BenefitCase.filter({ assigned_to: currentUser?.email }, "-created_date", 100),
   });
 
   const caseMap = useMemo(() => Object.fromEntries(cases.map(c => [c.id, c])), [cases]);
