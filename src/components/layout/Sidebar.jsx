@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { navGroups, bottomItems, sidebarBadgeConfigs } from "./sidebarConfig";
 
 export default function Sidebar({ collapsed, onToggle }) {
@@ -125,14 +124,13 @@ export default function Sidebar({ collapsed, onToggle }) {
           {bottomItems.map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={onToggle}
-            className="w-full justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent mt-2"
+            className="mt-2 flex w-full justify-center rounded-md px-3 py-2 text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
+          </button>
         </div>
       </div>
   );
