@@ -1,4 +1,3 @@
-import React from "react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
