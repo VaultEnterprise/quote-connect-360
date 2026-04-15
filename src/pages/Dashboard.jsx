@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { format, differenceInDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -184,7 +183,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="view-name">View Name</Label>
+              <label htmlFor="view-name" className="text-sm font-medium leading-none">View Name</label>
               <Input
                 id="view-name"
                 className="mt-1.5"
