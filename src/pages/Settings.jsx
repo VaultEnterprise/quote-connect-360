@@ -40,6 +40,7 @@ export default function Settings() {
 
   const agency = agencies[0];
   const [agencyForm, setAgencyForm] = useState(null);
+  const availableInviteRoles = user?.role === "admin" ? ["user", "admin"] : ["user"];
 
   useEffect(() => {
     if (agency && !agencyForm) {
@@ -68,6 +69,10 @@ export default function Settings() {
   const handleInvite = async (e) => {
     e.preventDefault();
     if (!inviteEmail) return;
+    if (inviteRole === "admin" && user?.role !== "admin") {
+      toast({ title: "Invite failed", description: "Only admins can invite other admins.", variant: "destructive" });
+      return;
+    }
     setInviting(true);
     try {
       await base44.users.inviteUser(inviteEmail, inviteRole);
@@ -87,6 +92,12 @@ export default function Settings() {
   });
 
   const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    if (!availableInviteRoles.includes(inviteRole)) {
+      setInviteRole(availableInviteRoles[0]);
+    }
+  }, [availableInviteRoles, inviteRole]);
 
   return (
     <div className="space-y-6">
@@ -259,8 +270,9 @@ export default function Settings() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
+                          {availableInviteRoles.map((role) => (
+                            <SelectItem key={role} value={role}>{role === "admin" ? "Admin" : "User"}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

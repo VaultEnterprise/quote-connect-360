@@ -122,7 +122,7 @@ export default function InteractivePipeline({ cases = [] }) {
                 </Link>
               ))}
               {selectedGroup.count > 10 && (
-                <Link to={buildRoute("cases", { stageGroup: selectedGroup.key })} className="block">
+                <Link to={`/cases?stageGroup=${selectedGroup.key}`} className="block">
                   <div className="px-4 py-2.5 text-center text-xs text-muted-foreground hover:text-primary hover:bg-muted/30 transition-colors">
                     +{selectedGroup.count - 10} more cases → View all
                   </div>

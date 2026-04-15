@@ -92,14 +92,8 @@ export default function EmployeePortalLogin() {
 
     setResendingInvite(true);
     try {
-      const matches = await base44.entities.EmployeeEnrollment.filter({ employee_email: normalizedEmail }, "-created_date", 1);
-      if (!matches?.length) {
-        toast({ title: "Invitation not found", description: "No enrollment invitation was found for that email.", variant: "destructive" });
-        return;
-      }
-
-      await base44.functions.invoke("sendEnrollmentInvite", { enrollment_id: matches[0].id });
-      toast({ title: "Invitation sent", description: "Your enrollment email has been resent." });
+      await base44.functions.invoke("sendEnrollmentInvite", { email: normalizedEmail });
+      toast({ title: "If found, invitation sent", description: "If an enrollment exists for that email, the invitation has been resent." });
       setShowResend(false);
       setResetEmail("");
     } catch (err) {

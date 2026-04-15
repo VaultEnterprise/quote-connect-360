@@ -29,14 +29,24 @@ export default function EmployerPortal() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const employerGroupId = searchParams.get("employer_id") || null;
+
+  if (!employerGroupId) {
+    return (
+      <div className="max-w-xl mx-auto py-20">
+        <EmptyState
+          icon={Building2}
+          title="Employer Access Required"
+          description="This portal link is missing the employer access context. Please use the link provided by your broker or administrator."
+        />
+      </div>
+    );
+  }
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Data ────────────────────────────────────────────────────────────────────
-  // TODO: This query should be scoped by the employer's user account via backend RLS.
-  // For now we limit to 50 records. Proper fix: implement employer-specific auth tokens
-  // or filter by employer_group_id linked to the authenticated user's account.
+  // Portal is hard-scoped by employer_id query param until dedicated employer auth is added.
   const { data: cases = [] } = useQuery({
     queryKey: ["employer-cases", employerGroupId],
     queryFn: () => employerGroupId
@@ -326,7 +336,7 @@ export default function EmployerPortal() {
              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quick Links</p>
              <div className="space-y-1.5">
                <button onClick={() => navigate("/help")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-primary font-medium">
-                 ? Help Center
+                 Help Center
                </button>
                <button onClick={() => navigate("/employer-portal")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-foreground font-medium">
                  ↻ Refresh Portal
