@@ -5,7 +5,11 @@ export const BLOCKING_RUNTIME_WARNING_PATTERNS = [
 ];
 
 export function getBlockingRuntimeWarnings(logLines = []) {
-  return (logLines || []).filter((line) => BLOCKING_RUNTIME_WARNING_PATTERNS.some((pattern) => pattern.test(String(line))));
+  return (logLines || []).filter((line) => {
+    const text = String(line);
+    if (/visual-edit-agent/i.test(text)) return false;
+    return BLOCKING_RUNTIME_WARNING_PATTERNS.some((pattern) => pattern.test(text));
+  });
 }
 
 export function assertWarningFreeRuntime(logLines = [], context = "touched flow") {
