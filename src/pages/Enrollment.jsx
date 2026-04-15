@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 import { ClipboardCheck, Plus, Search, Filter, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +18,7 @@ const STATUS_ORDER = { open: 0, closing_soon: 1, scheduled: 2, closed: 3, finali
 
 export default function Enrollment() {
   const routeContext = useRouteContext();
+  const { user } = useAuth();
   const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
@@ -24,8 +26,11 @@ export default function Enrollment() {
   const [showUrgentOnly, setShowUrgentOnly] = useState(false);
 
   const { data: enrollments = [], isLoading } = useQuery({
-    queryKey: ["enrollments-all"],
-    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
+    queryKey: ["enrollments-all", user?.email, user?.role],
+    enabled: !!user,
+    queryFn: () => user?.role === "admin"
+      ? base44.entities.EnrollmentWindow.list("-created_date", 100)
+      : base44.entities.EnrollmentWindow.filter({ assigned_to: user?.email }, "-created_date", 100),
   });
 
   const now = new Date();

@@ -222,8 +222,11 @@ export default function Employers() {
   const [showRenewalDashboard, setShowRenewalDashboard] = useState(false);
 
   const { data: employers = [] } = useQuery({
-    queryKey: ["employers"],
-    queryFn: () => base44.entities.EmployerGroup.list("-created_date", 100),
+    queryKey: ["employers", user?.email, user?.role],
+    enabled: !!user,
+    queryFn: () => user?.role === "admin"
+      ? base44.entities.EmployerGroup.list("-created_date", 100)
+      : base44.entities.EmployerGroup.filter({ assigned_to: user?.email }, "-created_date", 100),
   });
 
   const { data: agencies = [] } = useQuery({
@@ -232,8 +235,11 @@ export default function Employers() {
   });
 
   const { data: cases = [] } = useQuery({
-    queryKey: ["cases"],
-    queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
+    queryKey: ["cases", user?.email, user?.role],
+    enabled: !!user,
+    queryFn: () => user?.role === "admin"
+      ? base44.entities.BenefitCase.list("-created_date", 200)
+      : base44.entities.BenefitCase.filter({ assigned_to: user?.email }, "-created_date", 200),
   });
 
   const { data: documents = [] } = useQuery({
