@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import GlobalSearch from "@/components/shared/GlobalSearch";
@@ -50,9 +49,9 @@ export default function TopBar({ onMobileMenuClick }) {
             onClick={() => setMenuOpen((current) => !current)}
             className="flex h-9 items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent hover:text-accent-foreground"
           >
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{initials}</AvatarFallback>
-            </Avatar>
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+              {initials}
+            </div>
             <span className="hidden text-sm font-medium sm:inline">{user?.full_name || "User"}</span>
           </button>
 
