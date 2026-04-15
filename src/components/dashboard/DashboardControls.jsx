@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Bookmark, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DATE_RANGE_OPTIONS, DASHBOARD_VIEW_OPTIONS } from "@/utils/dashboardControls";
 import { STAGE_OPTIONS } from "@/contracts/workflowRegistry";
@@ -93,9 +92,9 @@ export default function DashboardControls({
               {option.label}
             </Button>
           ))}
-          <Badge variant="outline" className="h-8 px-3 text-xs">
+          <span className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs text-foreground">
             Comparing to previous period
-          </Badge>
+          </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

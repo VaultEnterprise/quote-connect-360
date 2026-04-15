@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Clock, Pause } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { differenceInDays, format } from "date-fns";
 
 export default function TodaysPriorities({ tasks, exceptions, cases, enrollments }) {
@@ -89,7 +88,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-orange-500" />
             Today's Priorities
-            <Badge className="bg-orange-100 text-orange-700 text-[10px] ml-1">{items.length}</Badge>
+            <span className="ml-1 inline-flex items-center rounded-md bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">{items.length}</span>
           </CardTitle>
         </div>
       </CardHeader>
