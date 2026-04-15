@@ -17,6 +17,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import TaskModal from "@/components/cases/TaskModal";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { format, isToday, isTomorrow, isPast, isThisWeek } from "date-fns";
 import useRouteContext from "@/hooks/useRouteContext";
 import useTasksPageModel from "@/domain/tasks/useTasksPageModel";
@@ -213,6 +214,8 @@ export default function Tasks() {
   const [editingTask, setEditingTask] = useState(null);
   const [collapsed, setCollapsed] = useState({});
   const [selected, setSelected] = useState([]);
+  const [deleteTaskId, setDeleteTaskId] = useState(null);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const {
     cases,
@@ -354,7 +357,7 @@ export default function Tasks() {
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => bulkComplete.mutate()} disabled={bulkComplete.isPending}>
             <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Mark Complete
           </Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs text-destructive border-destructive/30" onClick={() => bulkDelete.mutate()} disabled={bulkDelete.isPending}>
+          <Button size="sm" variant="outline" className="h-7 text-xs text-destructive border-destructive/30" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDelete.isPending}>
             <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Delete
           </Button>
           <Button size="sm" variant="ghost" className="h-7 text-xs ml-auto" onClick={() => setSelected([])}>Clear</Button>
@@ -395,7 +398,7 @@ export default function Tasks() {
               collapsed={!!collapsed[g.key]}
               onToggle={() => toggleGroup(g.key)}
               onEdit={(t) => { setEditingTask(t); setShowModal(true); }}
-              onDelete={(id) => deleteTask.mutate(id)}
+              onDelete={(id) => setDeleteTaskId(id)}
               onStatusChange={(t) => toggleStatus.mutate(t)}
               selected={selected}
               onSelect={handleSelect}
@@ -414,6 +417,30 @@ export default function Tasks() {
           onClose={() => { setShowModal(false); setEditingTask(null); }}
         />
       )}
+      <ConfirmDialog
+        open={!!deleteTaskId}
+        onClose={() => setDeleteTaskId(null)}
+        onConfirm={() => {
+          deleteTask.mutate(deleteTaskId);
+          setDeleteTaskId(null);
+        }}
+        title="Delete task?"
+        description="This task will be permanently deleted."
+        confirmLabel="Delete task"
+        destructive
+      />
+      <ConfirmDialog
+        open={showBulkDeleteConfirm}
+        onClose={setShowBulkDeleteConfirm}
+        onConfirm={() => {
+          bulkDelete.mutate();
+          setShowBulkDeleteConfirm(false);
+        }}
+        title="Delete selected tasks?"
+        description={`Permanently delete ${selected.length} selected task(s)? This cannot be undone.`}
+        confirmLabel="Delete tasks"
+        destructive
+      />
     </div>
   );
 }

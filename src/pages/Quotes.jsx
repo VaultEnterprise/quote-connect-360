@@ -24,6 +24,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
 import useRouteContext from "@/hooks/useRouteContext";
 import { useAuth } from "@/lib/AuthContext";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
@@ -48,6 +49,7 @@ export default function Quotes() {
   const [scenarioDetailModal, setScenarioDetailModal] = useState(null);
   const [approvalModal, setApprovalModal] = useState(null);
   const [contributionModal, setContributionModal] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: scenarios = [], isLoading } = useQuery({
     queryKey: ["scenarios-all"],
@@ -199,15 +201,12 @@ export default function Quotes() {
   };
 
   const handleBulkDelete = async () => {
-    if (currentUser?.role !== "admin") {
-      alert("Only administrators can delete quote scenarios.");
-      return;
-    }
-    if (!window.confirm(`Permanently delete ${selectedIds.length} scenario(s)? This cannot be undone.`)) return;
+    const count = selectedIds.length;
     await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.delete(id)));
     queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
     setSelectedIds([]);
-    toast?.({ title: `${selectedIds.length} scenarios deleted` });
+    setShowDeleteConfirm(false);
+    toast?.({ title: `${count} scenarios deleted` });
   };
 
   const handleBulkExportCSV = () => {
@@ -406,7 +405,7 @@ export default function Quotes() {
             <Button variant="outline" size="sm" className="h-7 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={handleBulkExpire}>
               <XCircle className="w-3.5 h-3.5 mr-1.5" /> Mark Expired
             </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20 hover:bg-destructive/5" onClick={handleBulkDelete}>
+            <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20 hover:bg-destructive/5" onClick={() => setShowDeleteConfirm(true)}>
               Delete Selected
             </Button>
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds([])}>
@@ -540,6 +539,15 @@ export default function Quotes() {
           onClose={() => setContributionModal(null)}
         />
       )}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={setShowDeleteConfirm}
+        onConfirm={handleBulkDelete}
+        title="Delete quote scenarios?"
+        description={`Permanently delete ${selectedIds.length} selected scenario(s)? This cannot be undone.`}
+        confirmLabel="Delete scenarios"
+        destructive
+      />
     </div>
   );
 }

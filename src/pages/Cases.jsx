@@ -28,6 +28,7 @@ import CasesList from "@/components/cases/CasesList";
 import { getCasesPageModel } from "@/domain/cases/useCasesDomain";
 import { resolveRouteContext } from "@/lib/routing/resolveRouteContext";
 import { exportToCSV } from "@/utils/export-import";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 const DEFAULT_FILTER_STATE = {
   search: "",
@@ -57,6 +58,7 @@ export default function Cases() {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showAssignDueDate, setShowAssignDueDate] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: cases = [], isLoading } = useQuery({ queryKey: ["cases"], queryFn: () => base44.entities.BenefitCase.list("-created_date", 200) });
   const { data: censusMembers = [] } = useQuery({ queryKey: ["case-census-members"], queryFn: () => base44.entities.CensusMember.list("-created_date", 200) });
@@ -123,16 +125,12 @@ export default function Cases() {
   const handleFilteredExport = () => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]);
 
   const handleBulkDelete = async () => {
-    if (currentUser?.role !== "admin") {
-      alert("Only administrators can delete cases.");
-      return;
-    }
-    if (!window.confirm(`Permanently delete ${selectedIds.size} case(s)? This cannot be undone.`)) return;
     setBulkAction("deleting");
     for (const id of selectedIds) await base44.entities.BenefitCase.delete(id);
     await queryClient.invalidateQueries({ queryKey: ["cases"] });
     setSelectedIds(new Set());
     setBulkAction(null);
+    setShowDeleteConfirm(false);
   };
 
   const handleBulkSuccess = async () => {
@@ -205,7 +203,10 @@ export default function Cases() {
             { label: "Advance Stage", icon: Layers, onClick: () => setShowStageAdvanceModal(true) },
             { label: "Assign + Due Date", icon: Calendar, onClick: () => setShowAssignDueDate(true) },
             { label: "Export", icon: Download, onClick: handleBulkExport },
-            { label: "Delete", icon: Trash2, variant: "destructive", onClick: handleBulkDelete },
+            { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => {
+              if (currentUser?.role !== "admin") return;
+              setShowDeleteConfirm(true);
+            } },
           ]}
         />
       )}
@@ -216,6 +217,15 @@ export default function Cases() {
       <BulkStageAdvanceModal isOpen={showStageAdvanceModal} caseIds={Array.from(selectedIds)} onClose={() => setShowStageAdvanceModal(false)} onSuccess={handleBulkSuccess} />
       <BulkAssignWithDueDate isOpen={showAssignDueDate} caseIds={Array.from(selectedIds)} onClose={() => setShowAssignDueDate(false)} onSuccess={handleBulkSuccess} />
       <QuickCreateCaseModal isOpen={showQuickCreate} onClose={() => setShowQuickCreate(false)} />
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={setShowDeleteConfirm}
+        onConfirm={handleBulkDelete}
+        title="Delete cases?"
+        description={`Permanently delete ${selectedIds.size} selected case(s)? This cannot be undone.`}
+        confirmLabel={bulkAction === "deleting" ? "Deleting..." : "Delete cases"}
+        destructive
+      />
     </div>
   );
 }
