@@ -54,11 +54,6 @@ export default function Dashboard() {
       ? base44.entities.RenewalCycle.list(sort, limit)
       : base44.entities.RenewalCycle.filter({ assigned_to: user?.email }, sort, limit);
 
-  const listQuoteScenarios = (sort, limit = 100) =>
-    user?.role === "admin"
-      ? base44.entities.QuoteScenario.list(sort, limit)
-      : base44.entities.QuoteScenario.filter({ assigned_to: user?.email }, sort, limit);
-
   const listExceptionItems = (sort, limit = 100) =>
     user?.role === "admin"
       ? base44.entities.ExceptionItem.list(sort, limit)
@@ -73,7 +68,8 @@ export default function Dashboard() {
   const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending", user?.email, user?.role], enabled: !!user, queryFn: () => user?.role === "admin" ? base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) : base44.entities.CaseTask.filter({ status: "pending", assigned_to: user?.email }, "-created_date", 200) });
   const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments", user?.email, user?.role], enabled: !!user, queryFn: () => listEnrollmentWindows("-created_date", 100) });
   const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals", user?.email, user?.role], enabled: !!user, queryFn: () => listRenewalCycles("-renewal_date", 100) });
-  const { data: scenarios = [], dataUpdatedAt: scenariosUpdatedAt } = useQuery({ queryKey: ["scenarios-all", user?.email, user?.role], enabled: !!user, queryFn: () => listQuoteScenarios("-created_date", 100) });
+  const scenarios = [];
+  const scenariosUpdatedAt = 0;
   const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions", user?.email, user?.role], enabled: !!user, queryFn: () => listExceptionItems("-created_date", 100) });
   const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals", user?.email, user?.role], enabled: !!user, queryFn: () => listProposals("-created_date", 100) });
   const { data: agencies = [], dataUpdatedAt: agenciesUpdatedAt } = useQuery({ queryKey: ["agencies"], queryFn: () => base44.entities.Agency.list("name", 100) });
