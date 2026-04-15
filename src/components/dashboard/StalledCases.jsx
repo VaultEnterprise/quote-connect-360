@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Pause, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { differenceInDays } from "date-fns";
 
 export default function StalledCases({ cases }) {
@@ -28,7 +27,7 @@ export default function StalledCases({ cases }) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Pause className="w-4 h-4 text-amber-500" /> Stalled Cases
-            <Badge className="bg-amber-100 text-amber-700 text-[10px]">{stalled.length}</Badge>
+            <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{stalled.length}</span>
           </CardTitle>
           <Link to="/cases" className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors">
             View all <ArrowRight className="w-3 h-3" />
@@ -48,9 +47,9 @@ export default function StalledCases({ cases }) {
                     {c.stage?.replace(/_/g, " ")} · {c.case_number || `#${c.id?.slice(-6)}`}
                   </p>
                 </div>
-                <Badge className={`text-[10px] flex-shrink-0 ml-2 ${c.idleDays >= 21 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold flex-shrink-0 ml-2 ${c.idleDays >= 21 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
                   {c.idleDays}d idle
-                </Badge>
+                </span>
               </div>
             </Link>
           ))}
