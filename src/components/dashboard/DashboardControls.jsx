@@ -21,19 +21,28 @@ const CASE_TYPE_OPTIONS = [
 
 function FilterSelect({ value, onValueChange, placeholder, options }) {
   const dedupedOptions = React.useMemo(
-    () => options.filter((option, index) => options.findIndex((candidate) => candidate.value === option.value) === index),
+    () => (options || [])
+      .filter((option) => option?.value !== undefined && option?.value !== null)
+      .map((option) => ({
+        value: String(option.value).trim(),
+        label: option.label || String(option.value).trim(),
+      }))
+      .filter((option) => option.value && option.value !== "all")
+      .filter((option, index, array) => array.findIndex((candidate) => candidate.value === option.value) === index),
     [options]
   );
 
+  const safeValue = dedupedOptions.some((option) => option.value === value) ? value : "all";
+
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={safeValue} onValueChange={onValueChange}>
       <SelectTrigger className="h-9 bg-background">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">All</SelectItem>
-        {dedupedOptions.map((option, index) => (
-          <SelectItem key={`${option.value}-${index}`} value={option.value}>
+        {dedupedOptions.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>
         ))}
@@ -88,17 +97,19 @@ export default function DashboardControls({
             </SelectContent>
           </Select>
 
-          <Select value={selectedPresetId || "none"} onValueChange={onPresetChange}>
+          <Select value={(selectedPresetId && presets.some((preset) => preset.id === selectedPresetId)) ? selectedPresetId : "none"} onValueChange={onPresetChange}>
             <SelectTrigger className="h-9 w-[180px] bg-background">
               <SelectValue placeholder="Saved views" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Saved views</SelectItem>
-              {presets.map((preset) => (
-                <SelectItem key={preset.id} value={preset.id}>
-                  {preset.name}
-                </SelectItem>
-              ))}
+              {presets
+                .filter((preset) => preset?.id)
+                .map((preset) => (
+                  <SelectItem key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
 
