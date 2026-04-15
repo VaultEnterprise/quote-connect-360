@@ -23,16 +23,18 @@ function FilterSelect({ value, onValueChange, placeholder, options }) {
   const dedupedOptions = React.useMemo(
     () => (options || [])
       .filter((option) => option?.value !== undefined && option?.value !== null)
-      .map((option) => ({
-        value: String(option.value).trim(),
-        label: option.label || String(option.value).trim(),
-      }))
+      .map((option) => {
+        const normalizedValue = String(option.value).trim();
+        const normalizedLabel = String(option.label ?? option.value).trim();
+        return { value: normalizedValue, label: normalizedLabel || normalizedValue || "Unknown" };
+      })
       .filter((option) => option.value && option.value !== "all")
       .filter((option, index, array) => array.findIndex((candidate) => candidate.value === option.value) === index),
     [options]
   );
 
-  const safeValue = dedupedOptions.some((option) => option.value === value) ? value : "all";
+  const normalizedValue = typeof value === "string" ? value.trim() : String(value ?? "all").trim();
+  const safeValue = dedupedOptions.some((option) => option.value === normalizedValue) ? normalizedValue : "all";
 
   return (
     <Select value={safeValue} onValueChange={onValueChange}>
@@ -64,6 +66,21 @@ export default function DashboardControls({
   isRefreshing,
   lastUpdated,
 }) {
+  const safePresets = useMemo(
+    () => (presets || [])
+      .filter((preset) => preset?.id)
+      .map((preset) => ({
+        ...preset,
+        id: String(preset.id).trim(),
+        name: String(preset.name || "Untitled view").trim() || "Untitled view",
+      }))
+      .filter((preset) => preset.id && preset.id !== "none")
+      .filter((preset, index, array) => array.findIndex((candidate) => candidate.id === preset.id) === index),
+    [presets]
+  );
+
+  const safeSelectedPresetId = safePresets.some((preset) => preset.id === selectedPresetId) ? selectedPresetId : "none";
+
   return (
     <div className="space-y-4 rounded-2xl border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -97,19 +114,17 @@ export default function DashboardControls({
             </SelectContent>
           </Select>
 
-          <Select value={(selectedPresetId && presets.some((preset) => preset.id === selectedPresetId)) ? selectedPresetId : "none"} onValueChange={onPresetChange}>
+          <Select value={safeSelectedPresetId} onValueChange={onPresetChange}>
             <SelectTrigger className="h-9 w-[180px] bg-background">
               <SelectValue placeholder="Saved views" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Saved views</SelectItem>
-              {presets
-                .filter((preset) => preset?.id)
-                .map((preset) => (
-                  <SelectItem key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </SelectItem>
-                ))}
+              {safePresets.map((preset) => (
+                <SelectItem key={preset.id} value={preset.id}>
+                  {preset.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
