@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Activity, AlertCircle, ArrowRight, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import StatusBadge from "@/components/shared/StatusBadge";
 import { format } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -18,7 +17,7 @@ export default function DashboardActivityPanels({ monthlyData, currentCases, cur
 
       <Card>
         <CardHeader className="pb-3"><div className="flex items-center justify-between"><CardTitle className="text-base font-semibold">Recent Cases</CardTitle><Link to="/cases" className="text-xs text-muted-foreground inline-flex items-center hover:text-primary transition-colors">View all <ArrowRight className="w-3 h-3 ml-1" /></Link></div></CardHeader>
-        <CardContent><div className="space-y-2">{currentCases.slice(0, 5).map((item) => (<Link key={item.id} to={`/cases/${item.id}`} className="block"><div className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-colors group"><div className="min-w-0 flex-1"><p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{item.employer_name || "Unnamed"}</p><p className="text-xs text-muted-foreground">{item.case_number || `#${item.id?.slice(-6)}`}</p></div><StatusBadge status={item.stage} /></div></Link>))}</div></CardContent>
+        <CardContent><div className="space-y-2">{currentCases.slice(0, 5).map((item) => (<Link key={item.id} to={`/cases/${item.id}`} className="block"><div className="flex items-center justify-between gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group"><div className="min-w-0 flex-1"><p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{item.employer_name || "Unnamed"}</p><p className="text-xs text-muted-foreground">{item.case_number || `#${item.id?.slice(-6)}`}</p></div><span className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground capitalize">{item.stage?.replace(/_/g, " ") || "unknown"}</span></div></Link>))}</div></CardContent>
       </Card>
 
       <Card>
