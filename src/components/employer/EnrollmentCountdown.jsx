@@ -6,16 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { format, differenceInDays } from "date-fns";
 
 export default function EnrollmentCountdown({ enrollment, caseId }) {
-  if (!enrollment || !enrollment.end_date) return null;
+  const endDate = enrollment?.end_date;
+  const enrolledCount = enrollment?.enrolled_count || 0;
+  const totalEligible = enrollment?.total_eligible || 1;
 
   const daysRemaining = useMemo(() => {
-    const diff = differenceInDays(new Date(enrollment.end_date), new Date());
+    if (!endDate) return 0;
+    const diff = differenceInDays(new Date(endDate), new Date());
     return Math.max(0, diff);
-  }, [enrollment.end_date]);
+  }, [endDate]);
 
   const enrollmentPct = useMemo(() => {
-    return Math.round(((enrollment.enrolled_count || 0) / (enrollment.total_eligible || 1)) * 100);
-  }, [enrollment.enrolled_count, enrollment.total_eligible]);
+    return Math.round((enrolledCount / totalEligible) * 100);
+  }, [enrolledCount, totalEligible]);
+
+  if (!enrollment || !endDate) return null;
 
   const urgency = daysRemaining <= 3 ? "critical" : daysRemaining <= 7 ? "warning" : "normal";
   const urgencyColor = { critical: "bg-destructive/10 text-destructive", warning: "bg-amber-100 text-amber-700", normal: "bg-blue-100 text-blue-700" }[urgency];

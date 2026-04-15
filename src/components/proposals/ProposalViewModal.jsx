@@ -34,6 +34,15 @@ const PLAN_TYPE_COLORS = {
 export default function ProposalViewModal({ proposal, open, onClose, onEdit, onReject }) {
   const queryClient = useQueryClient();
   const [showSendDialog, setShowSendDialog] = useState(false);
+
+  const updateStatus = useMutation({
+    mutationFn: (payload) => base44.entities.Proposal.update(proposal.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      onClose();
+    },
+  });
+
   if (!proposal) return null;
 
   const cfg = STATUS_CONFIG[proposal.status] || STATUS_CONFIG.draft;
@@ -47,14 +56,6 @@ export default function ProposalViewModal({ proposal, open, onClose, onEdit, onR
   const eeCost = proposal.employee_avg_cost || 0;
   const employerPct = totalPremium > 0 ? Math.round((employerCost / totalPremium) * 100) : 0;
   const eePct = 100 - employerPct;
-
-  const updateStatus = useMutation({
-    mutationFn: (payload) => base44.entities.Proposal.update(proposal.id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["proposals"] });
-      onClose();
-    },
-  });
 
   const handlePrint = () => window.print();
 

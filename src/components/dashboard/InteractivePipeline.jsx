@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
+import { buildRoute } from "@/lib/routing/buildRoute";
 
 export default function InteractivePipeline({ cases = [] }) {
   const [activeStage, setActiveStage] = useState(null);
