@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, AlertCircle } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 
 export default function TeamWorkload({ cases = [], tasks = [] }) {
   // Group cases by assigned user
@@ -60,7 +59,12 @@ export default function TeamWorkload({ cases = [], tasks = [] }) {
                     )}
                   </div>
                 </div>
-                <Progress value={u.load} className="h-2" />
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${Math.max(0, Math.min(u.load, 100))}%` }}
+                  />
+                </div>
               </div>
             ))}
           </div>
