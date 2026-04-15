@@ -16,12 +16,12 @@ export default function QuickActions() {
   return (
     <div className="flex flex-wrap gap-2">
       {ACTIONS.map(a => (
-        <Link key={a.href} to={a.href}>
-          <Button size="sm" variant={a.variant} className="h-8 text-xs gap-1.5">
+        <Button key={a.href} asChild size="sm" variant={a.variant} className="h-8 text-xs gap-1.5">
+          <Link to={a.href}>
             <a.icon className="w-3.5 h-3.5" />
             {a.label}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       ))}
     </div>
   );

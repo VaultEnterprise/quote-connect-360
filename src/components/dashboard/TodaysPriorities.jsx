@@ -98,15 +98,17 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
           {items.map((item, i) => {
             const cfg = urgencyConfig[item.urgency];
             return (
-              <Link key={i} to={item.href}>
-                <div className={`flex items-start gap-2 p-2.5 rounded-lg border transition-colors cursor-pointer ${cfg.color}`}>
-                  {cfg.icon}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold truncate">{item.label}</p>
-                    {item.sub && <p className="text-[10px] text-muted-foreground truncate capitalize">{item.sub}</p>}
-                  </div>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0 ${cfg.badge}`}>{item.meta}</span>
+              <Link
+                key={i}
+                to={item.href}
+                className={`flex items-start gap-2 p-2.5 rounded-lg border transition-colors cursor-pointer ${cfg.color}`}
+              >
+                {cfg.icon}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold truncate">{item.label}</p>
+                  {item.sub && <p className="text-[10px] text-muted-foreground truncate capitalize">{item.sub}</p>}
                 </div>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0 ${cfg.badge}`}>{item.meta}</span>
               </Link>
             );
           })}
