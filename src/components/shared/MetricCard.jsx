@@ -1,10 +1,9 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export default function MetricCard({ label, value, icon: Icon, trend, trendLabel, className }) {
   return (
-    <Card className={cn("p-5 relative overflow-hidden group hover:shadow-md transition-shadow", className)}>
+    <div className={cn("rounded-xl border bg-card p-5 text-card-foreground shadow relative overflow-hidden group hover:shadow-md transition-shadow", className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
@@ -24,6 +23,6 @@ export default function MetricCard({ label, value, icon: Icon, trend, trendLabel
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
