@@ -29,18 +29,6 @@ export default function EmployerPortal() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const employerGroupId = searchParams.get("employer_id") || null;
-
-  if (!employerGroupId) {
-    return (
-      <div className="max-w-xl mx-auto py-20">
-        <EmptyState
-          icon={Building2}
-          title="Employer Access Required"
-          description="This portal link is missing the employer access context. Please use the link provided by your broker or administrator."
-        />
-      </div>
-    );
-  }
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,6 +80,18 @@ export default function EmployerPortal() {
   const pendingProposals = proposals.filter(p => ["sent", "viewed"].includes(p.status));
   const openTasks       = tasks.filter(t => !["completed", "cancelled"].includes(t.status));
   const renewalCycle    = renewalCycles[0] || null;
+
+  if (!employerGroupId) {
+    return (
+      <div className="max-w-xl mx-auto py-20">
+        <EmptyState
+          icon={Building2}
+          title="Employer Access Required"
+          description="This portal link is missing the employer access context. Please use the link provided by your broker or administrator."
+        />
+      </div>
+    );
+  }
 
   // ── Empty state ──────────────────────────────────────────────────────────────
   if (cases.length === 0) {

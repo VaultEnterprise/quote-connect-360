@@ -9,9 +9,9 @@ export default function FinancialModeling({ proposal, employeeCount = 100 }) {
   const [eeContribution, setEeContribution] = useState(30);
   const [scenario, setScenario] = useState("current");
 
-  if (!proposal) return null;
+  const monthlyPremium = proposal?.total_monthly_premium || 0;
 
-  const monthlyPremium = proposal.total_monthly_premium || 0;
+  if (!proposal) return null;
   const employerBaseCost = (monthlyPremium * (100 - eeContribution)) / 100;
   const employeeBaseCost = (monthlyPremium * eeContribution) / 100;
 
