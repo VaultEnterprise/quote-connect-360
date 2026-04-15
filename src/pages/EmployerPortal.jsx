@@ -338,7 +338,7 @@ export default function EmployerPortal() {
                <button onClick={() => navigate("/help")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-primary font-medium">
                  Help Center
                </button>
-               <button onClick={() => navigate("/employer-portal")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-foreground font-medium">
+               <button onClick={() => window.location.reload()} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-foreground font-medium">
                  ↻ Refresh Portal
                </button>
              </div>
