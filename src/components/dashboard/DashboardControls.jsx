@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { Bookmark, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DATE_RANGE_OPTIONS, DASHBOARD_VIEW_OPTIONS } from "@/utils/dashboardControls";
 import { STAGE_OPTIONS } from "@/contracts/workflowRegistry";
@@ -83,14 +82,19 @@ export default function DashboardControls({
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           {DASHBOARD_VIEW_OPTIONS.map((option) => (
-            <Button
+            <button
               key={option.value}
-              size="sm"
-              variant={filters.viewMode === option.value ? "default" : "outline"}
+              type="button"
               onClick={() => onChange("viewMode", option.value)}
+              className={cn(
+                "inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors",
+                filters.viewMode === option.value
+                  ? "bg-primary text-primary-foreground shadow hover:bg-primary/90"
+                  : "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground"
+              )}
             >
               {option.label}
-            </Button>
+            </button>
           ))}
           <span className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs text-foreground">
             Comparing to previous period
@@ -123,17 +127,17 @@ export default function DashboardControls({
             ))}
           </select>
 
-          <Button size="sm" variant="outline" onClick={onSaveView}>
+          <button type="button" onClick={onSaveView} className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
             <Bookmark className="w-3.5 h-3.5" /> Save view
-          </Button>
+          </button>
 
-          <Button size="sm" variant="outline" onClick={onSetDefault} disabled={!selectedPresetId || selectedPresetId === "none"}>
+          <button type="button" onClick={onSetDefault} disabled={!selectedPresetId || selectedPresetId === "none"} className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50">
             Set default
-          </Button>
+          </button>
 
-          <Button size="sm" variant="outline" onClick={onRefresh}>
+          <button type="button" onClick={onRefresh} className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
-          </Button>
+          </button>
         </div>
       </div>
 
