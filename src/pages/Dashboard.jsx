@@ -139,7 +139,39 @@ export default function Dashboard() {
     await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
   };
 
-  if (isLoading || isUserLoading) return <DashboardSkeleton />;
+  if (isLoading || isUserLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Dashboard" description="Benefits operations overview" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index}>
+              <CardContent className="p-5 space-y-3">
+                <div className="h-3 w-24 rounded-md bg-muted animate-pulse" />
+                <div className="h-8 w-16 rounded-md bg-muted animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardContent className="p-5 space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-12 w-full rounded-lg bg-muted animate-pulse" />
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5 space-y-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-16 w-full rounded-lg bg-muted animate-pulse" />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
   if (cases.length === 0) {
     return <div className="space-y-6"><PageHeader title="Dashboard" description="Overview of your benefits operations" actions={<Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>} /><div className="flex flex-col items-center justify-center py-24 text-center"><div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6"><Briefcase className="w-9 h-9 text-primary" /></div><h2 className="text-xl font-bold mb-2">Welcome to Connect Quote 360</h2><p className="text-sm text-muted-foreground max-w-md mb-8">Your benefits operating platform is ready. Start by creating your first benefit case.</p><div className="flex gap-3"><Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> Create First Case</Button></Link><Link to="/employers"><Button variant="outline">Add Employer Groups</Button></Link></div></div></div>;
   }
