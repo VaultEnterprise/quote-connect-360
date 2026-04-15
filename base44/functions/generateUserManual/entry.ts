@@ -49,7 +49,7 @@ Make the content thorough, clear, and helpful for end users.`,
       }
     });
 
-    return Response.json(response.data || response);
+    return Response.json(response);
   } catch (error) {
     console.error('[function' + '] error:', error.message, error.stack);
     return Response.json({ error: 'Internal server error' }, { status: 500 });

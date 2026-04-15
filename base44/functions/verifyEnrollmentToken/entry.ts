@@ -17,17 +17,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
  */
 
 // Simple in-memory rate limiter (resets on cold-start, good enough for Deno edge)
-const attempts = new Map<string, { count: number; firstAttempt: number }>();
+const attempts = new Map();
 const RATE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
 
-function getRateLimitKey(req: Request): string {
+function getRateLimitKey(req) {
   return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
     'unknown';
 }
 
-function checkRateLimit(key: string): { allowed: boolean; remaining: number } {
+function checkRateLimit(key) {
   const now = Date.now();
   const record = attempts.get(key);
 
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  let body: { email?: string; token?: string };
+  let body;
   try {
     body = await req.json();
   } catch {
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
 
   // Constant-time comparison to prevent timing attacks
   const tokenMatches = enrollments?.length > 0 &&
-    enrollments.some((e: any) => e.access_token === token);
+    enrollments.some((e) => e.access_token === token);
 
   if (!enrollments?.length || !tokenMatches) {
     // Generic error — don't reveal whether email was found
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
   // Clear rate limit on success
   clearRateLimit(ipKey);
 
-  const enrollment = enrollments.find((e: any) => e.access_token === token)!;
+  const enrollment = enrollments.find((e) => e.access_token === token);
 
   // Check enrollment window
   if (enrollment.enrollment_window_id) {

@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
     // Mark as invited
     await base44.entities.EmployeeEnrollment.update(enrollment_id, {
-      status: enrollment.status === 'invited' ? 'invited' : enrollment.status,
+      status: 'invited',
       invited_at: new Date().toISOString(),
     });
 
