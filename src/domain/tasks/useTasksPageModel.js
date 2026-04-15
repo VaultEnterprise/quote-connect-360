@@ -160,7 +160,6 @@ export default function useTasksPageModel({
       if (currentUser?.role !== "admin") {
         throw new Error("Only administrators can bulk-delete tasks.");
       }
-      if (!window.confirm(`Permanently delete ${selectedIds.length} task(s)? This cannot be undone.`)) return;
       return deleteManyEntityRecords("CaseTask", selectedIds);
     },
     onSuccess: invalidateTasks,
