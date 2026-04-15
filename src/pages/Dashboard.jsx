@@ -10,7 +10,6 @@ import { format, differenceInDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/shared/PageHeader";
-import StatusBadge from "@/components/shared/StatusBadge";
 import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
 import DashboardControls from "@/components/dashboard/DashboardControls";
 import DashboardMetricGrid from "@/components/dashboard/DashboardMetricGrid";
