@@ -67,4 +67,9 @@ export const ROUTE_PARAM_SCHEMAS = {
     required: [],
     queryKeys: ["caseId", "employerId", "renewalId"],
   },
+  employerPortal: {
+    path: () => "/employer-portal",
+    required: ["employerId"],
+    queryKeys: ["employerId"],
+  },
 };

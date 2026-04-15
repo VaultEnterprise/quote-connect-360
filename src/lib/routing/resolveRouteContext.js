@@ -13,7 +13,8 @@ export function resolveRouteContext(routeKey, search) {
 
   const params = new URLSearchParams(getSearchString(search));
   const parsed = (schema.queryKeys || []).reduce((accumulator, key) => {
-    const value = params.get(key);
+    const queryKey = routeKey === "employerPortal" && key === "employerId" ? "employer_id" : key;
+    const value = params.get(queryKey);
     if (value) accumulator[key] = value;
     return accumulator;
   }, {});

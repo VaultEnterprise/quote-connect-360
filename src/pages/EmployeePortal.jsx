@@ -11,7 +11,6 @@ import EmptyState from "@/components/shared/EmptyState";
 // Employee-specific components
 import EnrollmentWizard from "@/components/employee/EnrollmentWizard";
 import BenefitsDashboard from "@/components/employee/BenefitsDashboard";
-import EmployerCaseValidator from "@/components/employee/EmployerCaseValidator";
 import SessionTimeout from "@/components/employee/SessionTimeout";
 import BenefitsGlossary from "@/components/employee/BenefitsGlossary";
 import { useEnrollmentSave } from "@/components/employee/EnrollmentDataPersistence";
@@ -142,10 +141,10 @@ function EmployeePortalContent() {
 
 export default function EmployeePortal() {
   return (
-    <EmployerCaseValidator>
+    
       <SessionTimeout>
         <EmployeePortalContent />
       </SessionTimeout>
-    </EmployerCaseValidator>
+    
   );
 }
