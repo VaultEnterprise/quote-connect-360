@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Bell, AlertTriangle, Clock, RefreshCw, ClipboardCheck, CheckCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isPast, isWithinInterval, addDays } from "date-fns";
 
@@ -137,14 +136,18 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={panelRef}>
-      <Button variant="ghost" size="icon" className="relative h-9 w-9" onClick={() => setOpen(o => !o)}>
+      <button
+        type="button"
+        className="relative flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+        onClick={() => setOpen(o => !o)}
+      >
         <Bell className="w-4 h-4" />
         {visible.length > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
             {visible.length > 9 ? "9+" : visible.length}
           </span>
         )}
-      </Button>
+      </button>
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-96 bg-popover border rounded-xl shadow-xl z-50 overflow-hidden">
@@ -155,9 +158,13 @@ export default function NotificationBell() {
               {visible.length > 0 && <Badge className="h-4 px-1.5 text-[10px]">{visible.length}</Badge>}
             </div>
             {visible.length > 0 && (
-              <Button variant="ghost" size="sm" className="text-xs h-6 text-muted-foreground" onClick={dismissAll}>
+              <button
+                type="button"
+                className="h-6 rounded-sm px-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                onClick={dismissAll}
+              >
                 Clear all
-              </Button>
+              </button>
             )}
           </div>
 
