@@ -39,19 +39,43 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: user, isLoading: isUserLoading } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
-  const scopedList = (entity, sort, limit = 100) =>
+  const listBenefitCases = (sort, limit = 100) =>
     user?.role === "admin"
-      ? base44.entities[entity].list(sort, limit)
-      : base44.entities[entity].filter({ assigned_to: user?.email }, sort, limit);
+      ? base44.entities.BenefitCase.list(sort, limit)
+      : base44.entities.BenefitCase.filter({ assigned_to: user?.email }, sort, limit);
 
-  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("BenefitCase", "-created_date", 100) });
+  const listEnrollmentWindows = (sort, limit = 100) =>
+    user?.role === "admin"
+      ? base44.entities.EnrollmentWindow.list(sort, limit)
+      : base44.entities.EnrollmentWindow.filter({ assigned_to: user?.email }, sort, limit);
+
+  const listRenewalCycles = (sort, limit = 100) =>
+    user?.role === "admin"
+      ? base44.entities.RenewalCycle.list(sort, limit)
+      : base44.entities.RenewalCycle.filter({ assigned_to: user?.email }, sort, limit);
+
+  const listQuoteScenarios = (sort, limit = 100) =>
+    user?.role === "admin"
+      ? base44.entities.QuoteScenario.list(sort, limit)
+      : base44.entities.QuoteScenario.filter({ assigned_to: user?.email }, sort, limit);
+
+  const listExceptionItems = (sort, limit = 100) =>
+    user?.role === "admin"
+      ? base44.entities.ExceptionItem.list(sort, limit)
+      : base44.entities.ExceptionItem.filter({ assigned_to: user?.email }, sort, limit);
+
+  const listProposals = (sort, limit = 100) =>
+    user?.role === "admin"
+      ? base44.entities.Proposal.list(sort, limit)
+      : base44.entities.Proposal.filter({ assigned_to: user?.email }, sort, limit);
+
+  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases", user?.email, user?.role], enabled: !!user, queryFn: () => listBenefitCases("-created_date", 100) });
   const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending", user?.email, user?.role], enabled: !!user, queryFn: () => user?.role === "admin" ? base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) : base44.entities.CaseTask.filter({ status: "pending", assigned_to: user?.email }, "-created_date", 200) });
-  const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("EnrollmentWindow", "-created_date", 100) });
-  const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("RenewalCycle", "-renewal_date", 100) });
-  const scenarios = [];
-  const scenariosUpdatedAt = 0;
-  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("ExceptionItem", "-created_date", 100) });
-  const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals", user?.email, user?.role], enabled: !!user, queryFn: () => scopedList("Proposal", "-created_date", 100) });
+  const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments", user?.email, user?.role], enabled: !!user, queryFn: () => listEnrollmentWindows("-created_date", 100) });
+  const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals", user?.email, user?.role], enabled: !!user, queryFn: () => listRenewalCycles("-renewal_date", 100) });
+  const { data: scenarios = [], dataUpdatedAt: scenariosUpdatedAt } = useQuery({ queryKey: ["scenarios-all", user?.email, user?.role], enabled: !!user, queryFn: () => listQuoteScenarios("-created_date", 100) });
+  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions", user?.email, user?.role], enabled: !!user, queryFn: () => listExceptionItems("-created_date", 100) });
+  const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals", user?.email, user?.role], enabled: !!user, queryFn: () => listProposals("-created_date", 100) });
   const { data: agencies = [], dataUpdatedAt: agenciesUpdatedAt } = useQuery({ queryKey: ["agencies"], queryFn: () => base44.entities.Agency.list("name", 100) });
   const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({ queryKey: DASHBOARD_PRESET_QUERY_KEY, enabled: !!user?.email, queryFn: () => base44.entities.DashboardViewPreset.filter({ created_by: user.email }, "name", 50) });
 
