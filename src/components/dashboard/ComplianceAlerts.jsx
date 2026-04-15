@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle2, AlertCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export default function ComplianceAlerts({ cases = [], scenarios = [] }) {
   const alerts = [];
@@ -76,9 +75,9 @@ export default function ComplianceAlerts({ cases = [], scenarios = [] }) {
                 <p className="text-sm font-medium">{a.title}</p>
                 <p className="text-xs text-muted-foreground">{a.message}</p>
               </div>
-              <Badge className={`text-[10px] flex-shrink-0 ${a.severity === "high" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold flex-shrink-0 ${a.severity === "high" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
                 {a.severity}
-              </Badge>
+              </span>
             </div>
           ))}
         </div>

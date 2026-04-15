@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
-import StatusBadge from "@/components/shared/StatusBadge";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
 import { buildRoute } from "@/lib/routing/buildRoute";
 
@@ -80,9 +78,9 @@ export default function InteractivePipeline({ cases = [] }) {
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: selectedGroup.color }} />
                 <span className="text-sm font-semibold">{selectedGroup.label} Stage</span>
-                <Badge className={`text-[10px] py-0 border ${selectedGroup.bgClass} ${selectedGroup.textClass}`} style={{ borderColor: `${selectedGroup.color}40` }}>
+                <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${selectedGroup.bgClass} ${selectedGroup.textClass}`} style={{ borderColor: `${selectedGroup.color}40` }}>
                   {selectedGroup.count} cases
-                </Badge>
+                </span>
               </div>
               <div className="flex items-center gap-1">
                 <Link to="/cases">
@@ -111,11 +109,11 @@ export default function InteractivePipeline({ cases = [] }) {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {c.priority && c.priority !== "normal" && (
-                        <Badge className={`text-[9px] py-0 ${c.priority === "urgent" ? "bg-red-100 text-red-700" : c.priority === "high" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-semibold capitalize ${c.priority === "urgent" ? "bg-red-100 text-red-700" : c.priority === "high" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
                           {c.priority}
-                        </Badge>
+                        </span>
                       )}
-                      <StatusBadge status={c.stage} />
+                      <span className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground capitalize">{c.stage?.replace(/_/g, " ") || "unknown"}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
