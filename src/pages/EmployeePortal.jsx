@@ -141,10 +141,8 @@ function EmployeePortalContent() {
 
 export default function EmployeePortal() {
   return (
-    
-      <SessionTimeout>
-        <EmployeePortalContent />
-      </SessionTimeout>
-    
+    <SessionTimeout>
+      <EmployeePortalContent />
+    </SessionTimeout>
   );
 }
