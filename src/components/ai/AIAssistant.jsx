@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Sparkles, X, Send, Minimize2, Maximize2, Loader2, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
@@ -124,15 +123,15 @@ export default function AIAssistant({ caseContext }) {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={reset} title="Clear chat">
+              <button type="button" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent" onClick={reset} title="Clear chat">
                 <RotateCcw className="w-3.5 h-3.5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setMinimized(!minimized)}>
+              </button>
+              <button type="button" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent" onClick={() => setMinimized(!minimized)}>
                 {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => setOpen(false)}>
+              </button>
+              <button type="button" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent" onClick={() => setOpen(false)}>
                 <X className="w-3.5 h-3.5" />
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -209,14 +208,14 @@ export default function AIAssistant({ caseContext }) {
                     rows={1}
                     disabled={loading}
                   />
-                  <Button
-                    size="icon"
+                  <button
+                    type="button"
                     onClick={() => sendMessage()}
                     disabled={!input.trim() || loading}
-                    className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent hover:opacity-90 flex-shrink-0"
+                    className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent hover:opacity-90 disabled:pointer-events-none disabled:opacity-50 flex-shrink-0 inline-flex items-center justify-center"
                   >
                     <Send className="w-4 h-4 text-white" />
-                  </Button>
+                  </button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-1.5 text-center">Powered by GradientAI • Uses integration credits</p>
               </div>
