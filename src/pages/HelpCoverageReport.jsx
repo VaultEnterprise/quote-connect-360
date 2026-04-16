@@ -30,15 +30,6 @@ export default function HelpCoverageReport() {
 
   if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
 
-  const { data: contents = [] } = useQuery({
-    queryKey: ["help-cov-contents"],
-    queryFn: () => base44.entities.HelpContent.list("-updated_date", 500),
-  });
-
-  if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
-
-  const contentMap = useMemo(() => contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}), [contents]);
-
   const total = HELP_TARGETS.length;
   const activeCount = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "active").length;
   const missingTargets = HELP_TARGETS.filter(t => !contentMap[t.target_code]);

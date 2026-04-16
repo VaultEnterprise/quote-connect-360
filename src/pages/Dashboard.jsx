@@ -271,8 +271,7 @@ export default function Dashboard() {
                       <span className="text-[11px] text-muted-foreground truncate">{d.name}</span>
                       <span className="text-[11px] font-semibold ml-auto">{d.value}</span>
                     </div>
-                  </Link>
-                ))}
+                  ))}
                 </div>
               </div>
             )}
@@ -356,16 +355,17 @@ export default function Dashboard() {
                 {tasks.slice(0, 3).map(t => (
                   <Link key={t.id} to="/tasks" className="block">
                     <div className="p-2.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
-                    <p className="text-xs font-medium truncate">{t.title}</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[10px] text-muted-foreground">{t.employer_name}</span>
-                      {t.due_date && (
-                        <span className={`text-[10px] flex items-center gap-0.5 ${new Date(t.due_date) < new Date() ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                          <Clock className="w-3 h-3" />{format(new Date(t.due_date), "MMM d")}
-                        </span>
-                      )}
+                      <p className="text-xs font-medium truncate">{t.title}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[10px] text-muted-foreground">{t.employer_name}</span>
+                        {t.due_date && (
+                          <span className={`text-[10px] flex items-center gap-0.5 ${new Date(t.due_date) < new Date() ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                            <Clock className="w-3 h-3" />{format(new Date(t.due_date), "MMM d")}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
