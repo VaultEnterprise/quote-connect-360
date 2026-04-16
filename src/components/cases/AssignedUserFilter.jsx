@@ -13,8 +13,8 @@ export default function AssignedUserFilter({ cases, value, onChange }) {
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-40 h-9">
-        <Users className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+      <SelectTrigger className="h-9 w-40 rounded-xl border-border/70 bg-background shadow-sm">
+        <Users className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
         <SelectValue placeholder="Assignee" />
       </SelectTrigger>
       <SelectContent>

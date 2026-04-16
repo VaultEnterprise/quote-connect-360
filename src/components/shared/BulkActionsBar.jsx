@@ -22,8 +22,8 @@ export default function BulkActionsBar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-lg z-40 p-4 animate-in slide-in-from-bottom-2">
-      <div className="max-w-full mx-auto flex items-center justify-between gap-4 flex-wrap">
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/95 p-4 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-background/80 animate-in slide-in-from-bottom-2">
+      <div className="mx-auto flex max-w-full flex-wrap items-center justify-between gap-4">
         {/* Left: Selection Info */}
         <div className="flex items-center gap-4">
           <Button
@@ -44,7 +44,7 @@ export default function BulkActionsBar({
               </>
             )}
           </Button>
-          <Badge variant="secondary">
+          <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-semibold">
             {selectedCount} selected {totalCount > selectedCount && `of ${totalCount}`}
           </Badge>
         </div>
