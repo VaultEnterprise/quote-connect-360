@@ -7,7 +7,7 @@ function FilterChip({ label, onClear, className = "" }) {
     <button
       type="button"
       onClick={onClear}
-      className={`inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-muted ${className}`}
     >
       <span className="truncate max-w-[180px]">{label}</span>
       <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted/80">
@@ -38,7 +38,7 @@ export default function ActiveFilterChips({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs text-muted-foreground">{filteredCount} of {totalCount} cases</span>
+      <span className="text-xs font-medium text-muted-foreground">{filteredCount} of {totalCount} cases</span>
 
       {search && <FilterChip label={`Search: ${search}`} onClear={onClearSearch} />}
 
@@ -72,7 +72,7 @@ export default function ActiveFilterChips({
         />
       )}
 
-      <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground" onClick={onClearAll}>
+      <Button variant="ghost" size="sm" className="h-7 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground" onClick={onClearAll}>
         <X className="w-3 h-3 mr-1" /> Clear filters
       </Button>
     </div>
