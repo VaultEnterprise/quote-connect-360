@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function CaseListSkeleton() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {Array.from({ length: 5 }, (_, i) => (
         <div key={i} className="flex items-center gap-4 rounded-2xl border border-border/70 bg-card/90 p-4 shadow-sm">
           <Skeleton className="w-10 h-10 rounded-xl flex-shrink-0" />
@@ -23,7 +23,7 @@ export function DashboardSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={`metric-${i}`} className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+          <div key={`metric-${i}`} className="rounded-2xl border border-border/70 bg-card/95 p-5 shadow-sm">
             <Skeleton className="h-3 w-24 mb-3" />
             <Skeleton className="h-8 w-16" />
           </div>

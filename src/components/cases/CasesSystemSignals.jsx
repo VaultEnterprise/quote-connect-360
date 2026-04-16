@@ -35,7 +35,7 @@ export default function CasesSystemSignals({ signals }) {
   ];
 
   return (
-    <Card className="border-border/70 shadow-sm">
+    <Card className="rounded-2xl border-border/70 shadow-sm">
       <CardContent className="space-y-4 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>

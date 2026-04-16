@@ -43,7 +43,7 @@ function CaseMiniCard({ c }) {
 
   return (
     <Link to={`/cases/${c.id}`}>
-      <div className={`mb-2 cursor-pointer rounded-xl border border-border/70 bg-background p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${c.priority === "urgent" ? "border-l-2 border-l-red-500" : c.priority === "high" ? "border-l-2 border-l-amber-500" : ""}`}>
+      <div className={`mb-2 cursor-pointer rounded-2xl border border-border/70 bg-background p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${c.priority === "urgent" ? "border-l-2 border-l-red-500" : c.priority === "high" ? "border-l-2 border-l-amber-500" : ""}`}>
         <p className="text-xs font-semibold truncate">{c.employer_name || "Unnamed"}</p>
         <p className="text-[10px] text-muted-foreground mt-0.5">{c.case_number || c.id?.slice(-6)}</p>
         <div className="flex items-center justify-between mt-2">
@@ -67,8 +67,8 @@ function CaseMiniCard({ c }) {
         </div>
         {c.products_requested?.length > 0 && (
           <div className="flex gap-1 mt-1.5 flex-wrap">
-            {c.products_requested.slice(0, 3).map(p => (
-              <span key={p} className="text-[9px] bg-primary/10 text-primary rounded px-1 py-0.5 capitalize">{p}</span>
+            {c.products_requested.slice(0, 3).map((p) => (
+              <span key={p} className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] capitalize text-primary">{p}</span>
             ))}
           </div>
         )}
@@ -90,7 +90,7 @@ export default function CasePipelineView({ cases }) {
         <div key={stage.key} className="w-56 flex-shrink-0">
           <div className="mb-2 flex items-center justify-between px-1">
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{stage.label}</span>
-            <Badge variant="secondary" className="h-5 rounded-full px-2 text-[10px]">{buckets[stage.key].length}</Badge>
+            <Badge variant="secondary" className="h-5 rounded-full border-border/70 px-2 text-[10px] shadow-sm">{buckets[stage.key].length}</Badge>
           </div>
           <div className="min-h-32 rounded-2xl border border-border/70 bg-muted/30 p-2.5 shadow-sm">
             {buckets[stage.key].length === 0 ? (
