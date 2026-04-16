@@ -1,17 +1,24 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { buildQuoteReadiness } from "@/components/quotes/quoteGovernanceEngine";
 
 export default function QuoteDependencyPanel({ scenarios, cases, censusVersions, enrollments, renewals }) {
   const withoutCensus = scenarios.filter((scenario) => !censusVersions.some((version) => version.case_id === scenario.case_id));
   const withoutPlans = scenarios.filter((scenario) => !scenario.plan_count);
   const errored = scenarios.filter((scenario) => scenario.status === "error");
   const downstreamCases = cases.filter((item) => item.quote_status === "completed");
+  const notReadyForEnrollment = scenarios.filter((scenario) => {
+    const caseRecord = cases.find((item) => item.id === scenario.case_id);
+    const readiness = buildQuoteReadiness({ scenario, caseRecord, censusVersions, enrollments, renewals });
+    return scenario.status === "approved" && !readiness.checks.enrollmentCompatible;
+  });
 
   const issues = [
     { label: "No census input", value: withoutCensus.length },
     { label: "No rated plans", value: withoutPlans.length },
     { label: "Calculation errors", value: errored.length },
+    { label: "Blocked approvals", value: notReadyForEnrollment.length },
     { label: "Enrollment handoffs", value: enrollments.length },
     { label: "Renewal dependencies", value: renewals.length },
     { label: "Case outputs", value: downstreamCases.length },

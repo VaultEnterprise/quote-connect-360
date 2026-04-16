@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { validateQuoteScenarioForm } from "@/components/quotes/quoteGovernanceEngine";
 
 const PRODUCTS = ["medical", "dental", "vision", "life", "std", "ltd", "accident", "critical_illness"];
 const CARRIERS = ["Anthem", "Blue Cross", "Cigna", "UnitedHealthcare", "Kaiser", "Aetna", "Humana", "Delta Dental", "MetLife", "VSP", "Principal", "Sun Life", "Guardian"];
@@ -15,6 +16,21 @@ const CARRIERS = ["Anthem", "Blue Cross", "Cigna", "UnitedHealthcare", "Kaiser",
 export default function QuoteScenarioModal({ caseId, scenario, open, onClose }) {
   const queryClient = useQueryClient();
   const isEdit = !!scenario;
+
+  const { data: caseRecords = [] } = useQuery({
+    queryKey: ["quote-scenario-case", caseId],
+    queryFn: () => caseId ? base44.entities.BenefitCase.filter({ id: caseId }) : Promise.resolve([]),
+    enabled: !!caseId,
+  });
+
+  const { data: censusVersions = [] } = useQuery({
+    queryKey: ["quote-scenario-census", caseId],
+    queryFn: () => caseId ? base44.entities.CensusVersion.filter({ case_id: caseId }) : Promise.resolve([]),
+    enabled: !!caseId,
+  });
+
+  const caseRecord = caseRecords[0];
+  const latestCensus = useMemo(() => [...censusVersions].sort((a, b) => Number(b.version_number || 0) - Number(a.version_number || 0))[0], [censusVersions]);
   const [form, setForm] = useState({
     name: scenario?.name || "",
     products_included: scenario?.products_included || ["medical"],
@@ -30,10 +46,17 @@ export default function QuoteScenarioModal({ caseId, scenario, open, onClose }) 
     notes: scenario?.notes || "",
   });
 
+  const validation = validateQuoteScenarioForm({ form, caseRecord, latestCensus });
+
   const save = useMutation({
     mutationFn: async () => {
+      if (!validation.isValid) {
+        throw new Error(validation.errors[0]);
+      }
+
       const payload = {
         ...form,
+        census_version_id: latestCensus?.id,
         total_monthly_premium: Number(form.total_monthly_premium) || undefined,
         employer_monthly_cost: Number(form.employer_monthly_cost) || undefined,
         employee_monthly_cost_avg: form.total_monthly_premium && form.employer_monthly_cost
@@ -69,6 +92,12 @@ export default function QuoteScenarioModal({ caseId, scenario, open, onClose }) 
           <div>
             <Label>Scenario Name <span className="text-destructive">*</span></Label>
             <Input value={form.name} onChange={e => set("name", e.target.value)} className="mt-1.5" placeholder="e.g. Scenario A — Anthem PPO + HMO" />
+            {latestCensus && (
+              <p className="text-xs text-muted-foreground mt-2">Using census version {latestCensus.version_number} for pricing traceability.</p>
+            )}
+            {!validation.isValid && (
+              <p className="text-xs text-destructive mt-2">{validation.errors[0]}</p>
+            )}
           </div>
 
           <div>

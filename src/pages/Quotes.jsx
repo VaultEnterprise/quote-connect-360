@@ -22,6 +22,8 @@ import ScenarioDetailModal from "@/components/quotes/ScenarioDetailModal";
 import ApprovalModal from "@/components/quotes/ApprovalModal";
 import ContributionSlider from "@/components/quotes/ContributionSlider";
 import SavedViewsPanel from "@/components/quotes/SavedViewsPanel";
+import QuotePipelinePanel from "@/components/quotes/QuotePipelinePanel";
+import { buildQuoteReadiness, buildScenarioVersionSnapshot, appendScenarioVersion } from "@/components/quotes/quoteGovernanceEngine";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
 
@@ -148,6 +150,21 @@ export default function Quotes() {
       queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
       const res = await base44.functions.invoke("calculateQuoteRates", { scenario_id: scenario.id });
       if (res.data?.error) throw new Error(res.data.error);
+
+      const refreshedScenario = scenarios.find((item) => item.id === scenario.id) || scenario;
+      await base44.entities.QuoteScenario.update(scenario.id, {
+        status: "reviewed",
+        versions: appendScenarioVersion(refreshedScenario.versions || [], buildScenarioVersionSnapshot({
+          ...refreshedScenario,
+          status: "reviewed",
+          total_monthly_premium: res.data.total_monthly_premium,
+          employer_monthly_cost: res.data.employer_monthly_cost,
+          employee_monthly_cost_avg: res.data.employee_monthly_cost_avg,
+          plan_count: res.data.plan_results?.length || 0,
+          census_version_id: res.data.census?.censusVersionId,
+        })),
+      });
+
       queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
       toast({
         title: "Rates calculated",
@@ -301,6 +318,8 @@ export default function Quotes() {
       />
 
       <QuotesSystemSummary scenarios={scenarios} cases={cases} enrollments={enrollments} renewals={renewals} />
+
+      <QuotePipelinePanel scenarios={scenarios} />
 
       <QuotesKPIBar scenarios={filtered.length ? filtered : scenarios} />
 

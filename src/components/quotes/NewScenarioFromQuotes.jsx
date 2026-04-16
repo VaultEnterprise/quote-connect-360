@@ -16,7 +16,7 @@ export default function NewScenarioFromQuotes({ open, onClose }) {
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
 
-  const activeCases = cases.filter(c => !["closed", "completed"].includes(c.stage));
+  const activeCases = cases.filter(c => ["census_validated", "ready_for_quote", "quoting", "proposal_ready", "employer_review", "approved_for_enrollment"].includes(c.stage));
 
   if (showScenarioModal && selectedCaseId) {
     return (

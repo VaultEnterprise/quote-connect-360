@@ -172,6 +172,7 @@ export default function ScenarioCompare({ scenarios, onClose }) {
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "plans", label: "Plan Details" },
+    { id: "versions", label: "Versioning" },
   ];
 
   return (
@@ -264,6 +265,28 @@ export default function ScenarioCompare({ scenarios, onClose }) {
         {/* Plan Details Tab */}
         {activeTab === "plans" && (
           <PlanComparisonSection scenarios={display} />
+        )}
+
+        {activeTab === "versions" && (
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {display.map((scenario) => (
+              <div key={scenario.id} className="rounded-xl border bg-card p-4">
+                <p className="text-sm font-semibold">{scenario.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{scenario.versions?.length || 0} saved versions</p>
+                <div className="mt-3 space-y-2">
+                  {(scenario.versions || []).slice(-3).reverse().map((version, index) => (
+                    <div key={index} className="rounded-lg bg-muted/40 p-2 text-xs">
+                      <p className="font-medium">{version.status || "snapshot"}</p>
+                      <p className="text-muted-foreground">Premium: {fmt$(version.total_monthly_premium)}</p>
+                    </div>
+                  ))}
+                  {(!scenario.versions || scenario.versions.length === 0) && (
+                    <p className="text-xs text-muted-foreground">No saved pricing versions yet.</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
