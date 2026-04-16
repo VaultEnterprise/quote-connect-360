@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -30,10 +28,8 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { useAuth } from "@/lib/AuthContext";
 
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
-const DASHBOARD_PRESET_QUERY_KEY = ["dashboard-view-presets"];
 
 export default function Dashboard() {
-  const queryClient = useQueryClient();
   const { user, isLoadingAuth: isUserLoading } = useAuth();
   const [filters, setFilters] = useState(DEFAULT_DASHBOARD_FILTERS);
   const [selectedPresetId, setSelectedPresetId] = useState("none");
@@ -60,10 +56,6 @@ export default function Dashboard() {
   const presets = [];
   const presetsFetched = true;
   const presetsUpdatedAt = 0;
-
-  useEffect(() => {
-    return () => {};
-  }, [queryClient]);
 
   useEffect(() => {
     if (hasInitializedPreferences || !user || !presetsFetched) return;
@@ -104,7 +96,7 @@ export default function Dashboard() {
   const [saveViewName, setSaveViewName] = useState("");
 
   const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
-  const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
+  const handleRefresh = async () => { setIsRefreshing(true); setIsRefreshing(false); };
   const handleSaveView = () => {
     setSaveViewName("");
     setShowSaveViewPanel(true);
