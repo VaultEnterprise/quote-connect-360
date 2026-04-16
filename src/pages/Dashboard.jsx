@@ -56,7 +56,9 @@ export default function Dashboard() {
   const proposalsUpdatedAt = 0;
   const agencies = [];
   const agenciesUpdatedAt = 0;
-  const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({ queryKey: DASHBOARD_PRESET_QUERY_KEY, enabled: !!user?.email, queryFn: () => base44.entities.DashboardViewPreset.filter({ created_by: user.email }, "name", 50) });
+  const presets = [];
+  const presetsFetched = true;
+  const presetsUpdatedAt = 0;
 
   useEffect(() => {
     return () => {};
@@ -108,15 +110,6 @@ export default function Dashboard() {
   };
 
   const handleSaveViewConfirm = async () => {
-    if (!saveViewName.trim()) return;
-    await base44.entities.DashboardViewPreset.create({
-      name: saveViewName.trim(),
-      view_mode: filters.viewMode,
-      date_range: filters.dateRange,
-      filters: { owner: filters.owner, team: filters.team, agencyId: filters.agencyId, employerId: filters.employerId, caseType: filters.caseType, stage: filters.stage },
-      is_default: false,
-    });
-    await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
     setShowSaveViewPanel(false);
   };
   const handlePresetChange = (presetId) => {
@@ -126,11 +119,7 @@ export default function Dashboard() {
     setSelectedPresetId(presetId);
     setFilters({ dateRange: preset.date_range || DEFAULT_DASHBOARD_FILTERS.dateRange, viewMode: preset.view_mode || DEFAULT_DASHBOARD_FILTERS.viewMode, owner: preset.filters?.owner || "all", team: preset.filters?.team || "all", agencyId: preset.filters?.agencyId || "all", employerId: preset.filters?.employerId || "all", caseType: preset.filters?.caseType || "all", stage: preset.filters?.stage || "all" });
   };
-  const handleSetDefault = async () => {
-    if (!selectedPresetId || selectedPresetId === "none") return;
-    await Promise.all(presets.map((preset) => base44.entities.DashboardViewPreset.update(preset.id, { is_default: preset.id === selectedPresetId })));
-    await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
-  };
+  const handleSetDefault = async () => {};
 
   if (isLoading || isUserLoading) {
     return (
