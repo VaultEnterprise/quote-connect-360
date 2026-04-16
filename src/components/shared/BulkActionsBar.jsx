@@ -23,14 +23,14 @@ export default function BulkActionsBar({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/95 p-4 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-background/80 animate-in slide-in-from-bottom-2">
-      <div className="mx-auto flex max-w-full flex-wrap items-center justify-between gap-4">
+      <div className="mx-auto flex max-w-full flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/70 bg-card/95 px-4 py-3 shadow-sm">
         {/* Left: Selection Info */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={onSelectAll}
-            className="text-xs"
+            className="rounded-xl text-xs"
           >
             {allSelected ? (
               <>
@@ -44,7 +44,7 @@ export default function BulkActionsBar({
               </>
             )}
           </Button>
-          <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-semibold">
+          <Badge variant="secondary" className="rounded-full border-border/70 px-3 py-1 text-xs font-semibold shadow-sm">
             {selectedCount} selected {totalCount > selectedCount && `of ${totalCount}`}
           </Badge>
         </div>
@@ -69,7 +69,7 @@ export default function BulkActionsBar({
               variant="outline"
               size="sm"
               onClick={() => onExport(selectedCount)}
-              className="text-xs"
+              className="rounded-xl text-xs"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Export

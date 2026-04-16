@@ -71,7 +71,7 @@ export default function StatusBadge({ status, className }) {
     <Badge
       variant={config.variant || "secondary"}
       className={cn(
-        "text-xs font-medium border capitalize",
+        "rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize shadow-sm",
         config.color,
         className
       )}
