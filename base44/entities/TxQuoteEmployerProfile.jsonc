@@ -1,0 +1,66 @@
+{
+  "name": "TxQuoteEmployerProfile",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": {
+      "type": "string"
+    },
+    "legal_company_name": {
+      "type": "string"
+    },
+    "dba_name": {
+      "type": "string"
+    },
+    "primary_contact_name": {
+      "type": "string"
+    },
+    "primary_contact_email": {
+      "type": "string"
+    },
+    "primary_contact_phone": {
+      "type": "string"
+    },
+    "sic_code": {
+      "type": "string"
+    },
+    "industry_type": {
+      "type": "string"
+    },
+    "headquarters_state": {
+      "type": "string"
+    },
+    "coverage_states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fein": {
+      "type": "string"
+    },
+    "group_size_total": {
+      "type": "number"
+    },
+    "eligible_employee_count": {
+      "type": "number"
+    },
+    "enrolling_employee_count": {
+      "type": "number"
+    },
+    "waiting_period": {
+      "type": "string"
+    },
+    "class_structure_notes": {
+      "type": "string"
+    },
+    "union_non_union_flag": {
+      "type": "string"
+    },
+    "cobra_retiree_flag": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "txquote_case_id"
+  ]
+}

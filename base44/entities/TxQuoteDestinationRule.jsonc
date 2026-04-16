@@ -1,0 +1,37 @@
+{
+  "name": "TxQuoteDestinationRule",
+  "type": "object",
+  "properties": {
+    "destination_code": {
+      "type": "string",
+      "enum": [
+        "TRIAD",
+        "SUS",
+        "AST",
+        "GLOBAL"
+      ]
+    },
+    "rule_code": {
+      "type": "string"
+    },
+    "rule_name": {
+      "type": "string"
+    },
+    "rule_type": {
+      "type": "string"
+    },
+    "rule_config": {
+      "type": "object"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "destination_code",
+    "rule_code",
+    "rule_name",
+    "rule_type"
+  ]
+}

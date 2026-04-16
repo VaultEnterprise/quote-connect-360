@@ -1,0 +1,83 @@
+{
+  "name": "TxQuoteDestination",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": {
+      "type": "string"
+    },
+    "destination_code": {
+      "type": "string",
+      "enum": [
+        "TRIAD",
+        "SUS",
+        "AST"
+      ]
+    },
+    "destination_name": {
+      "type": "string"
+    },
+    "is_selected": {
+      "type": "boolean",
+      "default": false
+    },
+    "readiness_status": {
+      "type": "string",
+      "enum": [
+        "incomplete",
+        "conditional",
+        "ready"
+      ],
+      "default": "incomplete"
+    },
+    "sent_status": {
+      "type": "string",
+      "enum": [
+        "not_sent",
+        "sent",
+        "failed"
+      ],
+      "default": "not_sent"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sent_by": {
+      "type": "string"
+    },
+    "email_to": {
+      "type": "string"
+    },
+    "email_cc": {
+      "type": "string"
+    },
+    "email_bcc": {
+      "type": "string"
+    },
+    "subject_template": {
+      "type": "string"
+    },
+    "body_template": {
+      "type": "string"
+    },
+    "resend_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_error": {
+      "type": "string"
+    },
+    "response_status": {
+      "type": "string"
+    },
+    "response_received_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "txquote_case_id",
+    "destination_code",
+    "destination_name"
+  ]
+}

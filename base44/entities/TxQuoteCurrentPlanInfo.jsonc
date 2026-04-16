@@ -1,0 +1,55 @@
+{
+  "name": "TxQuoteCurrentPlanInfo",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": {
+      "type": "string"
+    },
+    "current_carrier": {
+      "type": "string"
+    },
+    "current_plan_name": {
+      "type": "string"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "network_type": {
+      "type": "string"
+    },
+    "deductible_individual": {
+      "type": "number"
+    },
+    "deductible_family": {
+      "type": "number"
+    },
+    "oop_individual": {
+      "type": "number"
+    },
+    "oop_family": {
+      "type": "number"
+    },
+    "copay_structure": {
+      "type": "string"
+    },
+    "rx_structure": {
+      "type": "string"
+    },
+    "current_plan_design_notes": {
+      "type": "string"
+    },
+    "current_sbc_document_id": {
+      "type": "string"
+    },
+    "current_bill_document_id": {
+      "type": "string"
+    },
+    "renewal_offer_document_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "txquote_case_id"
+  ]
+}

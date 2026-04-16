@@ -1,0 +1,47 @@
+{
+  "name": "TxQuoteReadinessResult",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": {
+      "type": "string"
+    },
+    "validator_code": {
+      "type": "string"
+    },
+    "validator_name": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "conditional"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "field_path": {
+      "type": "string"
+    },
+    "destination_code": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "txquote_case_id",
+    "validator_code",
+    "severity",
+    "status",
+    "message"
+  ]
+}
