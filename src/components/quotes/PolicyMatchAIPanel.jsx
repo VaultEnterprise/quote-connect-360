@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Zap, CheckCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { format, parseISO } from "date-fns";
 
 export default function PolicyMatchAIPanel({ scenario, caseId }) {
   const [running, setRunning] = useState(false);
