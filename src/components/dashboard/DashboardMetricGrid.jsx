@@ -5,8 +5,8 @@ import MetricCard from "@/components/shared/MetricCard";
 
 const KPI_LINKS = {
   activeCases: "/cases",
-  quotingCases: "/quotes",
-  enrollmentOpen: "/enrollment",
+  quotingCases: "/cases",
+  enrollmentOpen: "/cases",
   overdueTasks: "/tasks",
 };
 

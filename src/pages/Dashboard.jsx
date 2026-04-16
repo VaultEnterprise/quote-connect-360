@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
-import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { format, differenceInDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PageHeader from "@/components/shared/PageHeader";
@@ -33,80 +30,32 @@ import { useAuth } from "@/lib/AuthContext";
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
 
 export default function Dashboard() {
-  const queryClient = useQueryClient();
   const { user, isLoadingAuth: isUserLoading } = useAuth();
   const [filters, setFilters] = useState(DEFAULT_DASHBOARD_FILTERS);
   const [selectedPresetId, setSelectedPresetId] = useState("none");
   const [hasInitializedPreferences, setHasInitializedPreferences] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const canViewAll = user?.role === "admin";
-
-  const { data: cases = [], isLoading: isLoadingCases, dataUpdatedAt: casesUpdatedAt } = useQuery({
-    queryKey: ["dashboard-cases", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.BenefitCase.list("-created_date", 300)
-      : base44.entities.BenefitCase.filter({ assigned_to: user?.email }, "-created_date", 300),
-  });
-
-  const { data: tasks = [], isLoading: isLoadingTasks, dataUpdatedAt: tasksUpdatedAt } = useQuery({
-    queryKey: ["dashboard-tasks", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.CaseTask.list("-created_date", 300)
-      : base44.entities.CaseTask.filter({ assigned_to: user?.email }, "-created_date", 300),
-  });
-
-  const { data: enrollments = [], isLoading: isLoadingEnrollments, dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({
-    queryKey: ["dashboard-enrollments", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300),
-  });
-
-  const { data: renewals = [], isLoading: isLoadingRenewals, dataUpdatedAt: renewalsUpdatedAt } = useQuery({
-    queryKey: ["dashboard-renewals", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.RenewalCycle.list("-created_date", 300)
-      : base44.entities.RenewalCycle.filter({ assigned_to: user?.email }, "-created_date", 300),
-  });
-
-  const { data: scenarios = [], isLoading: isLoadingScenarios, dataUpdatedAt: scenariosUpdatedAt } = useQuery({
-    queryKey: ["dashboard-scenarios", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.QuoteScenario.list("-created_date", 300)
-      : base44.entities.QuoteScenario.filter({ assigned_to: user?.email }, "-created_date", 300),
-  });
-
-  const { data: exceptions = [], isLoading: isLoadingExceptions, dataUpdatedAt: exceptionsUpdatedAt } = useQuery({
-    queryKey: ["dashboard-exceptions", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.ExceptionItem.list("-created_date", 300)
-      : base44.entities.ExceptionItem.filter({ assigned_to: user?.email }, "-created_date", 300),
-  });
-
-  const { data: proposals = [], isLoading: isLoadingProposals, dataUpdatedAt: proposalsUpdatedAt } = useQuery({
-    queryKey: ["dashboard-proposals", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => base44.entities.Proposal.list("-created_date", 300),
-  });
-
-  const { data: agencies = [], isLoading: isLoadingAgencies, dataUpdatedAt: agenciesUpdatedAt } = useQuery({
-    queryKey: ["dashboard-agencies"],
-    enabled: !!user,
-    queryFn: () => base44.entities.Agency.list("-created_date", 200),
-  });
-
-  const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({
-    queryKey: ["dashboard-presets"],
-    enabled: !!user,
-    queryFn: () => base44.entities.DashboardViewPreset.list("-updated_date", 100),
-  });
-
-  const isLoading = isLoadingCases || isLoadingTasks || isLoadingEnrollments || isLoadingRenewals || isLoadingScenarios || isLoadingExceptions || isLoadingProposals || isLoadingAgencies;
+  const cases = [];
+  const isLoading = false;
+  const casesUpdatedAt = 0;
+  const tasks = [];
+  const tasksUpdatedAt = 0;
+  const enrollments = [];
+  const enrollmentsUpdatedAt = 0;
+  const renewals = [];
+  const renewalsUpdatedAt = 0;
+  const scenarios = [];
+  const scenariosUpdatedAt = 0;
+  const exceptions = [];
+  const exceptionsUpdatedAt = 0;
+  const proposals = [];
+  const proposalsUpdatedAt = 0;
+  const agencies = [];
+  const agenciesUpdatedAt = 0;
+  const presets = [];
+  const presetsFetched = true;
+  const presetsUpdatedAt = 0;
 
   useEffect(() => {
     if (hasInitializedPreferences || !user || !presetsFetched) return;
@@ -147,47 +96,14 @@ export default function Dashboard() {
   const [saveViewName, setSaveViewName] = useState("");
 
   const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["dashboard-cases"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-tasks"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-enrollments"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-renewals"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-scenarios"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-exceptions"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-proposals"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-agencies"] }),
-      queryClient.invalidateQueries({ queryKey: ["dashboard-presets"] }),
-    ]);
-    setIsRefreshing(false);
-  };
+  const handleRefresh = async () => { setIsRefreshing(true); setIsRefreshing(false); };
   const handleSaveView = () => {
     setSaveViewName("");
     setShowSaveViewPanel(true);
   };
 
   const handleSaveViewConfirm = async () => {
-    const trimmedName = saveViewName.trim();
-    if (!trimmedName) return;
-    await base44.entities.DashboardViewPreset.create({
-      name: trimmedName,
-      description: `${filters.viewMode} dashboard view`,
-      view_mode: filters.viewMode,
-      date_range: filters.dateRange,
-      is_default: false,
-      filters: {
-        owner: filters.owner,
-        team: filters.team,
-        agencyId: filters.agencyId,
-        employerId: filters.employerId,
-        caseType: filters.caseType,
-        stage: filters.stage,
-      },
-    });
-    await queryClient.invalidateQueries({ queryKey: ["dashboard-presets"] });
     setShowSaveViewPanel(false);
-    setSaveViewName("");
   };
   const handlePresetChange = (presetId) => {
     if (presetId === "none") { setSelectedPresetId("none"); return; }
@@ -196,17 +112,7 @@ export default function Dashboard() {
     setSelectedPresetId(presetId);
     setFilters({ dateRange: preset.date_range || DEFAULT_DASHBOARD_FILTERS.dateRange, viewMode: preset.view_mode || DEFAULT_DASHBOARD_FILTERS.viewMode, owner: preset.filters?.owner || "all", team: preset.filters?.team || "all", agencyId: preset.filters?.agencyId || "all", employerId: preset.filters?.employerId || "all", caseType: preset.filters?.caseType || "all", stage: preset.filters?.stage || "all" });
   };
-  const handleSetDefault = async () => {
-    if (!selectedPresetId || selectedPresetId === "none") return;
-    await Promise.all(
-      presets.map((preset) =>
-        base44.entities.DashboardViewPreset.update(preset.id, {
-          is_default: preset.id === selectedPresetId,
-        })
-      )
-    );
-    await queryClient.invalidateQueries({ queryKey: ["dashboard-presets"] });
-  };
+  const handleSetDefault = async () => {};
 
   if (isLoading || isUserLoading) {
     return (
