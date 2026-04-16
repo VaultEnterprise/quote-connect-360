@@ -219,7 +219,7 @@ export default function Cases() {
       <BulkAssignModal isOpen={showAssignModal} caseIds={Array.from(selectedIds)} onClose={() => setShowAssignModal(false)} onSuccess={handleBulkSuccess} />
       <BulkStageModal isOpen={showStageModal} caseIds={Array.from(selectedIds)} onClose={() => setShowStageModal(false)} onSuccess={handleBulkSuccess} />
       <BulkPriorityModal isOpen={showPriorityModal} caseIds={Array.from(selectedIds)} onClose={() => setShowPriorityModal(false)} onSuccess={handleBulkSuccess} />
-      <BulkStageAdvanceModal isOpen={showStageAdvanceModal} caseIds={Array.from(selectedIds)} onClose={() => setShowStageAdvanceModal(false)} onSuccess={handleBulkSuccess} />
+      <BulkStageAdvanceModal isOpen={showStageAdvanceModal} caseIds={Array.from(selectedIds)} cases={cases} onClose={() => setShowStageAdvanceModal(false)} onSuccess={handleBulkSuccess} />
       <BulkAssignWithDueDate isOpen={showAssignDueDate} caseIds={Array.from(selectedIds)} onClose={() => setShowAssignDueDate(false)} onSuccess={handleBulkSuccess} />
       <QuickCreateCaseModal isOpen={showQuickCreate} onClose={() => setShowQuickCreate(false)} />
       <ConfirmDialog

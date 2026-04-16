@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { getAllowedTransitions } from "@/lib/workflow/getAllowedTransitions";
 
 const STAGES = [
   { value: "draft", label: "Draft" },
@@ -26,10 +27,20 @@ const STAGES = [
   { value: "closed", label: "Closed" },
 ];
 
-export default function BulkStageAdvanceModal({ isOpen, caseIds, onClose, onSuccess }) {
+export default function BulkStageAdvanceModal({ isOpen, caseIds, cases = [], onClose, onSuccess }) {
   const [newStage, setNewStage] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const allowedStageOptions = useMemo(() => {
+    const selectedCases = cases.filter((item) => caseIds.includes(item.id));
+    const sharedTransitions = selectedCases.reduce((acc, item) => {
+      const transitions = getAllowedTransitions(item.stage);
+      if (acc === null) return transitions;
+      return acc.filter((stage) => transitions.includes(stage));
+    }, null);
+    return STAGES.filter((stage) => (sharedTransitions || []).includes(stage.value));
+  }, [caseIds, cases]);
 
   const bulkUpdate = useMutation({
     mutationFn: async () => {
@@ -68,7 +79,7 @@ export default function BulkStageAdvanceModal({ isOpen, caseIds, onClose, onSucc
               <SelectValue placeholder="Select new stage..." />
             </SelectTrigger>
             <SelectContent>
-              {STAGES.map(s => (
+              {allowedStageOptions.map(s => (
                 <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
               ))}
             </SelectContent>
@@ -77,7 +88,7 @@ export default function BulkStageAdvanceModal({ isOpen, caseIds, onClose, onSucc
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => bulkUpdate.mutate()} disabled={!newStage || bulkUpdate.isPending}>
+          <Button onClick={() => bulkUpdate.mutate()} disabled={!newStage || bulkUpdate.isPending || allowedStageOptions.length === 0}>
             {bulkUpdate.isPending ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...</>
             ) : (
