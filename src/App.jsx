@@ -41,7 +41,6 @@ import ACALibrary from '@/pages/ACALibrary';
 import PlanRateEditor from '@/pages/PlanRateEditor';
 import PlanAnalyticsDashboard from '@/pages/PlanAnalyticsDashboard';
 import PlanComplianceCenter from '@/pages/PlanComplianceCenter';
-import PlanRatingEngine from '@/pages/PlanRatingEngine';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -98,7 +97,6 @@ const AuthenticatedApp = () => {
         <Route path="/plan-rate-editor" element={<PlanRateEditor />} />
         <Route path="/plan-analytics" element={<PlanAnalyticsDashboard />} />
         <Route path="/plan-compliance" element={<PlanComplianceCenter />} />
-        <Route path="/plan-rating" element={<PlanRatingEngine />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
