@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import { CaseListSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -479,11 +480,10 @@ export default function Cases() {
           <div className="space-y-2">
             {filtered.map(c => (
               <div key={c.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selectedIds.has(c.id)}
-                  onChange={() => toggleSelect(c.id)}
-                  className="w-4 h-4 rounded border border-input"
+                  onCheckedChange={() => toggleSelect(c.id)}
+                  className="h-4 w-4 rounded-md border-border/70 shadow-sm"
                 />
                 <div className="flex-1">
                   <CaseListCard c={c} />

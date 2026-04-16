@@ -51,7 +51,7 @@ export default function CasesSystemSignals({ signals }) {
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {items.map((item) => (
-            <div key={item.label} className={`rounded-2xl border p-4 shadow-sm ${item.tone}`}>
+            <div key={item.label} className={`rounded-2xl border p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 ${item.tone}`}>
               <div className="flex items-center justify-between gap-3">
                 <item.icon className="w-4 h-4" />
                 <span className="text-2xl font-semibold">{item.value}</span>

@@ -62,7 +62,7 @@ export default function CasesCommandCenter({ metrics, onFilter }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
       {cards.map((card) => (
-        <button key={card.key} onClick={card.onClick} className="text-left">
+        <button key={card.key} onClick={card.onClick} className="text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-ring/40 focus:ring-offset-2">
           <MetricCard
             label={card.label}
             value={card.value}
