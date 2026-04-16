@@ -9,13 +9,11 @@ export default function RatesIssuesPanel({ issues, onSelectRow }) {
         <p className="text-sm text-muted-foreground">No operational issues detected in the current scope.</p>
       ) : issues.map((issue) => (
         <>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold text-foreground">{issue.title}</p>
-              <p className="text-xs text-muted-foreground">{issue.count} affected records</p>
-            </div>
-            <Badge variant="outline" className="capitalize">{issue.severity}</Badge>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{issue.title}</p>
+            <p className="text-xs text-muted-foreground">{issue.count} affected records</p>
           </div>
+          <Badge variant="outline" className="capitalize">{issue.severity}</Badge>
           <div className="mt-2 space-y-1">
             {issue.rows.slice(0, 3).map((row) => (
               <button key={row.id} onClick={() => onSelectRow(row)} className="block text-left text-xs text-primary hover:underline">{row.rate_set_name || row.linkedPlanName}</button>
