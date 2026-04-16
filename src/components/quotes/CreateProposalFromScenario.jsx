@@ -29,7 +29,11 @@ export default function CreateProposalFromScenario({ scenario, open, onClose }) 
   });
 
   const create = useMutation({
-    mutationFn: () => base44.entities.Proposal.create({
+    mutationFn: async () => {
+      if (scenario.status !== "completed") {
+        throw new Error("Scenario must be calculated before creating a proposal");
+      }
+      return base44.entities.Proposal.create({
       case_id: scenario.case_id,
       scenario_id: scenario.id,
       title: form.title,
@@ -42,7 +46,8 @@ export default function CreateProposalFromScenario({ scenario, open, onClose }) 
       employer_monthly_cost: scenario.employer_monthly_cost,
       employee_avg_cost: scenario.employee_monthly_cost_avg,
       status: "draft",
-    }),
+    });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["proposals"] });
       toast({ title: "Proposal created", description: "Draft proposal created. Go to Proposals to finalize and send." });

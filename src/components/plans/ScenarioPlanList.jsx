@@ -26,13 +26,26 @@ export default function ScenarioPlanList({ scenarioId, caseId }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.ScenarioPlan.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scenario-plans", scenarioId] }),
+    mutationFn: async ({ id, data }) => {
+      const updated = await base44.entities.ScenarioPlan.update(id, data);
+      await base44.entities.QuoteScenario.update(scenarioId, { status: "draft" });
+      return updated;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scenario-plans", scenarioId] });
+      queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ScenarioPlan.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["scenario-plans", scenarioId] }),
+    mutationFn: async (id) => {
+      await base44.entities.ScenarioPlan.delete(id);
+      await base44.entities.QuoteScenario.update(scenarioId, { status: "draft" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scenario-plans", scenarioId] });
+      queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
+    },
   });
 
   if (scenarioPlans.length === 0) return (

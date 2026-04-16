@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { computeModeledContribution } from "./quoteCalculations";
 
 // ACA affordability threshold for 2024: employee contribution <= 9.02% of household income
 // We approximate against a $60k salary baseline
@@ -32,20 +33,18 @@ export default function CostModelingSlider({ scenarios }) {
       const eeContribPct = getContrib(s, "ee");
       const depContribPct = getContrib(s, "dep");
 
-      // Rough split: assume ~60% of premium is EE-only, 40% is dependents
-      const eePortion = totalPremium * 0.6;
-      const depPortion = totalPremium * 0.4;
+      const modeled = computeModeledContribution({
+        totalPremium,
+        employeeCount: 1,
+        dependentCount: 0,
+        eeContribution: eeContribPct,
+        depContribution: depContribPct,
+      });
 
-      const employerCost = (eePortion * eeContribPct / 100) + (depPortion * depContribPct / 100);
-      const employeeCost = totalPremium - employerCost;
-      const avgEEMonthly = s.plan_count > 0 ? employeeCost / (s.plan_count || 1) : employeeCost;
-
-      // ACA affordability: employee EE-only premium <= 9.02% of W-2 wages
-      const eeOnlyMonthly = eePortion * (1 - eeContribPct / 100);
-      const affordabilityPct = BASELINE_MONTHLY_INCOME > 0 ? (eeOnlyMonthly / BASELINE_MONTHLY_INCOME) * 100 : 0;
+      const affordabilityPct = BASELINE_MONTHLY_INCOME > 0 ? (modeled.employeeOnlyMonthlyContribution / BASELINE_MONTHLY_INCOME) * 100 : 0;
       const acaCompliant = affordabilityPct <= ACA_THRESHOLD_PCT;
 
-      return { s, totalPremium, employerCost, employeeCost, eeContribPct, depContribPct, acaCompliant, affordabilityPct };
+      return { s, totalPremium, employerCost: modeled.employerCost, employeeCost: modeled.employeeCost, eeContribPct, depContribPct, acaCompliant, affordabilityPct };
     });
   }, [scenarios, overrides]);
 

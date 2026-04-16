@@ -10,15 +10,16 @@ export default function RecommendationBreakdown({ scenario, previousScenario }) 
   const confidence = scenario.confidence_level || "medium";
   const disruption = scenario.disruption_score || 0;
 
-  // Score breakdown (mock calculation)
+  const totalPremium = scenario.total_monthly_premium || 0;
+  const employerCost = scenario.employer_monthly_cost || 0;
+  const eeCost = scenario.employee_monthly_cost_avg || 0;
   const scoreBreakdown = {
-    cost: Math.round(score * 0.4),
-    coverage: Math.round(score * 0.3),
-    risk: Math.round(score * 0.2),
-    network: Math.round(score * 0.1),
+    cost: Math.min(40, Math.max(0, Math.round((totalPremium > 0 ? (1 - (eeCost / totalPremium)) : 0) * 40))),
+    coverage: Math.min(30, Math.max(0, Math.round(((scenario.plan_count || 0) >= 3 ? 1 : (scenario.plan_count || 0) / 3) * 30))),
+    risk: Math.min(20, Math.max(0, 20 - Math.round((disruption / 100) * 20))),
+    network: Math.min(10, Math.max(0, Math.round(((scenario.carriers_included?.length || 0) >= 2 ? 1 : (scenario.carriers_included?.length || 0) / 2) * 10))),
   };
 
-  const totalPremium = scenario.total_monthly_premium || 0;
   const previousPremium = previousScenario?.total_monthly_premium || 0;
   const premiumChange = previousPremium ? ((totalPremium - previousPremium) / previousPremium) * 100 : 0;
 

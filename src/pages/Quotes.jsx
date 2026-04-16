@@ -106,7 +106,7 @@ export default function Quotes() {
     });
 
     return result;
-  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon]);
+  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon, carrierFilter]);
 
   const grouped = useMemo(() => {
     const groups = {};
@@ -188,7 +188,7 @@ export default function Quotes() {
   };
 
   const handleBulkExpire = async () => {
-    await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.update(id, { status: "expired" })));
+    await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.update(id, { status: "expired", expires_at: new Date().toISOString() })));
     queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
     setSelectedIds([]);
     toast?.({ title: `${selectedIds.length} scenarios marked expired` });
@@ -283,7 +283,7 @@ export default function Quotes() {
         }
       />
 
-      <QuotesKPIBar scenarios={scenarios} />
+      <QuotesKPIBar scenarios={filtered.length ? filtered : scenarios} />
 
       {compareMode && selectedScenarios.length >= 2 && (
         <ScenarioCompare

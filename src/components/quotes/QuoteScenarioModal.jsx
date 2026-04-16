@@ -31,9 +31,23 @@ export default function QuoteScenarioModal({ caseId, scenario, open, onClose }) 
   });
 
   const save = useMutation({
-    mutationFn: () => isEdit
-      ? base44.entities.QuoteScenario.update(scenario.id, { ...form, total_monthly_premium: Number(form.total_monthly_premium) || undefined, employer_monthly_cost: Number(form.employer_monthly_cost) || undefined, plan_count: Number(form.plan_count) || undefined })
-      : base44.entities.QuoteScenario.create({ ...form, case_id: caseId, status: "draft", total_monthly_premium: Number(form.total_monthly_premium) || undefined, employer_monthly_cost: Number(form.employer_monthly_cost) || undefined, plan_count: Number(form.plan_count) || undefined }),
+    mutationFn: async () => {
+      const payload = {
+        ...form,
+        total_monthly_premium: Number(form.total_monthly_premium) || undefined,
+        employer_monthly_cost: Number(form.employer_monthly_cost) || undefined,
+        employee_monthly_cost_avg: form.total_monthly_premium && form.employer_monthly_cost
+          ? Math.max(0, Number(form.total_monthly_premium) - Number(form.employer_monthly_cost))
+          : scenario?.employee_monthly_cost_avg,
+        plan_count: Number(form.plan_count) || undefined,
+      };
+
+      if (isEdit) {
+        return base44.entities.QuoteScenario.update(scenario.id, payload);
+      }
+
+      return base44.entities.QuoteScenario.create({ ...payload, case_id: caseId, status: "draft" });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quote-scenarios", caseId] });
       queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });

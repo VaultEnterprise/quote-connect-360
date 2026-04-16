@@ -3,11 +3,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
+import { computeModeledContribution, getScenarioCensusStats } from "./quoteCalculations";
 
 export default function ContributionSlider({ scenario, open, onClose }) {
   const [eeContribution, setEeContribution] = useState(scenario.employer_contribution_ee ?? 80);
@@ -16,28 +16,38 @@ export default function ContributionSlider({ scenario, open, onClose }) {
   const { toast } = useToast();
 
   const totalPremium = scenario.total_monthly_premium || 0;
-  const projectedEmployeeCount = 100; // Mock estimate
+
+  const { data: censusMembers = [] } = useQuery({
+    queryKey: ["scenario-census-members", scenario.case_id],
+    queryFn: () => base44.entities.CensusMember.filter({ case_id: scenario.case_id, is_eligible: true }, "-created_date", 500),
+    enabled: !!scenario.case_id,
+  });
+
+  const censusStats = useMemo(() => getScenarioCensusStats(censusMembers), [censusMembers]);
 
   const calculations = useMemo(() => {
-    const empRate = eeContribution / 100;
-    const depRate = depContribution / 100;
-    const avgEmpCost = totalPremium * empRate;
-    const avgDepCost = totalPremium * depRate;
-    const employeeAvgCost = totalPremium * (1 - empRate);
+    const modeled = computeModeledContribution({
+      totalPremium,
+      employeeCount: censusStats.employeeCount,
+      dependentCount: censusStats.dependentCount,
+      eeContribution,
+      depContribution,
+    });
 
-    // ACA affordability check (9.12% of household income)
-    const avgHouseholdIncome = 55000; // Mock
-    const acaThreshold = (avgHouseholdIncome * 0.0912) / 12;
-    const isACAAffordable = employeeAvgCost <= acaThreshold;
+    const acaThreshold = 350;
+    const isACAAffordable = modeled.employeeOnlyMonthlyContribution <= acaThreshold;
 
     return {
-      employerCostEE: avgEmpCost,
-      employerCostDep: avgDepCost,
-      employeeAvgCost,
+      employerCostEE: modeled.employerEmployeeCost,
+      employerCostDep: modeled.employerDependentCost,
+      employeeAvgCost: modeled.avgEmployeeCost,
+      employeeOnlyMonthlyContribution: modeled.employeeOnlyMonthlyContribution,
+      employerCost: modeled.employerCost,
+      employeeCost: modeled.employeeCost,
       acaThreshold,
       isACAAffordable,
     };
-  }, [eeContribution, depContribution, totalPremium]);
+  }, [eeContribution, depContribution, totalPremium, censusStats]);
 
   const saveContribution = useMutation({
     mutationFn: async () => {
@@ -102,7 +112,7 @@ export default function ContributionSlider({ scenario, open, onClose }) {
           {/* Cost Summary */}
           <div className="border-t pt-6">
             <p className="text-sm font-semibold mb-3">Impact Summary</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Card>
                 <CardContent className="pt-4">
                   <p className="text-xs text-muted-foreground">Total Monthly Premium</p>
@@ -111,11 +121,24 @@ export default function ContributionSlider({ scenario, open, onClose }) {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <p className="text-xs text-muted-foreground">Employee Avg Cost</p>
+                  <p className="text-xs text-muted-foreground">Employer Monthly Cost</p>
+                  <p className="text-lg font-bold">${calculations.employerCost.toLocaleString()}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-xs text-muted-foreground">Employee Total Cost</p>
+                  <p className="text-lg font-bold">${calculations.employeeCost.toLocaleString()}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-xs text-muted-foreground">Avg Employee Cost</p>
                   <p className="text-lg font-bold">${calculations.employeeAvgCost.toLocaleString()}</p>
                 </CardContent>
               </Card>
             </div>
+            <p className="text-xs text-muted-foreground mt-3">Based on {censusStats.employeeCount || 0} eligible employees and {censusStats.dependentCount || 0} dependent elections in the current census.</p>
           </div>
 
           {/* ACA Affordability Check */}

@@ -41,8 +41,10 @@ export default function PlanPickerModal({ open, onClose, scenarioId, caseId, alr
       }));
       return Promise.all(creates);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await base44.entities.QuoteScenario.update(scenarioId, { status: "draft" });
       queryClient.invalidateQueries({ queryKey: ["scenario-plans", scenarioId] });
+      queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
       onClose();
     },
   });

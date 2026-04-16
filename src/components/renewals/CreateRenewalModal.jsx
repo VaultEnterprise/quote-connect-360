@@ -34,7 +34,7 @@ export default function CreateRenewalModal({ open, onClose }) {
       const selectedCase = activeCases.find(c => c.id === selectedCaseId);
       if (!selectedCase) throw new Error("Case not found");
 
-      return base44.entities.RenewalCycle.create({
+      const renewal = await base44.entities.RenewalCycle.create({
         case_id: selectedCaseId,
         employer_group_id: selectedCase.employer_group_id,
         employer_name: selectedCase.employer_name,
@@ -43,6 +43,11 @@ export default function CreateRenewalModal({ open, onClose }) {
         status: "pre_renewal",
         assigned_to: selectedCase.assigned_to,
       });
+      await base44.entities.BenefitCase.update(selectedCaseId, {
+        stage: "renewal_pending",
+        last_activity_date: new Date().toISOString(),
+      });
+      return renewal;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });

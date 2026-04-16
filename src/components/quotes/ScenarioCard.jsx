@@ -49,7 +49,7 @@ function carrierColor(name) {
   return colors[name.charCodeAt(0) % colors.length];
 }
 
-export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate }) {
+export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, onShowDetails, onApproval, onContribution, calculating, onCalculate }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
@@ -301,6 +301,15 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                     <Send className="w-3.5 h-3.5 mr-2" /> Create Proposal
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuItem onClick={() => onShowDetails?.(scenario)}>
+                  <FileText className="w-3.5 h-3.5 mr-2" /> View Details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onContribution?.(scenario)}>
+                  <Sliders className="w-3.5 h-3.5 mr-2" /> Contribution Modeling
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onApproval?.(scenario)}>
+                  <Send className="w-3.5 h-3.5 mr-2" /> Approval Workflow
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => updateScenario.mutate({ is_recommended: !scenario.is_recommended })}>
                   <Star className="w-3.5 h-3.5 mr-2" />

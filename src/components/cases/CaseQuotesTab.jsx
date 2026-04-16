@@ -96,6 +96,9 @@ export default function CaseQuotesTab({ caseId, scenarios }) {
                       + Plans
                     </Button>
                     <StatusBadge status={s.status} />
+                    {s.status !== "completed" && (
+                      <Badge variant="outline" className="text-[10px]">Recalculate after plan changes</Badge>
+                    )}
                     <Button variant="ghost" size="sm" className="text-xs" onClick={() => openEdit(s)}>
                       <Pencil className="w-3 h-3" />
                     </Button>

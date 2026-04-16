@@ -30,11 +30,18 @@ export default function CreateEnrollmentModal({ open, onClose }) {
   const selectedCase = cases.find(c => c.id === form.case_id);
 
   const create = useMutation({
-    mutationFn: () => base44.entities.EnrollmentWindow.create({
-      ...form,
-      total_eligible: form.total_eligible ? Number(form.total_eligible) : undefined,
-      employer_name: selectedCase?.employer_name || "",
-    }),
+    mutationFn: async () => {
+      const enrollment = await base44.entities.EnrollmentWindow.create({
+        ...form,
+        total_eligible: form.total_eligible ? Number(form.total_eligible) : undefined,
+        employer_name: selectedCase?.employer_name || "",
+      });
+      await base44.entities.BenefitCase.update(form.case_id, {
+        enrollment_status: form.status === "open" ? "open" : "not_started",
+        stage: form.status === "open" ? "enrollment_open" : "approved_for_enrollment",
+      });
+      return enrollment;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["enrollments-all"] });
       queryClient.invalidateQueries({ queryKey: ["enrollments"] });

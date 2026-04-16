@@ -10,10 +10,10 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 
 const PRESET_VIEWS = [
-  { id: "recommended", name: "Recommended Scenarios", filters: { is_recommended: true } },
+  { id: "recommended", name: "Recommended Scenarios", filters: { statusFilter: "all", showExpiringOnly: false, search: "" } },
   { id: "expiring", name: "Expiring Soon", filters: { showExpiringOnly: true } },
-  { id: "completed", name: "Completed", filters: { status: "completed" } },
-  { id: "draft", name: "Drafts", filters: { status: "draft" } },
+  { id: "completed", name: "Completed", filters: { statusFilter: "completed" } },
+  { id: "draft", name: "Drafts", filters: { statusFilter: "draft" } },
 ];
 
 export default function SavedViewsPanel({ currentFilters, onLoadPreset, onSavePreset }) {
@@ -115,49 +115,38 @@ export default function SavedViewsPanel({ currentFilters, onLoadPreset, onSavePr
         </DialogContent>
       </Dialog>
 
-      {/* Preset Views Popover */}
-      <div className="absolute top-12 right-0 bg-white rounded-lg border shadow-lg p-3 w-64 z-50 hidden group-hover:block">
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-2">Quick Views</p>
-            <div className="space-y-1">
-              {PRESET_VIEWS.map((view) => (
-                <button
-                  key={view.id}
-                  onClick={() => onLoadPreset(view.filters)}
-                  className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-muted transition-colors"
-                >
-                  <Bookmark className="w-2.5 h-2.5 inline mr-1" />
-                  {view.name}
-                </button>
-              ))}
-            </div>
+      <div className="flex items-center gap-1.5">
+        {PRESET_VIEWS.map((view) => (
+          <Button
+            key={view.id}
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => onLoadPreset(view.filters)}
+          >
+            <Bookmark className="w-3 h-3 mr-1" /> {view.name}
+          </Button>
+        ))}
+        {savedPresets.map((preset) => (
+          <div key={preset.id} className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => onLoadPreset(preset.filters)}
+            >
+              {preset.name}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => deletePreset.mutate(preset.id)}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
           </div>
-
-          {savedPresets.length > 0 && (
-            <div className="border-t pt-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Saved Presets</p>
-              <div className="space-y-1">
-                {savedPresets.map((preset) => (
-                  <div key={preset.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
-                    <button
-                      onClick={() => onLoadPreset(preset.filters)}
-                      className="text-xs text-left flex-1"
-                    >
-                      {preset.name}
-                    </button>
-                    <button
-                      onClick={() => deletePreset.mutate(preset.id)}
-                      className="text-destructive hover:text-destructive/80"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        ))}
       </div>
     </>
   );
