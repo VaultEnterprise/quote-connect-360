@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -26,11 +26,17 @@ import DomainControlGrid from "@/components/dashboard/DomainControlGrid";
 import RoutedPagesDirectory from "@/components/dashboard/RoutedPagesDirectory";
 import WorkflowBottlenecksPanel from "@/components/dashboard/WorkflowBottlenecksPanel";
 import ActionCenterPanel from "@/components/dashboard/ActionCenterPanel";
+import DashboardRoleViewTabs from "@/components/dashboard/DashboardRoleViewTabs";
+import SystemControlMetrics from "@/components/dashboard/SystemControlMetrics";
+import AlertsAndAuditFeed from "@/components/dashboard/AlertsAndAuditFeed";
+import IntegrationStatusPanel from "@/components/dashboard/IntegrationStatusPanel";
+import NextBestActionsPanel from "@/components/dashboard/NextBestActionsPanel";
 import { buildPlatformDependencyRegistry } from "@/components/platform/platformDependencyRegistry";
 import { buildActionCenterFromRegistry } from "@/components/platform/platformOrchestrationEngine";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+  const [roleView, setRoleView] = useState("admin");
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
@@ -88,6 +94,11 @@ export default function Dashboard() {
     queryFn: () => base44.entities.EmployeeEnrollment.list("-created_date", 500),
   });
 
+  const { data: activityLogs = [] } = useQuery({
+    queryKey: ["dashboard-activity-logs"],
+    queryFn: () => base44.entities.ActivityLog.list("-created_date", 50),
+  });
+
   useEffect(() => {
     const unsubscribeCases = base44.entities.BenefitCase.subscribe(() => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
@@ -133,6 +144,10 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-employee-enrollments"] });
     });
 
+    const unsubscribeActivityLogs = base44.entities.ActivityLog.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard-activity-logs"] });
+    });
+
     return () => {
       unsubscribeCases?.();
       unsubscribeTasks?.();
@@ -145,6 +160,7 @@ export default function Dashboard() {
       unsubscribeEmployers?.();
       unsubscribeProposals?.();
       unsubscribeEmployeeEnrollments?.();
+      unsubscribeActivityLogs?.();
     };
   }, [queryClient]);
 
@@ -196,6 +212,94 @@ export default function Dashboard() {
   }), [cases, tasks, censusVersions, quoteScenarios, enrollments, renewals, exceptions, employeeEnrollments]);
 
   const actionCenterItems = useMemo(() => buildActionCenterFromRegistry(registry), [registry]);
+
+  const dashboardMetrics = useMemo(() => {
+    const totalEmployees = employeeEnrollments.length;
+    const totalEligible = enrollments.reduce((sum, item) => sum + (item.total_eligible || 0), 0);
+    const enrolledEmployees = employeeEnrollments.filter((item) => item.status === "completed").length;
+    const enrollmentCompletion = totalEligible > 0 ? Math.round((enrolledEmployees / totalEligible) * 100) : 0;
+    const quoteCompleted = quoteScenarios.filter((item) => item.status === "completed").length;
+    const quotePipeline = quoteScenarios.filter((item) => ["draft", "running", "completed"].includes(item.status)).length;
+    const renewalOverdue = renewals.filter((item) => item.renewal_date && new Date(item.renewal_date) < new Date() && item.status !== "completed").length;
+    const renewalPipeline = renewals.filter((item) => item.status !== "completed").length;
+    const openCases = activeCases.length;
+    const totalCases = cases.length;
+    const slaRisk = stalledCasesCount + overdueTasks.length;
+
+    return {
+      totalEmployees,
+      totalEligible,
+      enrolledEmployees,
+      enrollmentCompletion,
+      quoteCompleted,
+      quotePipeline,
+      renewalOverdue,
+      renewalPipeline,
+      openCases,
+      totalCases,
+      slaRisk,
+    };
+  }, [employeeEnrollments, enrollments, quoteScenarios, renewals, activeCases.length, cases.length, stalledCasesCount, overdueTasks.length]);
+
+  const activeAlerts = useMemo(() => {
+    const items = [
+      { label: "Census data issues", value: registry.systemSummary.censusIssues, detail: "Validation gaps are blocking downstream work.", href: "/census" },
+      { label: "Quote pricing issues", value: registry.systemSummary.quoteFailures + (registry.systemSummary.rateSummary?.quotedPlansWithoutRates || 0), detail: "Scenarios need pricing or rate remediation.", href: "/quotes" },
+      { label: "Enrollment blockers", value: registry.systemSummary.enrollmentBlockers, detail: "Enrollment execution is blocked or incomplete.", href: "/enrollment" },
+      { label: "Renewal deadlines", value: registry.systemSummary.renewalRisk, detail: "Renewals are approaching or overdue without closure.", href: "/renewals" },
+      { label: "Case escalations", value: openExceptions, detail: "Operational exceptions require triage and owner action.", href: "/cases" },
+    ];
+    return items.filter((item) => item.value > 0);
+  }, [registry, openExceptions]);
+
+  const integrationHealth = useMemo(() => ([
+    {
+      key: "payroll",
+      label: "Payroll",
+      value: employers.length,
+      detail: "Employer records available for downstream sync readiness.",
+      healthy: employers.length > 0,
+    },
+    {
+      key: "carrier",
+      label: "Carrier Pricing",
+      value: registry.systemSummary.rateSummary?.plansWithoutRates || 0,
+      detail: "Plans missing rates impact quoting accuracy.",
+      healthy: (registry.systemSummary.rateSummary?.plansWithoutRates || 0) === 0,
+    },
+    {
+      key: "edi",
+      label: "EDI / Enrollment",
+      value: pendingSignatures,
+      detail: "In-flight enrollment outputs still awaiting completion.",
+      healthy: pendingSignatures === 0,
+    },
+    {
+      key: "ingestion",
+      label: "Ingestion Health",
+      value: registry.systemSummary.censusIssues,
+      detail: "Census uploads with issues need correction.",
+      healthy: registry.systemSummary.censusIssues === 0,
+    },
+  ]), [employers.length, registry, pendingSignatures]);
+
+  const nextBestActions = useMemo(() => {
+    const items = [
+      registry.systemSummary.censusIssues > 0 && { label: "Fix census issues", meta: `${registry.systemSummary.censusIssues} cases blocked`, href: "/census" },
+      pendingSignatures > 0 && { label: "Complete enrollments", meta: `${pendingSignatures} signatures pending`, href: "/employee-management" },
+      openExceptions > 0 && { label: "Resolve case exceptions", meta: `${openExceptions} open exceptions`, href: "/exceptions" },
+      draftQuotes > 0 && { label: "Finalize quotes", meta: `${draftQuotes} draft scenarios`, href: "/quotes" },
+      activeRenewals > 0 && { label: "Complete renewals", meta: `${activeRenewals} active renewal cycles`, href: "/renewals" },
+    ].filter(Boolean);
+    return items.slice(0, 6);
+  }, [registry, pendingSignatures, openExceptions, draftQuotes, activeRenewals]);
+
+  const activityFeed = useMemo(() => activityLogs.slice(0, 8).map((item) => ({
+    id: item.id,
+    title: item.action,
+    detail: item.detail || item.actor_name || item.actor_email || "Recent system activity",
+    time: new Date(item.created_date).toLocaleDateString(),
+  })), [activityLogs]);
 
   const domainCards = useMemo(() => [
     {
@@ -357,7 +461,11 @@ export default function Dashboard() {
         actions={<Link to="/cases/new"><Button><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>}
       />
 
+      <DashboardRoleViewTabs value={roleView} onChange={setRoleView} />
+
       <QuickActions />
+
+      <SystemControlMetrics metrics={dashboardMetrics} />
 
       <SystemHealthStrip
         metrics={{
@@ -377,11 +485,15 @@ export default function Dashboard() {
 
       <ActionCenterPanel actions={actionCenterItems} />
 
+      <NextBestActionsPanel actions={nextBestActions} />
+
       <CensusGapAlert cases={cases} />
 
       <TodaysPriorities tasks={tasks} exceptions={exceptions} cases={cases} enrollments={enrollments} />
 
       <WorkflowBottlenecksPanel items={bottlenecks} />
+
+      <IntegrationStatusPanel items={integrationHealth} />
 
       <DomainControlGrid domains={domainCards} />
 
@@ -391,6 +503,8 @@ export default function Dashboard() {
       </div>
 
       <StalledCases cases={cases} />
+
+      <AlertsAndAuditFeed alerts={activeAlerts} feed={activityFeed} />
 
       <RoutedPagesDirectory pages={routedPages} />
     </div>
