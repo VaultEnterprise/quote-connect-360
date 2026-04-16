@@ -6,10 +6,10 @@ export default function CensusReadinessPanel({ readiness }) {
   if (!readiness) return null;
 
   const items = [
-    { label: "Quotes", ready: readiness.quoteReady, note: readiness.quoteReady ? "Validated population ready for pricing" : "Validation or error remediation required" },
-    { label: "Enrollment", ready: readiness.enrollmentReady, note: readiness.enrollmentReady ? "Eligible employee population available" : "No validated eligible members" },
-    { label: "Renewals", ready: readiness.renewalReady, note: readiness.renewalReady ? "Snapshot exists for renewal carry-forward" : "No census snapshot available" },
-    { label: "Dashboard", ready: readiness.dashboardHealthy, note: readiness.dashboardHealthy ? "Counts and quality metrics can be trusted" : "Errors will distort rollups" },
+    { label: "Quotes", ready: readiness.quoteReady, note: readiness.quoteReady ? "Latest validated snapshot is ready for pricing" : "Latest snapshot still has blocking validation issues" },
+    { label: "Enrollment", ready: readiness.enrollmentReady, note: readiness.enrollmentReady ? "Latest eligible population is ready for elections" : "No validated eligible members in latest snapshot" },
+    { label: "Renewals", ready: readiness.renewalReady, note: readiness.renewalReady ? "Versioned snapshot exists for renewal carry-forward" : "No versioned census snapshot available" },
+    { label: "Dashboard", ready: readiness.dashboardHealthy, note: readiness.dashboardHealthy ? "Rollups can trust the latest snapshot" : "Latest snapshot errors will distort visibility" },
   ];
 
   return (

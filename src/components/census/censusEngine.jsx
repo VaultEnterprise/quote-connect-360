@@ -278,8 +278,11 @@ export function buildValidationSummary(rows, mapping) {
 
 export function buildDownstreamReadiness({ caseRecord, censusVersions = [], members = [] }) {
   const latestVersion = [...censusVersions].sort((a, b) => Number(b.version_number || 0) - Number(a.version_number || 0))[0];
-  const validMembers = members.filter((member) => member.validation_status === "valid");
-  const erroredMembers = members.filter((member) => member.validation_status === "has_errors");
+  const latestVersionMembers = latestVersion
+    ? members.filter((member) => member.census_version_id === latestVersion.id)
+    : [];
+  const validMembers = latestVersionMembers.filter((member) => member.validation_status === "valid");
+  const erroredMembers = latestVersionMembers.filter((member) => member.validation_status === "has_errors");
 
   return {
     latestVersion,

@@ -5,13 +5,15 @@ import { Database, ShieldCheck, Users, Workflow } from "lucide-react";
 export default function CensusSystemSummary({ versions, members, cases }) {
   const validatedVersions = versions.filter((version) => version.status === "validated");
   const issueVersions = versions.filter((version) => version.status === "has_issues");
-  const eligibleMembers = members.filter((member) => member.is_eligible !== false);
+  const latestVersion = [...versions].sort((a, b) => Number(b.version_number || 0) - Number(a.version_number || 0))[0];
+  const latestMembers = latestVersion ? members.filter((member) => member.census_version_id === latestVersion.id) : [];
+  const eligibleMembers = latestMembers.filter((member) => member.is_eligible !== false);
   const activeCases = cases.filter((item) => !["closed", "renewed"].includes(item.stage));
 
   const items = [
     { label: "Validated versions", value: validatedVersions.length, icon: ShieldCheck },
     { label: "Issue versions", value: issueVersions.length, icon: Database },
-    { label: "Eligible members", value: eligibleMembers.length, icon: Users },
+    { label: "Latest eligible", value: eligibleMembers.length, icon: Users },
     { label: "Active case consumers", value: activeCases.length, icon: Workflow },
   ];
 

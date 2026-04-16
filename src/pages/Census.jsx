@@ -64,6 +64,7 @@ export default function Census() {
 
   const selectedCase = cases.find(c => c.id === selectedCaseId);
   const selectedVersionCount = filteredVersions.length;
+  const latestSelectedVersion = [...filteredVersions].sort((a, b) => Number(b.version_number || 0) - Number(a.version_number || 0))[0];
 
   const readiness = useMemo(() => {
     if (!selectedCase) return null;
@@ -80,9 +81,8 @@ export default function Census() {
     <div className="space-y-6">
       <PageHeader
         title="Census Management"
-        description="Import, validate, and manage employee census data"
-        actionLabel={selectedCaseId ? "Upload Census" : undefined}
-        onAction={selectedCaseId ? () => setShowUpload(true) : undefined}
+        description="Versioned census snapshots, canonical normalization, and downstream readiness control"
+        actions={selectedCaseId ? <Button onClick={() => setShowUpload(true)}><FileUp className="w-4 h-4 mr-2" /> Upload Snapshot</Button> : null}
       />
 
       {/* Case Selector */}
@@ -122,6 +122,22 @@ export default function Census() {
       </Card>
 
       <CensusSystemSummary versions={allVersions} members={censusMembers} cases={cases} />
+
+      {selectedCase && latestSelectedVersion && (
+        <Card>
+          <CardContent className="p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold">Canonical Snapshot Version {latestSelectedVersion.version_number}</p>
+              <p className="text-xs text-muted-foreground">
+                Status: {latestSelectedVersion.status} • Effective snapshot for Quotes, Enrollment, Renewals, and Dashboard consumers
+              </p>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Errors: {latestSelectedVersion.validation_errors || 0} • Warnings: {latestSelectedVersion.validation_warnings || 0}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Selected Case Info */}
       {selectedCase && (

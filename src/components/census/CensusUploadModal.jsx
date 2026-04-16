@@ -16,6 +16,7 @@ import MappingProfileManager from "./MappingProfileManager";
 import DataQualityInsights from "./DataQualityInsights";
 import { generateCensusTemplate } from "@/utils/censusHelpers";
 import { CENSUS_FIELDS, autoMap, parseCSV, validateRow, transformRow, detectDuplicates, analyzeDataQuality, buildValidationSummary } from "./censusEngine";
+import { buildVersionedSnapshotRows, buildVersionSummary } from "./censusSnapshotEngine";
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 const STEPS = ["upload", "mapping", "validate", "done"];
@@ -62,10 +63,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
   const handleImport = async () => {
     setImporting(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    
-    // Filter out skipped rows
     const rowsToImport = rows.filter((_, idx) => !skippedRows.has(idx));
-    
+
     const version = await base44.entities.CensusVersion.create({
       case_id: caseId,
       version_number: (currentVersionCount || 0) + 1,
@@ -78,44 +77,43 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
       notes,
     });
 
-    const members = rowsToImport.map((row) => {
-      const issues = validateRow(row, mapping);
-      return {
-        ...transformRow(row, mapping),
-        census_version_id: version.id,
-        case_id: caseId,
-        validation_issues: issues,
-        validation_status: issues.some(i => i.type === "error") ? "has_errors"
-          : issues.some(i => i.type === "warning") ? "has_warnings" : "valid",
-      };
-    });
+    const members = buildVersionedSnapshotRows(rowsToImport, mapping, caseId, version.id);
 
-    // Bulk create in batches of 50
     for (let i = 0; i < members.length; i += 50) {
       await base44.entities.CensusMember.bulkCreate(members.slice(i, i + 50));
     }
 
-    const finalStatus = (validationSummary?.errors || 0) > 0 ? "has_issues" : "validated";
+    const versionSummary = buildVersionSummary({ rows: rowsToImport, mapping, members });
     await base44.entities.CensusVersion.update(version.id, {
-      status: finalStatus,
-      eligible_employees: members.filter(m => m.is_eligible).length,
+      status: versionSummary.status,
+      eligible_employees: versionSummary.eligible_count,
       total_dependents: members.reduce((sum, member) => sum + Number(member.dependent_count || 0), 0),
-    });
-    await base44.entities.BenefitCase.update(caseId, {
-      census_status: finalStatus === "validated" ? "validated" : "issues_found",
-      stage: finalStatus === "validated" ? "census_validated" : "census_in_progress",
-    });
-    await base44.entities.ActivityLog.create({
-      case_id: caseId,
-      action: "Census imported",
-      detail: `${rowsToImport.length} census records imported as version ${(currentVersionCount || 0) + 1}`,
-      entity_type: "CensusVersion",
-      entity_id: version.id,
-      new_value: JSON.stringify({ status: finalStatus, eligible_employees: members.filter(m => m.is_eligible).length }),
+      total_employees: versionSummary.total_rows,
+      validation_errors: versionSummary.validation_errors,
+      validation_warnings: versionSummary.validation_warnings,
     });
 
-    queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] });
+    await base44.entities.BenefitCase.update(caseId, {
+      census_status: versionSummary.status === "validated" ? "validated" : "issues_found",
+      stage: versionSummary.status === "validated" ? "census_validated" : "census_in_progress",
+    });
+
+    await base44.entities.ActivityLog.create({
+      case_id: caseId,
+      action: "Census snapshot imported",
+      detail: `${rowsToImport.length} census records imported as canonical snapshot version ${(currentVersionCount || 0) + 1}`,
+      entity_type: "CensusVersion",
+      entity_id: version.id,
+      new_value: JSON.stringify({
+        status: versionSummary.status,
+        eligible_employees: versionSummary.eligible_count,
+        duplicate_count: versionSummary.duplicate_count,
+      }),
+    });
+
+    queryClient.invalidateQueries({ queryKey: ["census-all"] });
     queryClient.invalidateQueries({ queryKey: ["census-members"] });
+    queryClient.invalidateQueries({ queryKey: ["census-members-page", caseId] });
     queryClient.invalidateQueries({ queryKey: ["case", caseId] });
     setImporting(false);
     setStep("done");
@@ -155,7 +153,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Upload Census File</DialogTitle>
+          <DialogTitle>Upload Census Snapshot</DialogTitle>
           {/* Step indicator */}
           <div className="flex items-center gap-2 pt-2">
             {["Upload", "Map Fields", "Validate", "Done"].map((label, i) => {
@@ -182,8 +180,8 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
           <div className="space-y-4 py-2">
             <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-10 cursor-pointer hover:bg-muted/50 transition-colors">
               <Upload className="w-10 h-10 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">Click to select a census file</p>
-              <p className="text-xs text-muted-foreground mt-1">CSV supported — columns will be auto-mapped</p>
+              <p className="text-sm font-medium text-muted-foreground">Click to select a census snapshot file</p>
+              <p className="text-xs text-muted-foreground mt-1">CSV supported — data will be normalized into a new canonical versioned snapshot</p>
               <input type="file" accept=".csv" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
             </label>
             <Button variant="outline" size="sm" onClick={downloadTemplate} className="w-full text-xs">
