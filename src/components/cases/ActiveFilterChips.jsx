@@ -7,10 +7,12 @@ function FilterChip({ label, onClear, className = "" }) {
     <button
       type="button"
       onClick={onClear}
-      className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted ${className}`}
     >
-      {label}
-      <X className="w-3 h-3" />
+      <span className="truncate max-w-[180px]">{label}</span>
+      <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted/80">
+        <X className="w-3 h-3" />
+      </span>
     </button>
   );
 }
