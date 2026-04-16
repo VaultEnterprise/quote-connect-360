@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Users, FileText, ClipboardCheck, Calendar,
-  Clock, FileCheck, AlertTriangle, Briefcase, Pencil, X, Copy
+  Clock, FileCheck, AlertTriangle, Briefcase, Pencil, X, Copy, Send
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,8 +31,10 @@ import ActivityTab       from "@/components/cases/ActivityTab";
 import StageValidationWarnings from "@/components/cases/StageValidationWarnings";
 import DependencyCheckPanel from "@/components/cases/DependencyCheckPanel";
 import CloneCaseModal    from "@/components/cases/CloneCaseModal";
+import TxQuoteModal from "@/components/cases/TxQuoteModal";
 import AuditTrailViewer  from "@/components/shared/AuditTrailViewer";
 import { getCaseWorkflowSignals, getNextCaseStage, getStageRequirements } from "@/components/cases/caseWorkflow";
+import { getTxQuoteDisabledReason, isTxQuoteStepComplete } from "@/components/cases/txQuoteWorkflow";
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 import AIAssistant from "@/components/ai/AIAssistant";
@@ -69,6 +71,7 @@ export default function CaseDetail() {
   const [showClose, setShowClose]   = useState(false);
   const [showAdvance, setShowAdvance] = useState(false);
   const [showClone, setShowClone]   = useState(false);
+  const [showTxQuote, setShowTxQuote] = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const { data: caseData, isLoading } = useQuery({
@@ -125,6 +128,18 @@ export default function CaseDetail() {
     enabled: !!caseId,
   });
 
+  const { data: quoteRoutes = [] } = useQuery({
+    queryKey: ["quote-provider-routes"],
+    queryFn: () => base44.entities.QuoteProviderRoute.list("provider_code", 50),
+    enabled: !!caseId,
+  });
+
+  const { data: quoteTransmissions = [] } = useQuery({
+    queryKey: ["quote-transmissions", caseId],
+    queryFn: () => base44.entities.QuoteTransmission.filter({ case_id: caseId }, "-created_date", 200),
+    enabled: !!caseId,
+  });
+
   // ── Stage advance mutation ─────────────────────────────────────────────────
   const advanceStageMutation = useMutation({
     mutationFn: async (nextStage) => {
@@ -178,6 +193,9 @@ export default function CaseDetail() {
       exceptions,
     }),
   };
+
+  const txQuoteDisabledReason = getTxQuoteDisabledReason({ caseData, censusVersions, routes: quoteRoutes, user });
+  const txQuoteComplete = isTxQuoteStepComplete({ censusVersions, transmissions: quoteTransmissions });
 
   const aiContext = {
     employer:         caseData.employer_name,
@@ -246,6 +264,9 @@ export default function CaseDetail() {
               <X className="w-3.5 h-3.5 mr-1.5" /> Close Case
             </Button>
           )}
+          <Button variant="outline" size="sm" onClick={() => setShowTxQuote(true)} disabled={!!txQuoteDisabledReason}>
+            <Send className="w-3.5 h-3.5 mr-1.5" /> TxQuote
+          </Button>
           {nextStage && caseData.stage !== "closed" && (
             <Button size="sm" onClick={() => setShowAdvance(true)}>
               Advance → {STAGE_LABELS[nextStage]}
@@ -333,6 +354,7 @@ export default function CaseDetail() {
                     scenarioCount={scenarios.length}
                     taskCount={tasks.length}
                     docCount={docs.length}
+                    txQuoteComplete={txQuoteComplete}
                   />
                 </CardContent>
               </Card>
@@ -397,6 +419,16 @@ export default function CaseDetail() {
           open={showAdvance}
           onConfirm={() => advanceStageMutation.mutate(nextStage)}
           onClose={() => setShowAdvance(false)}
+        />
+      )}
+      {showTxQuote && (
+        <TxQuoteModal
+          open={showTxQuote}
+          onClose={() => setShowTxQuote(false)}
+          caseData={caseData}
+          censusVersions={censusVersions}
+          canTransmit={!txQuoteDisabledReason}
+          disabledReason={txQuoteDisabledReason}
         />
       )}
 

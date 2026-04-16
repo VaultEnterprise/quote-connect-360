@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 // Import new setting panels
 import APIIntegrationsPanel from "@/components/settings/APIIntegrationsPanel";
+import QuoteProviderRoutingPanel from "@/components/settings/QuoteProviderRoutingPanel";
 import FeatureTogglesPanel from "@/components/settings/FeatureTogglesPanel";
 import BrandingPanel from "@/components/settings/BrandingPanel";
 import AuditLogPanel from "@/components/settings/AuditLogPanel";
@@ -116,6 +117,9 @@ export default function Settings() {
               <TabsTrigger value="integrations" className="flex items-center gap-2">
                 <Zap className="w-4 h-4" /> Integrations
               </TabsTrigger>
+              <TabsTrigger value="quote-routing" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" /> Quote Routing
+              </TabsTrigger>
               <TabsTrigger value="features" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" /> Features
               </TabsTrigger>
@@ -210,6 +214,10 @@ export default function Settings() {
             {/* Integrations */}
             <TabsContent value="integrations" className="mt-6">
               <APIIntegrationsPanel />
+            </TabsContent>
+
+            <TabsContent value="quote-routing" className="mt-6">
+              <QuoteProviderRoutingPanel />
             </TabsContent>
 
             {/* Features */}
