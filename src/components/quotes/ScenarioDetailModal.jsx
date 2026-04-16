@@ -1,12 +1,17 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, Copy, Download, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Star, CheckCircle, Clock } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
+import QuoteScenarioInsights from "./QuoteScenarioInsights";
+import RecommendationBreakdown from "./RecommendationBreakdown";
+import ScenarioDecisionPanel from "./ScenarioDecisionPanel";
 
 export default function ScenarioDetailModal({ scenario, open, onClose }) {
   const [copiedField, setCopiedField] = useState(null);
@@ -16,6 +21,24 @@ export default function ScenarioDetailModal({ scenario, open, onClose }) {
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };
+
+  const { data: caseRecord } = useQuery({
+    queryKey: ["scenario-case-record", scenario?.case_id],
+    queryFn: async () => (await base44.entities.BenefitCase.filter({ id: scenario.case_id }))[0] || null,
+    enabled: !!scenario?.case_id,
+  });
+
+  const { data: censusMembers = [] } = useQuery({
+    queryKey: ["scenario-detail-census", scenario?.case_id],
+    queryFn: () => base44.entities.CensusMember.filter({ case_id: scenario.case_id, is_eligible: true }, "-created_date", 500),
+    enabled: !!scenario?.case_id,
+  });
+
+  const { data: scenarioPlans = [] } = useQuery({
+    queryKey: ["scenario-detail-plans", scenario?.id],
+    queryFn: () => base44.entities.ScenarioPlan.filter({ scenario_id: scenario.id }),
+    enabled: !!scenario?.id,
+  });
 
   if (!scenario) return null;
 
@@ -46,6 +69,8 @@ export default function ScenarioDetailModal({ scenario, open, onClose }) {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
+            <QuoteScenarioInsights scenario={scenario} censusMembers={censusMembers} />
+            <ScenarioDecisionPanel scenario={scenario} caseRecord={caseRecord} censusStats={{ employeeCount: censusMembers.length, dependentCount: censusMembers.filter((member) => member.coverage_tier && member.coverage_tier !== "employee_only").length, enrollingMembers: censusMembers.length }} scenarioPlans={scenarioPlans} />
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -115,6 +140,7 @@ export default function ScenarioDetailModal({ scenario, open, onClose }) {
 
           {/* Financials Tab */}
           <TabsContent value="financials" className="space-y-4">
+            <RecommendationBreakdown scenario={scenario} />
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">

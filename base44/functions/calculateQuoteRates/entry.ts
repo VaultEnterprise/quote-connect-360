@@ -99,6 +99,9 @@ Deno.serve(async (req) => {
       censusVersionId: latestCensus?.id || null,
       censusVersionNumber: latestCensus?.version_number || null,
       eligibleMemberCount: members.length,
+      validationStatus: latestCensus?.status || 'missing',
+      validationErrors: Number(latestCensus?.validation_errors || 0),
+      validationWarnings: Number(latestCensus?.validation_warnings || 0),
     };
 
     const tierDistribution = members.reduce((acc, member) => {
@@ -106,6 +109,14 @@ Deno.serve(async (req) => {
       acc[tier] = (acc[tier] || 0) + 1;
       return acc;
     }, {});
+
+    if (!latestCensus) {
+      await base44.asServiceRole.entities.QuoteScenario.update(scenario_id, {
+        status: 'error',
+        notes: `${scenario.notes ? `${scenario.notes}\n\n` : ''}Calculation blocked: no census version is attached to this case.`,
+      });
+      return Response.json({ error: 'No census version found for this case' }, { status: 400 });
+    }
 
     if (!Object.keys(tierDistribution).length) {
       tierDistribution.employee_only = Math.max(1, Number(caseRecord.employee_count || 1));
@@ -219,7 +230,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.QuoteScenario.update(scenario_id, scenarioUpdate);
     await base44.asServiceRole.entities.BenefitCase.update(caseRecord.id, {
       quote_status: scenarioStatus === 'completed' ? 'completed' : 'in_progress',
-      stage: ['ready_for_quote', 'quoting'].includes(caseRecord.stage) && scenarioStatus === 'completed' ? 'quoting' : caseRecord.stage,
+      stage: ['ready_for_quote', 'quoting'].includes(caseRecord.stage) && scenarioStatus === 'completed' ? 'proposal_ready' : caseRecord.stage,
       last_activity_date: new Date().toISOString(),
     });
 

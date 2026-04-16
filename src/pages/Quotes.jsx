@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import QuotesKPIBar from "@/components/quotes/QuotesKPIBar";
+import QuotesSystemSummary from "@/components/quotes/QuotesSystemSummary";
+import QuoteDependencyPanel from "@/components/quotes/QuoteDependencyPanel";
 import ScenarioCard from "@/components/quotes/ScenarioCard";
 import ScenarioCompare from "@/components/quotes/ScenarioCompare";
 import NewScenarioFromQuotes from "@/components/quotes/NewScenarioFromQuotes";
@@ -53,6 +55,21 @@ export default function Quotes() {
   const { data: cases = [] } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
+  });
+
+  const { data: censusVersions = [] } = useQuery({
+    queryKey: ["quotes-census-versions"],
+    queryFn: () => base44.entities.CensusVersion.list("-created_date", 300),
+  });
+
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["quotes-enrollments"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 200),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["quotes-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 200),
   });
 
   const caseMap = useMemo(() => Object.fromEntries(cases.map(c => [c.id, c])), [cases]);
@@ -283,7 +300,11 @@ export default function Quotes() {
         }
       />
 
+      <QuotesSystemSummary scenarios={scenarios} cases={cases} enrollments={enrollments} renewals={renewals} />
+
       <QuotesKPIBar scenarios={filtered.length ? filtered : scenarios} />
+
+      <QuoteDependencyPanel scenarios={scenarios} cases={cases} censusVersions={censusVersions} enrollments={enrollments} renewals={renewals} />
 
       {compareMode && selectedScenarios.length >= 2 && (
         <ScenarioCompare

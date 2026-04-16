@@ -7,7 +7,7 @@ import { AlertTriangle } from "lucide-react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
-import { computeModeledContribution, getScenarioCensusStats } from "./quoteCalculations";
+import { computeModeledContribution, getScenarioCensusStats } from "./quoteEngine";
 
 export default function ContributionSlider({ scenario, open, onClose }) {
   const [eeContribution, setEeContribution] = useState(scenario.employer_contribution_ee ?? 80);
@@ -28,8 +28,7 @@ export default function ContributionSlider({ scenario, open, onClose }) {
   const calculations = useMemo(() => {
     const modeled = computeModeledContribution({
       totalPremium,
-      employeeCount: censusStats.employeeCount,
-      dependentCount: censusStats.dependentCount,
+      censusStats,
       eeContribution,
       depContribution,
     });

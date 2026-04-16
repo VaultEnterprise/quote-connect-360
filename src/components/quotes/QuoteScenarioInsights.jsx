@@ -2,12 +2,11 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Wallet, ShieldCheck } from "lucide-react";
-import { computeScenarioContributionView, formatCurrency } from "./quoteCalculations";
+import { computeScenarioContributionView, formatCurrency, getScenarioCensusStats } from "./quoteEngine";
 
 export default function QuoteScenarioInsights({ scenario, censusMembers = [] }) {
-  const employeeCount = censusMembers.length || 0;
-  const dependentCount = censusMembers.filter((member) => member.coverage_tier && member.coverage_tier !== "employee_only").length;
-  const summary = computeScenarioContributionView({ scenario, employeeCount, dependentCount });
+  const censusStats = getScenarioCensusStats(censusMembers);
+  const summary = computeScenarioContributionView({ scenario, censusStats });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
