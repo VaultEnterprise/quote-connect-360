@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Star, Check, X, TrendingDown, TrendingUp, ChevronDown, ChevronUp, Sliders } from "lucide-react";
+import { Star, Check, X, TrendingDown, TrendingUp, Sliders } from "lucide-react";
 import CostModelingSlider from "./CostModelingSlider";
 
 const PRODUCT_COLORS = {
