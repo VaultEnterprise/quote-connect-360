@@ -1,9 +1,8 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Users, Briefcase, Mail, Phone, MapPin, Link as LinkIcon, Calendar, FileText, Activity, TrendingUp } from "lucide-react";
+import { Building2, Users, Briefcase, Mail, Phone, MapPin, Calendar, FileText, Activity, TrendingUp } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { Link } from "react-router-dom";
 import StatusBadge from "@/components/shared/StatusBadge";
