@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ClipboardCheck, Users, Percent, AlertTriangle, Clock, CheckCircle } from "lucide-react";
-import { differenceInDays, parseISO, isAfter } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 
 export default function EnrollmentKPIBar({ enrollments }) {
   const now = new Date();

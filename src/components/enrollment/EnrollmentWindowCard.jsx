@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Calendar, Users, ChevronDown, ChevronUp, AlertTriangle, CheckCircle,
-  Clock, ExternalLink, MoreHorizontal, Bell
+  Calendar, ChevronDown, ChevronUp, AlertTriangle,
+  Clock, ExternalLink, MoreHorizontal
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger
@@ -19,8 +19,8 @@ import { format, parseISO, differenceInDays, isAfter } from "date-fns";
 
 const STATUS_ACTIONS = {
   scheduled: { next: "open", label: "Open Enrollment", color: "bg-blue-600 hover:bg-blue-700" },
-  open: { next: "closing_soon", label: "Mark Closing Soon", color: "" },
-  closing_soon: { next: "closed", label: "Close Window", color: "bg-amber-600 hover:bg-amber-700" },
+  open: { next: "closing_soon", label: "Mark Closing Soon", color: "bg-amber-600 hover:bg-amber-700" },
+  closing_soon: { next: "closed", label: "Close Window", color: "bg-slate-700 hover:bg-slate-800" },
   closed: { next: "finalized", label: "Finalize", color: "bg-green-600 hover:bg-green-700" },
 };
 
@@ -44,6 +44,8 @@ export default function EnrollmentWindowCard({ enrollment }) {
   const updateStatus = useMutation({
     mutationFn: (status) => base44.entities.EnrollmentWindow.update(enrollment.id, {
       status,
+      pending_count: pending,
+      participation_rate: enrollment.total_eligible ? Math.round(((enrollment.enrolled_count || 0) / enrollment.total_eligible) * 100) : 0,
       ...(status === "finalized" ? { finalized_at: new Date().toISOString() } : {}),
     }),
     onSuccess: () => {
@@ -123,13 +125,11 @@ export default function EnrollmentWindowCard({ enrollment }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                {Object.entries(STATUS_ACTIONS).map(([from, action]) => (
-                  from !== enrollment.status && (
-                    <DropdownMenuItem key={from} onClick={() => updateStatus.mutate(action.next)}>
-                      Set: {action.label}
-                    </DropdownMenuItem>
-                  )
-                ))}
+                {nextAction && (
+                  <DropdownMenuItem onClick={() => updateStatus.mutate(nextAction.next)}>
+                    {nextAction.label}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to={`/cases/${enrollment.case_id}`} className="flex items-center gap-2">
@@ -163,6 +163,7 @@ export default function EnrollmentWindowCard({ enrollment }) {
           <div className="h-2 rounded-full bg-muted overflow-hidden flex">
             <div className="bg-green-500 h-full transition-all" style={{ width: `${Math.round((enrolled / total) * 100)}%` }} />
             <div className="bg-gray-300 h-full transition-all" style={{ width: `${Math.round((waived / total) * 100)}%` }} />
+            <div className="bg-amber-200 h-full transition-all" style={{ width: `${Math.round((pending / total) * 100)}%` }} />
           </div>
 
           {/* Milestone indicators */}

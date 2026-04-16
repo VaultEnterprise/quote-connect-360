@@ -28,9 +28,7 @@ export default function Enrollment() {
   const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ["enrollments-all", user?.email, user?.role],
     enabled: !!user,
-    queryFn: () => user?.role === "admin"
-      ? base44.entities.EnrollmentWindow.list("-created_date", 100)
-      : base44.entities.EnrollmentWindow.filter({ assigned_to: user?.email }, "-created_date", 100),
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
   });
 
   const now = new Date();
