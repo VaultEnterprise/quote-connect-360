@@ -62,7 +62,7 @@ export default function TxQuoteModal({ open, onClose, caseData, censusVersions =
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Transmit Quote Request</DialogTitle>
-          <DialogDescription>{disabledReason || "Send the validated census file to selected quote providers."}</DialogDescription>
+          <DialogDescription>{disabledReason || "This step comes immediately after census validation and sends the validated census file to selected quote providers."}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

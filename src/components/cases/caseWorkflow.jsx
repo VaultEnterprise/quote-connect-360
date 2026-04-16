@@ -20,7 +20,7 @@ export const CASE_STAGE_LABELS = {
   draft: "Draft",
   census_in_progress: "Census In Progress",
   census_validated: "Census Validated",
-  ready_for_quote: "Ready for Quote",
+  ready_for_quote: "TxQuote",
   quoting: "Quoting",
   proposal_ready: "Proposal Ready",
   employer_review: "Employer Review",

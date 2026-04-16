@@ -50,7 +50,7 @@ const STAGE_LABELS = {
   draft: "Draft",
   census_in_progress: "Census",
   census_validated: "Validated",
-  ready_for_quote: "Quote Ready",
+  ready_for_quote: "TxQuote",
   quoting: "Quoting",
   proposal_ready: "Proposal",
   employer_review: "Review",
