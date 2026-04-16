@@ -19,7 +19,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import useRouteContext from "@/hooks/useRouteContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import { differenceInDays, parseISO, isAfter } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
 import EmployerDetailDrawer from "@/components/employer/EmployerDetailDrawer";
 import { BulkActionsBar, EmployerImportModal } from "@/components/employer/BulkActionsBar";
 import { QuickCreateCase } from "@/components/employer/QuickCreateCase";
