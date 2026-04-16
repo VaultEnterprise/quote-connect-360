@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { format, parseISO, differenceInDays, isAfter, differenceInCalendarDays } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
 import CloneScenarioDialog from "./CloneScenarioDialog";
 import CreateProposalFromScenario from "./CreateProposalFromScenario";
 
@@ -51,7 +50,6 @@ function carrierColor(name) {
 
 export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate, onShowDetails, onApproval, onContribution }) {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [showClone, setShowClone] = useState(false);
   const [showProposal, setShowProposal] = useState(false);
