@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -9,14 +8,6 @@ import { format, parseISO } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
 
 export default function ScenarioDetailModal({ scenario, open, onClose }) {
-  const [copiedField, setCopiedField] = useState(null);
-
-  const copyToClipboard = (text, field) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
   if (!scenario) return null;
 
   const totalPremium = scenario.total_monthly_premium || 0;
