@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -27,18 +27,19 @@ import CycleTiming from "@/components/dashboard/CycleTiming";
 import { DEFAULT_DASHBOARD_FILTERS } from "@/utils/dashboardControls";
 import { getDashboardPageModel } from "@/domain/dashboard/useDashboardMetrics";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useAuth } from "@/lib/AuthContext";
 
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
 const DASHBOARD_PRESET_QUERY_KEY = ["dashboard-view-presets"];
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+  const { user, isLoadingAuth: isUserLoading } = useAuth();
   const [filters, setFilters] = useState(DEFAULT_DASHBOARD_FILTERS);
   const [selectedPresetId, setSelectedPresetId] = useState("none");
   const [hasInitializedPreferences, setHasInitializedPreferences] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: user, isLoading: isUserLoading } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const cases = [];
   const isLoading = false;
   const casesUpdatedAt = 0;
