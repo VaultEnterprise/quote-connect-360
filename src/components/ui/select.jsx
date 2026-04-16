@@ -32,10 +32,13 @@ const flattenSelectItems = (children) => {
 
 const Select = ({ value = "", onValueChange, children }) => {
   const items = React.useMemo(() => flattenSelectItems(children), [children])
+  const trigger = React.Children.toArray(children).find(
+    (child) => React.isValidElement(child) && child.type === SelectTrigger
+  )
 
   return (
     <SelectContext.Provider value={{ value, onValueChange, items }}>
-      {children}
+      {trigger || null}
     </SelectContext.Provider>
   )
 }
