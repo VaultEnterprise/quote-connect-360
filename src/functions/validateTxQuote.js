@@ -1,3 +1,4 @@
+/* global Deno */
 /// <reference lib="deno.ns" />
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
