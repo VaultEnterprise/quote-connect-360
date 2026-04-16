@@ -1,46 +1,39 @@
-import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, Loader2 } from "lucide-react";
-
-const STAGES = [
-  { value: "draft", label: "Draft" },
-  { value: "census_in_progress", label: "Census In Progress" },
-  { value: "census_validated", label: "Census Validated" },
-  { value: "ready_for_quote", label: "Ready for Quote" },
-  { value: "quoting", label: "Quoting" },
-  { value: "proposal_ready", label: "Proposal Ready" },
-  { value: "employer_review", label: "Employer Review" },
-  { value: "approved_for_enrollment", label: "Approved for Enrollment" },
-  { value: "enrollment_open", label: "Enrollment Open" },
-  { value: "enrollment_complete", label: "Enrollment Complete" },
-  { value: "install_in_progress", label: "Install In Progress" },
-  { value: "active", label: "Active" },
-  { value: "renewal_pending", label: "Renewal Pending" },
-  { value: "closed", label: "Closed" },
-];
+import { getNextCaseStage, getCaseStageLabel } from "@/components/cases/caseWorkflow";
 
 export default function BulkStageAdvanceModal({ isOpen, caseIds, onClose, onSuccess }) {
-  const [newStage, setNewStage] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const { data: cases = [] } = useQuery({
+    queryKey: ["bulk-advance-cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
+    enabled: isOpen,
+  });
+
+  const selectedCases = useMemo(() => cases.filter((item) => caseIds.includes(item.id)), [cases, caseIds]);
+  const nextStages = useMemo(() => Array.from(new Set(selectedCases.map((item) => getNextCaseStage(item.stage)).filter(Boolean))), [selectedCases]);
+  const sharedNextStage = nextStages.length === 1 ? nextStages[0] : null;
+
   const bulkUpdate = useMutation({
     mutationFn: async () => {
-      for (const id of caseIds) {
-        await base44.entities.BenefitCase.update(id, { stage: newStage });
+      for (const item of selectedCases) {
+        const nextStage = getNextCaseStage(item.stage);
+        if (!nextStage || nextStage !== sharedNextStage) continue;
+        await base44.entities.BenefitCase.update(item.id, { stage: nextStage });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cases"] });
-      toast({ title: `${caseIds.length} cases advanced`, description: `Moved to ${STAGES.find(s => s.value === newStage)?.label}` });
-      setNewStage("");
+      toast({ title: `${selectedCases.length} cases advanced`, description: `Moved to ${getCaseStageLabel(sharedNextStage)}` });
       onClose();
       onSuccess?.();
     },
@@ -53,31 +46,25 @@ export default function BulkStageAdvanceModal({ isOpen, caseIds, onClose, onSucc
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Advance Cases to Stage</DialogTitle>
-          <DialogDescription>Move {caseIds.length} case{caseIds.length !== 1 ? "s" : ""} to a new stage</DialogDescription>
+          <DialogTitle>Advance Cases to Next Stage</DialogTitle>
+          <DialogDescription>Advance {caseIds.length} case{caseIds.length !== 1 ? "s" : ""} by one workflow step.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex gap-2">
             <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700">This will move all selected cases to the same stage. Ensure all prerequisites are met.</p>
+            <p className="text-xs text-amber-700">Bulk advance only works when all selected cases share the same next workflow step.</p>
           </div>
 
-          <Select value={newStage} onValueChange={setNewStage}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select new stage..." />
-            </SelectTrigger>
-            <SelectContent>
-              {STAGES.map(s => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <p className="text-xs text-muted-foreground">Next stage</p>
+            <p className="mt-1 text-sm font-semibold">{sharedNextStage ? getCaseStageLabel(sharedNextStage) : "Mixed stages selected"}</p>
+          </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => bulkUpdate.mutate()} disabled={!newStage || bulkUpdate.isPending}>
+          <Button onClick={() => bulkUpdate.mutate()} disabled={!sharedNextStage || bulkUpdate.isPending}>
             {bulkUpdate.isPending ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...</>
             ) : (

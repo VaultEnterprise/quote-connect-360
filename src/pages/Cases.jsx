@@ -4,14 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   Briefcase, Plus, Search, Filter, X, LayoutList, Columns,
-  TrendingUp, Clock, AlertTriangle, CheckCircle, ArrowUpDown, Download, Trash2,
-  Users, Layers, Flag
+  ArrowUpDown, Download, Trash2,
+  Users, Layers, Flag, AlertTriangle, FileWarning, ShieldAlert, RefreshCw
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import { CaseListSkeleton } from "@/components/shared/LoadingSkeleton";
@@ -24,7 +22,11 @@ import BulkPriorityModal from "@/components/cases/BulkPriorityModal";
 import SavedFiltersPanel from "@/components/cases/SavedFiltersPanel";
 import AssignedUserFilter from "@/components/cases/AssignedUserFilter";
 import BulkStageAdvanceModal from "@/components/cases/BulkStageAdvanceModal";
+import CasesCommandCenter from "@/components/cases/CasesCommandCenter";
+import CasesSystemSignals from "@/components/cases/CasesSystemSignals";
+import CasesOperationalTable from "@/components/cases/CasesOperationalTable";
 import { exportToCSV } from "@/utils/export-import";
+import { CASE_PRIORITY_ORDER, getCaseWorkflowSignals } from "@/components/cases/caseWorkflow";
 
 const STAGE_OPTIONS = [
   { value: "all",                      label: "All Stages" },
@@ -41,6 +43,7 @@ const STAGE_OPTIONS = [
   { value: "install_in_progress",      label: "Install In Progress" },
   { value: "active",                   label: "Active" },
   { value: "renewal_pending",          label: "Renewal Pending" },
+  { value: "closed",                   label: "Closed" },
 ];
 
 const SORT_OPTIONS = [
@@ -49,9 +52,8 @@ const SORT_OPTIONS = [
   { value: "employer_asc", label: "Employer A–Z" },
   { value: "priority",     label: "Priority" },
   { value: "effective",    label: "Effective Date" },
+  { value: "sla_risk",     label: "SLA Risk" },
 ];
-
-const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 export default function Cases() {
   const queryClient = useQueryClient();
@@ -68,14 +70,86 @@ export default function Cases() {
   const [showStageModal, setShowStageModal]   = useState(false);
   const [showPriorityModal, setShowPriorityModal] = useState(false);
   const [showStageAdvanceModal, setShowStageAdvanceModal] = useState(false);
+  const [operationalPreset, setOperationalPreset] = useState("all");
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
 
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["cases-page-tasks"],
+    queryFn: () => base44.entities.CaseTask.list("-created_date", 500),
+  });
+
+  const { data: censusVersions = [] } = useQuery({
+    queryKey: ["cases-page-census"],
+    queryFn: () => base44.entities.CensusVersion.list("-created_date", 500),
+  });
+
+  const { data: scenarios = [] } = useQuery({
+    queryKey: ["cases-page-scenarios"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500),
+  });
+
+  const { data: enrollmentWindows = [] } = useQuery({
+    queryKey: ["cases-page-enrollment"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 500),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["cases-page-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 500),
+  });
+
+  const { data: exceptions = [] } = useQuery({
+    queryKey: ["cases-page-exceptions"],
+    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
+  });
+
+  const caseRelations = useMemo(() => {
+    const relationMap = {};
+    cases.forEach((item) => {
+      relationMap[item.id] = {
+        tasks: tasks.filter((task) => task.case_id === item.id),
+        censusVersions: censusVersions.filter((version) => version.case_id === item.id),
+        scenarios: scenarios.filter((scenario) => scenario.case_id === item.id),
+        enrollmentWindows: enrollmentWindows.filter((window) => window.case_id === item.id),
+        renewals: renewals.filter((renewal) => renewal.case_id === item.id),
+        exceptions: exceptions.filter((exception) => exception.case_id === item.id),
+      };
+    });
+    return relationMap;
+  }, [cases, tasks, censusVersions, scenarios, enrollmentWindows, renewals, exceptions]);
+
+  const enrichedCases = useMemo(() => {
+    return cases.map((item) => {
+      const related = caseRelations[item.id] || {
+        tasks: [], censusVersions: [], scenarios: [], enrollmentWindows: [], renewals: [], exceptions: [],
+      };
+      const signals = getCaseWorkflowSignals({ caseData: item, ...related });
+      const systemIssues = [
+        signals.censusIssues.length > 0 && { label: "Census", icon: FileWarning, tone: "text-amber-700 border-amber-200 bg-amber-50" },
+        (signals.erroredQuotes.length > 0 || signals.expiringQuotes.length > 0) && { label: "Quotes", icon: AlertTriangle, tone: "text-red-700 border-red-200 bg-red-50" },
+        signals.enrollmentBlocked && { label: "Enrollment", icon: ShieldAlert, tone: "text-amber-700 border-amber-200 bg-amber-50" },
+        signals.renewalAtRisk && { label: "Renewal", icon: RefreshCw, tone: "text-red-700 border-red-200 bg-red-50" },
+      ].filter(Boolean);
+
+      return {
+        ...item,
+        related,
+        signals,
+        escalated: signals.criticalExceptions.length > 0 || signals.urgentTasks.length > 0,
+        systemIssues,
+        staleDays: signals.staleDays,
+        slaRisk: signals.slaRisk,
+        slaLabel: signals.slaRisk ? "At risk" : "On track",
+      };
+    });
+  }, [cases, caseRelations]);
+
   const filtered = useMemo(() => {
-    let result = cases.filter((c) => {
+    let result = enrichedCases.filter((c) => {
       const matchSearch = !search ||
         c.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
         c.case_number?.toLowerCase().includes(search.toLowerCase()) ||
@@ -84,23 +158,31 @@ export default function Cases() {
       const matchType     = typeFilter     === "all" || c.case_type === typeFilter;
       const matchPriority = priorityFilter === "all" || c.priority  === priorityFilter;
       const matchAssignee = assignedToFilter === "all" ? true : assignedToFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignedToFilter;
-      return matchSearch && matchStage && matchType && matchPriority && matchAssignee;
+
+      const matchOperationalPreset = operationalPreset === "all"
+        || (operationalPreset === "open" && !["closed", "renewed"].includes(c.stage))
+        || (operationalPreset === "sla_risk" && c.slaRisk)
+        || (operationalPreset === "critical_blockers" && (c.signals.criticalExceptions.length > 0 || c.signals.blockedTasks.length > 0))
+        || (operationalPreset === "stalled" && c.staleDays !== null && c.staleDays > 7);
+
+      return matchSearch && matchStage && matchType && matchPriority && matchAssignee && matchOperationalPreset;
     });
 
     result = [...result].sort((a, b) => {
       if (sortBy === "created_asc")  return new Date(a.created_date) - new Date(b.created_date);
       if (sortBy === "created_desc") return new Date(b.created_date) - new Date(a.created_date);
       if (sortBy === "employer_asc") return (a.employer_name || "").localeCompare(b.employer_name || "");
-      if (sortBy === "priority")     return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
+      if (sortBy === "priority")     return (CASE_PRIORITY_ORDER[a.priority] ?? 2) - (CASE_PRIORITY_ORDER[b.priority] ?? 2);
       if (sortBy === "effective")    return new Date(a.effective_date || 0) - new Date(b.effective_date || 0);
+      if (sortBy === "sla_risk")     return Number(b.slaRisk) - Number(a.slaRisk);
       return 0;
     });
 
     return result;
-  }, [cases, search, stageFilter, typeFilter, priorityFilter, assignedToFilter, sortBy]);
+  }, [enrichedCases, search, stageFilter, typeFilter, priorityFilter, assignedToFilter, sortBy, operationalPreset]);
 
-  const activeFilters = [stageFilter, typeFilter, priorityFilter, assignedToFilter].filter(f => f !== "all").length;
-  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setAssignedToFilter("all"); setSearch(""); };
+  const activeFilters = [stageFilter, typeFilter, priorityFilter, assignedToFilter, operationalPreset].filter(f => f !== "all").length;
+  const clearFilters  = () => { setStageFilter("all"); setTypeFilter("all"); setPriorityFilter("all"); setAssignedToFilter("all"); setOperationalPreset("all"); setSearch(""); };
 
   const handleLoadPreset = (filters) => {
     if (filters.search !== undefined) setSearch(filters.search || "");
@@ -108,6 +190,13 @@ export default function Cases() {
     if (filters.typeFilter !== undefined) setTypeFilter(filters.typeFilter);
     if (filters.priorityFilter !== undefined) setPriorityFilter(filters.priorityFilter);
     if (filters.assignedToFilter !== undefined) setAssignedToFilter(filters.assignedToFilter);
+    if (filters.operationalPreset !== undefined) setOperationalPreset(filters.operationalPreset);
+  };
+
+  const handleCommandFilter = (filters) => {
+    if (filters.stageFilter) setStageFilter(filters.stageFilter);
+    if (filters.priorityFilter) setPriorityFilter(filters.priorityFilter);
+    if (filters.operationalPreset) setOperationalPreset(filters.operationalPreset);
   };
 
   // Bulk operations
@@ -154,15 +243,24 @@ export default function Cases() {
     setSelectedIds(new Set());
   };
 
-  // KPI counts
-  const urgentCount  = cases.filter(c => c.priority === "urgent").length;
-  const activeCount  = cases.filter(c => c.stage === "active").length;
-  const stalledCount = cases.filter(c => {
-    if (!c.last_activity_date) return false;
-    const days = (Date.now() - new Date(c.last_activity_date).getTime()) / 86400000;
-    return days > 7 && c.stage !== "active" && c.stage !== "closed";
-  }).length;
-  const enrollOpen   = cases.filter(c => c.stage === "enrollment_open").length;
+  const commandMetrics = useMemo(() => ({
+    openCount: enrichedCases.filter((item) => !["closed", "renewed"].includes(item.stage)).length,
+    closedCount: enrichedCases.filter((item) => item.stage === "closed").length,
+    urgentCount: enrichedCases.filter((item) => item.priority === "urgent").length,
+    stalledCount: enrichedCases.filter((item) => item.staleDays !== null && item.staleDays > 7 && !["active", "closed", "renewed"].includes(item.stage)).length,
+    unassignedCount: enrichedCases.filter((item) => !item.assigned_to).length,
+    slaRiskCount: enrichedCases.filter((item) => item.slaRisk).length,
+    criticalIssueCount: enrichedCases.filter((item) => item.signals.criticalExceptions.length > 0 || item.signals.blockedTasks.length > 0).length,
+    totalIssueCount: enrichedCases.reduce((sum, item) => sum + item.systemIssues.length + item.signals.openExceptions.length, 0),
+    escalatedCount: enrichedCases.filter((item) => item.escalated).length,
+  }), [enrichedCases]);
+
+  const systemSignals = useMemo(() => ({
+    censusIssueCount: enrichedCases.filter((item) => item.signals.censusIssues.length > 0).length,
+    quoteFailureCount: enrichedCases.filter((item) => item.signals.erroredQuotes.length > 0 || item.signals.expiringQuotes.length > 0).length,
+    enrollmentBlockerCount: enrichedCases.filter((item) => item.signals.enrollmentBlocked || (item.stage === "approved_for_enrollment" && !item.signals.latestEnrollment)).length,
+    renewalRiskCount: enrichedCases.filter((item) => item.signals.renewalAtRisk).length,
+  }), [enrichedCases]);
 
   return (
     <div className="space-y-5">
@@ -178,30 +276,11 @@ export default function Cases() {
         }
       />
 
-      {/* KPI Summary Strip */}
       {cases.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Active Cases",     value: activeCount,  icon: CheckCircle,    color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-100", filter: () => setStageFilter("active") },
-            { label: "Enrollment Open",  value: enrollOpen,   icon: Clock,          color: "text-blue-600",   bg: "bg-blue-50",     border: "border-blue-100",   filter: () => setStageFilter("enrollment_open") },
-            { label: "Urgent Priority",  value: urgentCount,  icon: AlertTriangle,  color: "text-red-600",    bg: "bg-red-50",      border: "border-red-100",    filter: () => setPriorityFilter("urgent") },
-            { label: "Stalled (7+ days)",value: stalledCount, icon: TrendingUp,     color: "text-amber-600",  bg: "bg-amber-50",    border: "border-amber-100",  filter: null },
-          ].map(kpi => (
-            <Card
-              key={kpi.label}
-              className={`border ${kpi.border} ${kpi.bg} ${kpi.filter ? "cursor-pointer hover:shadow-sm transition-shadow" : ""}`}
-              onClick={kpi.filter || undefined}
-            >
-              <CardContent className="p-3 flex items-center gap-3">
-                <kpi.icon className={`w-4 h-4 ${kpi.color} flex-shrink-0`} />
-                <div>
-                  <p className={`text-xl font-bold leading-none ${kpi.color}`}>{kpi.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{kpi.label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <>
+          <CasesCommandCenter metrics={commandMetrics} onFilter={handleCommandFilter} />
+          <CasesSystemSignals signals={systemSignals} />
+        </>
       )}
 
       {/* Filter Bar */}
@@ -277,7 +356,7 @@ export default function Cases() {
             </button>
           </div>
 
-          <SavedFiltersPanel currentFilters={{ search, stageFilter, typeFilter, priorityFilter, assignedToFilter }} onLoadPreset={handleLoadPreset} />
+          <SavedFiltersPanel currentFilters={{ search, stageFilter, typeFilter, priorityFilter, assignedToFilter, operationalPreset }} onLoadPreset={handleLoadPreset} />
         </div>
 
         {(activeFilters > 0 || search) && (
@@ -304,20 +383,23 @@ export default function Cases() {
       ) : viewMode === "pipeline" ? (
         <CasePipelineView cases={filtered} />
       ) : (
-        <div className="space-y-2 pb-20">
-          {filtered.map(c => (
-            <div key={c.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={selectedIds.has(c.id)}
-                onChange={() => toggleSelect(c.id)}
-                className="w-4 h-4 rounded border border-input"
-              />
-              <div className="flex-1">
-                <CaseListCard c={c} />
+        <div className="space-y-4 pb-20">
+          <CasesOperationalTable cases={filtered.slice(0, 12)} />
+          <div className="space-y-2">
+            {filtered.map(c => (
+              <div key={c.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(c.id)}
+                  onChange={() => toggleSelect(c.id)}
+                  className="w-4 h-4 rounded border border-input"
+                />
+                <div className="flex-1">
+                  <CaseListCard c={c} />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

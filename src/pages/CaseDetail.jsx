@@ -32,6 +32,7 @@ import StageValidationWarnings from "@/components/cases/StageValidationWarnings"
 import DependencyCheckPanel from "@/components/cases/DependencyCheckPanel";
 import CloneCaseModal    from "@/components/cases/CloneCaseModal";
 import AuditTrailViewer  from "@/components/shared/AuditTrailViewer";
+import { getCaseWorkflowSignals, getNextCaseStage, getStageRequirements } from "@/components/cases/caseWorkflow";
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 import AIAssistant from "@/components/ai/AIAssistant";
@@ -100,6 +101,24 @@ export default function CaseDetail() {
     enabled: !!caseId,
   });
 
+  const { data: enrollmentWindows = [] } = useQuery({
+    queryKey: ["enrollment-windows", caseId],
+    queryFn: () => base44.entities.EnrollmentWindow.filter({ case_id: caseId }, "-created_date"),
+    enabled: !!caseId,
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["case-renewals", caseId],
+    queryFn: () => base44.entities.RenewalCycle.filter({ case_id: caseId }, "-created_date"),
+    enabled: !!caseId,
+  });
+
+  const { data: exceptions = [] } = useQuery({
+    queryKey: ["case-exceptions", caseId],
+    queryFn: () => base44.entities.ExceptionItem.filter({ case_id: caseId }, "-created_date"),
+    enabled: !!caseId,
+  });
+
   const { data: activityLog = [] } = useQuery({
     queryKey: ["activity", caseId],
     queryFn: () => base44.entities.ActivityLog.filter({ case_id: caseId }, "-created_date"),
@@ -145,9 +164,20 @@ export default function CaseDetail() {
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const currentStageIndex = STAGE_ORDER.indexOf(caseData.stage);
-  const nextStage = currentStageIndex >= 0 && currentStageIndex < STAGE_ORDER.length - 1
-    ? STAGE_ORDER[currentStageIndex + 1]
-    : null;
+  const nextStage = getNextCaseStage(caseData.stage);
+
+  const workflowContext = {
+    caseData,
+    ...getCaseWorkflowSignals({
+      caseData,
+      censusVersions,
+      scenarios,
+      enrollmentWindows,
+      tasks,
+      renewals,
+      exceptions,
+    }),
+  };
 
   const aiContext = {
     employer:         caseData.employer_name,
@@ -248,11 +278,8 @@ export default function CaseDetail() {
             {/* Validation warnings */}
             {nextStage && (
               <StageValidationWarnings
-                caseData={caseData}
                 nextStage={nextStage}
-                censusVersions={censusVersions}
-                scenarios={scenarios}
-                tasks={tasks}
+                workflowContext={workflowContext}
               />
             )}
 
@@ -366,6 +393,7 @@ export default function CaseDetail() {
           caseData={caseData}
           nextStage={nextStage}
           nextStageLabel={STAGE_LABELS[nextStage]}
+          workflowContext={workflowContext}
           open={showAdvance}
           onConfirm={() => advanceStageMutation.mutate(nextStage)}
           onClose={() => setShowAdvance(false)}
