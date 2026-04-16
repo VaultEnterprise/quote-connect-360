@@ -26,6 +26,7 @@ import DomainControlGrid from "@/components/dashboard/DomainControlGrid";
 import RoutedPagesDirectory from "@/components/dashboard/RoutedPagesDirectory";
 import WorkflowBottlenecksPanel from "@/components/dashboard/WorkflowBottlenecksPanel";
 import ActionCenterPanel from "@/components/dashboard/ActionCenterPanel";
+import WorkflowStartPanel from "@/components/dashboard/WorkflowStartPanel";
 import DashboardRoleViewTabs from "@/components/dashboard/DashboardRoleViewTabs";
 import SystemControlMetrics from "@/components/dashboard/SystemControlMetrics";
 import AlertsAndAuditFeed from "@/components/dashboard/AlertsAndAuditFeed";
@@ -457,11 +458,13 @@ export default function Dashboard() {
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Unified command center for cases, census, quotes, enrollment, renewals, documents, exceptions, and routed platform workflows"
+        description="Start work, monitor blockers, and move cases through census, quoting, enrollment, and renewals."
         actions={<Link to="/cases/new"><Button><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>}
       />
 
       <DashboardRoleViewTabs value={roleView} onChange={setRoleView} />
+
+      <WorkflowStartPanel />
 
       <QuickActions />
 

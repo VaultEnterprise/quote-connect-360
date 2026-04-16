@@ -49,7 +49,7 @@ export default function EmployeeManagement() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Employee Management"
+        title="Employees"
         description={`${enrollments.length} total employee enrollments across ${windows.length} windows`}
       />
 

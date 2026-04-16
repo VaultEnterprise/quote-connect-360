@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import ContextBar from "./ContextBar";
 import AIAssistant from "@/components/ai/AIAssistant";
 import HelpAIAssistant from "@/components/help/HelpAIAssistant";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ export default function AppLayout() {
         )}
       >
         <TopBar onMobileMenuClick={() => setMobileOpen(true)} />
+        <ContextBar />
         <main className="p-4 md:p-6">
           <Outlet />
         </main>

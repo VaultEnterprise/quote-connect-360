@@ -64,7 +64,7 @@ export default function Enrollment() {
     <div className="space-y-6">
       <PageHeader
         title="Enrollment"
-        description="Track and manage open enrollment windows"
+        description="Open enrollment windows, monitor participation, and move approved cases into employee enrollment."
         actions={
           <div className="flex items-center gap-2">
             {closingSoon.length > 0 && (

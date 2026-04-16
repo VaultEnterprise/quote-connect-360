@@ -65,8 +65,8 @@ export default function PlanLibrary() {
   const PageContent = () => (
     <div className="space-y-6">
       <PageHeader
-        title="Plan Library"
-        description="Manage your medical and ancillary plan catalog."
+        title="Plans / Plan Builder"
+        description="Manage plan catalog, compare options, and maintain active and archived plans."
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowImport(true)}>

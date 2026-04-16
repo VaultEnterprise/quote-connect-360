@@ -90,7 +90,7 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Platform configuration and administration" />
+      <PageHeader title="Settings" description="Organization setup, team access, integrations, and platform administration" />
 
       {!isAdmin && (
         <Card className="border-amber-200 bg-amber-50">

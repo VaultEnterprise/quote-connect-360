@@ -149,8 +149,8 @@ export default function ContributionModeling() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Contribution Modeling"
-        description="Model employer contribution strategies, run ACA affordability analysis, and compare options side-by-side"
+        title="Contributions"
+        description="Model employer contribution strategies, review affordability, and compare funding options side-by-side."
         actions={
           <div className="flex gap-2">
             {models.length > 0 && (

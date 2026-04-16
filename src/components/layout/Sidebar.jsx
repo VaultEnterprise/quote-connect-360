@@ -3,78 +3,15 @@ import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
-  LayoutDashboard,
-  Briefcase,
-  Users,
-  FileText,
-  ClipboardCheck,
-  RefreshCw,
   AlertCircle,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Zap,
-  Building2,
-  BookOpen,
-  DollarSign,
-  FileOutput,
-  TriangleAlert,
-  Calculator,
-  Heart,
-  Landmark,
-  UserCog,
-  Brain,
-  ServerCog,
-  HelpCircle,
-  ShieldCheck,
-  Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-
-const navGroups = [
-  {
-    label: "Core Workflow",
-    items: [
-      { path: "/", label: "Dashboard", icon: LayoutDashboard },
-      { path: "/cases", label: "Cases", icon: Briefcase },
-      { path: "/employers", label: "Employers", icon: Building2 },
-      { path: "/census", label: "Census", icon: Users },
-      { path: "/quotes", label: "Quotes", icon: FileText },
-      { path: "/contributions", label: "Contributions", icon: Calculator },
-      { path: "/proposals", label: "Proposals", icon: FileOutput },
-      { path: "/enrollment", label: "Enrollment", icon: ClipboardCheck },
-      { path: "/renewals", label: "Renewals", icon: RefreshCw },
-    ],
-  },
-  {
-    label: "Tools & Reference",
-    items: [
-      { path: "/plans", label: "Plan Library", icon: BookOpen },
-      { path: "/rates", label: "Rates", icon: DollarSign },
-      { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
-      { path: "/tasks", label: "Tasks", icon: AlertCircle },
-      { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
-      { path: "/integration-infra", label: "Integration Infra", icon: ServerCog },
-      { path: "/aca-library", label: "ACA Library", icon: Scale },
-    ],
-  },
-  {
-    label: "Portals",
-    items: [
-      { path: "/employer-portal", label: "Employer Portal", icon: Landmark },
-      { path: "/employee-portal", label: "Employee Portal", icon: Heart },
-      { path: "/employee-management", label: "Employee Mgmt", icon: UserCog },
-    ],
-  },
-];
-
-const bottomItems = [
-  { path: "/help", label: "Help Center", icon: HelpCircle },
-  { path: "/help-admin", label: "Help Console", icon: ShieldCheck },
-  { path: "/settings", label: "Settings", icon: Settings },
-];
+import { navGroups, supportItems as bottomItems } from "@/components/layout/navigationConfig";
 
 export default function Sidebar({ collapsed, onToggle }) {
   const location = useLocation();
@@ -117,7 +54,12 @@ export default function Sidebar({ collapsed, onToggle }) {
       >
         <item.icon className={cn("w-5 h-5 flex-shrink-0", active && "drop-shadow-sm")} />
         {!collapsed && (
-          <span className="text-sm font-medium truncate flex-1">{item.label}</span>
+          <div className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium">{item.label}</span>
+            {item.description && !active && (
+              <span className="block truncate text-[10px] text-sidebar-foreground/45">{item.description}</span>
+            )}
+          </div>
         )}
         {item.path === "/tasks" && pendingTasks.length > 0 && !collapsed && (
           <span className="ml-auto text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5 min-w-[18px] text-center">

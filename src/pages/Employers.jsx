@@ -347,8 +347,8 @@ export default function Employers() {
   return (
     <div>
       <PageHeader
-        title="Employer Groups"
-        description="Manage your employer group accounts"
+        title="Master Groups"
+        description="Manage employer accounts, renewals, documents, and quick case creation"
         actions={
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => setShowRenewalDashboard(!showRenewalDashboard)}>
