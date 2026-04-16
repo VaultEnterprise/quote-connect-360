@@ -9,7 +9,7 @@ import {
   FileText, DollarSign, Calendar, Star, Calculator, XCircle,
   ArrowRight, ChevronDown, ChevronUp, AlertTriangle, Pencil,
   Trash2, CheckSquare, Square, MoreHorizontal, Copy, Send,
-  Download, StickyNote, Clock, Sliders
+  StickyNote, Clock, Sliders
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
