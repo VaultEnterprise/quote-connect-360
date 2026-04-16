@@ -27,23 +27,35 @@ export default function PlanComparisonTool({ plans, medical = false, selectedPla
     );
   }
 
-  const fields = medical
-    ? [
-      { label: "Network Type", key: "network_type" },
-      { label: "Deductible (Ind.)", key: "deductible_individual", format: v => v ? `$${v.toLocaleString()}` : "—" },
-      { label: "Deductible (Fam.)", key: "deductible_family", format: v => v ? `$${v.toLocaleString()}` : "—" },
-      { label: "OOP Max (Ind.)", key: "oop_max_individual", format: v => v ? `$${v.toLocaleString()}` : "—" },
-      { label: "OOP Max (Fam.)", key: "oop_max_family", format: v => v ? `$${v.toLocaleString()}` : "—" },
-      { label: "PCP Copay", key: "copay_pcp", format: v => v ? `$${v}` : "—" },
-      { label: "Specialist Copay", key: "copay_specialist", format: v => v ? `$${v}` : "—" },
-      { label: "ER Copay", key: "copay_er", format: v => v ? `$${v}` : "—" },
-      { label: "Coinsurance", key: "coinsurance", format: v => v ? `${v}%` : "—" },
-      { label: "HSA Eligible", key: "hsa_eligible", format: v => v ? "Yes" : "No" },
-    ]
-    : [
-      { label: "Carrier", key: "carrier" },
-      { label: "Plan Code", key: "plan_code" },
-    ];
+  const money = (value) => value === 0 || value ? `$${Number(value).toLocaleString()}` : "—";
+  const percent = (value) => value === 0 || value ? `${value}%` : "—";
+  const text = (value) => value || "—";
+  const booleanLabel = (value) => value ? "Yes" : "No";
+
+  const fields = [
+    { label: "Plan Name", key: "plan_name", format: text },
+    { label: "Plan Type", key: "plan_type", format: text },
+    { label: "Carrier", key: "carrier", format: text },
+    { label: "Plan Code", key: "plan_code", format: text },
+    { label: "Network Type", key: "network_type", format: text },
+    { label: "State", key: "state", format: text },
+    { label: "Effective Date", key: "effective_date", format: text },
+    { label: "Status", key: "status", format: text },
+    { label: "Deductible (Ind.)", key: "deductible_individual", format: money },
+    { label: "Deductible (Fam.)", key: "deductible_family", format: money },
+    { label: "OOP Max (Ind.)", key: "oop_max_individual", format: money },
+    { label: "OOP Max (Fam.)", key: "oop_max_family", format: money },
+    { label: "PCP Copay", key: "copay_pcp", format: money },
+    { label: "Specialist Copay", key: "copay_specialist", format: money },
+    { label: "ER Copay", key: "copay_er", format: money },
+    { label: "Coinsurance", key: "coinsurance", format: percent },
+    { label: "Rx Tier 1", key: "rx_tier1", format: money },
+    { label: "Rx Tier 2", key: "rx_tier2", format: money },
+    { label: "Rx Tier 3", key: "rx_tier3", format: money },
+    { label: "Rx Tier 4", key: "rx_tier4", format: money },
+    { label: "HSA Eligible", key: "hsa_eligible", format: booleanLabel },
+    { label: "Notes", key: "notes", format: text },
+  ].filter((field) => medical || !["network_type", "deductible_individual", "deductible_family", "oop_max_individual", "oop_max_family", "copay_pcp", "copay_specialist", "copay_er", "coinsurance", "rx_tier1", "rx_tier2", "rx_tier3", "rx_tier4", "hsa_eligible"].includes(field.key));
 
   return (
     <Card>
