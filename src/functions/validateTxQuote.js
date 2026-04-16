@@ -1,3 +1,4 @@
+/// <reference lib="deno.ns" />
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 function addResult(results, txQuoteCaseId, validator_code, validator_name, severity, status, message, field_path = '', destination_code = '') {
