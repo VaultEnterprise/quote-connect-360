@@ -1,0 +1,125 @@
+{
+  "name": "EmployeeEnrollment",
+  "type": "object",
+  "properties": {
+    "enrollment_window_id": { "type": "string" },
+    "case_id": { "type": "string" },
+    "employee_email": { "type": "string" },
+    "employee_name": { "type": "string" },
+    "access_token": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["invited", "started", "completed", "waived", "terminated"],
+      "default": "invited"
+    },
+    "execution_status": {
+      "type": "string",
+      "enum": ["draft", "in_progress", "ready_for_signature", "signed", "committed", "invalid", "terminated"],
+      "default": "draft"
+    },
+    "eligibility_status": {
+      "type": "string",
+      "enum": ["eligible", "ineligible", "pending_review"],
+      "default": "pending_review"
+    },
+    "eligibility_snapshot": {
+      "type": "object",
+      "description": "Committed eligibility evaluation used for this enrollment session"
+    },
+    "coverage_tier": {
+      "type": "string",
+      "enum": ["employee_only", "employee_spouse", "employee_children", "family"]
+    },
+    "selected_plan_id": { "type": "string" },
+    "selected_plan_name": { "type": "string" },
+    "selected_plans": {
+      "type": "array",
+      "items": { "type": "object" },
+      "description": "Committed elections by product type"
+    },
+    "plan_selection_snapshot": {
+      "type": "object",
+      "description": "Available plan universe, constraints, and quote-linked context at selection time"
+    },
+    "waiver_reason": { "type": "string" },
+    "dependents": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "dependent_summary": {
+      "type": "object",
+      "description": "Derived dependent counts and relationship summary"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "employer_name": { "type": "string" },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "contribution_snapshot": {
+      "type": "object",
+      "description": "Committed employer and employee cost details"
+    },
+    "payroll_deduction_snapshot": {
+      "type": "object",
+      "description": "Committed downstream payroll deduction values"
+    },
+    "validation_summary": {
+      "type": "object",
+      "description": "Latest strict validation result before commit"
+    },
+    "last_saved_step": { "type": "string" },
+    "last_saved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "committed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "terminated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "docusign_envelope_id": {
+      "type": "string",
+      "description": "DocuSign envelope ID for this enrollment"
+    },
+    "docusign_status": {
+      "type": "string",
+      "enum": ["not_sent", "sent", "delivered", "completed", "declined", "voided"],
+      "default": "not_sent",
+      "description": "Current DocuSign envelope status"
+    },
+    "docusign_signed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the employee completed signing"
+    },
+    "docusign_document_url": {
+      "type": "string",
+      "description": "URL to the completed signed document"
+    },
+    "docusign_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when DocuSign envelope was first sent"
+    },
+    "docusign_declined_reason": {
+      "type": "string",
+      "description": "Reason given if employee declined to sign"
+    }
+  },
+  "required": ["case_id", "employee_email", "employee_name"]
+}
