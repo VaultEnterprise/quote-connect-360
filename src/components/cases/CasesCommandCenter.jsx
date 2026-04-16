@@ -69,7 +69,7 @@ export default function CasesCommandCenter({ metrics, onFilter }) {
             icon={card.icon}
             trend={card.trend}
             trendLabel={card.trendLabel}
-            className="h-full hover:border-primary/30 hover:bg-card"
+            className="h-full hover:border-primary/30 hover:bg-card/100"
           />
         </button>
       ))}
