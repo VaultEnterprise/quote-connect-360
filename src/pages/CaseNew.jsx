@@ -164,6 +164,15 @@ export default function CaseNew() {
 
       // If no employer_group_id but employer_name given, create EmployerGroup first
       let empGroupId = data.employer_group_id;
+      if (!agencyId) {
+        const fallbackAgency = await base44.entities.Agency.create({
+          name: newAgency.name || "Default Agency",
+          code: newAgency.code || `AG-${Date.now().toString(36).toUpperCase()}`,
+          status: "active",
+        });
+        agencyId = fallbackAgency.id;
+      }
+
       if (!empGroupId && data.employer_name) {
         const newEmp = await base44.entities.EmployerGroup.create({
           agency_id: agencyId,
@@ -186,15 +195,6 @@ export default function CaseNew() {
           status: "prospect",
         });
         empGroupId = newEmp.id;
-      }
-
-      if (!agencyId) {
-        const fallbackAgency = await base44.entities.Agency.create({
-          name: newAgency.name || "Default Agency",
-          code: newAgency.code || `AG-${Date.now().toString(36).toUpperCase()}`,
-          status: "active",
-        });
-        agencyId = fallbackAgency.id;
       }
 
       return base44.entities.BenefitCase.create({
