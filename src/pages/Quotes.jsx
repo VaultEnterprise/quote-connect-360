@@ -23,6 +23,10 @@ import ApprovalModal from "@/components/quotes/ApprovalModal";
 import ContributionSlider from "@/components/quotes/ContributionSlider";
 import SavedViewsPanel from "@/components/quotes/SavedViewsPanel";
 import QuotePipelinePanel from "@/components/quotes/QuotePipelinePanel";
+import QuoteControlCenter from "@/components/quotes/QuoteControlCenter";
+import QuoteValidationDeck from "@/components/quotes/QuoteValidationDeck";
+import QuoteInsightsPanel from "@/components/quotes/QuoteInsightsPanel";
+import QuoteActivityFeed from "@/components/quotes/QuoteActivityFeed";
 import { buildQuoteReadiness, buildScenarioVersionSnapshot, appendScenarioVersion } from "@/components/quotes/quoteGovernanceEngine";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
@@ -72,6 +76,11 @@ export default function Quotes() {
   const { data: renewals = [] } = useQuery({
     queryKey: ["quotes-renewals"],
     queryFn: () => base44.entities.RenewalCycle.list("-created_date", 200),
+  });
+
+  const { data: activityLogs = [] } = useQuery({
+    queryKey: ["quotes-activity-logs"],
+    queryFn: () => base44.entities.ActivityLog.list("-created_date", 100),
   });
 
   const caseMap = useMemo(() => Object.fromEntries(cases.map(c => [c.id, c])), [cases]);
@@ -201,6 +210,62 @@ export default function Quotes() {
 
   const draftScenarios = filtered.filter(s => s.status === "draft");
 
+  const readinessItems = useMemo(() => {
+    const invalidCensus = scenarios.filter((scenario) => {
+      const readiness = buildQuoteReadiness({ scenario, caseRecord: caseMap[scenario.case_id], censusVersions, enrollments, renewals });
+      return !readiness.checks.censusValidated;
+    }).length;
+
+    const missingPlans = scenarios.filter((scenario) => !Number(scenario.plan_count || 0)).length;
+    const blockedEnrollment = scenarios.filter((scenario) => {
+      const readiness = buildQuoteReadiness({ scenario, caseRecord: caseMap[scenario.case_id], censusVersions, enrollments, renewals });
+      return scenario.status === "approved" && !readiness.checks.enrollmentCompatible;
+    }).length;
+
+    const blockedRenewal = scenarios.filter((scenario) => {
+      const readiness = buildQuoteReadiness({ scenario, caseRecord: caseMap[scenario.case_id], censusVersions, enrollments, renewals });
+      return scenario.status === "approved" && !readiness.checks.renewalCompatible;
+    }).length;
+
+    return [
+      { label: "Census validation", value: invalidCensus, detail: "Quotes without validated census inputs.", href: "/census" },
+      { label: "Plan mapping", value: missingPlans, detail: "Scenarios missing priced plan selections.", href: "/plans" },
+      { label: "Enrollment compatibility", value: blockedEnrollment, detail: "Approved quotes blocked from enrollment handoff.", href: "/enrollment" },
+      { label: "Renewal compatibility", value: blockedRenewal, detail: "Approved quotes not ready for renewal workflows.", href: "/renewals" },
+    ];
+  }, [scenarios, caseMap, censusVersions, enrollments, renewals]);
+
+  const quoteInsights = useMemo(() => {
+    const completed = scenarios.filter((scenario) => scenario.status === "completed");
+    const totalPremium = completed.reduce((sum, scenario) => sum + Number(scenario.total_monthly_premium || 0), 0);
+    const totalEmployer = completed.reduce((sum, scenario) => sum + Number(scenario.employer_monthly_cost || 0), 0);
+    const totalEmployee = completed.reduce((sum, scenario) => sum + Math.max(0, Number(scenario.total_monthly_premium || 0) - Number(scenario.employer_monthly_cost || 0)), 0);
+    const tracedEmployees = cases.reduce((sum, item) => sum + Number(item.employee_count || 0), 0);
+    const costPerEmployee = tracedEmployees > 0 ? Math.round(totalPremium / tracedEmployees) : 0;
+    const priorQuotes = scenarios.filter((scenario) => Array.isArray(scenario.versions) && scenario.versions.length > 1).length;
+
+    return [
+      { label: "Total Premium", value: `$${totalPremium.toLocaleString()}`, detail: "Completed monthly scenario premium volume." },
+      { label: "Employer Split", value: `$${totalEmployer.toLocaleString()}`, detail: "Employer monthly contribution across completed quotes." },
+      { label: "Employee Split", value: `$${totalEmployee.toLocaleString()}`, detail: "Employee monthly responsibility across completed quotes." },
+      { label: "Cost / Employee", value: costPerEmployee ? `$${costPerEmployee}` : "—", detail: "Average premium per employee across traced groups." },
+      { label: "Versioned Quotes", value: priorQuotes, detail: "Scenarios with saved historical versions." },
+      { label: "Risk Flags", value: scenarios.filter((scenario) => scenario.status === "error" || scenario.status === "expired").length, detail: "Scenarios requiring remediation or recalculation." },
+      { label: "Approved", value: scenarios.filter((scenario) => scenario.status === "approved").length, detail: "Quotes ready for downstream action." },
+      { label: "Converted", value: scenarios.filter((scenario) => scenario.status === "converted_to_enrollment").length, detail: "Quotes mapped into enrollment execution." },
+    ];
+  }, [scenarios, cases]);
+
+  const quoteActivity = useMemo(() => activityLogs
+    .filter((item) => item.entity_type === "QuoteScenario" || item.action?.toLowerCase().includes("quote") || item.action?.toLowerCase().includes("scenario"))
+    .slice(0, 8)
+    .map((item) => ({
+      id: item.id,
+      title: item.action,
+      detail: item.detail || item.actor_name || item.actor_email || "Quote activity",
+      time: new Date(item.created_date).toLocaleDateString(),
+    })), [activityLogs]);
+
   const handleCalculateAllDrafts = async () => {
     if (!draftScenarios.length) return;
     setBulkCalculating(true);
@@ -325,6 +390,10 @@ export default function Quotes() {
 
       <QuoteDependencyPanel scenarios={scenarios} cases={cases} censusVersions={censusVersions} enrollments={enrollments} renewals={renewals} />
 
+      <QuoteValidationDeck items={readinessItems} />
+
+      <QuoteInsightsPanel insights={quoteInsights} />
+
       {compareMode && selectedScenarios.length >= 2 && (
         <ScenarioCompare
           scenarios={selectedScenarios}
@@ -332,81 +401,25 @@ export default function Quotes() {
         />
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-        <div className="flex items-center border rounded-lg overflow-hidden">
-          <button
-            onClick={() => setGroupByCaseMode(true)}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${groupByCaseMode ? "bg-primary text-white" : "hover:bg-muted"}`}
-          >
-            By Case
-          </button>
-          <button
-            onClick={() => setGroupByCaseMode(false)}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${!groupByCaseMode ? "bg-primary text-white" : "hover:bg-muted"}`}
-          >
-            All
-          </button>
-        </div>
-
-        <div className="relative flex-1 min-w-48 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search scenarios..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
-        </div>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36 h-9">
-            <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" /><SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="running">Running</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="error">Error</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {employers.length > 0 && (
-          <Select value={caseFilter} onValueChange={setCaseFilter}>
-            <SelectTrigger className="w-44 h-9"><SelectValue placeholder="All Employers" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Employers</SelectItem>
-              {employers.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
-
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-36 h-9">
-            <SortAsc className="w-3.5 h-3.5 mr-2 text-muted-foreground" /><SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="created_date">Newest First</SelectItem>
-            <SelectItem value="premium">Highest Premium</SelectItem>
-            <SelectItem value="expiry">Expiry Date</SelectItem>
-            <SelectItem value="score">Rec. Score</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {allCarriers.length > 0 && (
-          <Select value={carrierFilter} onValueChange={setCarrierFilter}>
-            <SelectTrigger className="w-40 h-9"><SelectValue placeholder="All Carriers" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Carriers</SelectItem>
-              {allCarriers.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
-
-        {activeFilters.length > 0 && (
-          <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setCaseFilter("all"); setShowExpiringOnly(false); setCarrierFilter("all"); }}>
-            <X className="w-3.5 h-3.5 mr-1" /> Clear all
-          </Button>
-        )}
-
-        <span className="text-xs text-muted-foreground ml-auto">{filtered.length} scenario{filtered.length !== 1 ? "s" : ""}</span>
-      </div>
+      <QuoteControlCenter
+        groupByCaseMode={groupByCaseMode}
+        setGroupByCaseMode={setGroupByCaseMode}
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        caseFilter={caseFilter}
+        setCaseFilter={setCaseFilter}
+        employers={employers}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        allCarriers={allCarriers}
+        carrierFilter={carrierFilter}
+        setCarrierFilter={setCarrierFilter}
+        activeFilters={activeFilters}
+        clearAll={() => { setSearch(""); setStatusFilter("all"); setCaseFilter("all"); setShowExpiringOnly(false); setCarrierFilter("all"); }}
+        filteredCount={filtered.length}
+      />
 
       {activeFilters.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap -mt-2">
@@ -538,6 +551,8 @@ export default function Quotes() {
           ))}
         </div>
       )}
+
+      <QuoteActivityFeed items={quoteActivity} />
 
       {showNewScenario && (
         <NewScenarioFromQuotes open={showNewScenario} onClose={() => setShowNewScenario(false)} />
