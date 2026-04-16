@@ -52,20 +52,27 @@ export default function TxQuoteWorkspace({ open, onClose, caseData, censusVersio
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["txquote-workspace", caseData?.id] });
 
+  const upsertTxQuoteRecord = async (entityName, currentRecord, payload) => {
+    if (currentRecord?.id) {
+      return base44.entities[entityName].update(currentRecord.id, payload);
+    }
+    return base44.entities[entityName].create({ txquote_case_id: data.txQuoteCase.id, ...payload });
+  };
+
   const saveEmployer = useMutation({
-    mutationFn: (payload) => base44.entities.TxQuoteEmployerProfile.update(data.employerProfile.id, payload),
+    mutationFn: (payload) => upsertTxQuoteRecord("TxQuoteEmployerProfile", data.employerProfile, payload),
     onSuccess: refresh,
   });
   const saveCurrentPlan = useMutation({
-    mutationFn: (payload) => base44.entities.TxQuoteCurrentPlanInfo.update(data.currentPlan.id, payload),
+    mutationFn: (payload) => upsertTxQuoteRecord("TxQuoteCurrentPlanInfo", data.currentPlan, payload),
     onSuccess: refresh,
   });
   const saveContribution = useMutation({
-    mutationFn: (payload) => base44.entities.TxQuoteContributionStrategy.update(data.contribution.id, payload),
+    mutationFn: (payload) => upsertTxQuoteRecord("TxQuoteContributionStrategy", data.contribution, payload),
     onSuccess: refresh,
   });
   const saveClaims = useMutation({
-    mutationFn: (payload) => base44.entities.TxQuoteClaimsRequirement.update(data.claims.id, payload),
+    mutationFn: (payload) => upsertTxQuoteRecord("TxQuoteClaimsRequirement", data.claims, payload),
     onSuccess: refresh,
   });
   const validateMutation = useMutation({
