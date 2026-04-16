@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -16,7 +15,6 @@ export default function ContributionSlider({ scenario, open, onClose }) {
   const { toast } = useToast();
 
   const totalPremium = scenario.total_monthly_premium || 0;
-  const projectedEmployeeCount = 100; // Mock estimate
 
   const calculations = useMemo(() => {
     const empRate = eeContribution / 100;
