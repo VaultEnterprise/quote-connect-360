@@ -240,12 +240,12 @@ export default function Quotes() {
     toast?.({ title: "Export started" });
   };
 
-  const handleLoadPreset = (filters) => {
+  const handleLoadPreset = (filters = {}) => {
     if (filters.search !== undefined) setSearch(filters.search || "");
-    if (filters.statusFilter !== undefined) setStatusFilter(filters.statusFilter);
-    if (filters.caseFilter !== undefined) setCaseFilter(filters.caseFilter);
-    if (filters.carrierFilter !== undefined) setCarrierFilter(filters.carrierFilter);
-    if (filters.showExpiringOnly !== undefined) setShowExpiringOnly(filters.showExpiringOnly);
+    if (filters.statusFilter !== undefined) setStatusFilter(filters.statusFilter || "all");
+    if (filters.caseFilter !== undefined) setCaseFilter(filters.caseFilter || "all");
+    if (filters.carrierFilter !== undefined) setCarrierFilter(filters.carrierFilter || "all");
+    if (filters.showExpiringOnly !== undefined) setShowExpiringOnly(Boolean(filters.showExpiringOnly));
   };
 
   // Keyboard shortcuts

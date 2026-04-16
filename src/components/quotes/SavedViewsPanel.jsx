@@ -9,10 +9,10 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 
 const PRESET_VIEWS = [
-  { id: "recommended", name: "Recommended Scenarios", filters: { is_recommended: true } },
   { id: "expiring", name: "Expiring Soon", filters: { showExpiringOnly: true } },
-  { id: "completed", name: "Completed", filters: { status: "completed" } },
-  { id: "draft", name: "Drafts", filters: { status: "draft" } },
+  { id: "completed", name: "Completed", filters: { statusFilter: "completed" } },
+  { id: "draft", name: "Drafts", filters: { statusFilter: "draft" } },
+  { id: "all", name: "All Scenarios", filters: { search: "", statusFilter: "all", caseFilter: "all", carrierFilter: "all", showExpiringOnly: false } },
 ];
 
 export default function SavedViewsPanel({ currentFilters, onLoadPreset }) {
@@ -53,8 +53,37 @@ export default function SavedViewsPanel({ currentFilters, onLoadPreset }) {
   });
 
   return (
-    <>
-      {/* Trigger Button */}
+    <div className="flex items-center gap-2 flex-wrap">
+      {PRESET_VIEWS.map((view) => (
+        <Button
+          key={view.id}
+          variant="outline"
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => onLoadPreset(view.filters)}
+        >
+          <Bookmark className="w-3.5 h-3.5 mr-1" /> {view.name}
+        </Button>
+      ))}
+
+      {savedPresets.map((preset) => (
+        <div key={preset.id} className="flex items-center rounded-md border bg-background">
+          <button
+            onClick={() => onLoadPreset(preset.filters || {})}
+            className="px-2.5 py-1.5 text-xs hover:bg-muted transition-colors rounded-l-md"
+          >
+            {preset.name}
+          </button>
+          <button
+            onClick={() => deletePreset.mutate(preset.id)}
+            className="px-2 py-1.5 text-destructive hover:bg-destructive/5 transition-colors rounded-r-md border-l"
+            aria-label={`Delete ${preset.name}`}
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        </div>
+      ))}
+
       <Button
         variant="outline"
         size="sm"
@@ -114,50 +143,6 @@ export default function SavedViewsPanel({ currentFilters, onLoadPreset }) {
         </DialogContent>
       </Dialog>
 
-      {/* Preset Views Popover */}
-      <div className="absolute top-12 right-0 bg-white rounded-lg border shadow-lg p-3 w-64 z-50 hidden group-hover:block">
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-2">Quick Views</p>
-            <div className="space-y-1">
-              {PRESET_VIEWS.map((view) => (
-                <button
-                  key={view.id}
-                  onClick={() => onLoadPreset(view.filters)}
-                  className="w-full text-left px-2 py-1.5 rounded text-xs hover:bg-muted transition-colors"
-                >
-                  <Bookmark className="w-2.5 h-2.5 inline mr-1" />
-                  {view.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {savedPresets.length > 0 && (
-            <div className="border-t pt-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Saved Presets</p>
-              <div className="space-y-1">
-                {savedPresets.map((preset) => (
-                  <div key={preset.id} className="flex items-center justify-between p-2 rounded hover:bg-muted">
-                    <button
-                      onClick={() => onLoadPreset(preset.filters)}
-                      className="text-xs text-left flex-1"
-                    >
-                      {preset.name}
-                    </button>
-                    <button
-                      onClick={() => deletePreset.mutate(preset.id)}
-                      className="text-destructive hover:text-destructive/80"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

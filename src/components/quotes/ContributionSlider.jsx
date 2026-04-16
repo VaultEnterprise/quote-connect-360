@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -9,12 +9,17 @@ import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function ContributionSlider({ scenario, open, onClose }) {
-  const [eeContribution, setEeContribution] = useState(scenario.employer_contribution_ee ?? 80);
-  const [depContribution, setDepContribution] = useState(scenario.employer_contribution_dep ?? 50);
+  const [eeContribution, setEeContribution] = useState(scenario?.employer_contribution_ee ?? 80);
+  const [depContribution, setDepContribution] = useState(scenario?.employer_contribution_dep ?? 50);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const totalPremium = scenario.total_monthly_premium || 0;
+  useEffect(() => {
+    setEeContribution(scenario?.employer_contribution_ee ?? 80);
+    setDepContribution(scenario?.employer_contribution_dep ?? 50);
+  }, [scenario?.id, scenario?.employer_contribution_ee, scenario?.employer_contribution_dep]);
+
+  const totalPremium = scenario?.total_monthly_premium || 0;
 
   const calculations = useMemo(() => {
     const empRate = eeContribution / 100;
