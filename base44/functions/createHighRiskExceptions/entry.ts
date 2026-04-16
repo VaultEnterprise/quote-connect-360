@@ -36,60 +36,70 @@ Deno.serve(async (req) => {
     }, '', 10000);
 
     const createdExceptions = [];
-    const openExceptions = await base44.entities.ExceptionItem.filter({
-      case_id,
-      entity_type: 'CensusMember'
-    }, '', 10000);
-    const existingMemberIds = new Set(
-      openExceptions
-        .filter((item) => item.status !== 'resolved')
-        .map((item) => item.entity_id)
-        .filter(Boolean)
-    );
 
-    const exceptionsToCreate = [];
-
+    // Create exceptions for high-risk members
     for (const member of members) {
-      if (existingMemberIds.has(member.id)) continue;
-      exceptionsToCreate.push({
-        case_id,
-        employer_name: caseData.employer_name,
-        category: 'census',
-        severity: 'high',
-        status: 'new',
-        title: `High Risk Member: ${member.first_name} ${member.last_name}`,
-        description: `GradientAI risk score: ${member.gradient_ai_data.risk_score}. Predicted annual claims: $${Math.round(member.gradient_ai_data.predicted_annual_claims)}. Requires underwriting review.`,
-        suggested_action: 'Conduct detailed underwriting review. Consider enhanced benefits or rate adjustments.',
-        entity_type: 'CensusMember',
-        entity_id: member.id,
-        due_by: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-    }
-
-    for (const member of elevatedMembers) {
-      if (existingMemberIds.has(member.id)) continue;
-      exceptionsToCreate.push({
-        case_id,
-        employer_name: caseData.employer_name,
-        category: 'census',
-        severity: 'medium',
-        status: 'new',
-        title: `Elevated Risk Member: ${member.first_name} ${member.last_name}`,
-        description: `GradientAI risk score: ${member.gradient_ai_data.risk_score}. Predicted annual claims: $${Math.round(member.gradient_ai_data.predicted_annual_claims)}. Monitor during enrollment.`,
-        suggested_action: 'Review coverage recommendations. Consider wellness program enrollment.',
-        entity_type: 'CensusMember',
-        entity_id: member.id,
-        due_by: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-    }
-
-    for (let index = 0; index < exceptionsToCreate.length; index += 25) {
-      const batch = exceptionsToCreate.slice(index, index + 25);
       try {
-        await base44.entities.ExceptionItem.bulkCreate(batch);
-        createdExceptions.push(...batch);
+        const existingException = await base44.entities.ExceptionItem.filter({
+          case_id,
+          entity_type: 'CensusMember',
+          entity_id: member.id,
+          status: { $ne: 'resolved' }
+        }, '', 1);
+
+        if (!existingException.length) {
+          const exception = {
+            case_id,
+            employer_name: caseData.employer_name,
+            category: 'census',
+            severity: 'high',
+            status: 'new',
+            title: `High Risk Member: ${member.first_name} ${member.last_name}`,
+            description: `GradientAI risk score: ${member.gradient_ai_data.risk_score}. Predicted annual claims: $${Math.round(member.gradient_ai_data.predicted_annual_claims)}. Requires underwriting review.`,
+            suggested_action: 'Conduct detailed underwriting review. Consider enhanced benefits or rate adjustments.',
+            entity_type: 'CensusMember',
+            entity_id: member.id,
+            due_by: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          };
+
+          await base44.entities.ExceptionItem.create(exception);
+          createdExceptions.push(exception);
+        }
       } catch (err) {
-        console.error(`Error creating exception batch starting at ${index}:`, err.message);
+        console.error(`Error creating exception for member ${member.id}:`, err.message);
+      }
+    }
+
+    // Create exceptions for elevated-risk members (warning level)
+    for (const member of elevatedMembers) {
+      try {
+        const existingException = await base44.entities.ExceptionItem.filter({
+          case_id,
+          entity_type: 'CensusMember',
+          entity_id: member.id,
+          status: { $ne: 'resolved' }
+        }, '', 1);
+
+        if (!existingException.length) {
+          const exception = {
+            case_id,
+            employer_name: caseData.employer_name,
+            category: 'census',
+            severity: 'medium',
+            status: 'new',
+            title: `Elevated Risk Member: ${member.first_name} ${member.last_name}`,
+            description: `GradientAI risk score: ${member.gradient_ai_data.risk_score}. Predicted annual claims: $${Math.round(member.gradient_ai_data.predicted_annual_claims)}. Monitor during enrollment.`,
+            suggested_action: 'Review coverage recommendations. Consider wellness program enrollment.',
+            entity_type: 'CensusMember',
+            entity_id: member.id,
+            due_by: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          };
+
+          await base44.entities.ExceptionItem.create(exception);
+          createdExceptions.push(exception);
+        }
+      } catch (err) {
+        console.error(`Error creating exception for member ${member.id}:`, err.message);
       }
     }
 

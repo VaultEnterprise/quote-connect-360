@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Users, FileUp, Search, CheckCircle2 } from "lucide-react";
+import { Users, FileUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
-import CensusImportWorkspace from "@/components/census/CensusImportWorkspace";
+import CensusUploadModal from "@/components/census/CensusUploadModal";
 import CensusVersionHistory from "@/components/census/CensusVersionHistory";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import RiskDashboard from "@/components/census/RiskDashboard";
@@ -21,7 +21,6 @@ export default function Census() {
   const [selectedCaseId, setSelectedCaseId] = useState(routeContext.caseId || "");
   const [showUpload, setShowUpload] = useState(false);
   const [viewingVersionId, setViewingVersionId] = useState(null);
-  const [importSuccessMessage, setImportSuccessMessage] = useState("");
 
   // Fetch all cases
   const { data: cases = [] } = useQuery({
@@ -48,7 +47,6 @@ export default function Census() {
 
   const selectedCase = cases.find(c => c.id === selectedCaseId);
   const selectedVersionCount = filteredVersions.length;
-  const activeVersionId = viewingVersionId || filteredVersions[0]?.id || null;
 
   return (
     <div className="space-y-6">
@@ -94,16 +92,6 @@ export default function Census() {
         </CardContent>
       </Card>
 
-      {importSuccessMessage && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2">
-            <CheckCircle2 className="w-4 h-4 mt-0.5" />
-            <span>{importSuccessMessage}</span>
-          </div>
-          <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-green-800 hover:text-green-900" onClick={() => setImportSuccessMessage("")}>Dismiss</Button>
-        </div>
-      )}
-
       {/* Selected Case Info */}
       {selectedCase && (
         <Card>
@@ -124,16 +112,7 @@ export default function Census() {
       )}
 
       {/* Content */}
-      {showUpload && selectedCaseId ? (
-        <CensusImportWorkspace
-          caseId={selectedCaseId}
-          onCancel={() => setShowUpload(false)}
-          onComplete={(censusVersionId, message) => {
-            setViewingVersionId(censusVersionId);
-            setImportSuccessMessage(message || "Import completed successfully.");
-          }}
-        />
-      ) : !selectedCaseId ? (
+      {!selectedCaseId ? (
         <EmptyState
           icon={Users}
           title="Select a Case"
@@ -153,22 +132,17 @@ export default function Census() {
           <CensusVersionHistory
             versions={filteredVersions}
             onViewMembers={version => setViewingVersionId(version.id)}
-            onDeleteVersion={(version) => {
-              if (viewingVersionId === version.id) {
-                setViewingVersionId(null);
-              }
-            }}
           />
 
           {/* Risk Dashboard */}
-          {activeVersionId && (
-            <RiskDashboard censusVersionId={activeVersionId} caseId={selectedCaseId} />
+          {viewingVersionId && (
+            <RiskDashboard censusVersionId={viewingVersionId} caseId={selectedCaseId} />
           )}
 
-          {/* GradientAI Analysis */}
-          {activeVersionId && (
+          {/* GradientAI Analysis — show for the latest version as soon as a case is selected */}
+          {filteredVersions.length > 0 && (
             <GradientAIAnalysisPanel 
-              censusVersionId={activeVersionId} 
+              censusVersionId={viewingVersionId || filteredVersions[0].id} 
               caseId={selectedCaseId}
               onAnalysisComplete={() => {}}
             />
@@ -194,6 +168,18 @@ export default function Census() {
         </div>
       )}
 
+      {/* Upload Modal */}
+      {selectedCaseId && (
+        <CensusUploadModal
+          caseId={selectedCaseId}
+          currentVersionCount={selectedVersionCount}
+          open={showUpload}
+          onClose={() => {
+            setShowUpload(false);
+            // Refetch versions to see new upload
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const NUMERIC_FIELDS = ["hours_per_week", "annual_salary", "dependent_count"];
+const REQUIRED_FIELDS = ["first_name", "last_name"];
 const ALLOWED_FIELDS = [
   "employee_id", "first_name", "last_name", "date_of_birth", "gender", "ssn_last4", "email", "phone", "address", "city", "state", "zip", "hire_date", "employment_status", "employment_type", "hours_per_week", "annual_salary", "job_title", "department", "class_code", "is_eligible", "dependent_count", "coverage_tier", "validation_status", "validation_issues",
 ];
@@ -55,27 +56,13 @@ function parseCsv(text) {
 
 function normalizeDate(value) {
   if (!value) return undefined;
-  const raw = String(value).trim();
-  if (!raw) return undefined;
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-
-  const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (slashMatch) {
-    const [, month, day, year] = slashMatch;
-    const normalizedYear = year.length === 2 ? `20${year}` : year;
-    const iso = `${normalizedYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const parsed = new Date(`${iso}T00:00:00Z`);
-    return Number.isNaN(parsed.getTime()) ? undefined : iso;
-  }
-
-  const date = new Date(raw);
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) return undefined;
   return date.toISOString().slice(0, 10);
 }
 
 function transformField(fieldKey, value) {
-  if (value == null) return undefined;
+  if (!value) return undefined;
   if (NUMERIC_FIELDS.includes(fieldKey)) {
     const parsed = Number(String(value).replace(/[$,]/g, ''));
     return Number.isNaN(parsed) ? undefined : parsed;
@@ -106,12 +93,6 @@ function transformField(fieldKey, value) {
     if (normalized.includes('child')) return 'employee_children';
     return 'employee_only';
   }
-  if (fieldKey === "is_eligible") {
-    const normalized = String(value).toLowerCase().trim();
-    if (["false", "no", "n", "0", "ineligible"].includes(normalized)) return false;
-    if (["true", "yes", "y", "1", "eligible"].includes(normalized)) return true;
-    return undefined;
-  }
   return String(value).trim();
 }
 
@@ -121,7 +102,6 @@ function validateMember(member) {
   if (!member.last_name) issues.push({ field: 'last_name', type: 'error', message: 'Missing last name' });
   if (member.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email)) issues.push({ field: 'email', type: 'warning', message: 'Invalid email format' });
   if (member.date_of_birth && !/^\d{4}-\d{2}-\d{2}$/.test(member.date_of_birth)) issues.push({ field: 'date_of_birth', type: 'warning', message: 'Invalid date format' });
-  if (member.zip && !/^\d{5}(-\d{4})?$/.test(member.zip)) issues.push({ field: 'zip', type: 'warning', message: 'ZIP should be 5 digits' });
   return issues;
 }
 
@@ -193,12 +173,8 @@ Deno.serve(async (req) => {
         member[fieldKey] = transformField(fieldKey, rawRow[columnName]);
       });
 
-      if (member.is_eligible == null) {
-        member.is_eligible = true;
-      }
-
       const issues = validateMember(member);
-      const identity = member.email || member.employee_id || `${member.first_name || ''}-${member.last_name || ''}-${member.date_of_birth || ''}`;
+      const identity = member.email || member.employee_id;
       if (identity && seenIdentity.has(identity)) {
         duplicates.push({ row: index, prevRow: seenIdentity.get(identity), identity });
         issues.push({ field: 'employee_id', type: 'warning', message: 'Potential duplicate employee' });
@@ -226,10 +202,6 @@ Deno.serve(async (req) => {
     };
 
     if (body.dryRun) return Response.json(preview);
-
-    if (rows.length === 0) {
-      return Response.json({ error: 'The file has no data rows to import' }, { status: 400 });
-    }
 
     const importRun = await base44.asServiceRole.entities.ImportRun.create({
       import_type: 'census_members',
@@ -275,9 +247,7 @@ Deno.serve(async (req) => {
 
     await base44.entities.BenefitCase.update(body.caseId, {
       census_status: errorCount > 0 ? 'issues_found' : 'validated',
-      stage: errorCount > 0 ? 'census_in_progress' : 'census_validated',
-      employee_count: transformedRows.length,
-      last_activity_date: new Date().toISOString(),
+      stage: 'census_in_progress',
     });
 
     await base44.asServiceRole.entities.ImportRun.update(importRun.id, {
