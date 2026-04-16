@@ -30,41 +30,54 @@ export function getTxQuoteButtonState({ txQuoteCase, readinessResults = [], dest
 }
 
 export async function ensureTxQuoteWorkspace(caseData, censusVersions = []) {
-  const existing = await base44.entities.TxQuoteCase.filter({ case_id: caseData.id }, "-created_date", 1);
-  if (existing[0]) return existing[0];
-
   const validatedCensus = getLatestValidatedCensus(censusVersions);
-  const created = await base44.entities.TxQuoteCase.create({
-    case_id: caseData.id,
-    census_version_id: validatedCensus?.id,
-    effective_date: caseData.effective_date,
-    requested_plan_type: caseData.products_requested?.join(", ") || "medical",
-    quote_type: caseData.case_type,
-    funding_type: "level_funded",
-    status: "draft",
-    readiness_status: "incomplete",
-    created_by_email: caseData.assigned_to || caseData.created_by,
-    updated_by_email: caseData.assigned_to || caseData.created_by,
-  });
+  let txQuoteCase = await base44.entities.TxQuoteCase.filter({ case_id: caseData.id }, "-created_date", 1).then((items) => items[0] || null);
+
+  if (!txQuoteCase) {
+    txQuoteCase = await base44.entities.TxQuoteCase.create({
+      case_id: caseData.id,
+      census_version_id: validatedCensus?.id,
+      effective_date: caseData.effective_date,
+      requested_plan_type: caseData.products_requested?.join(", ") || "medical",
+      quote_type: caseData.case_type,
+      funding_type: "level_funded",
+      status: "draft",
+      readiness_status: "incomplete",
+      created_by_email: caseData.assigned_to || caseData.created_by,
+      updated_by_email: caseData.assigned_to || caseData.created_by,
+    });
+  }
+
+  const [employerProfile, currentPlan, contribution, claims, destinations] = await Promise.all([
+    base44.entities.TxQuoteEmployerProfile.filter({ txquote_case_id: txQuoteCase.id }, "-created_date", 1).then((items) => items[0] || null),
+    base44.entities.TxQuoteCurrentPlanInfo.filter({ txquote_case_id: txQuoteCase.id }, "-created_date", 1).then((items) => items[0] || null),
+    base44.entities.TxQuoteContributionStrategy.filter({ txquote_case_id: txQuoteCase.id }, "-created_date", 1).then((items) => items[0] || null),
+    base44.entities.TxQuoteClaimsRequirement.filter({ txquote_case_id: txQuoteCase.id }, "-created_date", 1).then((items) => items[0] || null),
+    base44.entities.TxQuoteDestination.filter({ txquote_case_id: txQuoteCase.id }, "destination_code", 20),
+  ]);
+
+  const existingDestinationCodes = new Set(destinations.map((item) => item.destination_code));
 
   await Promise.all([
-    base44.entities.TxQuoteEmployerProfile.create({
-      txquote_case_id: created.id,
+    !employerProfile ? base44.entities.TxQuoteEmployerProfile.create({
+      txquote_case_id: txQuoteCase.id,
       legal_company_name: caseData.employer_name,
       eligible_employee_count: caseData.employee_count,
       group_size_total: caseData.employee_count,
-    }),
-    base44.entities.TxQuoteCurrentPlanInfo.create({ txquote_case_id: created.id }),
-    base44.entities.TxQuoteContributionStrategy.create({ txquote_case_id: created.id }),
-    base44.entities.TxQuoteClaimsRequirement.create({ txquote_case_id: created.id }),
-    ...TXQUOTE_DESTINATIONS.map((destination) => base44.entities.TxQuoteDestination.create({
-      txquote_case_id: created.id,
-      destination_code: destination.code,
-      destination_name: destination.name,
-    })),
+    }) : Promise.resolve(),
+    !currentPlan ? base44.entities.TxQuoteCurrentPlanInfo.create({ txquote_case_id: txQuoteCase.id }) : Promise.resolve(),
+    !contribution ? base44.entities.TxQuoteContributionStrategy.create({ txquote_case_id: txQuoteCase.id }) : Promise.resolve(),
+    !claims ? base44.entities.TxQuoteClaimsRequirement.create({ txquote_case_id: txQuoteCase.id }) : Promise.resolve(),
+    ...TXQUOTE_DESTINATIONS
+      .filter((destination) => !existingDestinationCodes.has(destination.code))
+      .map((destination) => base44.entities.TxQuoteDestination.create({
+        txquote_case_id: txQuoteCase.id,
+        destination_code: destination.code,
+        destination_name: destination.name,
+      })),
   ]);
 
-  return created;
+  return txQuoteCase;
 }
 
 export function buildReadinessSummary({ txQuoteCase, employerProfile, currentPlan, contribution, claims, supportingDocuments = [], readinessResults = [], destinations = [] }) {
