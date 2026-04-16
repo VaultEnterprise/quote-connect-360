@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Archive, RotateCcw, Trash2 } from "lucide-react";
 
-export default function PlanArchiveManager({ archivedPlans = [] }) {
+export default function PlanArchiveManager({ archivedPlans = [], onRestore, onDelete }) {
   const [showArchived, setShowArchived] = useState(false);
 
   if (archivedPlans.length === 0) return null;
@@ -32,10 +31,10 @@ export default function PlanArchiveManager({ archivedPlans = [] }) {
                   <p className="text-[10px] text-muted-foreground">{plan.carrier} · {plan.plan_code}</p>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" className="h-6 text-xs gap-1">
+                  <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => onRestore?.(plan)}>
                     <RotateCcw className="w-3 h-3" /> Restore
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive" onClick={() => onDelete?.(plan)}>
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
