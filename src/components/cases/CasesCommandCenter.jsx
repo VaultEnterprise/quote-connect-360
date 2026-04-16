@@ -60,7 +60,7 @@ export default function CasesCommandCenter({ metrics, onFilter }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
       {cards.map((card) => (
         <button key={card.key} onClick={card.onClick} className="text-left">
           <MetricCard

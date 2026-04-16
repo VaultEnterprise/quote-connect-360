@@ -35,8 +35,8 @@ export default function CasesSystemSignals({ signals }) {
   ];
 
   return (
-    <Card>
-      <CardContent className="p-5 space-y-4">
+    <Card className="border-border/70 shadow-sm">
+      <CardContent className="space-y-4 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold">Cross-System Signals</p>
@@ -49,9 +49,9 @@ export default function CasesSystemSignals({ signals }) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {items.map((item) => (
-            <div key={item.label} className={`rounded-2xl border p-4 ${item.tone}`}>
+            <div key={item.label} className={`rounded-2xl border p-4 shadow-sm ${item.tone}`}>
               <div className="flex items-center justify-between gap-3">
                 <item.icon className="w-4 h-4" />
                 <span className="text-2xl font-semibold">{item.value}</span>
