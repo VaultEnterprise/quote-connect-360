@@ -43,7 +43,7 @@ function CaseMiniCard({ c }) {
 
   return (
     <Link to={`/cases/${c.id}`}>
-      <div className={`p-3 rounded-lg border bg-background hover:shadow-md hover:border-primary/30 transition-all cursor-pointer mb-2 ${c.priority === "urgent" ? "border-l-2 border-l-red-500" : c.priority === "high" ? "border-l-2 border-l-amber-500" : ""}`}>
+      <div className={`mb-2 cursor-pointer rounded-xl border border-border/70 bg-background p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md ${c.priority === "urgent" ? "border-l-2 border-l-red-500" : c.priority === "high" ? "border-l-2 border-l-amber-500" : ""}`}>
         <p className="text-xs font-semibold truncate">{c.employer_name || "Unnamed"}</p>
         <p className="text-[10px] text-muted-foreground mt-0.5">{c.case_number || c.id?.slice(-6)}</p>
         <div className="flex items-center justify-between mt-2">
@@ -85,14 +85,14 @@ export default function CasePipelineView({ cases }) {
   });
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4">
+    <div className="flex gap-4 overflow-x-auto pb-4">
       {PIPELINE_STAGES.map(stage => (
-        <div key={stage.key} className="flex-shrink-0 w-52">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-xs font-semibold text-muted-foreground">{stage.label}</span>
-            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{buckets[stage.key].length}</Badge>
+        <div key={stage.key} className="w-56 flex-shrink-0">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{stage.label}</span>
+            <Badge variant="secondary" className="h-5 rounded-full px-2 text-[10px]">{buckets[stage.key].length}</Badge>
           </div>
-          <div className="bg-muted/40 rounded-xl p-2 min-h-32">
+          <div className="min-h-32 rounded-2xl border border-border/70 bg-muted/30 p-2.5 shadow-sm">
             {buckets[stage.key].length === 0 ? (
               <p className="text-[10px] text-muted-foreground/50 text-center pt-4">No cases</p>
             ) : (
