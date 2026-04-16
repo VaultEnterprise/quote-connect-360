@@ -63,13 +63,13 @@ export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
             <Bookmark className="mr-2 h-3.5 w-3.5" /> Presets
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-56 rounded-2xl border-border/70 p-3 shadow-lg">
+        <PopoverContent className="w-64 rounded-2xl border-border/70 bg-card/95 p-3 shadow-lg">
           <div className="space-y-2">
             {QUICK_PRESETS.map((p) => (
               <button
                 key={p.name}
                 onClick={() => onLoadPreset(p.filters)}
-                className="w-full rounded-xl px-2.5 py-2 text-left text-xs font-medium transition-colors hover:bg-muted"
+                className="w-full rounded-xl px-2.5 py-2 text-left text-xs font-medium transition-colors hover:bg-muted/80"
               >
                 {p.name}
               </button>
@@ -82,7 +82,7 @@ export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
                   <div key={p.id} className="flex items-center justify-between group">
                     <button
                       onClick={() => onLoadPreset(p.filters)}
-                      className="text-left text-xs px-2 py-1.5 rounded hover:bg-muted transition-colors flex-1"
+                      className="flex-1 rounded-xl px-2.5 py-2 text-left text-xs font-medium transition-colors hover:bg-muted/80"
                     >
                       {p.name}
                     </button>
@@ -108,7 +108,7 @@ export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
       </Popover>
 
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm rounded-2xl border-border/70">
           <DialogHeader>
             <DialogTitle>Save Filter Preset</DialogTitle>
           </DialogHeader>
@@ -117,10 +117,11 @@ export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
             value={presetName}
             onChange={(e) => setPresetName(e.target.value)}
             autoFocus
+            className="rounded-xl border-border/70"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
-            <Button onClick={() => savePreset.mutate()} disabled={!presetName || savePreset.isPending}>
+            <Button variant="outline" className="rounded-xl" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+            <Button className="rounded-xl" onClick={() => savePreset.mutate()} disabled={!presetName || savePreset.isPending}>
               Save
             </Button>
           </DialogFooter>

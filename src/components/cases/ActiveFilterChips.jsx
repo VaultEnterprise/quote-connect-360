@@ -37,7 +37,7 @@ export default function ActiveFilterChips({
   onClearAll,
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 shadow-sm">
       <span className="text-xs font-medium text-muted-foreground">{filteredCount} of {totalCount} cases</span>
 
       {search && <FilterChip label={`Search: ${search}`} onClear={onClearSearch} />}
@@ -72,7 +72,7 @@ export default function ActiveFilterChips({
         />
       )}
 
-      <Button variant="ghost" size="sm" className="h-7 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground" onClick={onClearAll}>
+      <Button variant="ghost" size="sm" className="h-7 rounded-full px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground" onClick={onClearAll}>
         <X className="w-3 h-3 mr-1" /> Clear filters
       </Button>
     </div>
