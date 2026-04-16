@@ -11,7 +11,6 @@ export default function RatesIssuesPanel({ issues, onSelectRow }) {
         <>
           <div>
             <p className="text-sm font-semibold text-foreground">{issue.title}</p>
-            <p className="text-xs text-muted-foreground">{issue.count} affected records</p>
           </div>
           <Badge variant="outline" className="capitalize">{issue.severity}</Badge>
           <div className="mt-2 space-y-1">
