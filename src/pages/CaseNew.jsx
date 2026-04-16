@@ -188,6 +188,15 @@ export default function CaseNew() {
         empGroupId = newEmp.id;
       }
 
+      if (!agencyId) {
+        const fallbackAgency = await base44.entities.Agency.create({
+          name: newAgency.name || "Default Agency",
+          code: newAgency.code || `AG-${Date.now().toString(36).toUpperCase()}`,
+          status: "active",
+        });
+        agencyId = fallbackAgency.id;
+      }
+
       return base44.entities.BenefitCase.create({
         agency_id:         agencyId,
         employer_group_id: empGroupId,
