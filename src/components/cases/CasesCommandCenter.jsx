@@ -48,10 +48,19 @@ export default function CasesCommandCenter({ metrics, onFilter }) {
       trendLabel: `${metrics.unassignedCount} unassigned`,
       onClick: () => onFilter?.({ operationalPreset: "stalled" }),
     },
+    {
+      key: "rates",
+      label: "Rate Gaps",
+      value: metrics.rateGapCount,
+      icon: ShieldAlert,
+      trend: metrics.rateGapCount > 0 ? "down" : undefined,
+      trendLabel: metrics.rateGapCount > 0 ? "Quoted plans missing rates" : "Rate coverage healthy",
+      onClick: () => onFilter?.({ operationalPreset: "rate_gaps" }),
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
       {cards.map((card) => (
         <button key={card.key} onClick={card.onClick} className="text-left">
           <MetricCard

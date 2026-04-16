@@ -206,7 +206,8 @@ export default function Cases() {
         || (operationalPreset === "open" && !["closed", "renewed"].includes(c.stage))
         || (operationalPreset === "sla_risk" && c.slaRisk)
         || (operationalPreset === "critical_blockers" && (c.signals.criticalExceptions.length > 0 || c.signals.blockedTasks.length > 0))
-        || (operationalPreset === "stalled" && c.staleDays !== null && c.staleDays > 7);
+        || (operationalPreset === "stalled" && c.staleDays !== null && c.staleDays > 7)
+        || (operationalPreset === "rate_gaps" && c.hasRateGap);
 
       return matchSearch && matchStage && matchType && matchPriority && matchAssignee && matchOperationalPreset;
     });
@@ -293,6 +294,7 @@ export default function Cases() {
     stalledCount: enrichedCases.filter((item) => item.staleDays !== null && item.staleDays > 7 && !["active", "closed", "renewed"].includes(item.stage)).length,
     unassignedCount: enrichedCases.filter((item) => !item.assigned_to).length,
     slaRiskCount: enrichedCases.filter((item) => item.slaRisk).length,
+    rateGapCount: enrichedCases.filter((item) => item.hasRateGap).length,
     criticalIssueCount: enrichedCases.filter((item) => item.signals.criticalExceptions.length > 0 || item.signals.blockedTasks.length > 0 || item.hasRateGap).length,
     totalIssueCount: enrichedCases.reduce((sum, item) => sum + item.systemIssues.length + item.signals.openExceptions.length, 0),
     escalatedCount: enrichedCases.filter((item) => item.escalated).length,

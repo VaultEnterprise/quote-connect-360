@@ -18,6 +18,7 @@ const QUICK_PRESETS = [
   { name: "Active Stage", filters: { stageFilter: "active" } },
   { name: "Renewal Pending", filters: { stageFilter: "renewal_pending" } },
   { name: "Enrollment Open", filters: { stageFilter: "enrollment_open" } },
+  { name: "Rate Gaps", filters: { operationalPreset: "rate_gaps" } },
 ];
 
 export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
