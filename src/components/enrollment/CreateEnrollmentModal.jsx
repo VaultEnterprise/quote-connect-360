@@ -1,8 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { parseISO, isAfter } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function CreateEnrollmentModal({ open, onClose }) {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const [form, setForm] = useState({
     case_id: "",
     start_date: "",
@@ -22,30 +19,22 @@ export default function CreateEnrollmentModal({ open, onClose }) {
   });
 
   const { data: cases = [] } = useQuery({
-    queryKey: ["cases", user?.email, user?.role],
-    enabled: !!user,
+    queryKey: ["cases"],
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
 
-  const activeCases = useMemo(() => cases.filter((c) =>
-    ["approved_for_enrollment", "enrollment_open"].includes(c.stage)
-  ), [cases]);
+  const activeCases = cases.filter(c =>
+    ["approved_for_enrollment", "enrollment_open", "quoting", "proposal_ready", "employer_review"].includes(c.stage)
+  );
 
-  const selectedCase = activeCases.find(c => c.id === form.case_id);
+  const selectedCase = cases.find(c => c.id === form.case_id);
 
   const create = useMutation({
-    mutationFn: () => {
-      const totalEligible = form.total_eligible ? Number(form.total_eligible) : undefined;
-      return base44.entities.EnrollmentWindow.create({
-        ...form,
-        total_eligible: totalEligible,
-        pending_count: totalEligible,
-        enrolled_count: 0,
-        waived_count: 0,
-        invited_count: 0,
-        employer_name: selectedCase?.employer_name || "",
-      });
-    },
+    mutationFn: () => base44.entities.EnrollmentWindow.create({
+      ...form,
+      total_eligible: form.total_eligible ? Number(form.total_eligible) : undefined,
+      employer_name: selectedCase?.employer_name || "",
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["enrollments-all"] });
       queryClient.invalidateQueries({ queryKey: ["enrollments"] });
@@ -55,8 +44,7 @@ export default function CreateEnrollmentModal({ open, onClose }) {
   });
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const hasValidDates = form.start_date && form.end_date && isAfter(parseISO(form.end_date), parseISO(form.start_date));
-  const isValid = Boolean(form.case_id && form.start_date && form.end_date && hasValidDates);
+  const isValid = form.case_id && form.start_date && form.end_date;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -89,12 +77,9 @@ export default function CreateEnrollmentModal({ open, onClose }) {
             </div>
             <div>
               <Label>End Date <span className="text-destructive">*</span></Label>
-              <Input type="date" value={form.end_date} onChange={e => set("end_date", e.target.value)} className="mt-1.5" min={form.start_date || undefined} />
+              <Input type="date" value={form.end_date} onChange={e => set("end_date", e.target.value)} className="mt-1.5" />
             </div>
           </div>
-          {form.start_date && form.end_date && !hasValidDates && (
-            <p className="text-xs text-destructive">End date must be after the start date.</p>
-          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { differenceInDays, format } from "date-fns";
 
 export default function EnrollmentCountdowns({ enrollments }) {
-  const open = (enrollments || []).filter(Boolean).filter(e => ["open", "closing_soon"].includes(e.status));
+  const open = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
   if (open.length === 0) return null;
 
   const now = new Date();

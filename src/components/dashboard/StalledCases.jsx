@@ -6,8 +6,7 @@ import { differenceInDays } from "date-fns";
 
 export default function StalledCases({ cases }) {
   const now = new Date();
-  const stalled = (cases || [])
-    .filter(Boolean)
+  const stalled = cases
     .filter(c => {
       if (["closed", "renewed", "active"].includes(c.stage)) return false;
       const last = c.last_activity_date || c.updated_date || c.created_date;

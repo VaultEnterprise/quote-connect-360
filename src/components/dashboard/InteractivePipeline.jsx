@@ -3,20 +3,16 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
+import { buildRoute } from "@/lib/routing/buildRoute";
 
 export default function InteractivePipeline({ cases = [] }) {
   const [activeStage, setActiveStage] = useState(null);
 
-  const safeCases = (cases || []).filter(Boolean);
-
-  const stageData = CASE_STAGE_GROUPS.map(g => {
-    const matchingCases = safeCases.filter(c => g.match(c.stage));
-    return {
-      ...g,
-      cases: matchingCases,
-      count: matchingCases.length,
-    };
-  }).filter(g => g.count > 0);
+  const stageData = CASE_STAGE_GROUPS.map(g => ({
+    ...g,
+    cases: cases.filter(c => g.match(c.stage)),
+    count: cases.filter(c => g.match(c.stage)).length,
+  })).filter(g => g.count > 0);
 
   const maxCount = Math.max(...stageData.map(s => s.count), 1);
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateValidatedEntityRecord, createValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,37 +17,21 @@ const CLOSE_REASONS = [
   { value: "other", label: "Other" },
 ];
 
-export default function CaseCloseModal({ caseData, open, onClose, user }) {
+export default function CaseCloseModal({ caseData, open, onClose }) {
   const queryClient = useQueryClient();
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
 
   const close = useMutation({
-    mutationFn: async () => {
-      await updateValidatedEntityRecord("BenefitCase", caseData.id, {
-        stage: "closed",
-        closed_reason: reason,
-        closed_date: new Date().toISOString().split("T")[0],
-        notes: notes || caseData.notes,
-        last_activity_date: new Date().toISOString(),
-      });
-
-      await createValidatedEntityRecord("ActivityLog", {
-        case_id: caseData.id,
-        actor_email: user?.email,
-        actor_name: user?.full_name,
-        action: "Case closed",
-        detail: `Case closed with reason: ${reason}`,
-        entity_type: "BenefitCase",
-        entity_id: caseData.id,
-        old_value: caseData.stage,
-        new_value: "closed",
-      }, ["case_id", "action"]);
-    },
+    mutationFn: () => base44.entities.BenefitCase.update(caseData.id, {
+      stage: "closed",
+      closed_reason: reason,
+      closed_date: new Date().toISOString().split("T")[0],
+      notes: notes || caseData.notes,
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["case", caseData.id] });
       queryClient.invalidateQueries({ queryKey: ["cases"] });
-      queryClient.invalidateQueries({ queryKey: ["activity", caseData.id] });
       onClose();
     },
   });
