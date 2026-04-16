@@ -338,8 +338,8 @@ export default function Cases() {
         description={`${cases.length} total benefit cases`}
         actions={
           <Link to="/cases/new">
-            <Button className="shadow-sm">
-              <Plus className="w-4 h-4 mr-2" /> New Case
+            <Button className="rounded-xl shadow-sm">
+              <Plus className="mr-2 h-4 w-4" /> New Case
             </Button>
           </Link>
         }
@@ -353,21 +353,21 @@ export default function Cases() {
       )}
 
       {/* Filter Bar */}
-      <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+      <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 xl:flex-row xl:flex-wrap">
+          <div className="flex flex-col gap-2 xl:flex-row xl:flex-wrap xl:items-center">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search employer, case #, or assignee..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 h-9"
+              className="h-9 rounded-xl border-border/70 bg-background pl-10 shadow-sm"
             />
           </div>
 
           <Select value={stageFilter} onValueChange={setStageFilter}>
-            <SelectTrigger className="w-44 h-9">
+            <SelectTrigger className="h-9 w-44 rounded-xl border-border/70 bg-background shadow-sm">
               <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Stage" />
             </SelectTrigger>
@@ -377,7 +377,7 @@ export default function Cases() {
           </Select>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-40 h-9"><SelectValue placeholder="Case Type" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-40 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Case Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="new_business">New Business</SelectItem>
@@ -388,7 +388,7 @@ export default function Cases() {
           </Select>
 
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-36 h-9"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-36 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Priority" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Priorities</SelectItem>
               <SelectItem value="urgent">Urgent</SelectItem>
@@ -401,14 +401,14 @@ export default function Cases() {
           <AssignedUserFilter cases={cases} value={assignedToFilter} onChange={setAssignedToFilter} />
 
           <Select value={operationalPreset} onValueChange={setOperationalPreset}>
-            <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Operational" /></SelectTrigger>
+            <SelectTrigger className="h-9 w-44 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Operational" /></SelectTrigger>
             <SelectContent>
               {OPERATIONAL_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-40 h-9">
+            <SelectTrigger className="h-9 w-40 rounded-xl border-border/70 bg-background shadow-sm">
               <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
@@ -418,15 +418,15 @@ export default function Cases() {
           </Select>
 
           {/* View Toggle */}
-          <div className="flex rounded-md border overflow-hidden flex-shrink-0">
+          <div className="flex flex-shrink-0 overflow-hidden rounded-xl border border-border/70 bg-muted/30 p-1 shadow-sm">
             <button
-              className={`px-3 h-9 flex items-center gap-1.5 text-xs transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+              className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors ${viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/80"}`}
               onClick={() => setViewMode("list")}
             >
               <LayoutList className="w-3.5 h-3.5" /> List
             </button>
             <button
-              className={`px-3 h-9 flex items-center gap-1.5 text-xs transition-colors ${viewMode === "pipeline" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+              className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors ${viewMode === "pipeline" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/80"}`}
               onClick={() => setViewMode("pipeline")}
             >
               <Columns className="w-3.5 h-3.5" /> Pipeline
