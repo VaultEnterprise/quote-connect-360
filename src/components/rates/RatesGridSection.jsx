@@ -50,43 +50,45 @@ export default function RatesGridSection({ rows, selectedIds, setSelectedIds, on
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-t border-border hover:bg-muted/20">
-                  <td className="px-3 py-3"><Checkbox checked={selectedIds.includes(row.id)} onCheckedChange={() => toggleSelect(row.id)} /></td>
-                  <td className="px-3 py-3"><button onClick={() => onOpenPreview(row)} className="font-semibold text-left hover:underline">{row.rate_set_name || row.linkedPlanName}</button></td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{row.internal_code || row.id.slice(0, 8)}</td>
-                  <td className="px-3 py-3">{row.linkedPlanName}</td>
-                  <td className="px-3 py-3">{row.planType}</td>
-                  <td className="px-3 py-3">{row.carrier}</td>
-                  <td className="px-3 py-3">{row.rate_type}</td>
-                  <td className="px-3 py-3">{row.version_number || 1}</td>
-                  <td className="px-3 py-3"><Badge variant="outline">{row.versionStatus}</Badge></td>
-                  <td className="px-3 py-3"><Badge variant="outline">{row.readinessStatus}</Badge></td>
-                  <td className="px-3 py-3">{row.effective_date || "—"}</td>
-                  <td className="px-3 py-3">{row.end_date || "—"}</td>
-                  <td className="px-3 py-3">{row.scopeType}</td>
-                  <td className="px-3 py-3">{row.masterGroupCount}</td>
-                  <td className="px-3 py-3">{row.tenantAssignmentCount}</td>
-                  <td className="px-3 py-3">{row.coverageTierSummary}</td>
-                  <td className="px-3 py-3">{row.contributionLinkageStatus}</td>
-                  <td className="px-3 py-3">{row.quoteUsageStatus}</td>
-                  <td className="px-3 py-3">{row.enrollmentUsageStatus}</td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{row.updated_date ? new Date(row.updated_date).toLocaleDateString() : "—"}</td>
-                  <td className="px-3 py-3 text-xs text-muted-foreground">{row.created_by || "System"}</td>
-                  <td className="px-3 py-3"><Badge variant="secondary">{row.issueCount}</Badge></td>
-                  <td className="px-3 py-3">
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => onOpenPreview(row)}>Open</Button>
-                      <Button size="sm" variant="ghost" onClick={() => onToggleEdit(row.id)}>{editingRowId === row.id ? "Close Edit" : "Edit Rates"}</Button>
-                    </div>
-                  </td>
-                </tr>
-              {editingRowId === row.id && (
-                <tr className="border-t border-border bg-muted/10">
-                  <td colSpan={23} className="px-3 py-4">
-                    <RateTableEditor planId={row.plan_id} rateTables={rows.filter((item) => item.plan_id === row.plan_id)} />
-                  </td>
-                </tr>
-              )}
+                <React.Fragment key={row.id}>
+                  <tr className="border-t border-border hover:bg-muted/20">
+                    <td className="px-3 py-3"><Checkbox checked={selectedIds.includes(row.id)} onCheckedChange={() => toggleSelect(row.id)} /></td>
+                    <td className="px-3 py-3"><button onClick={() => onOpenPreview(row)} className="font-semibold text-left hover:underline">{row.rate_set_name || row.linkedPlanName}</button></td>
+                    <td className="px-3 py-3 text-xs text-muted-foreground">{row.internal_code || row.id.slice(0, 8)}</td>
+                    <td className="px-3 py-3">{row.linkedPlanName}</td>
+                    <td className="px-3 py-3">{row.planType}</td>
+                    <td className="px-3 py-3">{row.carrier}</td>
+                    <td className="px-3 py-3">{row.rate_type}</td>
+                    <td className="px-3 py-3">{row.version_number || 1}</td>
+                    <td className="px-3 py-3"><Badge variant="outline">{row.versionStatus}</Badge></td>
+                    <td className="px-3 py-3"><Badge variant="outline">{row.readinessStatus}</Badge></td>
+                    <td className="px-3 py-3">{row.effective_date || "—"}</td>
+                    <td className="px-3 py-3">{row.end_date || "—"}</td>
+                    <td className="px-3 py-3">{row.scopeType}</td>
+                    <td className="px-3 py-3">{row.masterGroupCount}</td>
+                    <td className="px-3 py-3">{row.tenantAssignmentCount}</td>
+                    <td className="px-3 py-3">{row.coverageTierSummary}</td>
+                    <td className="px-3 py-3">{row.contributionLinkageStatus}</td>
+                    <td className="px-3 py-3">{row.quoteUsageStatus}</td>
+                    <td className="px-3 py-3">{row.enrollmentUsageStatus}</td>
+                    <td className="px-3 py-3 text-xs text-muted-foreground">{row.updated_date ? new Date(row.updated_date).toLocaleDateString() : "—"}</td>
+                    <td className="px-3 py-3 text-xs text-muted-foreground">{row.created_by || "System"}</td>
+                    <td className="px-3 py-3"><Badge variant="secondary">{row.issueCount}</Badge></td>
+                    <td className="px-3 py-3">
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => onOpenPreview(row)}>Open</Button>
+                        <Button size="sm" variant="ghost" onClick={() => onToggleEdit(row.id)}>{editingRowId === row.id ? "Close Edit" : "Edit Rates"}</Button>
+                      </div>
+                    </td>
+                  </tr>
+                  {editingRowId === row.id && (
+                    <tr className="border-t border-border bg-muted/10">
+                      <td colSpan={23} className="px-3 py-4">
+                        <RateTableEditor planId={row.plan_id} rateTables={rows.filter((item) => item.plan_id === row.plan_id)} />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
