@@ -9,9 +9,6 @@ export default function RatesIssuesPanel({ issues }) {
       ) : (
         issues.map((issue, index) => (
           <div key={`${issue.severity}-${index}`} className="mb-3 last:mb-0">
-            <Badge variant="outline" className="capitalize">
-              {issue.severity}
-            </Badge>
           </div>
         ))
       )}
