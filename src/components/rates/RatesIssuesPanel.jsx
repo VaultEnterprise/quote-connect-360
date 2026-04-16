@@ -10,7 +10,6 @@ export default function RatesIssuesPanel({ issues, onSelectRow }) {
       ) : issues.map((issue) => (
         <>
           <div>
-            <p className="text-sm font-semibold text-foreground">{issue.title}</p>
           </div>
           <Badge variant="outline" className="capitalize">{issue.severity}</Badge>
           <div className="mt-2 space-y-1">
