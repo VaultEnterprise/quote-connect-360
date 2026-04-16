@@ -353,8 +353,9 @@ export default function Cases() {
       )}
 
       {/* Filter Bar */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row gap-2">
+      <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 xl:flex-row xl:flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -435,27 +436,28 @@ export default function Cases() {
           <SavedFiltersPanel currentFilters={{ search, stageFilter, typeFilter, priorityFilter, assignedToFilter, operationalPreset }} onLoadPreset={handleLoadPreset} />
         </div>
 
-        {(activeFilters > 0 || search) && (
-          <ActiveFilterChips
-            filteredCount={filtered.length}
-            totalCount={cases.length}
-            search={search}
-            stageFilter={stageFilter}
-            typeFilter={typeFilter}
-            priorityFilter={priorityFilter}
-            assignedToFilter={assignedToFilter}
-            operationalPreset={operationalPreset}
-            stageOptions={STAGE_OPTIONS}
-            operationalOptions={OPERATIONAL_OPTIONS}
-            onClearSearch={() => setSearch("")}
-            onClearStage={() => setStageFilter("all")}
-            onClearType={() => setTypeFilter("all")}
-            onClearPriority={() => setPriorityFilter("all")}
-            onClearAssigned={() => setAssignedToFilter("all")}
-            onClearOperational={() => setOperationalPreset("all")}
-            onClearAll={clearFilters}
-          />
-        )}
+          {(activeFilters > 0 || search) && (
+            <ActiveFilterChips
+              filteredCount={filtered.length}
+              totalCount={cases.length}
+              search={search}
+              stageFilter={stageFilter}
+              typeFilter={typeFilter}
+              priorityFilter={priorityFilter}
+              assignedToFilter={assignedToFilter}
+              operationalPreset={operationalPreset}
+              stageOptions={STAGE_OPTIONS}
+              operationalOptions={OPERATIONAL_OPTIONS}
+              onClearSearch={() => setSearch("")}
+              onClearStage={() => setStageFilter("all")}
+              onClearType={() => setTypeFilter("all")}
+              onClearPriority={() => setPriorityFilter("all")}
+              onClearAssigned={() => setAssignedToFilter("all")}
+              onClearOperational={() => setOperationalPreset("all")}
+              onClearAll={clearFilters}
+            />
+          )}
+        </div>
       </div>
 
       {/* Content */}

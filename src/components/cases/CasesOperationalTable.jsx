@@ -10,10 +10,10 @@ export default function CasesOperationalTable({ cases }) {
   if (!cases.length) return null;
 
   return (
-    <Card>
-      <CardContent className="p-0 overflow-x-auto">
-        <div className="min-w-[980px]">
-          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+    <Card className="overflow-hidden border-border/70 shadow-sm">
+      <CardContent className="overflow-x-auto p-0">
+        <div className="min-w-[980px] bg-card">
+          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b bg-muted/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <div>Case</div>
             <div>Workflow</div>
             <div>Ownership</div>

@@ -30,8 +30,8 @@ export default function CaseListCard({ c }) {
 
   return (
     <Link to={`/cases/${c.id}`}>
-      <Card className="hover:shadow-md transition-all duration-200 hover:border-primary/25 cursor-pointer group">
-        <CardContent className="p-4">
+      <Card className="group cursor-pointer border-border/70 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md">
+        <CardContent className="p-4 sm:p-5">
           {/* Top row */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
