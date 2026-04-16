@@ -435,8 +435,13 @@ export default function Cases() {
         </div>
 
         {(activeFilters > 0 || search) && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">{filtered.length} of {cases.length} cases</span>
+            {operationalPreset !== "all" && (
+              <span className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                {OPERATIONAL_OPTIONS.find((opt) => opt.value === operationalPreset)?.label}
+              </span>
+            )}
             <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground" onClick={clearFilters}>
               <X className="w-3 h-3 mr-1" /> Clear filters
             </Button>
