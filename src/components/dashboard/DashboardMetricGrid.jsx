@@ -4,8 +4,8 @@ import { AlertCircle, Briefcase, ClipboardCheck, FileText } from "lucide-react";
 import MetricCard from "@/components/shared/MetricCard";
 
 const KPI_LINKS = {
-  activeCases: "/cases",
-  quotingCases: "/quotes",
+  activeCases: "/cases?quickView=all",
+  quotingCases: "/cases?stageGroup=quoting",
   enrollmentOpen: "/enrollment",
   overdueTasks: "/tasks",
 };

@@ -75,23 +75,35 @@ export default function Dashboard() {
   const { data: scenarios = [], isLoading: isLoadingScenarios, dataUpdatedAt: scenariosUpdatedAt } = useQuery({
     queryKey: ["dashboard-scenarios", user?.email, user?.role],
     enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.QuoteScenario.list("-created_date", 300)
-      : base44.entities.QuoteScenario.filter({ assigned_to: user?.email }, "-created_date", 300),
+    queryFn: async () => {
+      const allScenarios = await base44.entities.QuoteScenario.list("-created_date", 300);
+      if (canViewAll) return allScenarios;
+      const allowedCaseIds = new Set(cases.map((item) => item.id));
+      return allScenarios.filter((item) => item.case_id && allowedCaseIds.has(item.case_id));
+    },
   });
 
   const { data: exceptions = [], isLoading: isLoadingExceptions, dataUpdatedAt: exceptionsUpdatedAt } = useQuery({
     queryKey: ["dashboard-exceptions", user?.email, user?.role],
     enabled: !!user,
-    queryFn: () => canViewAll
-      ? base44.entities.ExceptionItem.list("-created_date", 300)
-      : base44.entities.ExceptionItem.filter({ assigned_to: user?.email }, "-created_date", 300),
+    queryFn: async () => {
+      const allExceptions = canViewAll
+        ? await base44.entities.ExceptionItem.list("-created_date", 300)
+        : await base44.entities.ExceptionItem.filter({ assigned_to: user?.email }, "-created_date", 300);
+      const allowedCaseIds = new Set(cases.map((item) => item.id));
+      return allExceptions.filter((item) => !item.case_id || allowedCaseIds.has(item.case_id));
+    },
   });
 
   const { data: proposals = [], isLoading: isLoadingProposals, dataUpdatedAt: proposalsUpdatedAt } = useQuery({
     queryKey: ["dashboard-proposals", user?.email, user?.role],
     enabled: !!user,
-    queryFn: () => base44.entities.Proposal.list("-created_date", 300),
+    queryFn: async () => {
+      const allProposals = await base44.entities.Proposal.list("-created_date", 300);
+      if (canViewAll) return allProposals;
+      const allowedCaseIds = new Set(cases.map((item) => item.id));
+      return allProposals.filter((item) => item.case_id && allowedCaseIds.has(item.case_id));
+    },
   });
 
   const { data: agencies = [], isLoading: isLoadingAgencies, dataUpdatedAt: agenciesUpdatedAt } = useQuery({

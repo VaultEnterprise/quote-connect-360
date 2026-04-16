@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Briefcase, Upload, ClipboardCheck, Users, FileText, RefreshCw } from "lucide-react";
+
 const ACTIONS = [
   { label: "New Case", icon: Briefcase, href: "/cases/new", className: "bg-primary text-primary-foreground shadow hover:bg-primary/90" },
   { label: "Upload Census", icon: Upload, href: "/census", className: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" },

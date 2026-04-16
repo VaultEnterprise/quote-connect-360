@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
-import { buildRoute } from "@/lib/routing/buildRoute";
 
 export default function InteractivePipeline({ cases = [] }) {
   const [activeStage, setActiveStage] = useState(null);

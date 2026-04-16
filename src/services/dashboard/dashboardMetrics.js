@@ -3,8 +3,9 @@ import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
 import { filterByWindow, filterCasesForDashboard, getComparisonMeta } from "@/utils/dashboardControls";
 
 export function getDashboardScopedData({ cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, filters, user, windowBounds }) {
-  const currentCases = filterCasesForDashboard(filterByWindow(cases, (item) => item.created_date, windowBounds), filters, user);
-  const previousCases = filterCasesForDashboard(filterByWindow(cases, (item) => item.created_date, { start: windowBounds.previousStart, end: windowBounds.previousEnd }), filters, user);
+  const caseDateValue = (item) => item.last_activity_date || item.updated_date || item.created_date || item.effective_date;
+  const currentCases = filterCasesForDashboard(filterByWindow(cases, caseDateValue, windowBounds), filters, user);
+  const previousCases = filterCasesForDashboard(filterByWindow(cases, caseDateValue, { start: windowBounds.previousStart, end: windowBounds.previousEnd }), filters, user);
   const currentCaseIds = new Set(currentCases.map((item) => item.id));
   const previousCaseIds = new Set(previousCases.map((item) => item.id));
 
