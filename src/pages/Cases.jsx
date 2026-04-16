@@ -106,15 +106,6 @@ export default function Cases() {
   const caseMetaById = casePageModel.caseMetaById;
   const kpis = casePageModel.kpis;
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "n" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); setShowQuickCreate(true); }
-      if (event.key === "e" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); handleFilteredExport(); }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleFilteredExport]);
-
   const activeFilters = [filters.quickView, filters.stageFilter, filters.stageGroup, filters.typeFilter, filters.priorityFilter, filters.assignedToFilter, filters.dateFilter, filters.employeeFilter].filter((item) => item !== "all" && item !== null).length;
   const clearFilters = () => setFilters(DEFAULT_FILTER_STATE);
   const setFilterState = (nextState) => setFilters((current) => ({ ...current, ...nextState }));
@@ -128,6 +119,15 @@ export default function Cases() {
 
   const handleBulkExport = useCallback(() => exportToCSV(filtered.filter((item) => selectedIds.has(item.id)), "cases-export.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"]), [filtered, selectedIds]);
   const handleFilteredExport = useCallback(() => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]), [filtered]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "n" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); setShowQuickCreate(true); }
+      if (event.key === "e" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); handleFilteredExport(); }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleFilteredExport]);
 
   const handleBulkDelete = async () => {
     setBulkAction("deleting");
