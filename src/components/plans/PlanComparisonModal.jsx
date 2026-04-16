@@ -12,7 +12,7 @@ export default function PlanComparisonModal({ open, onClose, plans }) {
         {plans.length === 0 ? (
           <p className="text-sm text-muted-foreground">Select plans from the grid to compare them here.</p>
         ) : (
-          <PlanComparisonTool plans={plans} medical={plans.every((plan) => plan.plan_type === "medical")} />
+          <PlanComparisonTool plans={plans} medical={plans.every((plan) => plan.plan_type === "medical")} enableSelection={false} />
         )}
       </DialogContent>
     </Dialog>

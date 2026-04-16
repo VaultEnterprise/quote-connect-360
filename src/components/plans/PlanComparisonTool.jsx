@@ -5,14 +5,17 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
 
-export default function PlanComparisonTool({ plans, medical = false }) {
-  const [selected, setSelected] = useState([]);
+export default function PlanComparisonTool({ plans, medical = false, selectedPlanIds, enableSelection = true }) {
+  const [selected, setSelected] = useState(selectedPlanIds || []);
 
   const togglePlan = (planId) => {
+    if (!enableSelection) return;
     setSelected(prev => prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev.slice(-1), planId]);
   };
 
-  const selectedPlans = plans.filter(p => selected.includes(p.id));
+  const selectedPlans = enableSelection
+    ? plans.filter(p => selected.includes(p.id))
+    : plans;
 
   if (selectedPlans.length === 0) {
     return (
@@ -56,9 +59,11 @@ export default function PlanComparisonTool({ plans, medical = false }) {
                 <th key={p.id} className="text-left p-2 font-semibold">
                   <div className="flex items-center gap-1 justify-between">
                     <div className="truncate">{p.plan_name}</div>
-                    <button onClick={() => togglePlan(p.id)} className="text-muted-foreground hover:text-foreground">
-                      <X className="w-3 h-3" />
-                    </button>
+                    {enableSelection && (
+                      <button onClick={() => togglePlan(p.id)} className="text-muted-foreground hover:text-foreground">
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 </th>
               ))}
