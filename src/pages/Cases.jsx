@@ -354,9 +354,9 @@ export default function Cases() {
       )}
 
       {/* Filter Bar */}
-      <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
+      <div className="rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 xl:flex-row xl:flex-wrap xl:items-center">
+          <div className="flex flex-col gap-2.5 xl:flex-row xl:flex-wrap xl:items-center">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -372,14 +372,14 @@ export default function Cases() {
               <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Stage" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-border/70 shadow-lg">
               {STAGE_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="h-9 w-40 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Case Type" /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-border/70 shadow-lg">
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="new_business">New Business</SelectItem>
               <SelectItem value="renewal">Renewal</SelectItem>
@@ -390,7 +390,7 @@ export default function Cases() {
 
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
             <SelectTrigger className="h-9 w-36 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-border/70 shadow-lg">
               <SelectItem value="all">All Priorities</SelectItem>
               <SelectItem value="urgent">Urgent</SelectItem>
               <SelectItem value="high">High</SelectItem>
@@ -403,7 +403,7 @@ export default function Cases() {
 
           <Select value={operationalPreset} onValueChange={setOperationalPreset}>
             <SelectTrigger className="h-9 w-44 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Operational" /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-border/70 shadow-lg">
               {OPERATIONAL_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -413,7 +413,7 @@ export default function Cases() {
               <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-border/70 shadow-lg">
               {SORT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -477,7 +477,7 @@ export default function Cases() {
       ) : (
         <div className="space-y-4 pb-20">
           <CasesOperationalTable cases={filtered.slice(0, 12)} />
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filtered.map(c => (
               <div key={c.id} className="flex items-center gap-2">
                 <Checkbox
