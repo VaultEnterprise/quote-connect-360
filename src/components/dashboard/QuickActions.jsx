@@ -14,16 +14,18 @@ const ACTIONS = [
 export default function QuickActions({ actions = ACTIONS }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {actions.map((action) => (
+      {actions.filter(Boolean).map((action, index) => {
+        const ActionIcon = action.icon;
+        return (
         <Link
-          key={action.href}
+          key={action.href || `action-${index}`}
           to={action.href}
           className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors ${action.className}`}
         >
-          <action.icon className="w-3.5 h-3.5" />
+          {ActionIcon ? <ActionIcon className="w-3.5 h-3.5" /> : null}
           {action.label}
         </Link>
-      ))}
+      )})}
     </div>
   );
 }

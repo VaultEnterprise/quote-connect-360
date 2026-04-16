@@ -146,7 +146,15 @@ export default function Dashboard() {
   }), [cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, agencies, filters, user]);
 
   const options = dashboardPageModel.options;
-  const scopedData = dashboardPageModel.scopedData;
+  const scopedData = {
+    currentCases: (dashboardPageModel.scopedData?.currentCases || []).filter(Boolean),
+    currentTasks: (dashboardPageModel.scopedData?.currentTasks || []).filter(Boolean),
+    currentEnrollments: (dashboardPageModel.scopedData?.currentEnrollments || []).filter(Boolean),
+    currentRenewals: (dashboardPageModel.scopedData?.currentRenewals || []).filter(Boolean),
+    currentScenarios: (dashboardPageModel.scopedData?.currentScenarios || []).filter(Boolean),
+    currentExceptions: (dashboardPageModel.scopedData?.currentExceptions || []).filter(Boolean),
+    currentProposals: (dashboardPageModel.scopedData?.currentProposals || []).filter(Boolean),
+  };
   const summary = dashboardPageModel.summary;
   const charts = dashboardPageModel.charts;
 
