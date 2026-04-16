@@ -6,13 +6,15 @@ export default function ComplianceAlerts({ cases = [], scenarios = [] }) {
   const alerts = [];
 
   // Check for ACA affordability issues (contribution models should flag these)
-  const affordabilityIssues = scenarios.filter(s => s.status === "completed" && s.total_monthly_premium && s.employer_monthly_cost && (s.employer_monthly_cost / s.total_monthly_premium) < 0.05);
-  
+  const affordabilityIssues = scenarios.filter(
+    (s) => s.status === "completed" && s.total_monthly_premium > 0 && s.employer_monthly_cost >= 0 && (s.employer_monthly_cost / s.total_monthly_premium) < 0.5
+  );
+
   if (affordabilityIssues.length > 0) {
     alerts.push({
       id: "aca",
-      title: "ACA Affordability Risk",
-      message: `${affordabilityIssues.length} scenario(s) below 9.5% threshold`,
+      title: "Low Employer Contribution",
+      message: `${affordabilityIssues.length} completed scenario(s) have employer funding below 50%`,
       severity: "high"
     });
   }

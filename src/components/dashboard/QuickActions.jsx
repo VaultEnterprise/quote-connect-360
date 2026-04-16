@@ -10,10 +10,10 @@ const ACTIONS = [
   { label: "View Renewals", icon: RefreshCw, href: "/renewals", className: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground" },
 ];
 
-export default function QuickActions() {
+export default function QuickActions({ actions = ACTIONS }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {ACTIONS.map((action) => (
+      {actions.map((action) => (
         <Link
           key={action.href}
           to={action.href}
