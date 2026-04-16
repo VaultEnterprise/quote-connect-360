@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Clock, Pause } from "lucide-react";
+import { buildRoute } from "@/lib/routing/buildRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { differenceInDays, format } from "date-fns";
 
 export default function TodaysPriorities({ tasks, exceptions, cases, enrollments }) {
@@ -15,7 +17,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: t.title,
       sub: t.employer_name,
       urgency: "high",
-      href: "/tasks",
+      href: buildRoute("tasks", { caseId: t.case_id || undefined, taskId: t.id }),
       meta: `Due ${format(new Date(t.due_date), "MMM d")}`,
     }));
 
@@ -27,7 +29,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: e.title,
       sub: e.employer_name,
       urgency: e.severity === "critical" ? "critical" : "high",
-      href: "/exceptions",
+      href: buildRoute("exceptions", { caseId: e.case_id || undefined, exceptionId: e.id }),
       meta: e.severity,
     }));
 
@@ -43,7 +45,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: c.employer_name || "Unnamed Case",
       sub: c.stage?.replace(/_/g, " "),
       urgency: "medium",
-      href: `/cases/${c.id}`,
+      href: buildRoute("caseDetail", { caseId: c.id }),
       meta: `${differenceInDays(now, new Date(c.last_activity_date || c.updated_date || c.created_date))}d idle`,
     }));
 
@@ -55,7 +57,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       label: `${e.employer_name || "Enrollment"} closing`,
       sub: `${e.enrolled_count ?? 0}/${e.total_eligible ?? "?"} enrolled`,
       urgency: "high",
-      href: "/enrollment",
+      href: buildRoute("enrollment", { caseId: e.case_id || undefined }),
       meta: `${differenceInDays(new Date(e.end_date), now)}d left`,
     }));
 
@@ -88,7 +90,7 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-orange-500" />
             Today's Priorities
-            <span className="ml-1 inline-flex items-center rounded-md bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">{items.length}</span>
+            <Badge className="bg-orange-100 text-orange-700 text-[10px] ml-1">{items.length}</Badge>
           </CardTitle>
         </div>
       </CardHeader>
@@ -97,17 +99,15 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
           {items.map((item, i) => {
             const cfg = urgencyConfig[item.urgency];
             return (
-              <Link
-                key={i}
-                to={item.href}
-                className={`flex items-start gap-2 p-2.5 rounded-lg border transition-colors cursor-pointer ${cfg.color}`}
-              >
-                {cfg.icon}
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold truncate">{item.label}</p>
-                  {item.sub && <p className="text-[10px] text-muted-foreground truncate capitalize">{item.sub}</p>}
+              <Link key={i} to={item.href}>
+                <div className={`flex items-start gap-2 p-2.5 rounded-lg border transition-colors cursor-pointer ${cfg.color}`}>
+                  {cfg.icon}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold truncate">{item.label}</p>
+                    {item.sub && <p className="text-[10px] text-muted-foreground truncate capitalize">{item.sub}</p>}
+                  </div>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0 ${cfg.badge}`}>{item.meta}</span>
                 </div>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold flex-shrink-0 ${cfg.badge}`}>{item.meta}</span>
               </Link>
             );
           })}

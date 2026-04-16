@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 /**
  * Generates AI-drafted help content for a single HelpTarget.
@@ -89,7 +89,6 @@ Respond with JSON (use exactly these field names — they are spec-canonical):
 
     return Response.json({ success: true, content: result });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -1,8 +1,9 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Users, Briefcase, Mail, Phone, MapPin, Calendar, FileText, Activity, TrendingUp } from "lucide-react";
+import { Building2, Users, Briefcase, Mail, Phone, MapPin, Link as LinkIcon, Calendar, FileText, Activity, TrendingUp } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { Link } from "react-router-dom";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -11,10 +12,8 @@ export default function EmployerDetailDrawer({ employer, cases, documents, open,
   if (!employer) return null;
 
   const employerCases = cases.filter(c => c.employer_group_id === employer.id);
-  const employerDocs = documents.filter(
-    d => d.employer_group_id === employer.id || d.case_id && employerCases.some(c => c.id === d.case_id)
-  );
-
+  const employerDocs = documents.filter(d => d.employer_group_id === employer.id);
+  
   const daysToRenewal = employer.renewal_date ? differenceInDays(parseISO(employer.renewal_date), new Date()) : null;
   const isRenewingSoon = daysToRenewal !== null && daysToRenewal >= 0 && daysToRenewal <= 60;
 
@@ -46,7 +45,7 @@ export default function EmployerDetailDrawer({ employer, cases, documents, open,
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="cases">Cases ({employerCases.length})</TabsTrigger>
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
-            <TabsTrigger value="activity">Activity ({employerDocs.length})</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-4">
@@ -225,26 +224,15 @@ export default function EmployerDetailDrawer({ employer, cases, documents, open,
                 <Activity className="w-4 h-4" />
                 <span className="font-semibold">Recent Activity</span>
               </div>
-              {employerCases.length > 0 || employerDocs.length > 0 ? (
+              {employerCases.length > 0 ? (
                 <div className="space-y-2">
                   {employerCases.slice(0, 5).map(c => (
-                    <div key={`case-${c.id}`} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/50">
+                    <div key={c.id} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/50">
                       <Briefcase className="w-4 h-4 text-muted-foreground" />
                       <span>Case {c.case_type.replace(/_/g, " ")} created</span>
                       {c.created_date && (
                         <span className="text-xs text-muted-foreground ml-auto">
                           {format(parseISO(c.created_date), "MMM d, yyyy")}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                  {employerDocs.slice(0, 5).map(doc => (
-                    <div key={`doc-${doc.id}`} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/50">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <span>Document {doc.name || doc.file_name || "uploaded file"} added</span>
-                      {doc.created_date && (
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          {format(parseISO(doc.created_date), "MMM d, yyyy")}
                         </span>
                       )}
                     </div>

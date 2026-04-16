@@ -122,10 +122,7 @@ export default function CensusVersionHistory({ versions, onViewMembers, onDelete
                                              <Button
                                                variant="outline"
                                                size="sm"
-                                               onClick={(event) => {
-                                                 event.stopPropagation();
-                                                 onViewMembers?.(version);
-                                               }}
+                                               onClick={() => onViewMembers?.(version)}
                                                className="text-xs"
                                              >
                                                View Members

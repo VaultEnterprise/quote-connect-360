@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const REMAINING_ORPHANED = [
   "FLD-RENEWAL-CASE-SUMMARY-STATUS",
@@ -58,7 +58,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ deleted, remaining: REMAINING_ORPHANED.length });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

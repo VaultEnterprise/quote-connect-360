@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 import { jsPDF } from 'npm:jspdf@4.0.0';
 
 Deno.serve(async (req) => {
@@ -125,7 +125,6 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

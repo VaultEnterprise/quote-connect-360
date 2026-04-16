@@ -268,7 +268,7 @@ export default function HelpCenter() {
               helpTargets={HELP_TARGETS}
               contentMap={contentMap}
               onBack={handleBackToHome}
-              onBackToModule={() => { setSelectedTarget(null); }}
+              onBackToModule={() => { setSelectedTarget(null); if (selectedModule) {} else setSelectedModule(null); }}
               onSelectTarget={handleSelectTarget}
             />
           )}

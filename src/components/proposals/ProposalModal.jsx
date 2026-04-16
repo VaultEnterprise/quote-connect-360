@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext";
-import {AlertTriangle,  Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 export default function ProposalModal({ open, onClose, proposal }) {
   const { user } = useAuth();
@@ -90,16 +90,6 @@ export default function ProposalModal({ open, onClose, proposal }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        {/* PROPOSAL_LOCK — warn if editing a sent proposal */}
-        {proposal?.status === 'sent' && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3 mb-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800">
-              <strong>Warning:</strong> This proposal has already been sent.
-              Editing it will change what the employer sees. Consider creating a new version instead.
-            </p>
-          </div>
-        )}
         <DialogHeader>
           <DialogTitle>{isEdit ? `Edit Proposal — v${proposal.version || 1}` : "New Proposal"}</DialogTitle>
         </DialogHeader>

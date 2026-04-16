@@ -41,6 +41,8 @@ export default function HelpTargetRegistry() {
     enabled: !!selectedTarget,
   });
 
+  if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
+
   const contentMap = useMemo(() =>
     contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}),
   [contents]);
@@ -71,8 +73,6 @@ export default function HelpTargetRegistry() {
     if (c.content_status === "draft") return <Clock className="w-3.5 h-3.5 text-amber-500" />;
     return <AlertCircle className="w-3.5 h-3.5 text-slate-400" />;
   };
-
-  if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
 
   return (
     <div className="space-y-4">

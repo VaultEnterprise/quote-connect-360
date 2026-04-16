@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const ORPHANED_CODES = [
   "PAGE_HELP_REGISTRY", "PAGE_ACA_LIBRARY", "PAGE_HELP_DASHBOARD",
@@ -126,7 +126,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ deleted, failed, totalAttempted: ORPHANED_CODES.length });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

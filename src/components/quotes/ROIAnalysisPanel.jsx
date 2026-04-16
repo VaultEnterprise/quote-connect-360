@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
 
 export default function ROIAnalysisPanel({ scenario, currentScenario, caseData }) {
   const calculations = useMemo(() => {

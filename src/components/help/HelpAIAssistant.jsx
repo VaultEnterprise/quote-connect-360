@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocation } from "react-router-dom";
 import { MessageSquare, X, Send, ThumbsUp, ThumbsDown, Sparkles, ChevronDown, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -199,9 +200,9 @@ export default function HelpAIAssistant() {
               className="text-sm h-9"
               disabled={loading}
             />
-            <button type="button" onClick={sendMessage} disabled={loading || !input.trim()} className="h-9 px-3 rounded-md bg-primary text-primary-foreground shadow hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50 inline-flex items-center justify-center">
+            <Button size="sm" onClick={sendMessage} disabled={loading || !input.trim()} className="h-9 px-3">
               <Send className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}

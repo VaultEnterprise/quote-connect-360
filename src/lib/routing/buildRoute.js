@@ -17,9 +17,7 @@ export function buildRoute(routeKey, params = {}) {
   const query = new URLSearchParams();
 
   (schema.queryKeys || []).forEach((key) => {
-    if (!validatedParams[key]) return;
-    const queryKey = routeKey === "employerPortal" && key === "employerId" ? "employer_id" : key;
-    query.set(queryKey, validatedParams[key]);
+    if (validatedParams[key]) query.set(key, validatedParams[key]);
   });
 
   const queryString = query.toString();

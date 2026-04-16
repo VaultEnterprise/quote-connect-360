@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 /**
  * getDocuSignSigningURL
@@ -72,8 +72,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ signing_url: viewData.url });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
 

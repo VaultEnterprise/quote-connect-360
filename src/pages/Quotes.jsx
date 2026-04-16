@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText, Plus, Search, Filter, GitCompare, ChevronDown, ChevronUp,
   AlertTriangle, SortAsc, X, XCircle, Download
@@ -23,14 +23,11 @@ import SavedViewsPanel from "@/components/quotes/SavedViewsPanel";
 import { useToast } from "@/components/ui/use-toast";
 import { parseISO, isAfter, addDays } from "date-fns";
 import useRouteContext from "@/hooks/useRouteContext";
-import { useAuth } from "@/lib/AuthContext";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 export default function Quotes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const routeContext = useRouteContext();
-  const { user: currentUser } = useAuth();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -49,22 +46,15 @@ export default function Quotes() {
   const [scenarioDetailModal, setScenarioDetailModal] = useState(null);
   const [approvalModal, setApprovalModal] = useState(null);
   const [contributionModal, setContributionModal] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: scenarios = [], isLoading } = useQuery({
-    queryKey: ["scenarios-all", currentUser?.email, currentUser?.role],
-    enabled: !!currentUser,
-    queryFn: () => currentUser?.role === "admin"
-      ? base44.entities.QuoteScenario.list("-created_date", 200)
-      : base44.entities.QuoteScenario.filter({ assigned_to: currentUser?.email }, "-created_date", 200),
+    queryKey: ["scenarios-all"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 200),
   });
 
   const { data: cases = [] } = useQuery({
-    queryKey: ["cases", currentUser?.email, currentUser?.role],
-    enabled: !!currentUser,
-    queryFn: () => currentUser?.role === "admin"
-      ? base44.entities.BenefitCase.list("-created_date", 100)
-      : base44.entities.BenefitCase.filter({ assigned_to: currentUser?.email }, "-created_date", 100),
+    queryKey: ["cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
 
   const caseMap = useMemo(() => Object.fromEntries(cases.map(c => [c.id, c])), [cases]);
@@ -118,7 +108,7 @@ export default function Quotes() {
     });
 
     return result;
-  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon, carrierFilter]);
+  }, [scenarios, search, statusFilter, caseFilter, showExpiringOnly, sortBy, caseMap, expiringSoon]);
 
   const grouped = useMemo(() => {
     const groups = {};
@@ -207,12 +197,10 @@ export default function Quotes() {
   };
 
   const handleBulkDelete = async () => {
-    const count = selectedIds.length;
     await Promise.all(selectedIds.map(id => base44.entities.QuoteScenario.delete(id)));
     queryClient.invalidateQueries({ queryKey: ["scenarios-all"] });
     setSelectedIds([]);
-    setShowDeleteConfirm(false);
-    toast?.({ title: `${count} scenarios deleted` });
+    toast?.({ title: `${selectedIds.length} scenarios deleted` });
   };
 
   const handleBulkExportCSV = () => {
@@ -240,12 +228,12 @@ export default function Quotes() {
     toast?.({ title: "Export started" });
   };
 
-  const handleLoadPreset = (filters = {}) => {
+  const handleLoadPreset = (filters) => {
     if (filters.search !== undefined) setSearch(filters.search || "");
-    if (filters.statusFilter !== undefined) setStatusFilter(filters.statusFilter || "all");
-    if (filters.caseFilter !== undefined) setCaseFilter(filters.caseFilter || "all");
-    if (filters.carrierFilter !== undefined) setCarrierFilter(filters.carrierFilter || "all");
-    if (filters.showExpiringOnly !== undefined) setShowExpiringOnly(Boolean(filters.showExpiringOnly));
+    if (filters.statusFilter !== undefined) setStatusFilter(filters.statusFilter);
+    if (filters.caseFilter !== undefined) setCaseFilter(filters.caseFilter);
+    if (filters.carrierFilter !== undefined) setCarrierFilter(filters.carrierFilter);
+    if (filters.showExpiringOnly !== undefined) setShowExpiringOnly(filters.showExpiringOnly);
   };
 
   // Keyboard shortcuts
@@ -411,7 +399,7 @@ export default function Quotes() {
             <Button variant="outline" size="sm" className="h-7 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={handleBulkExpire}>
               <XCircle className="w-3.5 h-3.5 mr-1.5" /> Mark Expired
             </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20 hover:bg-destructive/5" onClick={() => setShowDeleteConfirm(true)}>
+            <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20 hover:bg-destructive/5" onClick={handleBulkDelete}>
               Delete Selected
             </Button>
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds([])}>
@@ -545,15 +533,6 @@ export default function Quotes() {
           onClose={() => setContributionModal(null)}
         />
       )}
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        onClose={setShowDeleteConfirm}
-        onConfirm={handleBulkDelete}
-        title="Delete quote scenarios?"
-        description={`Permanently delete ${selectedIds.length} selected scenario(s)? This cannot be undone.`}
-        confirmLabel="Delete scenarios"
-        destructive
-      />
     </div>
   );
 }

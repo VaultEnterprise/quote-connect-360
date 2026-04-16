@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText, Plus, LayoutGrid, List, Search, Filter, AlertTriangle,
-  ArrowUpDown, Download, X, CheckSquare, AlertOctagon
+  ArrowUpDown, Download, X, CheckSquare, XCircle, Clock, AlertOctagon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,7 @@ export default function ProposalBuilder() {
   const [showExpiringOnly, setShowExpiringOnly] = useState(false);
   const [sortBy, setSortBy] = useState("created_desc");
   const [viewMode2, setViewMode2] = useState("list"); // "list", "analytics", "guide"
+  const [expandedProposalId, setExpandedProposalId] = useState(null);
 
   // KPI click filter
   const [kpiFilter, setKpiFilter] = useState(null);
@@ -162,10 +163,20 @@ export default function ProposalBuilder() {
   const selectAll = () => setSelectedIds(filtered.map(p => p.id));
   const clearSelection = () => setSelectedIds([]);
 
-  const handleMarkAllExpired = async () => {
-    await Promise.all(overdueProposals.map((p) => base44.entities.Proposal.update(p.id, { status: "expired" })));
-    queryClient.invalidateQueries({ queryKey: ["proposals"] });
-  };
+  const bulkStatusUpdate = useMutation({
+    mutationFn: ({ ids, status }) => Promise.all(ids.map(id => base44.entities.Proposal.update(id, { status }))),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["proposals"] }); setSelectedIds([]); },
+  });
+
+  const bulkDelete = useMutation({
+    mutationFn: (ids) => Promise.all(ids.map(id => base44.entities.Proposal.delete(id))),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["proposals"] }); setSelectedIds([]); },
+  });
+
+  const markAllExpired = useMutation({
+    mutationFn: () => Promise.all(overdueProposals.map(p => base44.entities.Proposal.update(p.id, { status: "expired" }))),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proposals"] }),
+  });
 
   const handleExportCSV = () => {
     const rows = [
@@ -211,7 +222,8 @@ export default function ProposalBuilder() {
               variant="outline"
               size="sm"
               className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 text-xs"
-              onClick={() => { if (confirm(`Mark ${overdueProposals.length} overdue proposals as expired?`)) handleMarkAllExpired(); }}
+              onClick={() => { if (confirm(`Mark ${overdueProposals.length} overdue proposals as expired?`)) markAllExpired.mutate(); }}
+              disabled={markAllExpired.isPending}
             >
               <AlertOctagon className="w-3.5 h-3.5" />
               Mark {overdueProposals.length} Expired
@@ -374,7 +386,7 @@ export default function ProposalBuilder() {
       )}
 
           {/* Bulk action bar */}
-          {selectedIds.length > 0 && <ProposalBulkActions selectedIds={selectedIds} selectedCount={selectedIds.length} proposals={filtered} />}
+          {selectedIds.length > 0 && <ProposalBulkActions selectedCount={selectedIds.length} proposals={filtered} />}
 
           {/* Content */}
           {isLoading ? (
@@ -398,15 +410,17 @@ export default function ProposalBuilder() {
           ) : (
             <div className="space-y-2.5">
               {filtered.map(p => (
-              <ProposalCard
-              key={p.id}
-              proposal={p}
-              onView={setViewing}
-              onEdit={setEditing}
-              onReject={setRejecting}
-              isSelected={selectedIds.includes(p.id)}
-              onToggleSelect={toggleSelect}
-              />
+                <div key={p.id}>
+                  <ProposalCard
+                    proposal={p}
+                    onView={setViewing}
+                    onEdit={setEditing}
+                    onReject={setRejecting}
+                    isSelected={selectedIds.includes(p.id)}
+                    onToggleSelect={toggleSelect}
+                  />
+                  {expandedProposalId === p.id && <ProposalDetailExpanded proposal={p} />}
+                </div>
               ))}
             </div>
           )}

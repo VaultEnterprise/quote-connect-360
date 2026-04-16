@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const DASHBOARD_HELP = [
   {
@@ -253,20 +253,6 @@ Each item in the panel links directly to the relevant record. Click through to r
 
 Deno.serve(async (req) => {
   try {
-  // ─── SEED GUARD ─────────────────────────────────────────────────────────────
-  // Seed functions must never be callable without authorization.
-  // Set SEED_SECRET in function Secrets and pass it as X-Seed-Secret header.
-  const seedSecret = Deno.env.get("SEED_SECRET");
-  if (seedSecret) {
-    const incomingSecret = req.headers.get("x-seed-secret");
-    if (incomingSecret !== seedSecret) {
-      return Response.json({ error: "Unauthorized: invalid or missing X-Seed-Secret header." }, { status: 401 });
-    }
-  } else {
-    // No secret configured → block in all environments (seeds are dangerous)
-    return Response.json({ error: "Seed functions are disabled. Set SEED_SECRET env var to enable." }, { status: 403 });
-  }
-  // ─────────────────────────────────────────────────────────────────────────────
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
@@ -310,7 +296,6 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

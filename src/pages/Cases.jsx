@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users, Layers, Flag, Download, Trash2, Calendar, Briefcase } from "lucide-react";
@@ -28,7 +28,6 @@ import CasesList from "@/components/cases/CasesList";
 import { getCasesPageModel } from "@/domain/cases/useCasesDomain";
 import { resolveRouteContext } from "@/lib/routing/resolveRouteContext";
 import { exportToCSV } from "@/utils/export-import";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 const DEFAULT_FILTER_STATE = {
   search: "",
@@ -58,22 +57,16 @@ export default function Cases() {
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showAssignDueDate, setShowAssignDueDate] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const { data: cases = [], isLoading } = useQuery({ queryKey: ["cases"], queryFn: () => base44.entities.BenefitCase.list("-created_date", 200) });
+  const { data: censusMembers = [] } = useQuery({ queryKey: ["case-census-members"], queryFn: () => base44.entities.CensusMember.list("-created_date", 500) });
   const { data: currentUser } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
-  const listScoped = (entity, sort, limit = 200) =>
-    currentUser?.role === "admin"
-      ? base44.entities[entity].list(sort, limit)
-      : base44.entities[entity].filter({ assigned_to: currentUser?.email }, sort, limit);
-
-  const { data: cases = [], isLoading } = useQuery({ queryKey: ["cases", currentUser?.email, currentUser?.role], enabled: !!currentUser, queryFn: () => listScoped("BenefitCase", "-created_date", 200) });
-  const { data: censusMembers = [] } = useQuery({ queryKey: ["case-census-members"], queryFn: () => base44.entities.CensusMember.list("-created_date", 200) });
-  const { data: quoteScenarios = [] } = useQuery({ queryKey: ["cases-related", "quotes", currentUser?.email, currentUser?.role], enabled: !!currentUser, queryFn: () => listScoped("QuoteScenario", "-created_date", 200) });
-  const { data: proposals = [] } = useQuery({ queryKey: ["cases-related", "proposals", currentUser?.email, currentUser?.role], enabled: !!currentUser, queryFn: () => listScoped("Proposal", "-created_date", 200) });
-  const { data: caseTasks = [] } = useQuery({ queryKey: ["cases-related", "tasks", currentUser?.email, currentUser?.role], enabled: !!currentUser, queryFn: () => currentUser?.role === "admin" ? base44.entities.CaseTask.list("-created_date", 200) : base44.entities.CaseTask.filter({ assigned_to: currentUser?.email }, "-created_date", 200) });
-  const { data: exceptionItems = [] } = useQuery({ queryKey: ["cases-related", "exceptions", currentUser?.email, currentUser?.role], enabled: !!currentUser, queryFn: () => listScoped("ExceptionItem", "-created_date", 200) });
-  const { data: enrollmentWindows = [] } = useQuery({ queryKey: ["cases-related", "enrollment-windows", currentUser?.email, currentUser?.role], enabled: !!currentUser, queryFn: () => listScoped("EnrollmentWindow", "-created_date", 300) });
-  const { data: documents = [] } = useQuery({ queryKey: ["cases-related", "documents"], queryFn: () => base44.entities.Document.list("-created_date", 200) });
+  const { data: quoteScenarios = [] } = useQuery({ queryKey: ["cases-related", "quotes"], queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500) });
+  const { data: proposals = [] } = useQuery({ queryKey: ["cases-related", "proposals"], queryFn: () => base44.entities.Proposal.list("-created_date", 500) });
+  const { data: caseTasks = [] } = useQuery({ queryKey: ["cases-related", "tasks"], queryFn: () => base44.entities.CaseTask.list("-created_date", 500) });
+  const { data: exceptionItems = [] } = useQuery({ queryKey: ["cases-related", "exceptions"], queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500) });
+  const { data: enrollmentWindows = [] } = useQuery({ queryKey: ["cases-related", "enrollment-windows"], queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300) });
+  const { data: documents = [] } = useQuery({ queryKey: ["cases-related", "documents"], queryFn: () => base44.entities.Document.list("-created_date", 500) });
 
   const routeFilters = useMemo(() => resolveRouteContext("cases", location.search), [location.search]);
 
@@ -106,6 +99,15 @@ export default function Cases() {
   const caseMetaById = casePageModel.caseMetaById;
   const kpis = casePageModel.kpis;
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "n" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); setShowQuickCreate(true); }
+      if (event.key === "e" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); handleFilteredExport(); }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [filtered]);
+
   const activeFilters = [filters.quickView, filters.stageFilter, filters.stageGroup, filters.typeFilter, filters.priorityFilter, filters.assignedToFilter, filters.dateFilter, filters.employeeFilter].filter((item) => item !== "all" && item !== null).length;
   const clearFilters = () => setFilters(DEFAULT_FILTER_STATE);
   const setFilterState = (nextState) => setFilters((current) => ({ ...current, ...nextState }));
@@ -117,25 +119,16 @@ export default function Cases() {
     return next;
   });
 
-  const handleBulkExport = useCallback(() => exportToCSV(filtered.filter((item) => selectedIds.has(item.id)), "cases-export.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"]), [filtered, selectedIds]);
-  const handleFilteredExport = useCallback(() => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]), [filtered]);
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "n" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); setShowQuickCreate(true); }
-      if (event.key === "e" && (event.metaKey || event.ctrlKey)) { event.preventDefault(); handleFilteredExport(); }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleFilteredExport]);
+  const handleBulkExport = () => exportToCSV(filtered.filter((item) => selectedIds.has(item.id)), "cases-export.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"]);
+  const handleFilteredExport = () => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]);
 
   const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selectedIds.size} case(s)? This cannot be undone.`)) return;
     setBulkAction("deleting");
     for (const id of selectedIds) await base44.entities.BenefitCase.delete(id);
     await queryClient.invalidateQueries({ queryKey: ["cases"] });
     setSelectedIds(new Set());
     setBulkAction(null);
-    setShowDeleteConfirm(false);
   };
 
   const handleBulkSuccess = async () => {
@@ -208,10 +201,7 @@ export default function Cases() {
             { label: "Advance Stage", icon: Layers, onClick: () => setShowStageAdvanceModal(true) },
             { label: "Assign + Due Date", icon: Calendar, onClick: () => setShowAssignDueDate(true) },
             { label: "Export", icon: Download, onClick: handleBulkExport },
-            { label: "Delete", icon: Trash2, variant: "destructive", onClick: () => {
-              if (currentUser?.role !== "admin") return;
-              setShowDeleteConfirm(true);
-            } },
+            { label: "Delete", icon: Trash2, variant: "destructive", onClick: handleBulkDelete },
           ]}
         />
       )}
@@ -222,15 +212,6 @@ export default function Cases() {
       <BulkStageAdvanceModal isOpen={showStageAdvanceModal} caseIds={Array.from(selectedIds)} onClose={() => setShowStageAdvanceModal(false)} onSuccess={handleBulkSuccess} />
       <BulkAssignWithDueDate isOpen={showAssignDueDate} caseIds={Array.from(selectedIds)} onClose={() => setShowAssignDueDate(false)} onSuccess={handleBulkSuccess} />
       <QuickCreateCaseModal isOpen={showQuickCreate} onClose={() => setShowQuickCreate(false)} />
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        onClose={setShowDeleteConfirm}
-        onConfirm={handleBulkDelete}
-        title="Delete cases?"
-        description={`Permanently delete ${selectedIds.size} selected case(s)? This cannot be undone.`}
-        confirmLabel={bulkAction === "deleting" ? "Deleting..." : "Delete cases"}
-        destructive
-      />
     </div>
   );
 }

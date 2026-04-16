@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 /**
  * sendDocuSignEnvelope
@@ -149,7 +149,6 @@ Deno.serve(async (req) => {
             name: enrollment.employee_name,
             recipientId: "1",
             routingOrder: "1",
-            clientUserId: enrollment_id,
             tabs: {
               signHereTabs: [
                 {
@@ -199,8 +198,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, envelope_id: envelopeId });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
 

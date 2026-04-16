@@ -29,15 +29,11 @@ export function getCaseNextStep(caseData, meta = {}) {
     case "install_in_progress": return "Complete carrier install";
     case "renewal_pending": return "Prepare the renewal strategy";
     case "active": return "Monitor tasks and renewal timing";
-    case "on_hold": return "Review hold reason and resume when ready";
-    case "lost": return "Document loss reason and close case";
     default: return "Review the case details";
   }
 }
 
 export function getCaseBlocker(caseData, meta = {}) {
-  if (caseData?.stage === "on_hold") return "Case is on hold — review and resume";
-  if (caseData?.stage === "lost") return null;
   if (!caseData?.effective_date) return "Missing effective date";
   if (["census_validated", "ready_for_quote", "quoting"].includes(caseData.stage) && caseData.census_status !== "validated") {
     return "Census is not validated";

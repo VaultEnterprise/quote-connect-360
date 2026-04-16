@@ -120,12 +120,12 @@ function PlanCard({ plan, selected, onSelect, onCompare, monthly_cost, isMedical
           >
             View Details
           </Button>
-          {isMedical && onCompare && (
+          {isMedical && selected && (
             <Button
               variant="outline"
               size="sm"
               className="flex-1 text-xs"
-              onClick={e => { e.stopPropagation(); onCompare(plan); }}
+              onClick={e => { e.stopPropagation(); onCompare?.(plan); }}
             >
               Compare
             </Button>

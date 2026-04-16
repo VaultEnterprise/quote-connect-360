@@ -5,7 +5,7 @@
  * Usage: base44.functions.invoke('syncBulkEmployersToZoho', { agency_id: 'xyz' })
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
@@ -99,7 +99,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error in bulk sync:', error);
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

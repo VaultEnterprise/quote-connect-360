@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ClipboardCheck, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { differenceInDays, format } from "date-fns";
 
 export default function EnrollmentCountdowns({ enrollments }) {
@@ -29,7 +30,7 @@ export default function EnrollmentCountdowns({ enrollments }) {
             const participation = e.total_eligible > 0
               ? Math.round(((e.enrolled_count || 0) / e.total_eligible) * 100)
               : e.participation_rate || 0;
-            const urgency = daysLeft !== null && daysLeft <= 3 ? "text-red-600" : daysLeft !== null && daysLeft <= 7 ? "text-amber-600" : "text-muted-foreground";
+            const urgency = daysLeft !== null && daysLeft <= 3 ? "text-red-600" : daysLeft <= 7 ? "text-amber-600" : "text-muted-foreground";
 
             return (
               <Link key={e.id} to="/enrollment" className="block">
@@ -43,12 +44,7 @@ export default function EnrollmentCountdowns({ enrollments }) {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${Math.max(0, Math.min(participation, 100))}%` }}
-                      />
-                    </div>
+                    <Progress value={participation} className="h-1.5 flex-1" />
                     <span className="text-[11px] text-muted-foreground flex-shrink-0 w-10 text-right">
                       {participation}%
                     </span>

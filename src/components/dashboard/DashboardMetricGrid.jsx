@@ -2,12 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, Briefcase, ClipboardCheck, FileText } from "lucide-react";
 import MetricCard from "@/components/shared/MetricCard";
+import { buildRoute } from "@/lib/routing/buildRoute";
 
 const KPI_LINKS = {
-  activeCases: "/cases",
-  quotingCases: "/cases",
-  enrollmentOpen: "/cases",
-  overdueTasks: "/tasks",
+  activeCases: buildRoute("cases", { stageFilter: "active" }),
+  quotingCases: buildRoute("cases", { stageGroup: "quoting" }),
+  enrollmentOpen: buildRoute("cases", { stageFilter: "enrollment_open" }),
+  overdueTasks: buildRoute("tasks"),
 };
 
 export default function DashboardMetricGrid({ summary }) {

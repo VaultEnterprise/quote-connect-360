@@ -4,63 +4,58 @@ import { useNavigate } from "react-router-dom";
 /**
  * usePortalSession
  * Validates and manages employee portal session.
+ * - Checks session token validity
+ * - Enforces session timeout (30 min inactivity)
+ * - Provides session info
  */
 export function usePortalSession() {
   const navigate = useNavigate();
   const [sessionValid, setSessionValid] = useState(false);
-  const [session, setSession] = useState(null);
   const [enrollmentId, setEnrollmentId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [minutesRemaining, setMinutesRemaining] = useState(30);
 
   useEffect(() => {
-    let parsedSession = null;
+    const token = sessionStorage.getItem("portal_session_token");
+    const enrollmentId = sessionStorage.getItem("portal_enrollment_id");
+    const timestamp = sessionStorage.getItem("portal_session_timestamp");
 
-    try {
-      const rawSession = sessionStorage.getItem("portal_session");
-      parsedSession = rawSession ? JSON.parse(rawSession) : null;
-    } catch {
-      parsedSession = null;
-    }
-
-    const timestamp = parsedSession?.authenticated_at;
-    const currentEnrollmentId = parsedSession?.enrollment_id || null;
-
-    if (!parsedSession || !currentEnrollmentId || !timestamp) {
+    if (!token || !enrollmentId || !timestamp) {
       setSessionValid(false);
-      setSession(null);
       setLoading(false);
       return;
     }
 
+    // Check if session expired (30 min timeout)
     const createdAt = new Date(timestamp);
     const now = new Date();
     const minutesOld = Math.floor((now - createdAt) / 60000);
 
     if (minutesOld > 30) {
-      sessionStorage.removeItem("portal_session");
+      sessionStorage.clear();
       setSessionValid(false);
-      setSession(null);
       setLoading(false);
       return;
     }
 
-    setSession(parsedSession);
-    setEnrollmentId(currentEnrollmentId);
+    setEnrollmentId(enrollmentId);
     setSessionValid(true);
-    setMinutesRemaining(Math.max(0, 30 - minutesOld));
+    setMinutesRemaining(30 - minutesOld);
     setLoading(false);
 
+    // Warn user at 5 min remaining
     const timeoutMs = (30 - minutesOld - 5) * 60000;
     const warnTimer = setTimeout(() => {
       console.warn("Portal session expiring in 5 minutes");
     }, Math.max(0, timeoutMs));
 
+    // Auto-logout at 30 min
     const logoutTimer = setTimeout(() => {
-      sessionStorage.removeItem("portal_session");
+      sessionStorage.clear();
       navigate("/employee-portal-login", { replace: true });
-    }, Math.max(0, (30 - minutesOld) * 60000));
+    }, (30 - minutesOld) * 60000);
 
+    // Update remaining time every minute
     const interval = setInterval(() => {
       const elapsed = Math.floor((new Date() - createdAt) / 60000);
       setMinutesRemaining(Math.max(0, 30 - elapsed));
@@ -74,19 +69,14 @@ export function usePortalSession() {
   }, [navigate]);
 
   const logout = () => {
-    sessionStorage.removeItem("portal_session");
+    sessionStorage.clear();
     navigate("/employee-portal-login", { replace: true });
   };
 
   const extendSession = () => {
-    setSession((prev) => {
-      if (!prev) return prev;
-      const updatedSession = { ...prev, authenticated_at: new Date().toISOString() };
-      sessionStorage.setItem("portal_session", JSON.stringify(updatedSession));
-      return updatedSession;
-    });
+    sessionStorage.setItem("portal_session_timestamp", new Date().toISOString());
     setMinutesRemaining(30);
   };
 
-  return { sessionValid, session, enrollmentId, loading, minutesRemaining, logout, extendSession };
+  return { sessionValid, enrollmentId, loading, minutesRemaining, logout, extendSession };
 }

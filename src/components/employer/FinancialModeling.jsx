@@ -6,10 +6,12 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function FinancialModeling({ proposal, employeeCount = 100 }) {
+  if (!proposal) return null;
+
   const [eeContribution, setEeContribution] = useState(30);
   const [scenario, setScenario] = useState("current");
 
-  const monthlyPremium = proposal?.total_monthly_premium || 0;
+  const monthlyPremium = proposal.total_monthly_premium || 0;
   const employerBaseCost = (monthlyPremium * (100 - eeContribution)) / 100;
   const employeeBaseCost = (monthlyPremium * eeContribution) / 100;
 
@@ -26,8 +28,6 @@ export default function FinancialModeling({ proposal, employeeCount = 100 }) {
     };
     return { monthly, annual };
   }, [employerBaseCost, employeeBaseCost, monthlyPremium]);
-
-  if (!proposal) return null;
 
   return (
     <Dialog>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
@@ -108,11 +108,7 @@ export default function CaseNew() {
     notes:               "",
   });
 
-  const [newAgency, setNewAgency] = useState({ name: "", code: "" });
   const updateField = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
-  const updateAgencyField = (field, value) => setNewAgency(prev => ({ ...prev, [field]: value }));
-  const showNewAgencyFields = agencies.length === 0 || form.agency_id === "__new__";
-  const agencyOptions = useMemo(() => agencies, [agencies]);
 
   const toggleProduct = (val) => {
     setForm(prev => ({
@@ -150,29 +146,11 @@ export default function CaseNew() {
 
   const createCase = useMutation({
     mutationFn: async (data) => {
-      let agencyId = data.agency_id;
-      if (agencyId === "__new__") {
-        const agency = await base44.entities.Agency.create({
-          name: newAgency.name,
-          code: newAgency.code,
-          status: "active",
-        });
-        agencyId = agency.id;
-      }
-      agencyId = agencyId || agencies[0]?.id || "";
+      const agencyId = data.agency_id || agencies[0]?.id || "";
       const caseNumber = `BC-${Date.now().toString(36).toUpperCase()}`;
 
       // If no employer_group_id but employer_name given, create EmployerGroup first
       let empGroupId = data.employer_group_id;
-      if (!agencyId) {
-        const fallbackAgency = await base44.entities.Agency.create({
-          name: newAgency.name || "Default Agency",
-          code: newAgency.code || `AG-${Date.now().toString(36).toUpperCase()}`,
-          status: "active",
-        });
-        agencyId = fallbackAgency.id;
-      }
-
       if (!empGroupId && data.employer_name) {
         const newEmp = await base44.entities.EmployerGroup.create({
           agency_id: agencyId,
@@ -439,30 +417,16 @@ export default function CaseNew() {
                 <Label>Assigned Broker / Rep</Label>
                 <Input value={form.assigned_to} onChange={e => updateField("assigned_to", e.target.value)} placeholder="broker@agency.com" className="mt-1.5" />
               </div>
-              <div>
-                <Label>Agency</Label>
-                <Select value={form.agency_id} onValueChange={v => updateField("agency_id", v)}>
-                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select agency..." /></SelectTrigger>
-                  <SelectContent>
-                    {agencyOptions.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-                    <SelectItem value="__new__">+ Add New Agency</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {agencies.length > 1 && (
+                <div>
+                  <Label>Agency</Label>
+                  <Select value={form.agency_id} onValueChange={v => updateField("agency_id", v)}>
+                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select agency..." /></SelectTrigger>
+                    <SelectContent>{agencies.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
-
-            {showNewAgencyFields && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border border-dashed p-4">
-                <div>
-                  <Label>New Agency Name</Label>
-                  <Input value={newAgency.name} onChange={e => updateAgencyField("name", e.target.value)} placeholder="Agency name" className="mt-1.5" />
-                </div>
-                <div>
-                  <Label>Agency Code</Label>
-                  <Input value={newAgency.code} onChange={e => updateAgencyField("code", e.target.value)} placeholder="Unique code" className="mt-1.5" />
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -529,7 +493,7 @@ export default function CaseNew() {
 
         <div className="flex justify-end gap-3 pt-1">
           <Link to="/cases"><Button variant="outline">Cancel</Button></Link>
-          <Button type="submit" disabled={createCase.isPending || !form.employer_name || (showNewAgencyFields && (!newAgency.name || !newAgency.code))} className="shadow-sm min-w-36">
+          <Button type="submit" disabled={createCase.isPending || !form.employer_name} className="shadow-sm min-w-36">
             {createCase.isPending ? "Creating..." : "Create Case →"}
           </Button>
         </div>

@@ -9,7 +9,7 @@ import {
   FileText, DollarSign, Calendar, Star, Calculator, XCircle,
   ArrowRight, ChevronDown, ChevronUp, AlertTriangle, Pencil,
   Trash2, CheckSquare, Square, MoreHorizontal, Copy, Send,
-  StickyNote, Clock, Sliders
+  Download, StickyNote, Clock, Sliders
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { format, parseISO, differenceInDays, isAfter, differenceInCalendarDays } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 import CloneScenarioDialog from "./CloneScenarioDialog";
 import CreateProposalFromScenario from "./CreateProposalFromScenario";
 
@@ -48,8 +49,9 @@ function carrierColor(name) {
   return colors[name.charCodeAt(0) % colors.length];
 }
 
-export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate, onShowDetails, onApproval, onContribution }) {
+export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onEdit, calculating, onCalculate }) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [showClone, setShowClone] = useState(false);
   const [showProposal, setShowProposal] = useState(false);
@@ -119,11 +121,6 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold">{scenario.name}</p>
               <StatusBadge status={scenario.status} />
-              {scenario.has_incomplete_rates && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 rounded px-1.5 py-0.5">
-                  ⚠ Incomplete Rates
-                </span>
-              )}
               {scenario.is_recommended && (
                 <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">
                   <Star className="w-2.5 h-2.5 mr-0.5" fill="currentColor" /> Recommended
@@ -309,21 +306,6 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                   <Star className="w-3.5 h-3.5 mr-2" />
                   {scenario.is_recommended ? "Remove Recommendation" : "Mark Recommended"}
                 </DropdownMenuItem>
-                {onShowDetails && (
-                  <DropdownMenuItem onClick={() => onShowDetails(scenario)}>
-                    <FileText className="w-3.5 h-3.5 mr-2" /> View Details
-                  </DropdownMenuItem>
-                )}
-                {onApproval && (
-                  <DropdownMenuItem onClick={() => onApproval(scenario)}>
-                    <Send className="w-3.5 h-3.5 mr-2" /> Approval
-                  </DropdownMenuItem>
-                )}
-                {onContribution && (
-                  <DropdownMenuItem onClick={() => onContribution(scenario)}>
-                    <Sliders className="w-3.5 h-3.5 mr-2" /> Adjust Contribution
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onClick={() => onEdit(scenario)}>
                   <Pencil className="w-3.5 h-3.5 mr-2" /> Edit Scenario
                 </DropdownMenuItem>
@@ -333,8 +315,10 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => window.location.href = `/cases/${scenario.case_id}`}>
-                  <ArrowRight className="w-3.5 h-3.5 mr-2" /> Open Case
+                <DropdownMenuItem asChild>
+                  <Link to={`/cases/${scenario.case_id}`} className="flex items-center">
+                    <ArrowRight className="w-3.5 h-3.5 mr-2" /> Open Case
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

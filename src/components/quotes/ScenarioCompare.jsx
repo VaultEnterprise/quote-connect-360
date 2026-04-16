@@ -1,8 +1,9 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Star, Check, X, TrendingDown, TrendingUp, Sliders } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Star, Check, X, TrendingDown, TrendingUp, ChevronDown, ChevronUp, Sliders } from "lucide-react";
 import CostModelingSlider from "./CostModelingSlider";
 
 const PRODUCT_COLORS = {
@@ -76,29 +77,26 @@ const PLAN_ROWS = [
 ];
 
 function PlanComparisonSection({ scenarios }) {
-  const scenarioIds = scenarios.map((s) => s.id).filter(Boolean);
+  // For each scenario, load ScenarioPlan → BenefitPlan data
+  const planQueries = scenarios.map(s =>
+    useQuery({
+      queryKey: ["scenario-plans-full", s.id],
+      queryFn: async () => {
+        const sps = await base44.entities.ScenarioPlan.filter({ scenario_id: s.id });
+        const plans = await Promise.all(
+          sps.map(sp => base44.entities.BenefitPlan.filter({ id: sp.plan_id }).then(r => r[0]).catch(() => null))
+        );
+        return sps.map((sp, i) => ({ sp, plan: plans[i] })).filter(x => x.plan);
+      },
+    })
+  );
 
-  const { data: planComparisonData = [], isLoading: loading } = useQuery({
-    queryKey: ["scenario-plans-full-compare", scenarioIds.join("-")],
-    queryFn: async () => {
-      const scenarioResults = await Promise.all(
-        scenarios.map(async (s) => {
-          const sps = await base44.entities.ScenarioPlan.filter({ scenario_id: s.id });
-          const plans = await Promise.all(
-            sps.map((sp) => base44.entities.BenefitPlan.filter({ id: sp.plan_id }).then((r) => r[0] || null))
-          );
-          return sps.map((sp, i) => ({ sp, plan: plans[i] })).filter((x) => x.plan);
-        })
-      );
-      return scenarioResults;
-    },
-    enabled: scenarioIds.length > 0,
-  });
-
+  const loading = planQueries.some(q => q.isLoading);
   if (loading) return <div className="p-4 text-xs text-muted-foreground">Loading plan details…</div>;
 
+  // Get all unique plan types across scenarios
   const allTypes = [...new Set(
-    planComparisonData.flatMap(q => (q || []).map(x => x.plan?.plan_type).filter(Boolean))
+    planQueries.flatMap(q => (q.data || []).map(x => x.plan?.plan_type).filter(Boolean))
   )];
 
   if (allTypes.length === 0) {
@@ -110,7 +108,7 @@ function PlanComparisonSection({ scenarios }) {
       {allTypes.map(type => {
         // Get the first plan of this type per scenario
         const plansByScenario = scenarios.map((_s, i) =>
-          (planComparisonData[i] || []).find(x => x.plan?.plan_type === type)?.plan || null
+          (planQueries[i].data || []).find(x => x.plan?.plan_type === type)?.plan || null
         );
 
         if (plansByScenario.every(p => p === null)) return null;

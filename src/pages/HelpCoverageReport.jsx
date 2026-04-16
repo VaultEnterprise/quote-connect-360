@@ -26,9 +26,9 @@ export default function HelpCoverageReport() {
     queryFn: () => base44.entities.HelpContent.list("-updated_date", 500),
   });
 
-  const contentMap = useMemo(() => contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}), [contents]);
-
   if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
+
+  const contentMap = useMemo(() => contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}), [contents]);
 
   const total = HELP_TARGETS.length;
   const activeCount = HELP_TARGETS.filter(t => contentMap[t.target_code]?.content_status === "active").length;
@@ -59,7 +59,7 @@ export default function HelpCoverageReport() {
       ...HELP_TARGETS.map(t => {
         const c = contentMap[t.target_code];
         return [t.target_code, t.module_code, t.page_code, t.component_type, t.target_label,
-          c?.content_status || "missing", c?.content_status === "active" ? "Yes" : "No", c?.view_count || 0];
+          c?.status || "missing", c?.status === "active" ? "Yes" : "No", c?.view_count || 0];
       })
     ];
     const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");

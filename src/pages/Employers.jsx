@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/lib/AuthContext";
 import {
   Building2, Plus, Search, MapPin, Phone, Mail, Users,
-  Pencil, AlertTriangle, Briefcase, Filter, X, Eye, Upload
+  Pencil, AlertTriangle, Briefcase, Filter, X, Eye, CheckSquare, Upload
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import useRouteContext from "@/hooks/useRouteContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO, isAfter } from "date-fns";
 import EmployerDetailDrawer from "@/components/employer/EmployerDetailDrawer";
 import { BulkActionsBar, EmployerImportModal } from "@/components/employer/BulkActionsBar";
 import { QuickCreateCase } from "@/components/employer/QuickCreateCase";
@@ -74,36 +73,12 @@ function EmployerModal({ employer, open, onClose, agencies }) {
   });
 
   const save = useMutation({
-    mutationFn: async () => {
-      // Validate EIN format (XX-XXXXXXX or 9 digits)
-      if (form.ein) {
-        const einClean = form.ein.replace(/\D/g, "");
-        if (einClean.length !== 9) {
-          throw new Error("EIN must be 9 digits (format: XX-XXXXXXX).");
-        }
-      }
-      // ELIGIBLE_GT_EMPLOYEE: eligible employees cannot exceed total
-      if (form.eligible_count && form.employee_count &&
-          Number(form.eligible_count) > Number(form.employee_count)) {
-        throw new Error("Eligible employee count cannot exceed total employee count.");
-      }
-
+    mutationFn: () => {
       const payload = {
         ...form,
-        // Normalize EIN to XX-XXXXXXX format if provided
-        ein: form.ein ? form.ein.replace(/\D/g, "").replace(/^(\d{2})(\d{7})$/, "$1-$2") : undefined,
         employee_count: Number(form.employee_count) || undefined,
         eligible_count: Number(form.eligible_count) || undefined,
       };
-
-      // Check for duplicate EIN when creating (skip for edits)
-      if (!isEdit && payload.ein) {
-        const existing = await base44.entities.EmployerGroup.filter({ ein: payload.ein });
-        if (existing && existing.length > 0) {
-          throw new Error(`An employer with EIN ${payload.ein} already exists: "${existing[0].name}". Please check for duplicates.`);
-        }
-      }
-
       return isEdit
         ? base44.entities.EmployerGroup.update(employer.id, payload)
         : base44.entities.EmployerGroup.create(payload);
@@ -196,9 +171,6 @@ function EmployerModal({ employer, open, onClose, agencies }) {
           </div>
         </div>
         <DialogFooter>
-          {save.isError && (
-            <p className="text-xs text-destructive text-left flex-1 mr-2">{save.error?.message}</p>
-          )}
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>
             {save.isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Employer"}
@@ -211,7 +183,6 @@ function EmployerModal({ employer, open, onClose, agencies }) {
 
 export default function Employers() {
   const routeContext = useRouteContext();
-  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -222,11 +193,8 @@ export default function Employers() {
   const [showRenewalDashboard, setShowRenewalDashboard] = useState(false);
 
   const { data: employers = [] } = useQuery({
-    queryKey: ["employers", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => user?.role === "admin"
-      ? base44.entities.EmployerGroup.list("-created_date", 100)
-      : base44.entities.EmployerGroup.filter({ assigned_to: user?.email }, "-created_date", 100),
+    queryKey: ["employers"],
+    queryFn: () => base44.entities.EmployerGroup.list("-created_date", 100),
   });
 
   const { data: agencies = [] } = useQuery({
@@ -235,11 +203,8 @@ export default function Employers() {
   });
 
   const { data: cases = [] } = useQuery({
-    queryKey: ["cases", user?.email, user?.role],
-    enabled: !!user,
-    queryFn: () => user?.role === "admin"
-      ? base44.entities.BenefitCase.list("-created_date", 200)
-      : base44.entities.BenefitCase.filter({ assigned_to: user?.email }, "-created_date", 200),
+    queryKey: ["cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
   });
 
   const { data: documents = [] } = useQuery({
@@ -329,7 +294,6 @@ export default function Employers() {
           selectedEmployers={selectedEmployers}
           onClearSelection={() => setSelectedEmployers([])}
           agencies={agencies}
-          canDelete={user?.role === "admin"}
         />
       )}
 

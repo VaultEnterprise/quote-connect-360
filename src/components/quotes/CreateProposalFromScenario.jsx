@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -27,15 +27,6 @@ export default function CreateProposalFromScenario({ scenario, open, onClose }) 
     broker_name: "",
     broker_email: "",
   });
-
-  useEffect(() => {
-    setForm({
-      title: `${scenario?.name || "Proposal"} — Proposal`,
-      cover_message: "",
-      broker_name: "",
-      broker_email: "",
-    });
-  }, [scenario?.id, scenario?.name]);
 
   const create = useMutation({
     mutationFn: () => base44.entities.Proposal.create({

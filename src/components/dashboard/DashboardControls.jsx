@@ -1,6 +1,14 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Bookmark, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DATE_RANGE_OPTIONS, DASHBOARD_VIEW_OPTIONS } from "@/utils/dashboardControls";
 import { STAGE_OPTIONS } from "@/contracts/workflowRegistry";
 
@@ -11,42 +19,27 @@ const CASE_TYPE_OPTIONS = [
   { value: "takeover", label: "Takeover" },
 ];
 
-function normalizeOptions(options, includeAllLabel = "All") {
-  const dedupedOptions = (options || [])
-    .filter((option) => option?.value !== undefined && option?.value !== null)
-    .map((option) => {
-      const normalizedValue = String(option.value).trim();
-      const normalizedLabel = String(option.label ?? option.value).trim();
-      return { value: normalizedValue, label: normalizedLabel || normalizedValue || "Unknown" };
-    })
-    .filter((option) => option.value && option.value !== "all")
-    .filter((option, index, array) => array.findIndex((candidate) => candidate.value === option.value) === index);
-
-  return [{ value: "all", label: includeAllLabel }, ...dedupedOptions];
-}
-
-function NativeSelect({ value, onValueChange, options, className }) {
-  const safeOptions = useMemo(() => normalizeOptions(options), [options]);
-  const normalizedValue = typeof value === "string" ? value.trim() : String(value ?? "all").trim();
-  const safeValue = safeOptions.some((option) => option.value === normalizedValue) ? normalizedValue : "all";
+function FilterSelect({ value, onValueChange, placeholder, options }) {
+  const dedupedOptions = React.useMemo(
+    () => options.filter((option, index) => options.findIndex((candidate) => candidate.value === option.value) === index),
+    [options]
+  );
 
   return (
-    <select
-      value={safeValue}
-      onChange={(event) => onValueChange(event.target.value)}
-      className={cn("flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring", className)}
-    >
-      {safeOptions.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger className="h-9 bg-background">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All</SelectItem>
+        {dedupedOptions.map((option, index) => (
+          <SelectItem key={`${option.value}-${index}`} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
-}
-
-function FilterSelect({ value, onValueChange, placeholder, options }) {
-  return <NativeSelect value={value} onValueChange={onValueChange} options={options} className="h-9" />;
 }
 
 export default function DashboardControls({
@@ -62,82 +55,64 @@ export default function DashboardControls({
   isRefreshing,
   lastUpdated,
 }) {
-  const safePresets = useMemo(
-    () => (presets || [])
-      .filter((preset) => preset?.id)
-      .map((preset) => ({
-        ...preset,
-        id: String(preset.id).trim(),
-        name: String(preset.name || "Untitled view").trim() || "Untitled view",
-      }))
-      .filter((preset) => preset.id && preset.id !== "none")
-      .filter((preset, index, array) => array.findIndex((candidate) => candidate.id === preset.id) === index),
-    [presets]
-  );
-
-  const safeSelectedPresetId = safePresets.some((preset) => preset.id === selectedPresetId) ? selectedPresetId : "none";
-
   return (
     <div className="space-y-4 rounded-2xl border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           {DASHBOARD_VIEW_OPTIONS.map((option) => (
-            <button
+            <Button
               key={option.value}
-              type="button"
+              size="sm"
+              variant={filters.viewMode === option.value ? "default" : "outline"}
               onClick={() => onChange("viewMode", option.value)}
-              className={cn(
-                "inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium transition-colors",
-                filters.viewMode === option.value
-                  ? "bg-primary text-primary-foreground shadow hover:bg-primary/90"
-                  : "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground"
-              )}
             >
               {option.label}
-            </button>
+            </Button>
           ))}
-          <span className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs text-foreground">
+          <Badge variant="outline" className="h-8 px-3 text-xs">
             Comparing to previous period
-          </span>
+          </Badge>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={filters.dateRange}
-            onChange={(event) => onChange("dateRange", event.target.value)}
-            className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {DATE_RANGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <Select value={filters.dateRange} onValueChange={(value) => onChange("dateRange", value)}>
+            <SelectTrigger className="h-9 w-[180px] bg-background">
+              <SelectValue placeholder="Date range" />
+            </SelectTrigger>
+            <SelectContent>
+              {DATE_RANGE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <select
-            value={safeSelectedPresetId}
-            onChange={(event) => onPresetChange(event.target.value)}
-            className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="none">Saved views</option>
-            {safePresets.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.name}
-              </option>
-            ))}
-          </select>
+          <Select value={selectedPresetId || "none"} onValueChange={onPresetChange}>
+            <SelectTrigger className="h-9 w-[180px] bg-background">
+              <SelectValue placeholder="Saved views" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Saved views</SelectItem>
+              {presets.map((preset) => (
+                <SelectItem key={preset.id} value={preset.id}>
+                  {preset.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <button type="button" onClick={onSaveView} className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+          <Button size="sm" variant="outline" onClick={onSaveView}>
             <Bookmark className="w-3.5 h-3.5" /> Save view
-          </button>
+          </Button>
 
-          <button type="button" onClick={onSetDefault} disabled={!selectedPresetId || selectedPresetId === "none"} className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50">
+          <Button size="sm" variant="outline" onClick={onSetDefault} disabled={!selectedPresetId || selectedPresetId === "none"}>
             Set default
-          </button>
+          </Button>
 
-          <button type="button" onClick={onRefresh} className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+          <Button size="sm" variant="outline" onClick={onRefresh}>
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
-          </button>
+          </Button>
         </div>
       </div>
 

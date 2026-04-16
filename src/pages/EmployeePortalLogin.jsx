@@ -1,30 +1,25 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Heart, Loader, Mail } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 /**
  * EmployeePortalLogin
  * Token-based portal access — employees use access token to unlock enrollment without app login.
  * Resolves enrollment record and validates token + email match.
- *
- * Session key: "portal_session" (JSON object with enrollment_id, case_id, employee_email, employee_name)
- * This must match EmployeeEnrollment.jsx and EmployeeBenefits.jsx.
  */
 export default function EmployeePortalLogin() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendingInvite, setResendingInvite] = useState(false);
-  const [showResend, setShowResend] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
   const handleSubmit = async (e) => {
@@ -33,73 +28,74 @@ export default function EmployeePortalLogin() {
     setLoading(true);
 
     try {
-      /**
-       * SECURITY: Token verification is handled SERVER-SIDE via verifyEnrollmentToken.
-       * This prevents:
-       *   - Brute-force attacks (server-side rate limiting: 5 attempts / 10 min)
-       *   - Direct entity filter calls exposing access_token to client network
-       *   - Timing attacks on token comparison
-       * The raw access_token is NEVER returned to the browser.
-       */
-      const result = await base44.functions.invoke("verifyEnrollmentToken", {
-        email: email.toLowerCase().trim(),
-        token: token.trim(),
+      // 1. Verify token against EmployeeEnrollment
+      const enrollments = await base44.entities.EmployeeEnrollment.filter({
+        employee_email: email,
+        access_token: token,
       });
 
-      if (!result?.data?.success || !result?.data?.enrollment) {
+      if (!enrollments || enrollments.length === 0) {
         setError("Invalid email or access token. Please check and try again.");
         setLoading(false);
         return;
       }
 
-      const enrollment = result.data.enrollment;
+      const enrollment = enrollments[0];
 
-      // Store session — access_token is intentionally excluded (server already verified it)
-      const sessionData = {
-        enrollment_id: enrollment.id,
-        case_id: enrollment.case_id,
-        employee_email: enrollment.employee_email,
-        employee_name: enrollment.employee_name || email,
-        employer_name: enrollment.employer_name || "",
-        authenticated_at: new Date().toISOString(),
-      };
-      sessionStorage.setItem("portal_session", JSON.stringify(sessionData));
+      // 2. Verify enrollment window is still open
+      const enrollmentWindows = await base44.entities.EnrollmentWindow.filter({
+        id: enrollment.enrollment_window_id,
+      });
 
-      // Redirect based on enrollment status
-      if (enrollment.status === "completed" || enrollment.status === "waived") {
+      if (!enrollmentWindows || enrollmentWindows.length === 0) {
+        setError("This enrollment is no longer available.");
+        setLoading(false);
+        return;
+      }
+
+      const window = enrollmentWindows[0];
+
+      // 3. Check if enrollment period is still active or has ended
+      const now = new Date();
+      const endDate = new Date(window.end_date);
+      
+      if (now > endDate && window.status === "closed") {
+        setError("This enrollment period has ended.");
+        setLoading(false);
+        return;
+      }
+
+      // 4. Verify case exists and is active
+      const cases = await base44.entities.BenefitCase.filter({
+        id: enrollment.case_id,
+      });
+
+      if (!cases || cases.length === 0) {
+        setError("Case not found. Please contact your administrator.");
+        setLoading(false);
+        return;
+      }
+
+      // 5. Store secure session token (NOT access_token in plain text)
+      const sessionToken = btoa(`${enrollment.id}:${token}:${Date.now()}`);
+      sessionStorage.setItem("portal_session_token", sessionToken);
+      sessionStorage.setItem("portal_enrollment_id", enrollment.id);
+      sessionStorage.setItem("portal_case_id", enrollment.case_id);
+      sessionStorage.setItem("portal_session_timestamp", new Date().toISOString());
+
+      // 6. Redirect based on enrollment status
+      if (enrollment.status === "invited" || enrollment.status === "started") {
+        navigate("/employee-enrollment", { replace: true });
+      } else if (enrollment.status === "completed" || enrollment.status === "waived") {
         navigate("/employee-benefits", { replace: true });
       } else {
         navigate("/employee-enrollment", { replace: true });
       }
     } catch (err) {
       console.error("Login error:", err);
-      if (err?.status === 429 || err?.message?.toLowerCase().includes("too many")) {
-        setError("Too many failed attempts. Please try again in 10 minutes.");
-      } else if (err?.status === 403) {
-        setError("This enrollment period has ended.");
-      } else {
-        // Generic message — don't reveal whether email exists
-        setError("Invalid email or access token. Please check and try again.");
-      }
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResendInvite = async () => {
-    const normalizedEmail = resetEmail.toLowerCase().trim();
-    if (!normalizedEmail) return;
-
-    setResendingInvite(true);
-    try {
-      await base44.functions.invoke("sendEnrollmentInvite", { email: normalizedEmail });
-      toast({ title: "If found, invitation sent", description: "If an enrollment exists for that email, the invitation has been resent." });
-      setShowResend(false);
-      setResetEmail("");
-    } catch (err) {
-      toast({ title: "Unable to resend", description: "Invitation email is not configured right now.", variant: "destructive" });
-    } finally {
-      setResendingInvite(false);
     }
   };
 
@@ -139,7 +135,7 @@ export default function EmployeePortalLogin() {
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Use the email address from your enrollment invitation.
+                Use the email address associated with your enrollment invitation.
               </p>
             </div>
 
@@ -176,12 +172,12 @@ export default function EmployeePortalLogin() {
               <p className="font-semibold mb-1.5">Need Help?</p>
               <div className="space-y-1.5">
                 <button
-                  onClick={() => setShowResend(!showResend)}
+                  onClick={() => setShowPasswordReset(!showPasswordReset)}
                   className="flex items-center gap-1.5 text-primary hover:underline text-xs font-medium"
                 >
                   <Mail className="w-3 h-3" /> Resend Invitation Email
                 </button>
-                {showResend && (
+                {showPasswordReset && (
                   <div className="mt-2 p-2 rounded bg-primary/5 border border-primary/10 space-y-2">
                     <input
                       type="email"
@@ -190,12 +186,8 @@ export default function EmployeePortalLogin() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       className="w-full px-2 py-1 text-xs border rounded"
                     />
-                    <button
-                      onClick={handleResendInvite}
-                      disabled={resendingInvite || !resetEmail.trim()}
-                      className="w-full px-2 py-1 text-xs bg-primary text-white rounded hover:opacity-90 disabled:opacity-50"
-                    >
-                      {resendingInvite ? "Sending..." : "Send Invitation"}
+                    <button className="w-full px-2 py-1 text-xs bg-primary text-white rounded hover:opacity-90">
+                      Send Invitation
                     </button>
                   </div>
                 )}

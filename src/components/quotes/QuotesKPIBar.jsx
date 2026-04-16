@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, CheckCircle, Clock, AlertTriangle, DollarSign, TrendingUp, Zap } from "lucide-react";
 import { isAfter, addDays, parseISO } from "date-fns";
@@ -6,6 +7,7 @@ export default function QuotesKPIBar({ scenarios }) {
   const now = new Date();
 
   const completed = scenarios.filter(s => s.status === "completed");
+  const active = scenarios.filter(s => !["expired"].includes(s.status));
 
   const expiringSoon = scenarios.filter(s => {
     if (!s.expires_at || ["expired"].includes(s.status)) return false;
@@ -16,6 +18,9 @@ export default function QuotesKPIBar({ scenarios }) {
   const totalActivePremium = completed.reduce((sum, s) => sum + (s.total_monthly_premium || 0), 0);
   const avgEmployerCost = completed.length > 0
     ? Math.round(completed.reduce((sum, s) => sum + (s.employer_monthly_cost || 0), 0) / completed.length)
+    : 0;
+  const avgEECost = completed.length > 0
+    ? Math.round(completed.reduce((sum, s) => sum + (s.employee_monthly_cost_avg || 0), 0) / completed.length)
     : 0;
   const recommended = scenarios.filter(s => s.is_recommended).length;
 

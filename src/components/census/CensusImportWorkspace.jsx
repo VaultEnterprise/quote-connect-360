@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, AlertTriangle, CheckCircle2, Download, FileUp, RefreshCw, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, FileUp, RefreshCw, Upload } from "lucide-react";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 
 const IMPORT_MODES = [
@@ -197,15 +197,6 @@ export default function CensusImportWorkspace({ caseId, onComplete, onCancel }) 
 
   return (
     <div className="space-y-6">
-      {/* ── PHI / HIPAA Notice ─────────────────────────────────────────────── */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
-        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-amber-800 leading-relaxed">
-          <strong>PHI Notice:</strong> This file may contain Protected Health Information (PHI).
-          Handle in compliance with HIPAA. Do not upload full Social Security Numbers —
-          last 4 digits only are accepted. Ensure this file is stored and transmitted securely.
-        </div>
-      </div>
       <div>
         <h2 className="text-xl font-semibold">Census Import Workspace</h2>
         <p className="text-sm text-muted-foreground mt-1">Upload, map, validate, and commit census files in a full-page workflow.</p>

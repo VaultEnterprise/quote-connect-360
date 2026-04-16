@@ -28,7 +28,7 @@ export default function ProviderSearch({ selectedPlan, plan }) {
         p.address.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesSpecialty = filterSpecialty === "all" || p.specialty === filterSpecialty;
-      const inNetwork = !plan?.plan_name || p.network.includes("All Plans") || p.network.includes("All Dental Plans") || p.network.some(n => n.includes(plan.plan_name));
+      const inNetwork = p.network.some(n => n.includes(plan?.plan_name || ""));
       
       return matchesQuery && matchesSpecialty && inNetwork;
     });

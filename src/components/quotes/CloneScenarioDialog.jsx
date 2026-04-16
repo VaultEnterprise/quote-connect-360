@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -12,10 +12,6 @@ export default function CloneScenarioDialog({ scenario, open, onClose }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [name, setName] = useState(`${scenario?.name || "Scenario"} (Copy)`);
-
-  useEffect(() => {
-    setName(`${scenario?.name || "Scenario"} (Copy)`);
-  }, [scenario?.id, scenario?.name]);
 
   const clone = useMutation({
     mutationFn: async () => {

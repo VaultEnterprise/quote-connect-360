@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ArrowRight, ChevronUp, ExternalLink } from "lucide-react";
+import StatusBadge from "@/components/shared/StatusBadge";
 import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
 import { buildRoute } from "@/lib/routing/buildRoute";
 
@@ -77,30 +80,25 @@ export default function InteractivePipeline({ cases = [] }) {
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: selectedGroup.color }} />
                 <span className="text-sm font-semibold">{selectedGroup.label} Stage</span>
-                <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${selectedGroup.bgClass} ${selectedGroup.textClass}`} style={{ borderColor: `${selectedGroup.color}40` }}>
+                <Badge className={`text-[10px] py-0 border ${selectedGroup.bgClass} ${selectedGroup.textClass}`} style={{ borderColor: `${selectedGroup.color}40` }}>
                   {selectedGroup.count} cases
-                </span>
+                </Badge>
               </div>
               <div className="flex items-center gap-1">
-                <Link
-                  to="/cases"
-                  className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs text-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  View all <ExternalLink className="w-3 h-3" />
+                <Link to={buildRoute("cases", { stageGroup: selectedGroup.key })}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
+                    View all <ExternalLink className="w-3 h-3" />
+                  </Button>
                 </Link>
-                <button
-                  type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-md p-0 transition-colors hover:bg-accent hover:text-accent-foreground"
-                  onClick={() => setActiveStage(null)}
-                >
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveStage(null)}>
                   <ChevronUp className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="divide-y divide-border max-h-56 overflow-y-auto">
               {selectedGroup.cases.slice(0, 10).map(c => (
-                <Link key={c.id} to={`/cases/${c.id}`} className="block">
+                <Link key={c.id} to={buildRoute("caseDetail", { caseId: c.id })} className="block">
                   <div className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors group">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
@@ -113,18 +111,18 @@ export default function InteractivePipeline({ cases = [] }) {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {c.priority && c.priority !== "normal" && (
-                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[9px] font-semibold capitalize ${c.priority === "urgent" ? "bg-red-100 text-red-700" : c.priority === "high" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                        <Badge className={`text-[9px] py-0 ${c.priority === "urgent" ? "bg-red-100 text-red-700" : c.priority === "high" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
                           {c.priority}
-                        </span>
+                        </Badge>
                       )}
-                      <span className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground capitalize">{c.stage?.replace(/_/g, " ") || "unknown"}</span>
+                      <StatusBadge status={c.stage} />
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
                 </Link>
               ))}
               {selectedGroup.count > 10 && (
-                <Link to={`/cases?stageGroup=${selectedGroup.key}`} className="block">
+                <Link to={buildRoute("cases", { stageGroup: selectedGroup.key })} className="block">
                   <div className="px-4 py-2.5 text-center text-xs text-muted-foreground hover:text-primary hover:bg-muted/30 transition-colors">
                     +{selectedGroup.count - 10} more cases → View all
                   </div>

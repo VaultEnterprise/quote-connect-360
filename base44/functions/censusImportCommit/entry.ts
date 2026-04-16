@@ -41,28 +41,8 @@ Deno.serve(async (req) => {
     if (!session) {
       return Response.json({ error: 'Import session was not found.' }, { status: 404 });
     }
-
-    // SECURITY: Require that validation was completed before allowing commit.
-    // This prevents bypassing client-side validation by calling commit directly.
-    if (body.importMode !== 'validate_only') {
-      if (!stagedRows.length) {
-        return Response.json({ error: 'No staged rows found. Please run validation before committing.' }, { status: 400 });
-      }
-      // Check session has been through validation (status must be 'validated' or 'validation_complete')
-      const sessionValidated = session.validation_status === 'validated' ||
-        session.validation_status === 'validation_complete' ||
-        session.validation_status === 'completed' ||
-        session.commit_status === 'validation_complete';
-      if (!sessionValidated && stagedRows.length > 0) {
-        // Allow if rows exist and have validation_status set (validation ran)
-        const rowsHaveValidation = stagedRows.every((r) => r.validation_status != null);
-        if (!rowsHaveValidation) {
-          return Response.json({
-            error: 'Census file must be validated before committing. Please run the validation step first.',
-            validation_required: true,
-          }, { status: 400 });
-        }
-      }
+    if (!stagedRows.length && body.importMode !== 'validate_only') {
+      return Response.json({ error: 'Please validate the file before importing.' }, { status: 400 });
     }
 
     const hasErrors = stagedRows.some((row) => row.validation_status === 'error');

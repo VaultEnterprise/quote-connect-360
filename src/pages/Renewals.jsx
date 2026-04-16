@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import useRenewalsPageModel from "@/domain/renewals/useRenewalsPageModel";
 import { downloadCsv } from "@/utils/downloadCsv";
-import { RefreshCw, LayoutGrid, List, Plus, Download, X, SortAsc, CalendarDays, XCircle, CheckSquare } from "lucide-react";
+import { RefreshCw, LayoutGrid, List, Plus, Download, X, SortAsc, CalendarDays, Users, XCircle, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 import RenewalKPIBar from "@/components/renewals/RenewalKPIBar";
 import RateDistributionChart from "@/components/renewals/RateDistributionChart";
@@ -45,7 +44,6 @@ export default function Renewals() {
   const [sortBy, setSortBy] = useState("urgency");
   const [kpiFilter, setKpiFilter] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { renewals, filtered, sorted, censusMembers, uniqueAssignees, activeFilterCount, bulkStatusUpdate, bulkDelete } = useRenewalsPageModel({
     caseScope,
@@ -255,7 +253,7 @@ export default function Renewals() {
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/20"
-              onClick={() => setShowDeleteConfirm(true)}>
+              onClick={() => { if (confirm(`Delete ${selectedIds.length} renewals?`)) bulkDelete.mutate(selectedIds); }}>
               <XCircle className="w-3.5 h-3.5 mr-1" /> Delete
             </Button>
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds([])}>
@@ -315,18 +313,6 @@ export default function Renewals() {
       )}
 
       <CreateRenewalModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        onClose={setShowDeleteConfirm}
-        onConfirm={() => {
-          bulkDelete.mutate(selectedIds);
-          setShowDeleteConfirm(false);
-        }}
-        title="Delete renewals?"
-        description={`Permanently delete ${selectedIds.length} selected renewal(s)? This cannot be undone.`}
-        confirmLabel="Delete renewals"
-        destructive
-      />
     </div>
   );
 }

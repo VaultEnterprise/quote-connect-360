@@ -1,25 +1,22 @@
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { AlertTriangle } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function ContributionSlider({ scenario, open, onClose }) {
-  const [eeContribution, setEeContribution] = useState(scenario?.employer_contribution_ee ?? 80);
-  const [depContribution, setDepContribution] = useState(scenario?.employer_contribution_dep ?? 50);
+  const [eeContribution, setEeContribution] = useState(scenario.employer_contribution_ee ?? 80);
+  const [depContribution, setDepContribution] = useState(scenario.employer_contribution_dep ?? 50);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  useEffect(() => {
-    setEeContribution(scenario?.employer_contribution_ee ?? 80);
-    setDepContribution(scenario?.employer_contribution_dep ?? 50);
-  }, [scenario?.id, scenario?.employer_contribution_ee, scenario?.employer_contribution_dep]);
-
-  const totalPremium = scenario?.total_monthly_premium || 0;
+  const totalPremium = scenario.total_monthly_premium || 0;
+  const projectedEmployeeCount = 100; // Mock estimate
 
   const calculations = useMemo(() => {
     const empRate = eeContribution / 100;

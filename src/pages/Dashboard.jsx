@@ -1,10 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Briefcase, RefreshCw } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { format, differenceInDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
 import DashboardControls from "@/components/dashboard/DashboardControls";
 import DashboardMetricGrid from "@/components/dashboard/DashboardMetricGrid";
 import DashboardSecondaryMetrics from "@/components/dashboard/DashboardSecondaryMetrics";
@@ -25,37 +30,36 @@ import CycleTiming from "@/components/dashboard/CycleTiming";
 import { DEFAULT_DASHBOARD_FILTERS } from "@/utils/dashboardControls";
 import { getDashboardPageModel } from "@/domain/dashboard/useDashboardMetrics";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { useAuth } from "@/lib/AuthContext";
 
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
+const DASHBOARD_PRESET_QUERY_KEY = ["dashboard-view-presets"];
 
 export default function Dashboard() {
-  const { user, isLoadingAuth: isUserLoading } = useAuth();
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState(DEFAULT_DASHBOARD_FILTERS);
   const [selectedPresetId, setSelectedPresetId] = useState("none");
   const [hasInitializedPreferences, setHasInitializedPreferences] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const cases = [];
-  const isLoading = false;
-  const casesUpdatedAt = 0;
-  const tasks = [];
-  const tasksUpdatedAt = 0;
-  const enrollments = [];
-  const enrollmentsUpdatedAt = 0;
-  const renewals = [];
-  const renewalsUpdatedAt = 0;
-  const scenarios = [];
-  const scenariosUpdatedAt = 0;
-  const exceptions = [];
-  const exceptionsUpdatedAt = 0;
-  const proposals = [];
-  const proposalsUpdatedAt = 0;
-  const agencies = [];
-  const agenciesUpdatedAt = 0;
-  const presets = [];
-  const presetsFetched = true;
-  const presetsUpdatedAt = 0;
+  const { data: user, isLoading: isUserLoading } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
+  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases"], queryFn: () => base44.entities.BenefitCase.list("-created_date", 200) });
+  const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending"], queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) });
+  const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments"], queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100) });
+  const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals"], queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100) });
+  const { data: scenarios = [], dataUpdatedAt: scenariosUpdatedAt } = useQuery({ queryKey: ["scenarios-all"], queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100) });
+  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions"], queryFn: () => base44.entities.ExceptionItem.list("-created_date", 100) });
+  const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals"], queryFn: () => base44.entities.Proposal.list("-created_date", 100) });
+  const { data: agencies = [], dataUpdatedAt: agenciesUpdatedAt } = useQuery({ queryKey: ["agencies"], queryFn: () => base44.entities.Agency.list("name", 100) });
+  const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({ queryKey: DASHBOARD_PRESET_QUERY_KEY, enabled: !!user?.email, queryFn: () => base44.entities.DashboardViewPreset.filter({ created_by: user.email }, "name", 50) });
+
+  useEffect(() => {
+    const unsubscribeCases = base44.entities.BenefitCase.subscribe(() => queryClient.invalidateQueries({ queryKey: ["cases"] }));
+    const unsubscribeTasks = base44.entities.CaseTask.subscribe(() => queryClient.invalidateQueries({ queryKey: ["tasks-pending"] }));
+    const unsubscribeEnrollments = base44.entities.EnrollmentWindow.subscribe(() => queryClient.invalidateQueries({ queryKey: ["enrollments"] }));
+    const unsubscribeExceptions = base44.entities.ExceptionItem.subscribe(() => queryClient.invalidateQueries({ queryKey: ["exceptions"] }));
+    const unsubscribeProposals = base44.entities.Proposal.subscribe(() => queryClient.invalidateQueries({ queryKey: ["proposals"] }));
+    return () => { unsubscribeCases?.(); unsubscribeTasks?.(); unsubscribeEnrollments?.(); unsubscribeExceptions?.(); unsubscribeProposals?.(); };
+  }, [queryClient]);
 
   useEffect(() => {
     if (hasInitializedPreferences || !user || !presetsFetched) return;
@@ -92,18 +96,13 @@ export default function Dashboard() {
     return timestamps.length === 0 ? "" : format(new Date(Math.max(...timestamps)), "MMM d, yyyy h:mm a");
   }, [casesUpdatedAt, tasksUpdatedAt, enrollmentsUpdatedAt, renewalsUpdatedAt, scenariosUpdatedAt, exceptionsUpdatedAt, proposalsUpdatedAt, agenciesUpdatedAt, presetsUpdatedAt]);
 
-  const [showSaveViewPanel, setShowSaveViewPanel] = useState(false);
-  const [saveViewName, setSaveViewName] = useState("");
-
   const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
-  const handleRefresh = async () => { setIsRefreshing(true); setIsRefreshing(false); };
-  const handleSaveView = () => {
-    setSaveViewName("");
-    setShowSaveViewPanel(true);
-  };
-
-  const handleSaveViewConfirm = async () => {
-    setShowSaveViewPanel(false);
+  const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([["cases"],["tasks-pending"],["enrollments"],["renewals"],["scenarios-all"],["exceptions"],["proposals"],["agencies"],DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
+  const handleSaveView = async () => {
+    const name = window.prompt("Name this dashboard view");
+    if (!name) return;
+    await base44.entities.DashboardViewPreset.create({ name, view_mode: filters.viewMode, date_range: filters.dateRange, filters: { owner: filters.owner, team: filters.team, agencyId: filters.agencyId, employerId: filters.employerId, caseType: filters.caseType, stage: filters.stage }, is_default: false });
+    await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
   };
   const handlePresetChange = (presetId) => {
     if (presetId === "none") { setSelectedPresetId("none"); return; }
@@ -112,43 +111,15 @@ export default function Dashboard() {
     setSelectedPresetId(presetId);
     setFilters({ dateRange: preset.date_range || DEFAULT_DASHBOARD_FILTERS.dateRange, viewMode: preset.view_mode || DEFAULT_DASHBOARD_FILTERS.viewMode, owner: preset.filters?.owner || "all", team: preset.filters?.team || "all", agencyId: preset.filters?.agencyId || "all", employerId: preset.filters?.employerId || "all", caseType: preset.filters?.caseType || "all", stage: preset.filters?.stage || "all" });
   };
-  const handleSetDefault = async () => {};
+  const handleSetDefault = async () => {
+    if (!selectedPresetId || selectedPresetId === "none") return;
+    await Promise.all(presets.map((preset) => base44.entities.DashboardViewPreset.update(preset.id, { is_default: preset.id === selectedPresetId })));
+    await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
+  };
 
-  if (isLoading || isUserLoading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Dashboard" description="Benefits operations overview" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index}>
-              <CardContent className="p-5 space-y-3">
-                <div className="h-3 w-24 rounded-md bg-muted animate-pulse" />
-                <div className="h-8 w-16 rounded-md bg-muted animate-pulse" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardContent className="p-5 space-y-3">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="h-12 w-full rounded-lg bg-muted animate-pulse" />
-              ))}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-5 space-y-3">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-16 w-full rounded-lg bg-muted animate-pulse" />
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading || isUserLoading) return <DashboardSkeleton />;
   if (cases.length === 0) {
-    return <div className="space-y-6"><PageHeader title="Dashboard" description="Overview of your benefits operations" actions={<Link to="/cases/new" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><Briefcase className="w-4 h-4 mr-2" /> New Case</Link>} /><div className="flex flex-col items-center justify-center py-24 text-center"><div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6"><Briefcase className="w-9 h-9 text-primary" /></div><h2 className="text-xl font-bold mb-2">Welcome to Connect Quote 360</h2><p className="text-sm text-muted-foreground max-w-md mb-8">Your benefits operating platform is ready. Start by creating your first benefit case.</p><div className="flex gap-3"><Link to="/cases/new" className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><Briefcase className="w-4 h-4 mr-2" /> Create First Case</Link><Link to="/employers" className="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">Add Employer Groups</Link></div></div></div>;
+    return <div className="space-y-6"><PageHeader title="Dashboard" description="Overview of your benefits operations" actions={<Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>} /><div className="flex flex-col items-center justify-center py-24 text-center"><div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6"><Briefcase className="w-9 h-9 text-primary" /></div><h2 className="text-xl font-bold mb-2">Welcome to Connect Quote 360</h2><p className="text-sm text-muted-foreground max-w-md mb-8">Your benefits operating platform is ready. Start by creating your first benefit case.</p><div className="flex gap-3"><Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> Create First Case</Button></Link><Link to="/employers"><Button variant="outline">Add Employer Groups</Button></Link></div></div></div>;
   }
 
   return (
@@ -156,35 +127,10 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" description="Benefits operations overview" />
       <DashboardControls filters={filters} options={options} presets={presets} selectedPresetId={selectedPresetId} onChange={handleFilterChange} onPresetChange={handlePresetChange} onSaveView={handleSaveView} onSetDefault={handleSetDefault} onRefresh={handleRefresh} isRefreshing={isRefreshing} lastUpdated={lastUpdated} />
       <QuickActions />
-      {showSaveViewPanel && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Save Dashboard View</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label htmlFor="view-name" className="text-sm font-medium leading-none">View Name</label>
-              <Input
-                id="view-name"
-                className="mt-1.5"
-                placeholder="e.g. My Open Cases View"
-                value={saveViewName}
-                onChange={(e) => setSaveViewName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleSaveViewConfirm(); }}
-                autoFocus
-              />
-            </div>
-            <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setShowSaveViewPanel(false)} className="inline-flex items-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">Cancel</button>
-              <button type="button" onClick={handleSaveViewConfirm} disabled={!saveViewName.trim()} className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50">Save View</button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
       <CensusGapAlert cases={scopedData.currentCases} />
       <TodaysPriorities tasks={scopedData.currentTasks} exceptions={scopedData.currentExceptions} cases={scopedData.currentCases} enrollments={scopedData.currentEnrollments} />
       <DashboardMetricGrid summary={summary} />
-      <DashboardSecondaryMetrics summary={summary} currentEnrollments={scopedData.currentEnrollments} upcomingRenewalsCount={charts.upcomingRenewals(scopedData.currentRenewals)} />
+      <DashboardSecondaryMetrics summary={summary} currentEnrollments={scopedData.currentEnrollments} currentRenewals={scopedData.currentRenewals} upcomingRenewalsCount={charts.upcomingRenewals} />
       <ProposalsKPI proposals={scopedData.currentProposals} />
       <ComplianceAlerts cases={scopedData.currentCases} scenarios={scopedData.currentScenarios} />
       <RevenueMetrics scenarios={scopedData.currentScenarios} />
@@ -201,8 +147,8 @@ export default function Dashboard() {
 
       {scopedData.currentRenewals.length > 0 && (
         <Card>
-          <CardHeader className="pb-3"><div className="flex items-center justify-between"><CardTitle className="text-base font-semibold flex items-center gap-2"><RefreshCw className="w-4 h-4 text-primary" /> Upcoming Renewals</CardTitle><Link to="/renewals" className="inline-flex items-center rounded-md px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground">View all</Link></div></CardHeader>
-          <CardContent><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{scopedData.currentRenewals.slice(0, 6).map((item) => { const daysUntil = item.renewal_date ? differenceInDays(new Date(item.renewal_date), new Date()) : null; return <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors"><div><p className="text-sm font-medium">{item.employer_name || "Unknown"}</p><p className="text-xs text-muted-foreground">{item.renewal_date ? format(new Date(item.renewal_date), "MMM d, yyyy") : "TBD"}</p></div><div className="flex items-center gap-2">{daysUntil !== null && <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold ${daysUntil <= 30 ? "bg-red-100 text-red-700" : daysUntil <= 60 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{daysUntil}d</span>}<span className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground capitalize">{item.status?.replace(/_/g, " ") || "unknown"}</span></div></div>; })}</div></CardContent>
+          <CardHeader className="pb-3"><div className="flex items-center justify-between"><CardTitle className="text-base font-semibold flex items-center gap-2"><RefreshCw className="w-4 h-4 text-primary" /> Upcoming Renewals</CardTitle><Link to="/renewals"><Button variant="ghost" size="sm" className="text-xs text-muted-foreground">View all</Button></Link></div></CardHeader>
+          <CardContent><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{scopedData.currentRenewals.slice(0, 6).map((item) => { const daysUntil = item.renewal_date ? differenceInDays(new Date(item.renewal_date), new Date()) : null; return <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors"><div><p className="text-sm font-medium">{item.employer_name || "Unknown"}</p><p className="text-xs text-muted-foreground">{item.renewal_date ? format(new Date(item.renewal_date), "MMM d, yyyy") : "TBD"}</p></div><div className="flex items-center gap-2">{daysUntil !== null && <Badge className={`text-[10px] ${daysUntil <= 30 ? "bg-red-100 text-red-700" : daysUntil <= 60 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{daysUntil}d</Badge>}<StatusBadge status={item.status} /></div></div>; })}</div></CardContent>
         </Card>
       )}
     </div>

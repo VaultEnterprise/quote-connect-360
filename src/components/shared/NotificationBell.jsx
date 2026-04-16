@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Bell, AlertTriangle, Clock, RefreshCw, ClipboardCheck, CheckCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, isPast, isWithinInterval, addDays } from "date-fns";
 
@@ -12,32 +13,29 @@ function useAlerts() {
 
   const { data: tasks = [] } = useQuery({
     queryKey: ["alerts-tasks"],
-    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-due_date", 25),
+    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-due_date", 50),
     refetchInterval: 120000,
   });
 
   const { data: scenarios = [] } = useQuery({
     queryKey: ["alerts-scenarios"],
-    queryFn: () => base44.entities.QuoteScenario.list("-expires_at", 25),
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 50),
     refetchInterval: 120000,
   });
 
   const { data: enrollments = [] } = useQuery({
     queryKey: ["alerts-enrollments"],
-    queryFn: () => base44.entities.EnrollmentWindow.list("-end_date", 15),
+    queryFn: () => base44.entities.EnrollmentWindow.list("-end_date", 20),
     refetchInterval: 120000,
   });
 
   const { data: renewals = [] } = useQuery({
     queryKey: ["alerts-renewals"],
-    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 15),
+    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 20),
     refetchInterval: 120000,
   });
 
   const alerts = [];
-  const nextWeek = addDays(today, 7);
-  const nextFiveDays = addDays(today, 5);
-  const nextNinetyDays = addDays(today, 90);
 
   // Overdue tasks
   tasks.filter(t => t.due_date && isPast(new Date(t.due_date))).slice(0, 5).forEach(t =>
@@ -53,7 +51,7 @@ function useAlerts() {
   );
 
   // Expiring quotes (within 7 days)
-  scenarios.filter(s => s.expires_at && isWithinInterval(new Date(s.expires_at), { start: today, end: nextWeek })).slice(0, 3).forEach(s =>
+  scenarios.filter(s => s.expires_at && isWithinInterval(new Date(s.expires_at), { start: today, end: addDays(today, 7) })).slice(0, 3).forEach(s =>
     alerts.push({
       id: `quote-expiring-${s.id}`,
       type: "warning",
@@ -66,7 +64,7 @@ function useAlerts() {
   );
 
   // Closing enrollments
-  enrollments.filter(e => ["open","closing_soon"].includes(e.status) && e.end_date && isWithinInterval(new Date(e.end_date), { start: today, end: nextFiveDays })).slice(0, 3).forEach(e =>
+  enrollments.filter(e => ["open","closing_soon"].includes(e.status) && e.end_date && isWithinInterval(new Date(e.end_date), { start: today, end: addDays(today, 5) })).slice(0, 3).forEach(e =>
     alerts.push({
       id: `enroll-closing-${e.id}`,
       type: "warning",
@@ -79,7 +77,7 @@ function useAlerts() {
   );
 
   // Upcoming renewals (within 90 days)
-  renewals.filter(r => r.renewal_date && isWithinInterval(new Date(r.renewal_date), { start: today, end: nextNinetyDays }) && !["completed"].includes(r.status)).slice(0, 3).forEach(r =>
+  renewals.filter(r => r.renewal_date && isWithinInterval(new Date(r.renewal_date), { start: today, end: addDays(today, 90) }) && !["completed"].includes(r.status)).slice(0, 3).forEach(r =>
     alerts.push({
       id: `renewal-${r.id}`,
       type: "info",
@@ -136,18 +134,14 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={panelRef}>
-      <button
-        type="button"
-        className="relative flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
-        onClick={() => setOpen(o => !o)}
-      >
+      <Button variant="ghost" size="icon" className="relative h-9 w-9" onClick={() => setOpen(o => !o)}>
         <Bell className="w-4 h-4" />
         {visible.length > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
             {visible.length > 9 ? "9+" : visible.length}
           </span>
         )}
-      </button>
+      </Button>
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-96 bg-popover border rounded-xl shadow-xl z-50 overflow-hidden">
@@ -158,13 +152,9 @@ export default function NotificationBell() {
               {visible.length > 0 && <Badge className="h-4 px-1.5 text-[10px]">{visible.length}</Badge>}
             </div>
             {visible.length > 0 && (
-              <button
-                type="button"
-                className="h-6 rounded-sm px-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                onClick={dismissAll}
-              >
+              <Button variant="ghost" size="sm" className="text-xs h-6 text-muted-foreground" onClick={dismissAll}>
                 Clear all
-              </button>
+              </Button>
             )}
           </div>
 

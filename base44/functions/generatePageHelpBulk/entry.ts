@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const PAGES_TO_GENERATE = [
   { code: "DASHBOARD", title: "Dashboard", desc: "Main landing page with KPIs, metrics, and quick actions" },
@@ -112,7 +112,6 @@ Return JSON:
       results 
     });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

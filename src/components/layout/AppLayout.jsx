@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import AIAssistant from "@/components/ai/AIAssistant";
 import HelpAIAssistant from "@/components/help/HelpAIAssistant";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export default function AppLayout() {
         </main>
       </div>
 
+      {!location.pathname.match(/^\/cases\/[^/]+$/) && <AIAssistant />}
       <HelpAIAssistant />
     </div>
   );

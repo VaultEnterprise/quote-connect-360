@@ -126,20 +126,7 @@ export default function useTasksPageModel({
   });
 
   const deleteTask = useMutation({
-    mutationFn: async (id) => {
-      // Only allow delete if: user is admin, or user created/is assigned to the task
-      const task = tasks.find((t) => t.id === id);
-      const isAdmin = currentUser?.role === "admin";
-      const isOwner = task && (
-        task.assigned_to === currentUser?.email ||
-        task.created_by === currentUser?.id ||
-        task.created_by === currentUser?.email
-      );
-      if (!isAdmin && !isOwner) {
-        throw new Error("You can only delete tasks assigned to you or tasks you created.");
-      }
-      return base44.entities.CaseTask.delete(id);
-    },
+    mutationFn: (id) => base44.entities.CaseTask.delete(id),
     onSuccess: invalidateTasks,
   });
 
@@ -156,12 +143,7 @@ export default function useTasksPageModel({
   });
 
   const bulkDelete = useMutation({
-    mutationFn: async () => {
-      if (currentUser?.role !== "admin") {
-        throw new Error("Only administrators can bulk-delete tasks.");
-      }
-      return deleteManyEntityRecords("CaseTask", selectedIds);
-    },
+    mutationFn: () => deleteManyEntityRecords("CaseTask", selectedIds),
     onSuccess: invalidateTasks,
   });
 

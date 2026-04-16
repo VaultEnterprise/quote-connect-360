@@ -487,7 +487,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ error: `Unknown action: ${body.action}` }, { status: 400 });
   } catch (error) {
-    console.error('[function' + '] error:', error.message, error.stack);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

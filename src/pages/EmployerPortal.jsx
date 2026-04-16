@@ -6,16 +6,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useAuth } from "@/lib/AuthContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import CrossPageNavigation from "@/components/shared/CrossPageNavigation";
+import { useNavigate } from "react-router-dom";
 
 // Employer-specific components
 import ActionRequiredBanner from "@/components/employer/ActionRequiredBanner";
 import BrokerContactCard    from "@/components/employer/BrokerContactCard";
 import StatusTimeline       from "@/components/employer/StatusTimeline";
+import ProposalReviewPanel  from "@/components/employer/ProposalReviewPanel";
 import EnrollmentDrillDown  from "@/components/employer/EnrollmentDrillDown";
+import DocumentsPanel       from "@/components/employer/DocumentsPanel";
 import CaseLifecycleStatus  from "@/components/employer/CaseLifecycleStatus";
 import EnrollmentCountdown  from "@/components/employer/EnrollmentCountdown";
 import ProposalEnhanced     from "@/components/employer/ProposalEnhanced";
@@ -26,20 +31,16 @@ import DocumentsCenter      from "@/components/employer/DocumentsCenter";
 import PlanExplainerModal   from "@/components/employer/PlanExplainerModal";
 
 export default function EmployerPortal() {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const employerGroupId = searchParams.get("employer_id") || null;
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Data ────────────────────────────────────────────────────────────────────
-  // Portal is hard-scoped by employer_id query param until dedicated employer auth is added.
   const { data: cases = [] } = useQuery({
-    queryKey: ["employer-cases", employerGroupId],
-    queryFn: () => employerGroupId
-      ? base44.entities.BenefitCase.filter({ employer_group_id: employerGroupId }, "-created_date", 50)
-      : Promise.resolve([]),
+    queryKey: ["employer-cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 50),
   });
 
   const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0];
@@ -80,18 +81,6 @@ export default function EmployerPortal() {
   const pendingProposals = proposals.filter(p => ["sent", "viewed"].includes(p.status));
   const openTasks       = tasks.filter(t => !["completed", "cancelled"].includes(t.status));
   const renewalCycle    = renewalCycles[0] || null;
-
-  if (!employerGroupId) {
-    return (
-      <div className="max-w-xl mx-auto py-20">
-        <EmptyState
-          icon={Building2}
-          title="Employer Access Required"
-          description="This portal link is missing the employer access context. Please use the link provided by your broker or administrator."
-        />
-      </div>
-    );
-  }
 
   // ── Empty state ──────────────────────────────────────────────────────────────
   if (cases.length === 0) {
@@ -136,15 +125,30 @@ export default function EmployerPortal() {
           </p>
         </div>
 
-        {/* Case status display — no cross-employer switcher for security */}
+        {/* Case switcher — responsive */}
         <div className="flex gap-2 flex-shrink-0">
-          <div className="flex items-center gap-2">
+          {cases.length > 1 ? (
+            <Select value={selectedCaseId || cases[0]?.id} onValueChange={setSelectedCaseId}>
+              <SelectTrigger className="w-48 sm:w-60 text-xs sm:text-sm">
+                <Building2 className="w-4 h-4 mr-2 text-muted-foreground hidden sm:inline" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {cases.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.employer_name} — {c.case_number || c.id.slice(-6)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="flex items-center gap-2">
               <StatusBadge status={activeCase?.stage} />
               {activeCase?.priority !== "normal" && <StatusBadge status={activeCase?.priority} />}
             </div>
+          )}
           {/* Mobile sidebar toggle */}
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             className="lg:hidden h-9 w-9"
@@ -336,9 +340,9 @@ export default function EmployerPortal() {
              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quick Links</p>
              <div className="space-y-1.5">
                <button onClick={() => navigate("/help")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-primary font-medium">
-                 Help Center
+                 ? Help Center
                </button>
-               <button onClick={() => window.location.reload()} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-foreground font-medium">
+               <button onClick={() => navigate("/employer-portal")} className="block w-full text-left text-xs px-2 py-1.5 rounded hover:bg-muted text-foreground font-medium">
                  ↻ Refresh Portal
                </button>
              </div>

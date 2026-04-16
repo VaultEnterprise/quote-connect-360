@@ -12,12 +12,6 @@ export function getCaseRouteContext(caseData) {
   };
 }
 
-export function getEmployerPortalRouteContext(employerGroup) {
-  return {
-    employerId: employerGroup?.id || undefined,
-  };
-}
-
-export function getRouteContext(search) {
+export function getRouteContext(search = window.location.search) {
   return getSharedRouteContext(search);
 }
