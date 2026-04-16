@@ -11,7 +11,7 @@ export default function RatesIssuesPanel({ issues, onSelectRow }) {
       {issues.length === 0 ? (
         <p className="text-sm text-muted-foreground">No operational issues detected in the current scope.</p>
       ) : issues.map((issue) => (
-        <div key={issue.title} className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        <div key={issue.title}>
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-sm font-semibold text-foreground">{issue.title}</p>
