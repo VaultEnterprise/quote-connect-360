@@ -28,6 +28,7 @@ import CasesOperationalTable from "@/components/cases/CasesOperationalTable";
 import { exportToCSV } from "@/utils/export-import";
 import { CASE_PRIORITY_ORDER, getCaseWorkflowSignals } from "@/components/cases/caseWorkflow";
 import { buildPlatformDependencyRegistry } from "@/components/platform/platformDependencyRegistry";
+import { buildRateDependencySummary } from "@/components/rates/rateGovernanceEngine";
 
 const STAGE_OPTIONS = [
   { value: "all",                      label: "All Stages" },
@@ -108,6 +109,26 @@ export default function Cases() {
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
   });
 
+  const { data: plans = [] } = useQuery({
+    queryKey: ["cases-page-plans"],
+    queryFn: () => base44.entities.BenefitPlan.list("-created_date", 500),
+  });
+
+  const { data: rateTables = [] } = useQuery({
+    queryKey: ["cases-page-rate-tables"],
+    queryFn: () => base44.entities.PlanRateTable.list("-created_date", 1000),
+  });
+
+  const { data: scenarioPlans = [] } = useQuery({
+    queryKey: ["cases-page-scenario-plans"],
+    queryFn: () => base44.entities.ScenarioPlan.list("-created_date", 1000),
+  });
+
+  const { data: employeeEnrollments = [] } = useQuery({
+    queryKey: ["cases-page-employee-enrollments"],
+    queryFn: () => base44.entities.EmployeeEnrollment.list("-created_date", 1000),
+  });
+
   const caseRelations = useMemo(() => {
     const relationMap = {};
     cases.forEach((item) => {
@@ -123,31 +144,52 @@ export default function Cases() {
     return relationMap;
   }, [cases, tasks, censusVersions, scenarios, enrollmentWindows, renewals, exceptions]);
 
+  const rateSummary = useMemo(() => buildRateDependencySummary({
+    plans,
+    rateTables,
+    scenarioPlans,
+    quoteScenarios: scenarios,
+    employeeEnrollments,
+    renewals,
+  }), [plans, rateTables, scenarioPlans, scenarios, employeeEnrollments, renewals]);
+
+  const plansMissingRateIds = useMemo(() => new Set(
+    plans
+      .filter((plan) => !rateTables.some((table) => table.plan_id === plan.id))
+      .map((plan) => plan.id)
+  ), [plans, rateTables]);
+
   const enrichedCases = useMemo(() => {
     return cases.map((item) => {
       const related = caseRelations[item.id] || {
         tasks: [], censusVersions: [], scenarios: [], enrollmentWindows: [], renewals: [], exceptions: [],
       };
       const signals = getCaseWorkflowSignals({ caseData: item, ...related });
+      const caseScenarioPlanIds = scenarioPlans
+        .filter((plan) => plan.case_id === item.id)
+        .map((plan) => plan.plan_id);
+      const hasRateGap = caseScenarioPlanIds.some((planId) => plansMissingRateIds.has(planId));
       const systemIssues = [
         signals.censusIssues.length > 0 && { label: "Census", icon: FileWarning, tone: "text-amber-700 border-amber-200 bg-amber-50" },
         (signals.erroredQuotes.length > 0 || signals.expiringQuotes.length > 0) && { label: "Quotes", icon: AlertTriangle, tone: "text-red-700 border-red-200 bg-red-50" },
         signals.enrollmentBlocked && { label: "Enrollment", icon: ShieldAlert, tone: "text-amber-700 border-amber-200 bg-amber-50" },
         signals.renewalAtRisk && { label: "Renewal", icon: RefreshCw, tone: "text-red-700 border-red-200 bg-red-50" },
+        hasRateGap && { label: "Rates", icon: AlertTriangle, tone: "text-red-700 border-red-200 bg-red-50" },
       ].filter(Boolean);
 
       return {
         ...item,
         related,
         signals,
-        escalated: signals.criticalExceptions.length > 0 || signals.urgentTasks.length > 0,
+        escalated: signals.criticalExceptions.length > 0 || signals.urgentTasks.length > 0 || hasRateGap,
         systemIssues,
+        hasRateGap,
         staleDays: signals.staleDays,
         slaRisk: signals.slaRisk,
         slaLabel: signals.slaRisk ? "At risk" : "On track",
       };
     });
-  }, [cases, caseRelations]);
+  }, [cases, caseRelations, scenarioPlans, plansMissingRateIds]);
 
   const filtered = useMemo(() => {
     let result = enrichedCases.filter((c) => {
@@ -251,7 +293,7 @@ export default function Cases() {
     stalledCount: enrichedCases.filter((item) => item.staleDays !== null && item.staleDays > 7 && !["active", "closed", "renewed"].includes(item.stage)).length,
     unassignedCount: enrichedCases.filter((item) => !item.assigned_to).length,
     slaRiskCount: enrichedCases.filter((item) => item.slaRisk).length,
-    criticalIssueCount: enrichedCases.filter((item) => item.signals.criticalExceptions.length > 0 || item.signals.blockedTasks.length > 0).length,
+    criticalIssueCount: enrichedCases.filter((item) => item.signals.criticalExceptions.length > 0 || item.signals.blockedTasks.length > 0 || item.hasRateGap).length,
     totalIssueCount: enrichedCases.reduce((sum, item) => sum + item.systemIssues.length + item.signals.openExceptions.length, 0),
     escalatedCount: enrichedCases.filter((item) => item.escalated).length,
   }), [enrichedCases]);
@@ -264,14 +306,18 @@ export default function Cases() {
     enrollments: enrollmentWindows,
     renewals,
     exceptions,
-  }), [cases, tasks, censusVersions, scenarios, enrollmentWindows, renewals, exceptions]);
+    plans,
+    rateTables,
+    scenarioPlans,
+    employeeEnrollments,
+  }), [cases, tasks, censusVersions, scenarios, enrollmentWindows, renewals, exceptions, plans, rateTables, scenarioPlans, employeeEnrollments]);
 
   const systemSignals = useMemo(() => ({
     censusIssueCount: registry.systemSummary.censusIssues,
-    quoteFailureCount: registry.systemSummary.quoteFailures,
+    quoteFailureCount: registry.systemSummary.quoteFailures + rateSummary.quotedPlansWithoutRates,
     enrollmentBlockerCount: registry.systemSummary.enrollmentBlockers,
     renewalRiskCount: registry.systemSummary.renewalRisk,
-  }), [registry]);
+  }), [registry, rateSummary]);
 
   return (
     <div className="space-y-5">
