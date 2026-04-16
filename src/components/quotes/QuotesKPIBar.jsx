@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, CheckCircle, Clock, AlertTriangle, DollarSign, TrendingUp, Zap } from "lucide-react";
 import { isAfter, addDays, parseISO } from "date-fns";
