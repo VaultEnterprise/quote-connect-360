@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Search, Plus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import PageHeader from "@/components/shared/PageHeader";
@@ -27,6 +28,7 @@ import ExceptionBulkActionsPanel from "@/components/exceptions/ExceptionBulkActi
 import ExceptionNotificationSettings from "@/components/exceptions/ExceptionNotificationSettings";
 import ExceptionFilterPresets from "@/components/exceptions/ExceptionFilterPresets";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { buildPlatformDependencyRegistry, buildPlatformExceptions } from "@/components/platform/platformDependencyRegistry";
 
 function ResolveModal({ exception, open, onClose }) {
   const queryClient = useQueryClient();
@@ -192,6 +194,31 @@ export default function ExceptionQueue() {
     queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
   });
 
+  const { data: cases = [] } = useQuery({
+    queryKey: ["exception-cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 300),
+  });
+
+  const { data: censusVersions = [] } = useQuery({
+    queryKey: ["exception-census"],
+    queryFn: () => base44.entities.CensusVersion.list("-created_date", 500),
+  });
+
+  const { data: quoteScenarios = [] } = useQuery({
+    queryKey: ["exception-quote-scenarios"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500),
+  });
+
+  const { data: enrollmentWindows = [] } = useQuery({
+    queryKey: ["exception-enrollment-windows"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["exception-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 300),
+  });
+
   const dismiss = useMutation({
     mutationFn: (id) => base44.entities.ExceptionItem.update(id, { status: "dismissed" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["exceptions"] }),
@@ -248,6 +275,16 @@ export default function ExceptionQueue() {
     return arr;
   }, [filtered, sortBy]);
 
+  const registry = useMemo(() => buildPlatformDependencyRegistry({
+    cases,
+    censusVersions,
+    scenarios: quoteScenarios,
+    enrollments: enrollmentWindows,
+    renewals,
+    exceptions,
+  }), [cases, censusVersions, quoteScenarios, enrollmentWindows, renewals, exceptions]);
+
+  const generatedPlatformExceptions = useMemo(() => buildPlatformExceptions(registry), [registry]);
   const openCount = exceptions.filter(e => !["resolved","dismissed"].includes(e.status)).length;
 
   const toggleSelect = (id) => {
@@ -422,6 +459,23 @@ export default function ExceptionQueue() {
       {viewMode === "analytics" && (
         <>
           <ExceptionAnalyticsDashboard exceptions={exceptions} />
+          <Card>
+            <CardContent className="p-4 space-y-2">
+              <p className="text-sm font-semibold">Generated Platform Exception Candidates</p>
+              <p className="text-xs text-muted-foreground">Shared orchestration now detects the following unresolved system risks.</p>
+              <div className="space-y-2">
+                {generatedPlatformExceptions.slice(0, 6).map((item, index) => (
+                  <div key={index} className="rounded-lg border bg-muted/20 p-3 text-xs">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-muted-foreground mt-1">{item.description}</p>
+                  </div>
+                ))}
+                {generatedPlatformExceptions.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No generated system exceptions right now.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
           <ExceptionAutomationRules />
         </>
       )}

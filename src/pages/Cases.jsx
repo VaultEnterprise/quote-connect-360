@@ -27,6 +27,7 @@ import CasesSystemSignals from "@/components/cases/CasesSystemSignals";
 import CasesOperationalTable from "@/components/cases/CasesOperationalTable";
 import { exportToCSV } from "@/utils/export-import";
 import { CASE_PRIORITY_ORDER, getCaseWorkflowSignals } from "@/components/cases/caseWorkflow";
+import { buildPlatformDependencyRegistry } from "@/components/platform/platformDependencyRegistry";
 
 const STAGE_OPTIONS = [
   { value: "all",                      label: "All Stages" },
@@ -255,12 +256,22 @@ export default function Cases() {
     escalatedCount: enrichedCases.filter((item) => item.escalated).length,
   }), [enrichedCases]);
 
+  const registry = useMemo(() => buildPlatformDependencyRegistry({
+    cases,
+    tasks,
+    censusVersions,
+    scenarios,
+    enrollments: enrollmentWindows,
+    renewals,
+    exceptions,
+  }), [cases, tasks, censusVersions, scenarios, enrollmentWindows, renewals, exceptions]);
+
   const systemSignals = useMemo(() => ({
-    censusIssueCount: enrichedCases.filter((item) => item.signals.censusIssues.length > 0).length,
-    quoteFailureCount: enrichedCases.filter((item) => item.signals.erroredQuotes.length > 0 || item.signals.expiringQuotes.length > 0).length,
-    enrollmentBlockerCount: enrichedCases.filter((item) => item.signals.enrollmentBlocked || (item.stage === "approved_for_enrollment" && !item.signals.latestEnrollment)).length,
-    renewalRiskCount: enrichedCases.filter((item) => item.signals.renewalAtRisk).length,
-  }), [enrichedCases]);
+    censusIssueCount: registry.systemSummary.censusIssues,
+    quoteFailureCount: registry.systemSummary.quoteFailures,
+    enrollmentBlockerCount: registry.systemSummary.enrollmentBlockers,
+    renewalRiskCount: registry.systemSummary.renewalRisk,
+  }), [registry]);
 
   return (
     <div className="space-y-5">

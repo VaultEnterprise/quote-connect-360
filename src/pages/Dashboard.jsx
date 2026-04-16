@@ -26,6 +26,8 @@ import DomainControlGrid from "@/components/dashboard/DomainControlGrid";
 import RoutedPagesDirectory from "@/components/dashboard/RoutedPagesDirectory";
 import WorkflowBottlenecksPanel from "@/components/dashboard/WorkflowBottlenecksPanel";
 import ActionCenterPanel from "@/components/dashboard/ActionCenterPanel";
+import { buildPlatformDependencyRegistry } from "@/components/platform/platformDependencyRegistry";
+import { buildActionCenterFromRegistry } from "@/components/platform/platformOrchestrationEngine";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
@@ -182,14 +184,18 @@ export default function Dashboard() {
     return items.filter((item) => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 5);
   }, [overdueTasks.length, openExceptions, draftQuotes, pendingSignatures, proposalAttention]);
 
-  const actionCenterItems = useMemo(() => [
-    { label: "Open urgent cases", href: "/cases", meta: `${activeCases.length} active` },
-    { label: "Review census pipeline", href: "/census", meta: `${censusVersions.length} uploads` },
-    { label: "Calculate draft quotes", href: "/quotes", meta: `${draftQuotes} drafts` },
-    { label: "Work enrollment windows", href: "/enrollment", meta: `${enrollmentOpen.length} open` },
-    { label: "Resolve exceptions", href: "/exceptions", meta: `${openExceptions} open` },
-    { label: "Process renewals", href: "/renewals", meta: `${activeRenewals} active` },
-  ], [activeCases.length, censusVersions.length, draftQuotes, enrollmentOpen.length, openExceptions, activeRenewals]);
+  const registry = useMemo(() => buildPlatformDependencyRegistry({
+    cases,
+    tasks,
+    censusVersions,
+    scenarios: quoteScenarios,
+    enrollments,
+    renewals,
+    exceptions,
+    employeeEnrollments,
+  }), [cases, tasks, censusVersions, quoteScenarios, enrollments, renewals, exceptions, employeeEnrollments]);
+
+  const actionCenterItems = useMemo(() => buildActionCenterFromRegistry(registry), [registry]);
 
   const domainCards = useMemo(() => [
     {
@@ -355,8 +361,8 @@ export default function Dashboard() {
 
       <SystemHealthStrip
         metrics={{
-          exceptions: openExceptions,
-          censusIssues,
+          exceptions: registry.systemSummary.exceptionCount,
+          censusIssues: registry.systemSummary.censusIssues,
           stalledCases: stalledCasesCount,
           healthy: healthyDomains,
         }}
