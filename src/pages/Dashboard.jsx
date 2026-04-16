@@ -39,35 +39,27 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: user, isLoading: isUserLoading } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
-  const listBenefitCases = (sort, limit = 100) =>
-    user?.role === "admin"
-      ? base44.entities.BenefitCase.list(sort, limit)
-      : base44.entities.BenefitCase.filter({ assigned_to: user?.email }, sort, limit);
-
-  const listExceptionItems = (sort, limit = 100) =>
-    user?.role === "admin"
-      ? base44.entities.ExceptionItem.list(sort, limit)
-      : base44.entities.ExceptionItem.filter({ assigned_to: user?.email }, sort, limit);
-
-  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases", user?.email, user?.role], enabled: !!user, queryFn: () => listBenefitCases("-created_date", 100) });
-  const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending", user?.email, user?.role], enabled: !!user, queryFn: () => user?.role === "admin" ? base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) : base44.entities.CaseTask.filter({ status: "pending", assigned_to: user?.email }, "-created_date", 200) });
+  const cases = [];
+  const isLoading = false;
+  const casesUpdatedAt = 0;
+  const tasks = [];
+  const tasksUpdatedAt = 0;
   const enrollments = [];
   const enrollmentsUpdatedAt = 0;
   const renewals = [];
   const renewalsUpdatedAt = 0;
   const scenarios = [];
   const scenariosUpdatedAt = 0;
-  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions", user?.email, user?.role], enabled: !!user, queryFn: () => listExceptionItems("-created_date", 100) });
+  const exceptions = [];
+  const exceptionsUpdatedAt = 0;
   const proposals = [];
   const proposalsUpdatedAt = 0;
-  const { data: agencies = [], dataUpdatedAt: agenciesUpdatedAt } = useQuery({ queryKey: ["agencies"], queryFn: () => base44.entities.Agency.list("name", 100) });
+  const agencies = [];
+  const agenciesUpdatedAt = 0;
   const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({ queryKey: DASHBOARD_PRESET_QUERY_KEY, enabled: !!user?.email, queryFn: () => base44.entities.DashboardViewPreset.filter({ created_by: user.email }, "name", 50) });
 
   useEffect(() => {
-    const unsubscribeCases = base44.entities.BenefitCase.subscribe(() => queryClient.invalidateQueries({ queryKey: ["cases"] }));
-    const unsubscribeTasks = base44.entities.CaseTask.subscribe(() => queryClient.invalidateQueries({ queryKey: ["tasks-pending"] }));
-    const unsubscribeExceptions = base44.entities.ExceptionItem.subscribe(() => queryClient.invalidateQueries({ queryKey: ["exceptions"] }));
-    return () => { unsubscribeCases?.(); unsubscribeTasks?.(); unsubscribeExceptions?.(); };
+    return () => {};
   }, [queryClient]);
 
   useEffect(() => {
@@ -109,7 +101,7 @@ export default function Dashboard() {
   const [saveViewName, setSaveViewName] = useState("");
 
   const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
-  const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([["cases"],["tasks-pending"],["exceptions"],["agencies"],DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
+  const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
   const handleSaveView = () => {
     setSaveViewName("");
     setShowSaveViewPanel(true);
