@@ -7,7 +7,6 @@ export default function QuotesKPIBar({ scenarios }) {
   const now = new Date();
 
   const completed = scenarios.filter(s => s.status === "completed");
-  const active = scenarios.filter(s => !["expired"].includes(s.status));
 
   const expiringSoon = scenarios.filter(s => {
     if (!s.expires_at || ["expired"].includes(s.status)) return false;
