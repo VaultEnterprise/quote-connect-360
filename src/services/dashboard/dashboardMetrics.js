@@ -3,23 +3,31 @@ import { CASE_STAGE_GROUPS } from "@/contracts/workflowRegistry";
 import { filterByWindow, filterCasesForDashboard, getComparisonMeta } from "@/utils/dashboardControls";
 
 export function getDashboardScopedData({ cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, filters, user, windowBounds }) {
-  const caseDateValue = (item) => item.last_activity_date || item.updated_date || item.created_date || item.effective_date;
-  const currentCases = filterCasesForDashboard(filterByWindow(cases, caseDateValue, windowBounds), filters, user);
-  const previousCases = filterCasesForDashboard(filterByWindow(cases, caseDateValue, { start: windowBounds.previousStart, end: windowBounds.previousEnd }), filters, user);
-  const currentCaseIds = new Set(currentCases.map((item) => item.id));
-  const previousCaseIds = new Set(previousCases.map((item) => item.id));
+  const safeCases = (cases || []).filter(Boolean);
+  const safeTasks = (tasks || []).filter(Boolean);
+  const safeEnrollments = (enrollments || []).filter(Boolean);
+  const safeRenewals = (renewals || []).filter(Boolean);
+  const safeScenarios = (scenarios || []).filter(Boolean);
+  const safeExceptions = (exceptions || []).filter(Boolean);
+  const safeProposals = (proposals || []).filter(Boolean);
 
-  const scopeLinked = (items, getDateValue, currentIds, previousIds) => ({
-    current: filterByWindow(items, getDateValue, windowBounds).filter((item) => !item.case_id || currentIds.has(item.case_id)),
-    previous: filterByWindow(items, getDateValue, { start: windowBounds.previousStart, end: windowBounds.previousEnd }).filter((item) => !item.case_id || previousIds.has(item.case_id)),
+  const caseDateValue = (item) => item.last_activity_date || item.updated_date || item.created_date || item.effective_date;
+  const currentCases = filterCasesForDashboard(filterByWindow(safeCases, caseDateValue, windowBounds), filters, user);
+  const previousCases = filterCasesForDashboard(filterByWindow(safeCases, caseDateValue, { start: windowBounds.previousStart, end: windowBounds.previousEnd }), filters, user);
+  const currentCaseIds = new Set(currentCases.map((item) => item.id).filter(Boolean));
+  const previousCaseIds = new Set(previousCases.map((item) => item.id).filter(Boolean));
+
+  const linkToCases = (items, currentIds, previousIds) => ({
+    current: items.filter((item) => !item.case_id || currentIds.has(item.case_id)),
+    previous: items.filter((item) => !item.case_id || previousIds.has(item.case_id)),
   });
 
-  const scopedTasks = scopeLinked(tasks, (item) => item.created_date || item.due_date, currentCaseIds, previousCaseIds);
-  const scopedEnrollments = scopeLinked(enrollments, (item) => item.start_date || item.created_date, currentCaseIds, previousCaseIds);
-  const scopedRenewals = scopeLinked(renewals, (item) => item.renewal_date || item.created_date, currentCaseIds, previousCaseIds);
-  const scopedScenarios = scopeLinked(scenarios, (item) => item.created_date || item.quoted_at, currentCaseIds, previousCaseIds);
-  const scopedExceptions = scopeLinked(exceptions, (item) => item.created_date || item.due_by, currentCaseIds, previousCaseIds);
-  const scopedProposals = scopeLinked(proposals, (item) => item.created_date || item.sent_at, currentCaseIds, previousCaseIds);
+  const scopedTasks = linkToCases(safeTasks, currentCaseIds, previousCaseIds);
+  const scopedEnrollments = linkToCases(safeEnrollments, currentCaseIds, previousCaseIds);
+  const scopedRenewals = linkToCases(safeRenewals, currentCaseIds, previousCaseIds);
+  const scopedScenarios = linkToCases(safeScenarios, currentCaseIds, previousCaseIds);
+  const scopedExceptions = linkToCases(safeExceptions, currentCaseIds, previousCaseIds);
+  const scopedProposals = linkToCases(safeProposals, currentCaseIds, previousCaseIds);
 
   return {
     currentCases,

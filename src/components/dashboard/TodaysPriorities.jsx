@@ -7,7 +7,8 @@ import { differenceInDays, format } from "date-fns";
 export default function TodaysPriorities({ tasks, exceptions, cases, enrollments }) {
   const now = new Date();
 
-  const overdueTasks = tasks
+  const overdueTasks = (tasks || [])
+    .filter(Boolean)
     .filter(t => t.due_date && new Date(t.due_date) < now)
     .slice(0, 3)
     .map(t => ({
@@ -19,7 +20,8 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       meta: `Due ${format(new Date(t.due_date), "MMM d")}`,
     }));
 
-  const criticalExceptions = exceptions
+  const criticalExceptions = (exceptions || [])
+    .filter(Boolean)
     .filter(e => !["resolved", "dismissed"].includes(e.status) && ["critical", "high"].includes(e.severity))
     .slice(0, 2)
     .map(e => ({
@@ -31,7 +33,8 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       meta: e.severity,
     }));
 
-  const stalledCases = cases
+  const stalledCases = (cases || [])
+    .filter(Boolean)
     .filter(c => {
       if (["closed", "renewed", "active"].includes(c.stage)) return false;
       const last = c.last_activity_date || c.updated_date || c.created_date;
@@ -47,7 +50,8 @@ export default function TodaysPriorities({ tasks, exceptions, cases, enrollments
       meta: `${differenceInDays(now, new Date(c.last_activity_date || c.updated_date || c.created_date))}d idle`,
     }));
 
-  const closingEnrollments = enrollments
+  const closingEnrollments = (enrollments || [])
+    .filter(Boolean)
     .filter(e => ["open", "closing_soon"].includes(e.status) && e.end_date && differenceInDays(new Date(e.end_date), now) <= 3)
     .slice(0, 2)
     .map(e => ({
