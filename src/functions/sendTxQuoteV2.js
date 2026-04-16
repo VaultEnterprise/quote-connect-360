@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { txQuoteCaseId } = await req.json();
+    const { txQuoteCaseId, destinationCode } = await req.json();
     if (!txQuoteCaseId) return Response.json({ error: 'TxQuote case is required' }, { status: 400 });
 
     const txQuoteCase = (await base44.entities.TxQuoteCase.filter({ id: txQuoteCaseId }))[0];
@@ -36,9 +36,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'TxQuote is not ready to send' }, { status: 400 });
     }
 
-    const selectedDestinations = destinations.filter((item) => item.is_selected);
+    const selectedDestinations = destinationCode
+      ? destinations.filter((item) => item.destination_code === destinationCode)
+      : destinations.filter((item) => item.is_selected);
     if (!selectedDestinations.length) {
-      return Response.json({ error: 'No destinations selected' }, { status: 400 });
+      return Response.json({ error: destinationCode ? 'Destination not found' : 'No destinations selected' }, { status: 400 });
     }
 
     const senderEmail = Deno.env.get('TXQUOTE_FROM_EMAIL');
@@ -164,11 +166,13 @@ Deno.serve(async (req) => {
 
     const sentCount = results.filter((item) => item.status === 'sent').length;
     const allSent = sentCount === selectedDestinations.length && selectedDestinations.length > 0;
+    const successfulDestinationCodes = results.filter((item) => item.status === 'sent').map((item) => item.destination_code);
+    const totalSentDestinationCount = destinations.filter((item) => item.sent_status === 'sent' || successfulDestinationCodes.includes(item.destination_code)).length;
 
     await base44.entities.TxQuoteCase.update(txQuoteCaseId, {
-      status: allSent ? 'sent_complete' : sentCount > 0 ? 'sent_partial' : txQuoteCase.status,
-      sent_destination_count: sentCount,
-      selected_destination_count: selectedDestinations.length,
+      status: totalSentDestinationCount === destinations.filter((item) => item.is_selected).length && totalSentDestinationCount > 0 ? 'sent_complete' : sentCount > 0 || totalSentDestinationCount > 0 ? 'sent_partial' : txQuoteCase.status,
+      sent_destination_count: totalSentDestinationCount,
+      selected_destination_count: destinations.filter((item) => item.is_selected).length,
       last_sent_at: new Date().toISOString(),
       updated_by_email: user.email,
     });
@@ -179,7 +183,7 @@ Deno.serve(async (req) => {
       last_activity_date: new Date().toISOString(),
     });
 
-    return Response.json({ success: allSent, sentCount, totalSelected: selectedDestinations.length, results });
+    return Response.json({ success: allSent, sentCount, totalSelected: selectedDestinations.length, results, resentDestinationCode: destinationCode || null });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

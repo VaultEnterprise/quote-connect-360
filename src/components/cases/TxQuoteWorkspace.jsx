@@ -82,6 +82,16 @@ export default function TxQuoteWorkspace({ open, onClose, caseData, censusVersio
       ]);
     },
   });
+  const resendMutation = useMutation({
+    mutationFn: (destinationCode) => base44.functions.invoke("sendTxQuoteV2", { txQuoteCaseId: data.txQuoteCase.id, destinationCode }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["txquote-workspace", caseData?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["case", caseData?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["activity", caseData?.id] }),
+      ]);
+    },
+  });
 
   const handleDestinationToggle = async (destination, checked) => {
     const defaultTo = data.contacts.find((item) => item.destination_code === destination.destination_code && item.contact_type === "to" && item.is_default && item.is_active);
@@ -135,6 +145,16 @@ export default function TxQuoteWorkspace({ open, onClose, caseData, censusVersio
                       <div><span className="text-muted-foreground">CC:</span> {destination.email_cc || "—"}</div>
                       <div><span className="text-muted-foreground">Sent:</span> {destination.sent_at ? new Date(destination.sent_at).toLocaleString() : "Not yet"}</div>
                     </div>
+                    {(destination.sent_status === "sent" || destination.sent_status === "failed") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => resendMutation.mutate(destination.destination_code)}
+                        disabled={resendMutation.isPending}
+                      >
+                        {resendMutation.isPending ? "Resending..." : `Resend to ${destination.destination_code}`}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
