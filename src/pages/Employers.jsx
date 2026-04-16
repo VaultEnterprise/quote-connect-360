@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,6 +22,9 @@ import EmployerDetailDrawer from "@/components/employer/EmployerDetailDrawer";
 import { BulkActionsBar, EmployerImportModal } from "@/components/employer/BulkActionsBar";
 import { QuickCreateCase } from "@/components/employer/QuickCreateCase";
 import { RenewalDashboard } from "@/components/employer/RenewalDashboard";
+import EmployerControlSummary from "@/components/employer/EmployerControlSummary";
+import EmployerDependencyPanel from "@/components/employer/EmployerDependencyPanel";
+import { buildEmployerControlPlane, buildEmployerConfigDraft, serializeEmployerConfigDraft } from "@/components/employer/employerConfigEngine";
 
 const INDUSTRIES = [
   "Accommodation & Food Services",
@@ -69,6 +72,7 @@ function EmployerModal({ employer, open, onClose, agencies }) {
     primary_contact_name: employer?.primary_contact_name || "",
     primary_contact_email: employer?.primary_contact_email || "",
     primary_contact_phone: employer?.primary_contact_phone || "",
+    ...buildEmployerConfigDraft(employer),
   });
 
   const save = useMutation({
@@ -77,6 +81,7 @@ function EmployerModal({ employer, open, onClose, agencies }) {
         ...form,
         employee_count: Number(form.employee_count) || undefined,
         eligible_count: Number(form.eligible_count) || undefined,
+        settings: serializeEmployerConfigDraft(form),
       };
       return isEdit
         ? base44.entities.EmployerGroup.update(employer.id, payload)
@@ -168,6 +173,63 @@ function EmployerModal({ employer, open, onClose, agencies }) {
               <div><Label>Phone</Label><Input value={form.primary_contact_phone} onChange={e => set("primary_contact_phone", e.target.value)} className="mt-1.5" /></div>
             </div>
           </div>
+
+          <div className="border-t pt-4 space-y-4">
+            <p className="text-sm font-medium">Employer Control Plane</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Waiting Period (days)</Label><Input type="number" value={form.eligibility_waiting_period_days} onChange={e => set("eligibility_waiting_period_days", e.target.value)} className="mt-1.5" /></div>
+              <div><Label>Minimum Hours / Week</Label><Input type="number" value={form.eligibility_minimum_hours_per_week} onChange={e => set("eligibility_minimum_hours_per_week", e.target.value)} className="mt-1.5" /></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Contribution Strategy</Label>
+                <Select value={form.contribution_strategy} onValueChange={v => set("contribution_strategy", v)}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="flat_dollar">Flat Dollar</SelectItem>
+                    <SelectItem value="defined_contribution">Defined Contribution</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Enabled Products</Label><Input value={form.enabled_products} onChange={e => set("enabled_products", e.target.value)} className="mt-1.5" placeholder="medical, dental, vision" /></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Employer % Employee</Label><Input type="number" value={form.contribution_employee_percent} onChange={e => set("contribution_employee_percent", e.target.value)} className="mt-1.5" /></div>
+              <div><Label>Employer % Dependent</Label><Input type="number" value={form.contribution_dependent_percent} onChange={e => set("contribution_dependent_percent", e.target.value)} className="mt-1.5" /></div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Billing Method</Label>
+                <Select value={form.billing_method} onValueChange={v => set("billing_method", v)}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="carrier_invoice">Carrier Invoice</SelectItem>
+                    <SelectItem value="self_bill">Self Bill</SelectItem>
+                    <SelectItem value="payroll_deduction">Payroll Deduction</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Payroll System</Label>
+                <Select value={form.payroll_system} onValueChange={v => set("payroll_system", v)}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="adp">ADP</SelectItem>
+                    <SelectItem value="paychex">Paychex</SelectItem>
+                    <SelectItem value="workday">Workday</SelectItem>
+                    <SelectItem value="gusto">Gusto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -210,6 +272,26 @@ export default function Employers() {
     queryFn: () => base44.entities.Document.list("-created_date", 500),
   });
 
+  const { data: censusMembers = [] } = useQuery({
+    queryKey: ["employer-census-members"],
+    queryFn: () => base44.entities.CensusMember.list("-created_date", 1000),
+  });
+
+  const { data: proposals = [] } = useQuery({
+    queryKey: ["employer-proposals"],
+    queryFn: () => base44.entities.Proposal.list("-created_date", 300),
+  });
+
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["employer-enrollments"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 300),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["employer-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 300),
+  });
+
   // Build case count map per employer group
   const caseCountMap = useMemo(() => {
     const map = {};
@@ -250,6 +332,18 @@ export default function Employers() {
     return days >= 0 && days <= 60;
   }), [employers]);
 
+  const employerControlPlane = useMemo(() => {
+    const firstEmployer = filtered[0];
+    if (!firstEmployer) return null;
+    return buildEmployerControlPlane(firstEmployer, {
+      censusMembers: censusMembers.filter((member) => member.case_id && cases.some((item) => item.id === member.case_id && item.employer_group_id === firstEmployer.id)),
+      proposals: proposals.filter((proposal) => cases.some((item) => item.id === proposal.case_id && item.employer_group_id === firstEmployer.id)),
+      enrollments: enrollments.filter((enrollment) => cases.some((item) => item.id === enrollment.case_id && item.employer_group_id === firstEmployer.id)),
+      renewals: renewals.filter((renewal) => renewal.employer_group_id === firstEmployer.id),
+      cases: cases.filter((item) => item.employer_group_id === firstEmployer.id),
+    });
+  }, [filtered, censusMembers, proposals, enrollments, renewals, cases]);
+
   return (
     <div>
       <PageHeader
@@ -266,6 +360,9 @@ export default function Employers() {
           </div>
         }
       />
+
+      <EmployerControlSummary controlPlane={employerControlPlane} />
+      <EmployerDependencyPanel controlPlane={employerControlPlane} />
 
       {/* Renewal Dashboard */}
       {showRenewalDashboard && (
