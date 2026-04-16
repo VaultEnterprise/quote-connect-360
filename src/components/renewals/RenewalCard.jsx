@@ -27,8 +27,20 @@ export default function RenewalCard({ renewal, onEdit, onClick, isSelected, onTo
   const [showNotes, setShowNotes] = useState(false);
 
   const updateStatus = useMutation({
-    mutationFn: (status) => base44.entities.RenewalCycle.update(renewal.id, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["renewals-all"] }),
+    mutationFn: async (status) => {
+      const updated = await base44.entities.RenewalCycle.update(renewal.id, { status });
+      if (renewal.case_id) {
+        await base44.entities.BenefitCase.update(renewal.case_id, {
+          stage: status === "completed" ? "renewed" : "renewal_pending",
+          last_activity_date: new Date().toISOString(),
+        });
+      }
+      return updated;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
+      queryClient.invalidateQueries({ queryKey: ["case", renewal.case_id] });
+    },
   });
 
   const daysUntilRenewal = renewal.renewal_date

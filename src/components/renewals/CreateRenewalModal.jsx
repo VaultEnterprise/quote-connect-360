@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,14 +25,32 @@ export default function CreateRenewalModal({ open, onClose }) {
 
   const { data: activeCases = [] } = useQuery({
     queryKey: ["active-cases-for-renewal"],
-    queryFn: () => base44.entities.BenefitCase.filter({ stage: "active" }, "-created_date", 50),
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
     enabled: open,
   });
 
+  const eligibleCases = useMemo(() => {
+    return activeCases.filter((c) => ["active", "renewal_pending"].includes(c.stage));
+  }, [activeCases]);
+
+  const selectedCase = eligibleCases.find(c => c.id === selectedCaseId);
+
+  useEffect(() => {
+    if (!selectedCase) return;
+    if (!renewalDate && selectedCase.effective_date) {
+      const current = new Date(selectedCase.effective_date);
+      const next = new Date(current.getFullYear() + 1, current.getMonth(), current.getDate());
+      setRenewalDate(next.toISOString().slice(0, 10));
+    }
+  }, [selectedCase, renewalDate]);
+
   const create = useMutation({
     mutationFn: async () => {
-      const selectedCase = activeCases.find(c => c.id === selectedCaseId);
       if (!selectedCase) throw new Error("Case not found");
+
+      const existingRenewals = await base44.entities.RenewalCycle.filter({ case_id: selectedCaseId }, "-created_date", 20);
+      const hasOpenRenewal = existingRenewals.some((renewal) => renewal.status !== "completed");
+      if (hasOpenRenewal) throw new Error("This case already has an active renewal cycle");
 
       const renewal = await base44.entities.RenewalCycle.create({
         case_id: selectedCaseId,
@@ -45,7 +63,16 @@ export default function CreateRenewalModal({ open, onClose }) {
       });
       await base44.entities.BenefitCase.update(selectedCaseId, {
         stage: "renewal_pending",
+        case_type: "renewal",
         last_activity_date: new Date().toISOString(),
+      });
+      await base44.entities.ActivityLog.create({
+        case_id: selectedCaseId,
+        action: "Renewal created",
+        detail: `Renewal cycle opened for ${selectedCase.employer_name}`,
+        entity_type: "RenewalCycle",
+        entity_id: renewal.id,
+        new_value: renewalDate,
       });
       return renewal;
     },
@@ -95,7 +122,10 @@ export default function CreateRenewalModal({ open, onClose }) {
                 <SelectValue placeholder="Select a case" />
               </SelectTrigger>
               <SelectContent>
-                {activeCases.map(c => (
+                {eligibleCases.length === 0 && (
+                  <SelectItem value="_none" disabled>No eligible cases</SelectItem>
+                )}
+                {eligibleCases.map(c => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.employer_name} • {c.case_number || c.id.slice(-6)}
                   </SelectItem>
@@ -137,14 +167,14 @@ export default function CreateRenewalModal({ open, onClose }) {
 
           <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 flex gap-2 text-xs text-blue-700">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>A new renewal cycle for {activeCases.find(c => c.id === selectedCaseId)?.employer_name || "this case"} will be created and marked as "Pre-Renewal".</span>
+            <span>A new renewal cycle for {selectedCase?.employer_name || "this case"} will be created and marked as "Pre-Renewal".</span>
           </div>
 
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={handleClose}>
               Cancel
             </Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={create.isPending}>
+            <Button className="flex-1" onClick={handleSubmit} disabled={create.isPending || eligibleCases.length === 0}>
               {create.isPending ? "Creating..." : "Create Renewal"}
             </Button>
           </div>

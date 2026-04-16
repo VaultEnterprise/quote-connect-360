@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, LayoutGrid, List, Plus, Download, X, SortAsc, CalendarDays, Users, XCircle, CheckSquare } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { RefreshCw, LayoutGrid, List, Plus, Download, X, SortAsc, CalendarDays, XCircle, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -62,8 +63,18 @@ export default function Renewals() {
   });
 
   const bulkStatusUpdate = useMutation({
-    mutationFn: ({ ids, status }) =>
-      Promise.all(ids.map(id => base44.entities.RenewalCycle.update(id, { status }))),
+    mutationFn: async ({ ids, status }) => {
+      const allRenewals = renewals.filter((renewal) => ids.includes(renewal.id));
+      await Promise.all(allRenewals.map(async (renewal) => {
+        await base44.entities.RenewalCycle.update(renewal.id, { status });
+        if (renewal.case_id) {
+          await base44.entities.BenefitCase.update(renewal.case_id, {
+            stage: status === "completed" ? "renewed" : "renewal_pending",
+            last_activity_date: new Date().toISOString(),
+          });
+        }
+      }));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
       setSelectedIds([]);
@@ -161,11 +172,12 @@ export default function Renewals() {
   };
 
   const handleExportCSV = () => {
+    const sanitize = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
     const rows = [
       ["Employer", "Status", "Renewal Date", "Current Premium", "Renewal Premium", "Rate Change %", "Disruption Score", "Recommendation", "Assigned To"],
-      ...filtered.map(r => [r.employer_name || "", r.status || "", r.renewal_date || "", r.current_premium || "", r.renewal_premium || "", r.rate_change_percent || "", r.disruption_score || "", r.recommendation || "", r.assigned_to || ""]),
+      ...sorted.map(r => [r.employer_name || "", r.status || "", r.renewal_date || "", r.current_premium || "", r.renewal_premium || "", r.rate_change_percent || "", r.disruption_score || "", r.recommendation || "", r.assigned_to || ""]),
     ];
-    const csv = rows.map(r => r.join(",")).join("\n");
+    const csv = rows.map(r => r.map(sanitize).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "renewals.csv"; a.click();
@@ -350,7 +362,7 @@ export default function Renewals() {
       ) : viewMode === "pipeline" ? (
         <RenewalPipelineView renewals={sorted} onSelect={setSelectedRenewal} onEdit={setSelectedRenewal} />
       ) : viewMode === "calendar" ? (
-        <RenewalCalendarView renewals={renewals} onSelect={setSelectedRenewal} />
+        <RenewalCalendarView renewals={sorted} onSelect={setSelectedRenewal} />
       ) : (
         <div className="space-y-2">
           {sorted.map(renewal => (

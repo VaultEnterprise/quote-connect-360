@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
 
@@ -35,9 +35,24 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
     rate_change_percent: renewal?.rate_change_percent || 0,
     disruption_score: renewal?.disruption_score || 0,
     recommendation: renewal?.recommendation || "",
-    decision: renewal?.decision || "",
+    decision: renewal?.decision || "pending",
     notes: renewal?.notes || "",
+    status: renewal?.status || "pre_renewal",
   });
+
+  useEffect(() => {
+    setFormData({
+      current_premium: renewal?.current_premium || 0,
+      renewal_premium: renewal?.renewal_premium || 0,
+      rate_change_percent: renewal?.rate_change_percent || 0,
+      disruption_score: renewal?.disruption_score || 0,
+      recommendation: renewal?.recommendation || "",
+      decision: renewal?.decision || "pending",
+      notes: renewal?.notes || "",
+      status: renewal?.status || "pre_renewal",
+    });
+    setIsEditing(false);
+  }, [renewal]);
 
   const { data: linkedCase } = useQuery({
     queryKey: ["renewal-case", renewal?.case_id],
@@ -45,18 +60,74 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
     enabled: open && !!renewal?.case_id,
   });
 
+  const derivedStatus = useMemo(() => {
+    if (formData.decision === "accepted_renewal") return "decision_made";
+    if (formData.decision === "requests_changes") return "employer_review";
+    if (formData.decision === "accepted_new_quote") return "decision_made";
+    if (formData.decision === "declined") return "completed";
+    return formData.status;
+  }, [formData.decision, formData.status]);
+
   const update = useMutation({
-    mutationFn: () => base44.entities.RenewalCycle.update(renewal.id, formData),
+    mutationFn: async () => {
+      const payload = {
+        ...formData,
+        status: derivedStatus,
+        current_premium: Number(formData.current_premium) || 0,
+        renewal_premium: Number(formData.renewal_premium) || 0,
+        rate_change_percent: Number(formData.rate_change_percent) || 0,
+        disruption_score: Number(formData.disruption_score) || 0,
+        decision: formData.decision === "pending" ? "" : formData.decision,
+        decision_date: formData.decision && formData.decision !== "pending" ? new Date().toISOString().slice(0, 10) : renewal?.decision_date,
+      };
+
+      const updated = await base44.entities.RenewalCycle.update(renewal.id, payload);
+
+      if (renewal.case_id) {
+        const caseUpdate = {
+          last_activity_date: new Date().toISOString(),
+        };
+
+        if (payload.status === "completed" && payload.decision === "accepted_renewal") {
+          caseUpdate.stage = "renewed";
+        } else if (["pre_renewal", "marketed", "options_prepared", "employer_review", "decision_made", "install_renewal", "active_renewal"].includes(payload.status)) {
+          caseUpdate.stage = "renewal_pending";
+        }
+
+        await base44.entities.BenefitCase.update(renewal.case_id, caseUpdate);
+        await base44.entities.ActivityLog.create({
+          case_id: renewal.case_id,
+          action: "Renewal updated",
+          detail: `${renewal.employer_name || "Renewal"} updated to ${payload.status}`,
+          entity_type: "RenewalCycle",
+          entity_id: renewal.id,
+          new_value: JSON.stringify({ status: payload.status, decision: payload.decision, recommendation: payload.recommendation }),
+        });
+      }
+
+      return updated;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
+      queryClient.invalidateQueries({ queryKey: ["renewal-case", renewal?.case_id] });
+      queryClient.invalidateQueries({ queryKey: ["case", renewal?.case_id] });
       setIsEditing(false);
     },
   });
 
   const deleteRenewal = useMutation({
-    mutationFn: () => base44.entities.RenewalCycle.delete(renewal.id),
+    mutationFn: async () => {
+      await base44.entities.RenewalCycle.delete(renewal.id);
+      if (renewal.case_id) {
+        await base44.entities.BenefitCase.update(renewal.case_id, {
+          stage: "active",
+          last_activity_date: new Date().toISOString(),
+        });
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });
+      queryClient.invalidateQueries({ queryKey: ["case", renewal?.case_id] });
       onClose();
     },
   });
@@ -100,7 +171,7 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
             <div>
               <Label className="text-xs">Status</Label>
               <div className="mt-1.5">
-                <StatusBadge status={renewal?.status} />
+                <StatusBadge status={derivedStatus} />
               </div>
             </div>
             {renewal?.renewal_date && (
@@ -248,7 +319,7 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
                     <SelectValue placeholder="Select employer decision" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={null}>— Pending —</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="accepted_renewal">Accepted Renewal</SelectItem>
                     <SelectItem value="requests_changes">Requests Changes</SelectItem>
                     <SelectItem value="accepted_new_quote">Accepted New Quote</SelectItem>
@@ -260,13 +331,13 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
               {/* Recommendation CTAs */}
               {!isEditing && (
                 <div className="pt-2 border-t space-y-2">
-                  {formData.recommendation === "market" && (
-                    <Button variant="outline" size="sm" className="w-full text-xs">
-                      Create Quote Case
+                  {formData.recommendation === "market" && caseLink && (
+                    <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+                      <a href={`/cases/${caseLink.id}`} target="_blank" rel="noreferrer">Open Linked Case</a>
                     </Button>
                   )}
                   {formData.recommendation === "renew_as_is" && formData.decision === "accepted_renewal" && (
-                    <Button variant="outline" size="sm" className="w-full text-xs">
+                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => setIsEditing(true)}>
                       Advance to Install
                     </Button>
                   )}
