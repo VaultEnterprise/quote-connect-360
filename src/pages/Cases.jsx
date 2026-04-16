@@ -25,6 +25,7 @@ import CasesSystemSignals from "@/components/cases/CasesSystemSignals";
 import CasesOperationalTable from "@/components/cases/CasesOperationalTable";
 import { exportToCSV } from "@/utils/export-import";
 import { CASE_PRIORITY_ORDER, getCaseWorkflowSignals } from "@/components/cases/caseWorkflow";
+import { getTxQuoteButtonState } from "@/components/cases/txQuoteEngine";
 import { buildPlatformDependencyRegistry } from "@/components/platform/platformDependencyRegistry";
 import { buildRateDependencySummary } from "@/components/rates/rateGovernanceEngine";
 
@@ -136,6 +137,21 @@ export default function Cases() {
     queryFn: () => base44.entities.EmployeeEnrollment.list("-created_date", 1000),
   });
 
+  const { data: txQuoteCases = [] } = useQuery({
+    queryKey: ["cases-page-txquote-cases"],
+    queryFn: () => base44.entities.TxQuoteCase.list("-created_date", 300),
+  });
+
+  const { data: txQuoteDestinations = [] } = useQuery({
+    queryKey: ["cases-page-txquote-destinations"],
+    queryFn: () => base44.entities.TxQuoteDestination.list("-created_date", 1000),
+  });
+
+  const { data: txQuoteReadinessResults = [] } = useQuery({
+    queryKey: ["cases-page-txquote-readiness"],
+    queryFn: () => base44.entities.TxQuoteReadinessResult.list("-created_date", 2000),
+  });
+
   const caseRelations = useMemo(() => {
     const relationMap = {};
     cases.forEach((item) => {
@@ -184,6 +200,16 @@ export default function Cases() {
         hasRateGap && { label: "Rates", icon: AlertTriangle, tone: "text-red-700 border-red-200 bg-red-50" },
       ].filter(Boolean);
 
+      const currentTxQuoteCase = txQuoteCases.find((tx) => tx.case_id === item.id);
+      const currentTxQuoteDestinations = currentTxQuoteCase ? txQuoteDestinations.filter((destination) => destination.txquote_case_id === currentTxQuoteCase.id) : [];
+      const currentTxQuoteReadiness = currentTxQuoteCase ? txQuoteReadinessResults.filter((result) => result.txquote_case_id === currentTxQuoteCase.id) : [];
+      const txQuoteState = getTxQuoteButtonState({
+        txQuoteCase: currentTxQuoteCase,
+        readinessResults: currentTxQuoteReadiness,
+        destinations: currentTxQuoteDestinations,
+        censusVersions: related.censusVersions,
+      });
+
       return {
         ...item,
         related,
@@ -194,9 +220,11 @@ export default function Cases() {
         staleDays: signals.staleDays,
         slaRisk: signals.slaRisk,
         slaLabel: signals.slaRisk ? "At risk" : "On track",
+        txQuoteCase: currentTxQuoteCase,
+        txQuoteState,
       };
     });
-  }, [cases, caseRelations, scenarioPlans, plansMissingRateIds]);
+  }, [cases, caseRelations, scenarioPlans, plansMissingRateIds, txQuoteCases, txQuoteDestinations, txQuoteReadinessResults]);
 
   const filtered = useMemo(() => {
     let result = enrichedCases.filter((c) => {

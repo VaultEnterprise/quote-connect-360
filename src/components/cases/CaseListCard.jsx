@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, AlertTriangle, ChevronRight, Clock } from "lucide-react";
+import { Calendar, Users, AlertTriangle, ChevronRight, Clock, Send } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CaseHealthScore from "./CaseHealthScore";
 import { format, differenceInDays, parseISO, isAfter } from "date-fns";
@@ -76,6 +76,11 @@ export default function CaseListCard({ c }) {
                   {c.hasRateGap && (
                     <span className="text-xs text-red-600 font-medium flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" />rate gap
+                    </span>
+                  )}
+                  {c.txQuoteState && (
+                    <span className={`text-xs font-medium flex items-center gap-1 ${c.txQuoteState.tone === "success" ? "text-emerald-600" : c.txQuoteState.tone === "warning" ? "text-amber-600" : "text-muted-foreground"}`}>
+                      <Send className="w-3 h-3" />{c.txQuoteState.label}
                     </span>
                   )}
                 </div>

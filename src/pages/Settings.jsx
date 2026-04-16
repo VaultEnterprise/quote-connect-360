@@ -24,6 +24,8 @@ import UserManualLibrary from "@/components/help/UserManualLibrary";
 import UserManualViewer from "@/components/help/UserManualViewer";
 import UserManualGenerator from "@/components/help/UserManualGenerator";
 import UserManualManager from "@/components/help/UserManualManager";
+import TxQuoteRulesPanel from "@/components/settings/TxQuoteRulesPanel";
+import TxQuoteContactsPanel from "@/components/settings/TxQuoteContactsPanel";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -119,6 +121,9 @@ export default function Settings() {
               </TabsTrigger>
               <TabsTrigger value="quote-routing" className="flex items-center gap-2">
                 <Mail className="w-4 h-4" /> Quote Routing
+              </TabsTrigger>
+              <TabsTrigger value="txquote-admin" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" /> TxQuote Admin
               </TabsTrigger>
               <TabsTrigger value="features" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" /> Features
@@ -218,6 +223,11 @@ export default function Settings() {
 
             <TabsContent value="quote-routing" className="mt-6">
               <QuoteProviderRoutingPanel />
+            </TabsContent>
+
+            <TabsContent value="txquote-admin" className="mt-6 space-y-6">
+              <TxQuoteRulesPanel />
+              <TxQuoteContactsPanel />
             </TabsContent>
 
             {/* Features */}
