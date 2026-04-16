@@ -26,11 +26,15 @@ export default function TeamWorkload({ cases = [], tasks = [] }) {
     }
   });
 
-  const userList = Object.entries(assignedUsers).map(([email, data]) => ({
-    email,
-    ...data,
-    load: Math.round((data.cases / Math.max(...Object.values(assignedUsers).map(u => u.cases))) * 100) || 0,
-  }));
+  const maxCases = Math.max(1, ...Object.values(assignedUsers).map(u => u.cases || 0));
+
+  const userList = Object.entries(assignedUsers)
+    .map(([email, data]) => ({
+      email,
+      ...data,
+      load: Math.round(((data.cases || 0) / maxCases) * 100),
+    }))
+    .sort((a, b) => (b.cases + b.overdue) - (a.cases + a.overdue));
 
   return (
     <Card>

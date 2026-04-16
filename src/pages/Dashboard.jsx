@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -113,15 +113,22 @@ export default function Dashboard() {
     };
   }, [queryClient]);
 
-  const activeCases = cases.filter(c => !["closed", "renewed"].includes(c.stage));
-  const quotingCases = cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage));
-  const enrollmentOpen = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
-  // "pending" status filter on the query already scopes this correctly;
-  // overdue = pending + past due_date
-  const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
-  const openExceptions = exceptions.filter(e => !["resolved", "dismissed"].includes(e.status));
-  // Only aggregate completed scenarios — drafts and expired produce misleading totals
-  const totalPremium = scenarios.filter(s => s.status === "completed" && s.total_monthly_premium).reduce((sum, s) => sum + s.total_monthly_premium, 0);
+  const activeCases = useMemo(() => cases.filter(c => !["closed", "renewed"].includes(c.stage)), [cases]);
+  const quotingCases = useMemo(() => cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage)), [cases]);
+  const enrollmentOpen = useMemo(() => enrollments.filter(e => ["open", "closing_soon"].includes(e.status)), [enrollments]);
+  const overdueTasks = useMemo(() => tasks.filter(t => t.due_date && new Date(t.due_date) < new Date()), [tasks]);
+  const openExceptions = useMemo(() => exceptions.filter(e => !["resolved", "dismissed"].includes(e.status)), [exceptions]);
+  const totalPremium = useMemo(() => scenarios.filter(s => s.status === "completed" && s.total_monthly_premium).reduce((sum, s) => sum + s.total_monthly_premium, 0), [scenarios]);
+  const upcomingRenewals90 = useMemo(() => renewals.filter(r => r.renewal_date && differenceInDays(new Date(r.renewal_date), new Date()) <= 90 && differenceInDays(new Date(r.renewal_date), new Date()) >= 0).length, [renewals]);
+  const activeEnrollmentWindows = useMemo(() => enrollments.filter(e => e.total_eligible > 0 && ["open", "closing_soon", "closed", "finalized"].includes(e.status)), [enrollments]);
+  const avgEnrollmentRate = useMemo(() => {
+    if (activeEnrollmentWindows.length === 0) return null;
+    const avg = Math.round(activeEnrollmentWindows.reduce((s, e) => {
+      const rate = e.participation_rate ?? Math.round(((e.enrolled_count || 0) / (e.total_eligible || 1)) * 100);
+      return s + rate;
+    }, 0) / activeEnrollmentWindows.length);
+    return avg;
+  }, [activeEnrollmentWindows]);
 
   if (isLoading) return <DashboardSkeleton />;
 
@@ -214,25 +221,13 @@ export default function Dashboard() {
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1">Upcoming Renewals (90d)</p>
-            <p className="text-xl font-bold text-amber-600">{renewals.filter(r => r.renewal_date && differenceInDays(new Date(r.renewal_date), new Date()) <= 90 && differenceInDays(new Date(r.renewal_date), new Date()) >= 0).length}</p>
+            <p className="text-xl font-bold text-amber-600">{upcomingRenewals90}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1">Avg Enrollment Rate</p>
-            <p className="text-xl font-bold text-green-600">
-              {(() => {
-                  // Only average windows that have actual activity — zeros from
-                  // scheduled/not-started windows would pull the average down artificially
-                  const active = enrollments.filter(e => e.total_eligible > 0 && e.enrolled_count > 0);
-                  if (active.length === 0) return "—";
-                  const avg = Math.round(active.reduce((s, e) => {
-                    const rate = e.participation_rate ?? Math.round((e.enrolled_count / e.total_eligible) * 100);
-                    return s + rate;
-                  }, 0) / active.length);
-                  return `${avg}%`;
-                })()}
-            </p>
+            <p className="text-xl font-bold text-green-600">{avgEnrollmentRate !== null ? `${avgEnrollmentRate}%` : "—"}</p>
           </CardContent>
         </Card>
       </div>
@@ -276,7 +271,8 @@ export default function Dashboard() {
                       <span className="text-[11px] text-muted-foreground truncate">{d.name}</span>
                       <span className="text-[11px] font-semibold ml-auto">{d.value}</span>
                     </div>
-                  ))}
+                  </Link>
+                ))}
                 </div>
               </div>
             )}
@@ -358,7 +354,8 @@ export default function Dashboard() {
                   </Link>
                 ))}
                 {tasks.slice(0, 3).map(t => (
-                  <div key={t.id} className="p-2.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
+                  <Link key={t.id} to="/tasks" className="block">
+                    <div className="p-2.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
                     <p className="text-xs font-medium truncate">{t.title}</p>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-[10px] text-muted-foreground">{t.employer_name}</span>

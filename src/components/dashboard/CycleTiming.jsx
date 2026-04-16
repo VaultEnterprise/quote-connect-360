@@ -5,24 +5,34 @@ import { Zap } from "lucide-react";
 import { differenceInDays } from "date-fns";
 
 export default function CycleTiming({ cases = [] }) {
-  // Calculate average cycle time per stage
   const STAGES = ["draft", "census_in_progress", "ready_for_quote", "quoting", "proposal_ready", "employer_review", "approved_for_enrollment", "enrollment_open", "active"];
-  
+
+  const caseAgeDays = cases
+    .map(c => {
+      const created = c.created_date ? new Date(c.created_date) : null;
+      if (!created || Number.isNaN(created.getTime())) return null;
+      return Math.max(0, differenceInDays(new Date(), created));
+    })
+    .filter(v => v !== null);
+
   const stageData = STAGES.map(stage => {
     const casesInStage = cases.filter(c => c.stage === stage);
     if (casesInStage.length === 0) return { stage, days: 0, count: 0 };
-    
+
     const avgDays = Math.round(
       casesInStage.reduce((sum, c) => {
-        const stageTime = c.last_activity_date ? differenceInDays(new Date(c.last_activity_date), new Date(c.created_date)) : 0;
-        return sum + stageTime;
+        const created = c.created_date ? new Date(c.created_date) : null;
+        if (!created || Number.isNaN(created.getTime())) return sum;
+        return sum + Math.max(0, differenceInDays(new Date(), created));
       }, 0) / casesInStage.length
     );
-    
+
     return { stage: stage.replace(/_/g, " "), days: avgDays, count: casesInStage.length };
   }).filter(d => d.count > 0);
 
-  const avgCycleTime = stageData.length > 0 ? Math.round(stageData.reduce((sum, d) => sum + d.days, 0) / stageData.length) : 0;
+  const avgCycleTime = caseAgeDays.length > 0
+    ? Math.round(caseAgeDays.reduce((sum, days) => sum + days, 0) / caseAgeDays.length)
+    : 0;
 
   return (
     <Card>

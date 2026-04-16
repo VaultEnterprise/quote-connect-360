@@ -15,7 +15,7 @@ export default function EnrollmentForecast({ enrollments = [] }) {
 
   const now = new Date();
   enrollments.forEach(e => {
-    if (e.status !== "closed" && e.end_date) {
+    if (!["closed", "finalized"].includes(e.status) && e.end_date) {
       const daysLeft = differenceInDays(new Date(e.end_date), now);
       if (daysLeft >= 0) {
         const item = forecastData.find(f => daysLeft >= f.range[0] && daysLeft <= f.range[1]);
