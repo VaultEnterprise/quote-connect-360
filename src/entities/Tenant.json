@@ -1,0 +1,25 @@
+{
+  "name": "Tenant",
+  "type": "object",
+  "properties": {
+    "master_group_id": {
+      "type": "string",
+      "description": "Parent master group"
+    },
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "archived"],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": ["master_group_id", "name", "code"]
+}

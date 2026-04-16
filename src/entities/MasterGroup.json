@@ -1,0 +1,23 @@
+{
+  "name": "MasterGroup",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Master group display name"
+    },
+    "code": {
+      "type": "string",
+      "description": "Unique internal master group code"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "archived"],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": ["name", "code"]
+}

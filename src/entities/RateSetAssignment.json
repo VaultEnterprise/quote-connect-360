@@ -1,0 +1,34 @@
+{
+  "name": "RateSetAssignment",
+  "type": "object",
+  "properties": {
+    "rate_table_id": {
+      "type": "string",
+      "description": "Assigned rate table id"
+    },
+    "assignment_type": {
+      "type": "string",
+      "enum": ["global", "master_group", "tenant"],
+      "default": "global"
+    },
+    "master_group_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "is_direct": {
+      "type": "boolean",
+      "default": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive"],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": ["rate_table_id", "assignment_type"]
+}
