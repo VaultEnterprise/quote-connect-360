@@ -46,6 +46,7 @@ export default function Rates() {
   const [showCompare, setShowCompare] = useState(false);
   const [assignmentRow, setAssignmentRow] = useState(null);
   const [impactRow, setImpactRow] = useState(null);
+  const [editingRowId, setEditingRowId] = useState(null);
 
   const { data: plans = [], isLoading } = useQuery({ queryKey: ["rates-plans"], queryFn: () => base44.entities.BenefitPlan.list("-updated_date", 500) });
   const { data: rateTables = [] } = useQuery({ queryKey: ["rates-tables"], queryFn: () => base44.entities.PlanRateTable.list("-updated_date", 1000) });
@@ -174,7 +175,7 @@ export default function Rates() {
         <EmptyState icon={DollarSign} title="No rate sets found" description="Adjust scope or create a new rate set to continue." actionLabel="Create Rate Set" onAction={() => setShowPlanModal(true)} />
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <RatesGridSection rows={filteredRows} selectedIds={selectedIds} setSelectedIds={setSelectedIds} onOpenPreview={setPreviewRow} />
+          <RatesGridSection rows={filteredRows} selectedIds={selectedIds} setSelectedIds={setSelectedIds} onOpenPreview={setPreviewRow} editingRowId={editingRowId} onToggleEdit={(rowId) => setEditingRowId((current) => current === rowId ? null : rowId)} />
           <RatesIssuesPanel issues={issues} onSelectRow={setPreviewRow} />
         </div>
       )}

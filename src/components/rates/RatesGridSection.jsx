@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function RatesGridSection({ rows, selectedIds, setSelectedIds, onOpenPreview }) {
+import RateTableEditor from "@/components/plans/RateTableEditor";
+
+export default function RatesGridSection({ rows, selectedIds, setSelectedIds, onOpenPreview, onToggleEdit, editingRowId }) {
   const toggleSelect = (id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
 
   return (
@@ -71,8 +73,20 @@ export default function RatesGridSection({ rows, selectedIds, setSelectedIds, on
                   <td className="px-3 py-3 text-xs text-muted-foreground">{row.updated_date ? new Date(row.updated_date).toLocaleDateString() : "—"}</td>
                   <td className="px-3 py-3 text-xs text-muted-foreground">{row.created_by || "System"}</td>
                   <td className="px-3 py-3"><Badge variant="secondary">{row.issueCount}</Badge></td>
-                  <td className="px-3 py-3"><Button size="sm" variant="ghost" onClick={() => onOpenPreview(row)}>Open</Button></td>
+                  <td className="px-3 py-3">
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => onOpenPreview(row)}>Open</Button>
+                      <Button size="sm" variant="ghost" onClick={() => onToggleEdit(row.id)}>{editingRowId === row.id ? "Close Edit" : "Edit Rates"}</Button>
+                    </div>
+                  </td>
                 </tr>
+              {editingRowId === row.id && (
+                <tr className="border-t border-border bg-muted/10">
+                  <td colSpan={23} className="px-3 py-4">
+                    <RateTableEditor planId={row.plan_id} rateTables={rows.filter((item) => item.plan_id === row.plan_id)} />
+                  </td>
+                </tr>
+              )}
               ))}
             </tbody>
           </table>
