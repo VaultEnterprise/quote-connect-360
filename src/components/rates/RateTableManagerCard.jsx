@@ -2,9 +2,11 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import RateTableEditor from "@/components/plans/RateTableEditor";
+import { summarizeRatePlan } from "@/components/rates/rateGovernanceEngine";
 
 export default function RateTableManagerCard({ plan, rateTables = [] }) {
-  const latestRate = rateTables[0];
+  const summary = summarizeRatePlan(plan, rateTables);
+  const latestRate = summary.latest;
 
   return (
     <Card className="border shadow-sm">
@@ -24,7 +26,7 @@ export default function RateTableManagerCard({ plan, rateTables = [] }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
           <div>
             <p className="text-muted-foreground">State</p>
             <p className="font-medium">{plan.state || "—"}</p>
@@ -40,6 +42,14 @@ export default function RateTableManagerCard({ plan, rateTables = [] }) {
           <div>
             <p className="text-muted-foreground">Family Rate</p>
             <p className="font-medium">{latestRate?.fam_rate != null ? `$${latestRate.fam_rate}` : "—"}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Versions</p>
+            <p className="font-medium">{summary.versionCount}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Future</p>
+            <p className="font-medium">{summary.futureCount}</p>
           </div>
         </div>
         <RateTableEditor planId={plan.id} rateTables={rateTables} />

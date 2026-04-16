@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import PlanFormModal from "@/components/plans/PlanFormModal";
 import RateTableManagerCard from "@/components/rates/RateTableManagerCard";
+import RatesDependencyPanel from "@/components/rates/RatesDependencyPanel";
+import { buildRateDependencySummary } from "@/components/rates/rateGovernanceEngine";
 
 export default function Rates() {
   const [search, setSearch] = useState("");
@@ -23,6 +25,26 @@ export default function Rates() {
   const { data: rateTables = [] } = useQuery({
     queryKey: ["rates-tables"],
     queryFn: () => base44.entities.PlanRateTable.list("-created_date", 1000),
+  });
+
+  const { data: scenarioPlans = [] } = useQuery({
+    queryKey: ["rates-scenario-plans"],
+    queryFn: () => base44.entities.ScenarioPlan.list("-created_date", 1000),
+  });
+
+  const { data: quoteScenarios = [] } = useQuery({
+    queryKey: ["rates-quote-scenarios"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500),
+  });
+
+  const { data: employeeEnrollments = [] } = useQuery({
+    queryKey: ["rates-employee-enrollments"],
+    queryFn: () => base44.entities.EmployeeEnrollment.list("-created_date", 500),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["rates-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 300),
   });
 
   const filteredPlans = useMemo(() => {
@@ -46,6 +68,15 @@ export default function Rates() {
     }, {});
   }, [rateTables]);
 
+  const dependencySummary = useMemo(() => buildRateDependencySummary({
+    plans,
+    rateTables,
+    scenarioPlans,
+    quoteScenarios,
+    employeeEnrollments,
+    renewals,
+  }), [plans, rateTables, scenarioPlans, quoteScenarios, employeeEnrollments, renewals]);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -57,6 +88,8 @@ export default function Rates() {
           </Button>
         }
       />
+
+      <RatesDependencyPanel summary={dependencySummary} />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Save, Trash2 } from "lucide-react";
+import { validateRateTablePayload } from "@/components/rates/rateGovernanceEngine";
 
 const DEFAULT_COMPOSITE = { ee_rate: "", es_rate: "", ec_rate: "", fam_rate: "" };
 
@@ -37,6 +38,10 @@ export default function RateTableEditor({ planId, rateTables }) {
           age_banded_rates: ageBanded.map(r => ({ age: Number(r.age), rate: parseFloat(r.rate) })),
         }),
       };
+      const validation = validateRateTablePayload(payload);
+      if (!validation.isValid) {
+        throw new Error(validation.errors[0]);
+      }
       if (existing?.id) return base44.entities.PlanRateTable.update(existing.id, payload);
       return base44.entities.PlanRateTable.create(payload);
     },

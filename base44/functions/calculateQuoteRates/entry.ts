@@ -7,17 +7,18 @@ function normalizeDate(value) {
   return value ? new Date(value) : null;
 }
 
-function pickBestRateTable(rateTables, scenarioEffectiveDate) {
+function pickBestRateTable(rateTables, scenarioEffectiveDate, scenarioState) {
   if (!rateTables.length) return null;
   const effectiveDate = normalizeDate(scenarioEffectiveDate);
-  const sorted = [...rateTables]
+  const scoped = scenarioState ? rateTables.filter((table) => !table.state || table.state === scenarioState) : rateTables;
+  const sorted = [...scoped]
     .filter((table) => table.effective_date)
     .sort((a, b) => new Date(b.effective_date) - new Date(a.effective_date));
 
-  if (!effectiveDate) return sorted[0] || rateTables[0];
+  if (!effectiveDate) return sorted[0] || scoped[0] || rateTables[0];
 
   const eligible = sorted.filter((table) => new Date(table.effective_date) <= effectiveDate);
-  return eligible[0] || sorted[0] || rateTables[0];
+  return eligible[0] || sorted[0] || scoped[0] || rateTables[0];
 }
 
 function getCompositeRate(rateTable, tier) {
@@ -137,7 +138,7 @@ Deno.serve(async (req) => {
       if (scenarioPlan.plan_type) allProducts.add(scenarioPlan.plan_type);
 
       const rateTables = await base44.asServiceRole.entities.PlanRateTable.filter({ plan_id: scenarioPlan.plan_id });
-      const rateTable = pickBestRateTable(rateTables, scenario.effective_date || caseRecord.effective_date);
+      const rateTable = pickBestRateTable(rateTables, scenario.effective_date || caseRecord.effective_date, caseRecord.state);
 
       if (!rateTable) {
         skippedPlans.push({ plan_id: scenarioPlan.plan_id, plan_name: scenarioPlan.plan_name, reason: 'No rate table found' });
