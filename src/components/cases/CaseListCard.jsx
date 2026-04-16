@@ -30,7 +30,7 @@ export default function CaseListCard({ c }) {
 
   return (
     <Link to={`/cases/${c.id}`}>
-      <Card className="group cursor-pointer rounded-2xl border-border/70 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md">
+      <Card className="group cursor-pointer rounded-2xl border-border/70 bg-card/95 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md">
         <CardContent className="p-4 sm:p-5">
           {/* Top row */}
           <div className="flex items-start justify-between gap-4">
@@ -52,7 +52,7 @@ export default function CaseListCard({ c }) {
                 </div>
                 {/* Meta row */}
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
-                  <span className="text-xs text-muted-foreground capitalize">{c.case_type?.replace(/_/g, " ")}</span>
+                  <span className="rounded-full bg-muted/70 px-2 py-0.5 text-xs capitalize text-muted-foreground">{c.case_type?.replace(/_/g, " ")}</span>
                   {c.employee_count && (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Users className="w-3 h-3" />{c.employee_count} EEs
@@ -98,11 +98,11 @@ export default function CaseListCard({ c }) {
             <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary/60 rounded-full transition-all" style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-[10px] text-muted-foreground flex-shrink-0">{progress}%</span>
+            <span className="text-[10px] font-medium text-muted-foreground flex-shrink-0">{progress}%</span>
             {c.products_requested?.length > 0 && (
               <div className="flex gap-1 flex-shrink-0">
                 {c.products_requested.slice(0, 4).map((p) => (
-                  <span key={p} className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] capitalize text-muted-foreground">{p}</span>
+                  <span key={p} className="rounded-full bg-muted/80 px-1.5 py-0.5 text-[10px] capitalize text-muted-foreground">{p}</span>
                 ))}
                 {c.products_requested.length > 4 && (
                   <span className="text-[10px] text-muted-foreground">+{c.products_requested.length - 4}</span>

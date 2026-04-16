@@ -10,10 +10,10 @@ export default function CasesOperationalTable({ cases }) {
   if (!cases.length) return null;
 
   return (
-    <Card className="overflow-hidden border-border/70 shadow-sm">
+    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card/95 shadow-sm">
       <CardContent className="overflow-x-auto p-0">
         <div className="min-w-[980px] bg-card">
-          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b border-border/70 bg-muted/20 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <div>Case</div>
             <div>Workflow</div>
             <div>Ownership</div>
@@ -22,7 +22,7 @@ export default function CasesOperationalTable({ cases }) {
             <div>Action</div>
           </div>
           {cases.map((item) => (
-            <div key={item.id} className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] items-center gap-4 border-b border-border/60 px-5 py-4 transition-colors hover:bg-muted/20 last:border-b-0">
+            <div key={item.id} className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] items-center gap-4 border-b border-border/60 px-5 py-4 transition-colors hover:bg-muted/10 last:border-b-0">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link to={`/cases/${item.id}`} className="font-semibold hover:text-primary transition-colors">
@@ -48,10 +48,10 @@ export default function CasesOperationalTable({ cases }) {
 
               <div className="flex flex-wrap gap-2">
                 {item.systemIssues.length === 0 ? (
-                  <Badge variant="outline" className="text-emerald-700 border-emerald-200 bg-emerald-50">Clear</Badge>
+                  <Badge variant="outline" className="rounded-full border-emerald-200 bg-emerald-50 text-emerald-700">Clear</Badge>
                 ) : (
                   item.systemIssues.slice(0, 3).map((issue) => (
-                    <Badge key={issue.label} variant="outline" className={issue.tone}>
+                    <Badge key={issue.label} variant="outline" className={`rounded-full ${issue.tone}`}>
                       <issue.icon className="w-3 h-3 mr-1" />
                       {issue.label}
                     </Badge>
@@ -60,7 +60,7 @@ export default function CasesOperationalTable({ cases }) {
               </div>
 
               <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border bg-background">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-2.5 py-1 text-xs font-medium shadow-sm">
                   {item.slaRisk ? <ShieldAlert className="w-3.5 h-3.5 text-red-600" /> : <Clock3 className="w-3.5 h-3.5 text-emerald-600" />}
                   <span className={item.slaRisk ? "text-red-700" : "text-emerald-700"}>{item.slaLabel}</span>
                 </div>
