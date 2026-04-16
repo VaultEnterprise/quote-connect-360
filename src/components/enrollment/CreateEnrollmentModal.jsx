@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getApprovedScenarioForCase, buildEnrollmentConversionPayload, buildEnrollmentWindowFromScenario } from "@/components/enrollment/enrollmentConversionEngine";
 
 export default function CreateEnrollmentModal({ open, onClose }) {
   const queryClient = useQueryClient();
@@ -23,23 +24,54 @@ export default function CreateEnrollmentModal({ open, onClose }) {
     queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
   });
 
+  const { data: scenarios = [] } = useQuery({
+    queryKey: ["enrollment-scenarios"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 300),
+  });
+
+  const { data: censusVersions = [] } = useQuery({
+    queryKey: ["enrollment-census-versions"],
+    queryFn: () => base44.entities.CensusVersion.list("-created_date", 300),
+  });
+
+  const { data: enrollmentWindows = [] } = useQuery({
+    queryKey: ["existing-enrollment-windows"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 200),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["enrollment-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 200),
+  });
+
   const activeCases = cases.filter(c =>
     ["approved_for_enrollment", "enrollment_open", "quoting", "proposal_ready", "employer_review"].includes(c.stage)
   );
 
   const selectedCase = cases.find(c => c.id === form.case_id);
+  const approvedScenario = getApprovedScenarioForCase(form.case_id, scenarios);
+  const conversion = buildEnrollmentConversionPayload({
+    caseRecord: selectedCase,
+    scenario: approvedScenario,
+    censusVersions,
+    enrollments: enrollmentWindows,
+    renewals,
+  });
 
   const create = useMutation({
     mutationFn: async () => {
-      const enrollment = await base44.entities.EnrollmentWindow.create({
-        ...form,
-        total_eligible: form.total_eligible ? Number(form.total_eligible) : undefined,
-        employer_name: selectedCase?.employer_name || "",
-      });
+      const enrollment = await base44.entities.EnrollmentWindow.create(
+        buildEnrollmentWindowFromScenario({ form, conversion })
+      );
       await base44.entities.BenefitCase.update(form.case_id, {
         enrollment_status: form.status === "open" ? "open" : "not_started",
         stage: form.status === "open" ? "enrollment_open" : "approved_for_enrollment",
       });
+      if (conversion.defaults.quote_scenario_id) {
+        await base44.entities.QuoteScenario.update(conversion.defaults.quote_scenario_id, {
+          status: "converted_to_enrollment",
+        });
+      }
       return enrollment;
     },
     onSuccess: () => {
@@ -51,7 +83,7 @@ export default function CreateEnrollmentModal({ open, onClose }) {
   });
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const isValid = form.case_id && form.start_date && form.end_date;
+  const isValid = form.case_id && form.start_date && form.end_date && conversion.isValid;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -91,13 +123,29 @@ export default function CreateEnrollmentModal({ open, onClose }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Effective Date</Label>
-              <Input type="date" value={form.effective_date} onChange={e => set("effective_date", e.target.value)} className="mt-1.5" />
+              <Input type="date" value={form.effective_date || conversion.defaults.effective_date} onChange={e => set("effective_date", e.target.value)} className="mt-1.5" />
             </div>
             <div>
               <Label>Total Eligible</Label>
-              <Input type="number" min="1" value={form.total_eligible} onChange={e => set("total_eligible", e.target.value)} className="mt-1.5" placeholder="e.g. 42" />
+              <Input type="number" min="1" value={form.total_eligible || conversion.defaults.total_eligible} onChange={e => set("total_eligible", e.target.value)} className="mt-1.5" placeholder="e.g. 42" />
             </div>
           </div>
+
+          {form.case_id && (
+            <div className={`rounded-lg border p-3 text-xs ${conversion.isValid ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
+              {conversion.isValid ? (
+                <div className="space-y-1">
+                  <p className="font-medium">Enrollment will be created from quote scenario: {conversion.defaults.quote_scenario_name || "Approved scenario"}</p>
+                  <p>Monthly premium: ${Number(conversion.defaults.total_monthly_premium || 0).toLocaleString()} · Employer cost: ${Number(conversion.defaults.employer_monthly_cost || 0).toLocaleString()}</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <p className="font-medium">This case is not ready for quote-driven enrollment.</p>
+                  {conversion.errors.map((error) => <p key={error}>• {error}</p>)}
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <Label>Initial Status</Label>

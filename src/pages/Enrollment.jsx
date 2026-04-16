@@ -11,6 +11,7 @@ import EnrollmentKPIBar from "@/components/enrollment/EnrollmentKPIBar";
 import EnrollmentWindowCard from "@/components/enrollment/EnrollmentWindowCard";
 import CreateEnrollmentModal from "@/components/enrollment/CreateEnrollmentModal";
 import { parseISO, differenceInDays } from "date-fns";
+import { getApprovedScenarioForCase } from "@/components/enrollment/enrollmentConversionEngine";
 
 const STATUS_ORDER = { open: 0, closing_soon: 1, scheduled: 2, closed: 3, finalized: 4 };
 
@@ -23,6 +24,16 @@ export default function Enrollment() {
   const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ["enrollments-all"],
     queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
+  });
+
+  const { data: cases = [] } = useQuery({
+    queryKey: ["enrollment-cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
+  });
+
+  const { data: scenarios = [] } = useQuery({
+    queryKey: ["enrollment-page-scenarios"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 300),
   });
 
   const now = new Date();
@@ -78,6 +89,12 @@ export default function Enrollment() {
 
       {/* KPI Bar */}
       <EnrollmentKPIBar enrollments={enrollments} />
+
+      {cases.filter((item) => item.stage === "approved_for_enrollment" && !enrollments.some((window) => window.case_id === item.id) && getApprovedScenarioForCase(item.id, scenarios)).length > 0 && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+          {cases.filter((item) => item.stage === "approved_for_enrollment" && !enrollments.some((window) => window.case_id === item.id) && getApprovedScenarioForCase(item.id, scenarios)).length} approved cases are ready to open enrollment from quote output.
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
