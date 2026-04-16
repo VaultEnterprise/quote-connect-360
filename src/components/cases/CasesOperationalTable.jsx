@@ -13,7 +13,7 @@ export default function CasesOperationalTable({ cases }) {
     <Card className="overflow-hidden border-border/70 shadow-sm">
       <CardContent className="overflow-x-auto p-0">
         <div className="min-w-[980px] bg-card">
-          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b bg-muted/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             <div>Case</div>
             <div>Workflow</div>
             <div>Ownership</div>
@@ -22,7 +22,7 @@ export default function CasesOperationalTable({ cases }) {
             <div>Action</div>
           </div>
           {cases.map((item) => (
-            <div key={item.id} className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b last:border-b-0 px-5 py-4 items-center">
+            <div key={item.id} className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] items-center gap-4 border-b border-border/60 px-5 py-4 transition-colors hover:bg-muted/20 last:border-b-0">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Link to={`/cases/${item.id}`} className="font-semibold hover:text-primary transition-colors">
@@ -69,7 +69,7 @@ export default function CasesOperationalTable({ cases }) {
 
               <div>
                 <Link to={`/cases/${item.id}`}>
-                  <Button variant="outline" size="sm" className="gap-1.5">
+                  <Button variant="outline" size="sm" className="rounded-xl gap-1.5 shadow-sm">
                     Open Case
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Button>

@@ -57,7 +57,7 @@ export default function BulkActionsBar({
               variant={action.variant || "outline"}
               size="sm"
               onClick={() => action.onClick(selectedCount)}
-              className={`text-xs ${action.color ? `text-${action.color}` : ""}`}
+              className="rounded-xl text-xs"
             >
               {action.icon && <action.icon className="w-3.5 h-3.5 mr-1.5" />}
               {action.label}

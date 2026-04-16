@@ -30,7 +30,7 @@ export default function CaseListCard({ c }) {
 
   return (
     <Link to={`/cases/${c.id}`}>
-      <Card className="group cursor-pointer border-border/70 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md">
+      <Card className="group cursor-pointer rounded-2xl border-border/70 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md">
         <CardContent className="p-4 sm:p-5">
           {/* Top row */}
           <div className="flex items-start justify-between gap-4">
@@ -101,8 +101,8 @@ export default function CaseListCard({ c }) {
             <span className="text-[10px] text-muted-foreground flex-shrink-0">{progress}%</span>
             {c.products_requested?.length > 0 && (
               <div className="flex gap-1 flex-shrink-0">
-                {c.products_requested.slice(0, 4).map(p => (
-                  <span key={p} className="text-[10px] bg-muted text-muted-foreground rounded px-1.5 py-0.5 capitalize">{p}</span>
+                {c.products_requested.slice(0, 4).map((p) => (
+                  <span key={p} className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] capitalize text-muted-foreground">{p}</span>
                 ))}
                 {c.products_requested.length > 4 && (
                   <span className="text-[10px] text-muted-foreground">+{c.products_requested.length - 4}</span>
