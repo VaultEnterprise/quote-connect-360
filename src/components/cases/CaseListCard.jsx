@@ -73,6 +73,11 @@ export default function CaseListCard({ c }) {
                       <AlertTriangle className="w-3 h-3" />{daysSince}d idle
                     </span>
                   )}
+                  {c.hasRateGap && (
+                    <span className="text-xs text-red-600 font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />rate gap
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

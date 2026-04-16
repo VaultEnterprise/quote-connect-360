@@ -32,6 +32,7 @@ export default function CasesOperationalTable({ cases }) {
                   {item.priority !== "normal" && <StatusBadge status={item.priority} />}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground capitalize">{item.case_type?.replace(/_/g, " ")}</p>
+                {item.hasRateGap && <p className="mt-1 text-xs text-red-600 font-medium">Quoted plans missing rate tables</p>}
               </div>
 
               <div className="space-y-1">
@@ -42,6 +43,7 @@ export default function CasesOperationalTable({ cases }) {
               <div>
                 <p className="text-sm font-medium">{item.assigned_to ? item.assigned_to.split("@")[0] : "Unassigned"}</p>
                 <p className="text-xs text-muted-foreground">{item.escalated ? "Escalated" : "Standard routing"}</p>
+                {item.hasRateGap && <p className="text-xs text-red-600">Needs rate setup</p>}
               </div>
 
               <div className="flex flex-wrap gap-2">
