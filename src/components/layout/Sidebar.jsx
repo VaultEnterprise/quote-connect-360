@@ -6,8 +6,6 @@ import {
   LayoutDashboard,
   Briefcase,
   Users,
-  BarChart2,
-  Award,
   FileText,
   ClipboardCheck,
   RefreshCw,
@@ -53,9 +51,6 @@ const navGroups = [
     label: "Tools & Reference",
     items: [
       { path: "/plans", label: "Plan Library", icon: BookOpen },
-      { path: "/plan-rate-editor", label: "Rate Editor", icon: BarChart2 },
-      { path: "/plan-analytics", label: "Plan Analytics", icon: Award },
-      { path: "/plan-compliance", label: "Compliance Center", icon: ShieldCheck },
       { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
       { path: "/tasks", label: "Tasks", icon: AlertCircle },
       { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },

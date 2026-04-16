@@ -1,21 +1,13 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/lib/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Upload, BookOpen, FileDown, BarChart2, Scale, GitBranch, Layers, Settings, FileText, Calculator, HandCoins } from "lucide-react";
-import PlanSummaryGenerator from "@/components/plans/PlanSummaryGenerator";
-import PlanCostCalculator from "@/components/plans/PlanCostCalculator";
-import BenefitsGlossaryPanel from "@/components/plans/BenefitsGlossaryPanel";
-import NegotiationTracker from "@/components/plans/NegotiationTracker";
-import PlanReportBuilder from "@/components/plans/PlanReportBuilder";
-import RateCardGenerator from "@/components/plans/RateCardGenerator";
+import { Plus, Search, Upload, BookOpen, FileDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import PlanCard from "@/components/plans/PlanCard";
@@ -29,12 +21,6 @@ import PlanLibraryGuide from "@/components/plans/PlanLibraryGuide";
 import PlanSearchAdvanced from "@/components/plans/PlanSearchAdvanced";
 import PlanQualityChecklist from "@/components/plans/PlanQualityChecklist";
 import PlanArchiveManager from "@/components/plans/PlanArchiveManager";
-import PlanDataValidation from "@/components/plans/PlanDataValidation";
-import BulkRateUpload from "@/components/plans/BulkRateUpload";
-import PlanCompareDrawer from "@/components/plans/PlanCompareDrawer";
-import PlanEffectiveDateManager from "@/components/plans/PlanEffectiveDateManager";
-import PlanFavoritesRecents, { usePlanFavorites } from "@/components/plans/PlanFavoritesRecents";
-import ScenarioAutoPopulate from "@/components/plans/ScenarioAutoPopulate";
 
 const MEDICAL_CARRIERS = ["Aetna", "Anthem", "BlueCross BlueShield", "Cigna", "Humana", "Kaiser", "UnitedHealthcare", "Other"];
 const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
@@ -49,13 +35,7 @@ export default function PlanLibrary() {
   const [editingPlan, setEditingPlan] = useState(null);
   const [activeTab, setActiveTab] = useState("medical");
   const [comparisonPlans, setComparisonPlans] = useState([]);
-  const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide", "employee", "reports", "negotiation"
-  const [selectedForCompare, setSelectedForCompare] = useState([]);
-  const [showCompareDrawer, setShowCompareDrawer] = useState(false);
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [showScenarioPopulate, setShowScenarioPopulate] = useState(false);
-  const { toggleFavorite, getFavorites, addRecent } = usePlanFavorites();
-  const [favIds, setFavIds] = React.useState(() => { try { return JSON.parse(localStorage.getItem(`plan_library_favorites_`) || "[]"); } catch { return []; } });
+  const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide"
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ["benefit-plans"],
@@ -92,17 +72,11 @@ export default function PlanLibrary() {
     <div className="space-y-6">
       <PageHeader
         title="Plan Library"
-        description="Rate intelligence system · carrier analytics · compliance enforcement"
+        description="Manage your Medical and Ancillary plan catalog with rate tables"
         actions={
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/plan-rate-editor" className="flex items-center gap-1.5"><Settings className="w-4 h-4" />Rate Editor</Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/plan-analytics" className="flex items-center gap-1.5"><BarChart2 className="w-4 h-4" />Analytics</Link>
-            </Button>
-            <Button variant="outline" onClick={() => setShowBulkUpload(!showBulkUpload)}>
-              <Upload className="w-4 h-4 mr-2" /> Bulk Upload
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowImport(true)}>
+              <Upload className="w-4 h-4 mr-2" /> Import Plans
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -124,9 +98,6 @@ export default function PlanLibrary() {
           <SelectContent>
             <SelectItem value="grid">Grid View</SelectItem>
             <SelectItem value="analytics">Analytics</SelectItem>
-            <SelectItem value="employee">Employee Tools</SelectItem>
-            <SelectItem value="reports">Reports & Exports</SelectItem>
-            <SelectItem value="negotiation">Negotiations</SelectItem>
             <SelectItem value="guide">Help & Tips</SelectItem>
           </SelectContent>
         </Select>
@@ -162,33 +133,8 @@ export default function PlanLibrary() {
       {/* Advanced search */}
       {viewMode === "grid" && <PlanSearchAdvanced onSearch={() => {}} />}
 
-      {/* Effective Date Alerts */}
-      {viewMode === "grid" && <PlanEffectiveDateManager plans={plans} />}
-
-      {/* Favorites & Recents */}
-      {viewMode === "grid" && <PlanFavoritesRecents plans={plans} onSelectPlan={(p) => { setEditingPlan(p); setShowForm(true); }} />}
-
-      {/* Bulk Rate Upload */}
-      {showBulkUpload && (
-        <BulkRateUpload plans={plans} />
-      )}
-
-      {/* Data Completeness Validation */}
-      {viewMode === "grid" && <PlanDataValidation plans={plans} />}
-
       {/* Quality checklist */}
       {viewMode === "grid" && <PlanQualityChecklist plans={plans} />}
-
-      {/* Compare / Scenario bar */}
-      {selectedForCompare.length > 0 && (
-        <div className="flex items-center gap-3 p-3 rounded-lg border bg-primary/5 border-primary/30 flex-wrap">
-          <Scale className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">{selectedForCompare.length} plan(s) selected</span>
-          <Button size="sm" onClick={() => setShowCompareDrawer(true)} className="h-7 text-xs">Compare</Button>
-          <Button size="sm" variant="outline" onClick={() => setShowScenarioPopulate(true)} className="h-7 text-xs gap-1"><Layers className="w-3 h-3" />Generate Scenarios</Button>
-          <Button size="sm" variant="ghost" className="h-7 text-xs ml-auto" onClick={() => setSelectedForCompare([])}>Clear</Button>
-        </div>
-      )}
 
       {/* Comparison tool for medical plans */}
       {activeTab === "medical" && filterPlans(medicalPlans).length > 0 && (
@@ -214,14 +160,9 @@ export default function PlanLibrary() {
             <EmptyState icon={BookOpen} title="No medical plans" description="Add plans manually or import from a CSV file" actionLabel="Add Plan" onAction={handleNew} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filterPlans(medicalPlans).map(p => (
-              <div key={p.id} className="relative">
-                <div className={`absolute top-2 right-2 z-10`}>
-                  <input type="checkbox" checked={selectedForCompare.includes(p.id)} onChange={e => setSelectedForCompare(prev => e.target.checked ? [...prev.slice(0,5), p.id] : prev.filter(id => id !== p.id))} className="w-4 h-4 accent-primary" title="Add to comparison" />
-                </div>
-                <PlanCard plan={p} onEdit={handleEdit} onArchive={() => archiveMutation.mutate(p.id)} />
-              </div>
-            ))}
+              {filterPlans(medicalPlans).map(p => (
+                <PlanCard key={p.id} plan={p} onEdit={handleEdit} onArchive={() => archiveMutation.mutate(p.id)} />
+              ))}
             </div>
           )}
         </TabsContent>
@@ -255,21 +196,6 @@ export default function PlanLibrary() {
         />
       )}
       {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
-      {showCompareDrawer && (
-        <PlanCompareDrawer
-          plans={plans.filter(p => selectedForCompare.includes(p.id))}
-          open={showCompareDrawer}
-          onClose={() => setShowCompareDrawer(false)}
-          onRemovePlan={(id) => setSelectedForCompare(prev => prev.filter(x => x !== id))}
-        />
-      )}
-      {showScenarioPopulate && (
-        <ScenarioAutoPopulate
-          selectedPlans={plans.filter(p => selectedForCompare.includes(p.id))}
-          open={showScenarioPopulate}
-          onClose={() => setShowScenarioPopulate(false)}
-        />
-      )}
     </div>
   );
 
@@ -281,54 +207,6 @@ export default function PlanLibrary() {
         <PlanAnalyticsPanel plans={plans} />
         <PlanQualityChecklist plans={plans} />
         <PlanArchiveManager archivedPlans={archivedPlans} />
-      </div>
-    );
-  }
-
-  if (viewMode === "employee") {
-    return (
-      <div className="space-y-6">
-        <PageContent />
-        <div className="rounded-xl border p-4 space-y-4">
-          <h2 className="text-base font-semibold flex items-center gap-2"><FileText className="w-4 h-4 text-primary" />Plan Summary Generator</h2>
-          <PlanSummaryGenerator plans={plans} />
-        </div>
-        <div className="rounded-xl border p-4 space-y-4">
-          <h2 className="text-base font-semibold flex items-center gap-2"><Calculator className="w-4 h-4 text-primary" />Employee Cost Calculator</h2>
-          <PlanCostCalculator plans={plans} />
-        </div>
-        <div className="rounded-xl border p-4 space-y-4">
-          <h2 className="text-base font-semibold">Benefits Glossary</h2>
-          <BenefitsGlossaryPanel />
-        </div>
-      </div>
-    );
-  }
-
-  if (viewMode === "reports") {
-    return (
-      <div className="space-y-6">
-        <PageContent />
-        <div className="rounded-xl border p-4 space-y-4">
-          <h2 className="text-base font-semibold">Custom Report Builder</h2>
-          <PlanReportBuilder plans={plans} />
-        </div>
-        <div className="rounded-xl border p-4 space-y-4">
-          <h2 className="text-base font-semibold">Rate Card Generator</h2>
-          <RateCardGenerator plans={plans} />
-        </div>
-      </div>
-    );
-  }
-
-  if (viewMode === "negotiation") {
-    return (
-      <div className="space-y-6">
-        <PageContent />
-        <div className="rounded-xl border p-4 space-y-4">
-          <h2 className="text-base font-semibold flex items-center gap-2"><HandCoins className="w-4 h-4 text-primary" />Carrier Negotiation Tracker</h2>
-          <NegotiationTracker plans={plans} />
-        </div>
       </div>
     );
   }
