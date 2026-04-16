@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users, Layers, Flag, Download, Trash2, Calendar, Briefcase } from "lucide-react";
@@ -113,7 +113,7 @@ export default function Cases() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [filtered]);
+  }, [handleFilteredExport]);
 
   const activeFilters = [filters.quickView, filters.stageFilter, filters.stageGroup, filters.typeFilter, filters.priorityFilter, filters.assignedToFilter, filters.dateFilter, filters.employeeFilter].filter((item) => item !== "all" && item !== null).length;
   const clearFilters = () => setFilters(DEFAULT_FILTER_STATE);
@@ -126,8 +126,8 @@ export default function Cases() {
     return next;
   });
 
-  const handleBulkExport = () => exportToCSV(filtered.filter((item) => selectedIds.has(item.id)), "cases-export.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"]);
-  const handleFilteredExport = () => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]);
+  const handleBulkExport = useCallback(() => exportToCSV(filtered.filter((item) => selectedIds.has(item.id)), "cases-export.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date"]), [filtered, selectedIds]);
+  const handleFilteredExport = useCallback(() => exportToCSV(filtered, "filtered-cases.csv", ["id", "case_number", "employer_name", "case_type", "stage", "priority", "assigned_to", "effective_date", "target_close_date"]), [filtered]);
 
   const handleBulkDelete = async () => {
     setBulkAction("deleting");
