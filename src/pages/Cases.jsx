@@ -409,7 +409,7 @@ export default function Cases() {
       ) : viewMode === "pipeline" ? (
         <CasePipelineView cases={filtered} />
       ) : (
-        <div className="space-y-4 pb-20">
+        <div className="space-y-5 pb-20">
           <CasesOperationalTable cases={filtered.slice(0, 12)} />
           <div className="space-y-3">
             {filtered.map(c => (

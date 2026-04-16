@@ -92,7 +92,7 @@ export default function CasePipelineView({ cases }) {
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{stage.label}</span>
             <Badge variant="secondary" className="h-5 rounded-full border-border/70 px-2 text-[10px] shadow-sm">{buckets[stage.key].length}</Badge>
           </div>
-          <div className="min-h-32 rounded-2xl border border-border/70 bg-muted/30 p-2.5 shadow-sm">
+          <div className="min-h-32 rounded-2xl border border-border/70 bg-muted/25 p-2.5 shadow-sm">
             {buckets[stage.key].length === 0 ? (
               <p className="text-[10px] text-muted-foreground/50 text-center pt-4">No cases</p>
             ) : (

@@ -13,7 +13,7 @@ export default function CasesOperationalTable({ cases }) {
     <Card className="overflow-hidden rounded-2xl border-border/70 bg-card/95 shadow-sm">
       <CardContent className="overflow-x-auto p-0">
         <div className="min-w-[980px] bg-card">
-          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b border-border/70 bg-muted/20 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="grid grid-cols-[2.1fr,1fr,1fr,1.2fr,1fr,1.2fr] gap-4 border-b border-border/70 bg-muted/20 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <div>Case</div>
             <div>Workflow</div>
             <div>Ownership</div>
