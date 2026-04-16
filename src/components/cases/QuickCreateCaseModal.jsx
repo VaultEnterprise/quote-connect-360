@@ -4,34 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function QuickCreateCaseModal({ isOpen, onClose }) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ employer_group_id: "", case_type: "new_business", priority: "normal", employee_count: "" });
-  const { data: employers = [] } = useQuery({
-    queryKey: ["quick-create-employers"],
-    queryFn: () => base44.entities.EmployerGroup.list("-created_date", 200),
-  });
+  const [form, setForm] = useState({ employer_name: "", case_type: "new_business", priority: "normal", employee_count: "" });
 
   const handleCreate = async () => {
     if (!form.employer_name.trim()) return;
     setLoading(true);
     try {
-      const selectedEmployer = employers.find((item) => item.id === form.employer_group_id);
-      if (!selectedEmployer) return;
       await base44.entities.BenefitCase.create({
-        employer_name: selectedEmployer.name,
-        agency_id: selectedEmployer.agency_id,
-        employer_group_id: selectedEmployer.id,
+        employer_name: form.employer_name,
         case_type: form.case_type,
         priority: form.priority,
-        employee_count: form.employee_count ? parseInt(form.employee_count, 10) : undefined,
+        employee_count: form.employee_count ? parseInt(form.employee_count) : null,
         stage: "draft",
+        agency_id: "",
+        employer_group_id: "",
       });
       queryClient.invalidateQueries({ queryKey: ["cases"] });
-      setForm({ employer_group_id: "", case_type: "new_business", priority: "normal", employee_count: "" });
+      setForm({ employer_name: "", case_type: "new_business", priority: "normal", employee_count: "" });
       onClose();
     } finally {
       setLoading(false);
@@ -44,15 +38,8 @@ export default function QuickCreateCaseModal({ isOpen, onClose }) {
         <DialogHeader><DialogTitle>Create New Case</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium mb-1 block">Employer *</label>
-            <Select value={form.employer_group_id} onValueChange={(v) => setForm({ ...form, employer_group_id: v })}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Select employer" /></SelectTrigger>
-              <SelectContent>
-                {employers.map((employer) => (
-                  <SelectItem key={employer.id} value={employer.id}>{employer.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <label className="text-xs font-medium mb-1 block">Employer Name *</label>
+            <Input placeholder="Acme Corp" value={form.employer_name} onChange={(e) => setForm({...form, employer_name: e.target.value})} className="h-9" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -86,7 +73,7 @@ export default function QuickCreateCaseModal({ isOpen, onClose }) {
           </div>
           <div className="flex gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={onClose} className="flex-1">Cancel</Button>
-            <Button size="sm" onClick={handleCreate} disabled={loading || !form.employer_group_id} className="flex-1">{loading ? "Creating..." : "Create"}</Button>
+            <Button size="sm" onClick={handleCreate} disabled={loading || !form.employer_name.trim()} className="flex-1">{loading ? "Creating..." : "Create"}</Button>
           </div>
         </div>
       </DialogContent>

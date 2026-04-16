@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,18 +8,13 @@ import { Loader } from "lucide-react";
 export default function BulkAssignModal({ isOpen, caseIds, onClose, onSuccess }) {
   const [assignee, setAssignee] = useState("");
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    if (isOpen) base44.entities.User.list().then(setUsers);
-  }, [isOpen]);
 
   const handleAssign = async () => {
     if (!assignee) return;
     setLoading(true);
     try {
       for (const id of caseIds) {
-        await base44.entities.BenefitCase.update(id, { assigned_to: assignee === "__unassigned__" ? "" : assignee });
+        await base44.entities.BenefitCase.update(id, { assigned_to: assignee });
       }
       onSuccess?.();
       onClose();
@@ -40,10 +35,10 @@ export default function BulkAssignModal({ isOpen, caseIds, onClose, onSuccess })
               <SelectValue placeholder="Select assignee..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__unassigned__">Unassigned</SelectItem>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.email}>{user.full_name || user.email}</SelectItem>
-              ))}
+              <SelectItem value="john@example.com">John Broker</SelectItem>
+              <SelectItem value="jane@example.com">Jane Broker</SelectItem>
+              <SelectItem value="mike@example.com">Mike Manager</SelectItem>
+              <SelectItem value={null}>Unassigned</SelectItem>
             </SelectContent>
           </Select>
         </div>
