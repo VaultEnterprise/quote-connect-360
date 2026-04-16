@@ -1,0 +1,20 @@
+{
+  "name": "TxQuoteSupportingDocument",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": { "type": "string" },
+    "document_type": {
+      "type": "string",
+      "enum": ["validated_census", "current_bill", "current_sbc", "renewal_offer", "claims_report", "large_claimant_report", "rx_report", "census_attestation", "supplemental_underwriting", "plan_design_summary"]
+    },
+    "document_id": { "type": "string" },
+    "file_name": { "type": "string" },
+    "uploaded_at": { "type": "string", "format": "date-time" },
+    "uploaded_by": { "type": "string" },
+    "is_required": { "type": "boolean", "default": false },
+    "is_received": { "type": "boolean", "default": false },
+    "applies_to_destinations": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" }
+  },
+  "required": ["txquote_case_id", "document_type"]
+}

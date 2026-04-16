@@ -1,0 +1,17 @@
+{
+  "name": "TxQuoteCensusOverride",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": { "type": "string" },
+    "census_row_id": { "type": "string" },
+    "override_payload": { "type": "object" },
+    "completeness_status": {
+      "type": "string",
+      "enum": ["incomplete", "partial", "complete"],
+      "default": "incomplete"
+    },
+    "updated_by": { "type": "string" },
+    "updated_at_override": { "type": "string", "format": "date-time" }
+  },
+  "required": ["txquote_case_id", "census_row_id"]
+}

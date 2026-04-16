@@ -1,0 +1,17 @@
+{
+  "name": "TxQuoteClaimsRequirement",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": { "type": "string" },
+    "total_enrolled_count": { "type": "number" },
+    "claims_required": { "type": "boolean", "default": false },
+    "claims_months_required": { "type": "number" },
+    "claims_received": { "type": "boolean", "default": false },
+    "claims_document_id": { "type": "string" },
+    "large_claimant_document_id": { "type": "string" },
+    "rx_report_document_id": { "type": "string" },
+    "claims_notes": { "type": "string" },
+    "underwriting_risk_notes": { "type": "string" }
+  },
+  "required": ["txquote_case_id"]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "TxQuoteSubmissionLog",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": { "type": "string" },
+    "destination_code": { "type": "string" },
+    "submission_type": { "type": "string" },
+    "sent_by": { "type": "string" },
+    "sent_at": { "type": "string", "format": "date-time" },
+    "email_to": { "type": "string" },
+    "email_cc": { "type": "string" },
+    "email_bcc": { "type": "string" },
+    "subject_line": { "type": "string" },
+    "body_snapshot": { "type": "string" },
+    "attachment_manifest": { "type": "array", "items": { "type": "object" } },
+    "delivery_status": { "type": "string" },
+    "external_message_id": { "type": "string" },
+    "error_message": { "type": "string" }
+  },
+  "required": ["txquote_case_id", "destination_code", "delivery_status"]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "TxQuoteDestinationContact",
+  "type": "object",
+  "properties": {
+    "destination_code": { "type": "string", "enum": ["TRIAD", "SUS", "AST"] },
+    "contact_name": { "type": "string" },
+    "email": { "type": "string" },
+    "contact_type": { "type": "string", "enum": ["to", "cc", "bcc"] },
+    "is_default": { "type": "boolean", "default": false },
+    "is_active": { "type": "boolean", "default": true }
+  },
+  "required": ["destination_code", "email", "contact_type"]
+}

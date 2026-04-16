@@ -31,10 +31,11 @@ import ActivityTab       from "@/components/cases/ActivityTab";
 import StageValidationWarnings from "@/components/cases/StageValidationWarnings";
 import DependencyCheckPanel from "@/components/cases/DependencyCheckPanel";
 import CloneCaseModal    from "@/components/cases/CloneCaseModal";
-import TxQuoteModal from "@/components/cases/TxQuoteModal";
+import TxQuoteWorkspace from "@/components/cases/TxQuoteWorkspace";
 import AuditTrailViewer  from "@/components/shared/AuditTrailViewer";
 import { getCaseWorkflowSignals, getNextCaseStage, getStageRequirements } from "@/components/cases/caseWorkflow";
 import { getTxQuoteDisabledReason, isTxQuoteStepComplete } from "@/components/cases/txQuoteWorkflow";
+import { getTxQuoteButtonState } from "@/components/cases/txQuoteEngine";
 
 // ── AI ───────────────────────────────────────────────────────────────────────
 import AIAssistant from "@/components/ai/AIAssistant";
@@ -140,6 +141,32 @@ export default function CaseDetail() {
     enabled: !!caseId,
   });
 
+  const { data: txQuoteCase } = useQuery({
+    queryKey: ["txquote-case", caseId],
+    queryFn: () => base44.entities.TxQuoteCase.filter({ case_id: caseId }, "-created_date", 1).then((items) => items[0] || null),
+    enabled: !!caseId,
+  });
+
+  const { data: txQuoteDestinations = [] } = useQuery({
+    queryKey: ["txquote-destinations", caseId],
+    queryFn: async () => {
+      const currentTxQuoteCase = await base44.entities.TxQuoteCase.filter({ case_id: caseId }, "-created_date", 1).then((items) => items[0] || null);
+      if (!currentTxQuoteCase) return [];
+      return base44.entities.TxQuoteDestination.filter({ txquote_case_id: currentTxQuoteCase.id }, "destination_code", 20);
+    },
+    enabled: !!caseId,
+  });
+
+  const { data: txQuoteReadinessResults = [] } = useQuery({
+    queryKey: ["txquote-readiness", caseId],
+    queryFn: async () => {
+      const currentTxQuoteCase = await base44.entities.TxQuoteCase.filter({ case_id: caseId }, "-created_date", 1).then((items) => items[0] || null);
+      if (!currentTxQuoteCase) return [];
+      return base44.entities.TxQuoteReadinessResult.filter({ txquote_case_id: currentTxQuoteCase.id }, "-created_date", 200);
+    },
+    enabled: !!caseId,
+  });
+
   // ── Stage advance mutation ─────────────────────────────────────────────────
   const advanceStageMutation = useMutation({
     mutationFn: async (nextStage) => {
@@ -195,7 +222,13 @@ export default function CaseDetail() {
   };
 
   const txQuoteDisabledReason = getTxQuoteDisabledReason({ caseData, censusVersions, routes: quoteRoutes, user });
-  const txQuoteComplete = isTxQuoteStepComplete({ censusVersions, transmissions: quoteTransmissions });
+  const txQuoteComplete = isTxQuoteStepComplete({ censusVersions, transmissions: quoteTransmissions }) || txQuoteCase?.status === "sent_complete";
+  const txQuoteButtonState = getTxQuoteButtonState({
+    txQuoteCase,
+    readinessResults: txQuoteReadinessResults,
+    destinations: txQuoteDestinations,
+    censusVersions,
+  });
 
   const aiContext = {
     employer:         caseData.employer_name,
@@ -265,7 +298,7 @@ export default function CaseDetail() {
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => setShowTxQuote(true)} disabled={!!txQuoteDisabledReason}>
-            <Send className="w-3.5 h-3.5 mr-1.5" /> TxQuote
+            <Send className="w-3.5 h-3.5 mr-1.5" /> {txQuoteButtonState.label}
           </Button>
           {nextStage && caseData.stage !== "closed" && (
             <Button size="sm" onClick={() => setShowAdvance(true)}>
@@ -427,13 +460,11 @@ export default function CaseDetail() {
         />
       )}
       {showTxQuote && (
-        <TxQuoteModal
+        <TxQuoteWorkspace
           open={showTxQuote}
           onClose={() => setShowTxQuote(false)}
           caseData={caseData}
           censusVersions={censusVersions}
-          canTransmit={!txQuoteDisabledReason}
-          disabledReason={txQuoteDisabledReason}
         />
       )}
 

@@ -1,0 +1,22 @@
+{
+  "name": "TxQuoteContributionStrategy",
+  "type": "object",
+  "properties": {
+    "txquote_case_id": { "type": "string" },
+    "employer_contribution_type": { "type": "string" },
+    "employee_only_contribution": { "type": "number" },
+    "employee_spouse_contribution": { "type": "number" },
+    "employee_children_contribution": { "type": "number" },
+    "family_contribution": { "type": "number" },
+    "contribution_percent_employee_only": { "type": "number" },
+    "contribution_percent_family": { "type": "number" },
+    "composite_or_age_banded": { "type": "string" },
+    "participation_percent": { "type": "number" },
+    "valid_waiver_count": { "type": "number" },
+    "enrolled_count_by_tier": { "type": "object" },
+    "contribution_notes": { "type": "string" },
+    "meets_minimum_contribution": { "type": "boolean", "default": false },
+    "meets_minimum_participation": { "type": "boolean", "default": false }
+  },
+  "required": ["txquote_case_id"]
+}
