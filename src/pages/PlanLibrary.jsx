@@ -6,20 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Upload, BookOpen, FileDown } from "lucide-react";
+import { Plus, Search, Upload, BookOpen } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import PlanCard from "@/components/plans/PlanCard";
 import PlanFormModal from "@/components/plans/PlanFormModal";
 import PlanImportModal from "@/components/plans/PlanImportModal";
-import PlanAnalyticsPanel from "@/components/plans/PlanAnalyticsPanel";
 import PlanComparisonTool from "@/components/plans/PlanComparisonTool";
-import PlanBulkActionsPanel from "@/components/plans/PlanBulkActionsPanel";
 import PlanFilterPresets from "@/components/plans/PlanFilterPresets";
-import PlanLibraryGuide from "@/components/plans/PlanLibraryGuide";
-import PlanSearchAdvanced from "@/components/plans/PlanSearchAdvanced";
-import PlanQualityChecklist from "@/components/plans/PlanQualityChecklist";
 import PlanArchiveManager from "@/components/plans/PlanArchiveManager";
 
 const MEDICAL_CARRIERS = ["Aetna", "Anthem", "BlueCross BlueShield", "Cigna", "Humana", "Kaiser", "UnitedHealthcare", "Other"];
@@ -34,8 +29,7 @@ export default function PlanLibrary() {
   const [showImport, setShowImport] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [activeTab, setActiveTab] = useState("medical");
-  const [comparisonPlans, setComparisonPlans] = useState([]);
-  const [viewMode, setViewMode] = useState("grid"); // "grid", "analytics", "guide"
+  const [viewMode, setViewMode] = useState("grid");
 
   const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ["benefit-plans"],
@@ -72,7 +66,7 @@ export default function PlanLibrary() {
     <div className="space-y-6">
       <PageHeader
         title="Plan Library"
-        description="Manage your Medical and Ancillary plan catalog with rate tables"
+        description="Manage your medical and ancillary plan catalog."
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowImport(true)}>
@@ -91,52 +85,29 @@ export default function PlanLibrary() {
         }
       />
 
-      {/* View mode toggle */}
-      <div className="flex items-center gap-2">
-        <Select value={viewMode} onValueChange={setViewMode}>
-          <SelectTrigger className="w-40 h-9 text-xs"><SelectValue /></SelectTrigger>
+      <PlanFilterPresets onSelectPreset={() => {}} />
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search by name, carrier, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
+        </div>
+        <Select value={carrierFilter} onValueChange={setCarrierFilter}>
+          <SelectTrigger className="w-44 h-9"><SelectValue placeholder="All Carriers" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="grid">Grid View</SelectItem>
-            <SelectItem value="analytics">Analytics</SelectItem>
-            <SelectItem value="guide">Help & Tips</SelectItem>
+            <SelectItem value="all">All Carriers</SelectItem>
+            {carriers.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={networkFilter} onValueChange={setNetworkFilter}>
+          <SelectTrigger className="w-36 h-9"><SelectValue placeholder="Network" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Networks</SelectItem>
+            {["HMO","PPO","EPO","HDHP","POS"].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Quick filter presets */}
-      {viewMode === "grid" && <PlanFilterPresets onSelectPreset={() => {}} />}
-
-      {/* Filters (grid view only) */}
-      {viewMode === "grid" && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search by name, carrier, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 h-9" />
-          </div>
-          <Select value={carrierFilter} onValueChange={setCarrierFilter}>
-            <SelectTrigger className="w-44 h-9"><SelectValue placeholder="All Carriers" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Carriers</SelectItem>
-              {carriers.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={networkFilter} onValueChange={setNetworkFilter}>
-            <SelectTrigger className="w-36 h-9"><SelectValue placeholder="Network" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Networks</SelectItem>
-              {["HMO","PPO","EPO","HDHP","POS"].map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {/* Advanced search */}
-      {viewMode === "grid" && <PlanSearchAdvanced onSearch={() => {}} />}
-
-      {/* Quality checklist */}
-      {viewMode === "grid" && <PlanQualityChecklist plans={plans} />}
-
-      {/* Comparison tool for medical plans */}
       {activeTab === "medical" && filterPlans(medicalPlans).length > 0 && (
         <PlanComparisonTool plans={filterPlans(medicalPlans)} medical={true} />
       )}
@@ -198,28 +169,6 @@ export default function PlanLibrary() {
       {showImport && <PlanImportModal open={showImport} onClose={() => setShowImport(false)} />}
     </div>
   );
-
-  // View mode content
-  if (viewMode === "analytics") {
-    return (
-      <div className="space-y-6">
-        <PageContent />
-        <PlanAnalyticsPanel plans={plans} />
-        <PlanQualityChecklist plans={plans} />
-        <PlanArchiveManager archivedPlans={archivedPlans} />
-      </div>
-    );
-  }
-
-  if (viewMode === "guide") {
-    return (
-      <div className="space-y-6">
-        <PageContent />
-        <PlanLibraryGuide />
-        <PlanQualityChecklist plans={plans} />
-      </div>
-    );
-  }
 
   return <PageContent />;
 }

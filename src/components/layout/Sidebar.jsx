@@ -16,6 +16,7 @@ import {
   Zap,
   Building2,
   BookOpen,
+  DollarSign,
   FileOutput,
   TriangleAlert,
   Calculator,
@@ -51,6 +52,7 @@ const navGroups = [
     label: "Tools & Reference",
     items: [
       { path: "/plans", label: "Plan Library", icon: BookOpen },
+      { path: "/rates", label: "Rates", icon: DollarSign },
       { path: "/policymatch", label: "PolicyMatchAI", icon: Brain },
       { path: "/tasks", label: "Tasks", icon: AlertCircle },
       { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
