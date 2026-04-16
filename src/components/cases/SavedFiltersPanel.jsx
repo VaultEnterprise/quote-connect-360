@@ -77,7 +77,7 @@ export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
 
             {presets.length > 0 && (
               <>
-                <div className="border-t my-2" />
+                <div className="my-2 border-t border-border/70" />
                 {presets.map((p) => (
                   <div key={p.id} className="flex items-center justify-between group">
                     <button
@@ -88,7 +88,7 @@ export default function SavedFiltersPanel({ currentFilters, onLoadPreset }) {
                     </button>
                     <button
                       onClick={() => deletePreset.mutate(p.id)}
-                      className="rounded-lg p-1 opacity-0 transition-all hover:bg-destructive/10 group-hover:opacity-100"
+                      className="rounded-lg p-1 opacity-0 transition-all hover:bg-destructive/10 group-hover:opacity-100 focus:opacity-100"
                     >
                       <Trash2 className="w-3 h-3 text-destructive" />
                     </button>
