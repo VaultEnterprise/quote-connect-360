@@ -3,8 +3,7 @@
   "type": "object",
   "properties": {
     "provider_code": {
-      "type": "string",
-      "enum": ["AST", "SUS", "TRIAD", "NATIONWIDE", "MEC_MVP", "BENEFITTER"]
+      "type": "string"
     },
     "provider_name": {
       "type": "string"
@@ -35,6 +34,10 @@
       "type": "string",
       "enum": ["all", "production", "development"],
       "default": "all"
+    },
+    "is_custom": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["provider_code", "provider_name", "destination_email"]

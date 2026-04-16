@@ -51,6 +51,11 @@ export default function TxQuoteModal({ open, onClose, caseData, censusVersions =
       : [...current, providerCode]);
   };
 
+  const carrierOrder = ["AST", "SUS", "BENEFITTER", "MEC_MVP", "TRIAD"];
+  const sortedRoutes = [
+    ...routes.filter((route) => carrierOrder.includes(route.provider_code)).sort((a, b) => carrierOrder.indexOf(a.provider_code) - carrierOrder.indexOf(b.provider_code)),
+    ...routes.filter((route) => !carrierOrder.includes(route.provider_code)),
+  ];
   const selectedRouteRows = routes.filter((route) => selectedProviders.includes(route.provider_code));
   const subjectPreview = `Quote Request - ${caseData?.employer_name || "Employer"} - ${caseData?.case_number || caseData?.id || "Case"} - ${caseData?.effective_date || "TBD"}`;
   const bodyPreview = `Please provide a quote for the attached validated census file for ${caseData?.employer_name || "this employer"}.`;
@@ -80,11 +85,11 @@ export default function TxQuoteModal({ open, onClose, caseData, censusVersions =
           <Card>
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="font-medium">Provider Selection</p>
+                <p className="font-medium">Carrier Selection</p>
                 {!allRoutesConfigured && <Badge variant="destructive">No active routes configured</Badge>}
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                {routes.map((route) => (
+                {sortedRoutes.map((route) => (
                   <label key={route.provider_code} className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer">
                     <Checkbox checked={selectedProviders.includes(route.provider_code)} onCheckedChange={() => toggleProvider(route.provider_code)} />
                     <div className="min-w-0">
