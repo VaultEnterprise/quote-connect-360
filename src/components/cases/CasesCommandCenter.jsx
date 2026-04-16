@@ -62,14 +62,14 @@ export default function CasesCommandCenter({ metrics, onFilter }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
       {cards.map((card) => (
-        <button key={card.key} onClick={card.onClick} className="text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-ring/40 focus:ring-offset-2">
+        <button key={card.key} onClick={card.onClick} className="text-left rounded-2xl transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-ring/40 focus:ring-offset-2 hover:-translate-y-0.5">
           <MetricCard
             label={card.label}
             value={card.value}
             icon={card.icon}
             trend={card.trend}
             trendLabel={card.trendLabel}
-            className="h-full hover:border-primary/30"
+            className="h-full hover:border-primary/30 hover:bg-card"
           />
         </button>
       ))}
