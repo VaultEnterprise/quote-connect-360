@@ -14,162 +14,8 @@ import ErrorDetailPanel from "./ErrorDetailPanel";
 import TransformPreview from "./TransformPreview";
 import MappingProfileManager from "./MappingProfileManager";
 import DataQualityInsights from "./DataQualityInsights";
-import { generateCensusTemplate, detectDuplicates, analyzeDataQuality } from "@/utils/censusHelpers";
-
-// ─── Field definitions ───────────────────────────────────────────────────────
-const CENSUS_FIELDS = [
-  { key: "first_name",        label: "First Name",        required: true },
-  { key: "last_name",         label: "Last Name",         required: true },
-  { key: "date_of_birth",     label: "Date of Birth",     required: false },
-  { key: "gender",            label: "Gender",            required: false },
-  { key: "email",             label: "Email",             required: false },
-  { key: "phone",             label: "Phone",             required: false },
-  { key: "employee_id",       label: "Employee ID",       required: false },
-  { key: "ssn_last4",         label: "SSN Last 4",        required: false },
-  { key: "hire_date",         label: "Hire Date",         required: false },
-  { key: "employment_status", label: "Emp. Status",       required: false },
-  { key: "employment_type",   label: "Emp. Type",         required: false },
-  { key: "hours_per_week",    label: "Hours/Week",        required: false },
-  { key: "annual_salary",     label: "Annual Salary",     required: false },
-  { key: "job_title",         label: "Job Title",         required: false },
-  { key: "department",        label: "Department",        required: false },
-  { key: "address",           label: "Address",           required: false },
-  { key: "city",              label: "City",              required: false },
-  { key: "state",             label: "State",             required: false },
-  { key: "zip",               label: "Zip Code",          required: false },
-  { key: "coverage_tier",     label: "Coverage Tier",     required: false },
-  { key: "dependent_count",   label: "Dependent Count",   required: false },
-  { key: "class_code",        label: "Class Code",        required: false },
-];
-
-// ─── Auto-map heuristics ─────────────────────────────────────────────────────
-const AUTOMAP_HINTS = {
-  first_name:        ["first_name","first name","firstname","fname","given name","given_name"],
-  last_name:         ["last_name","last name","lastname","lname","surname","family name"],
-  date_of_birth:     ["date_of_birth","dob","birth date","birthdate","birth_date","date of birth"],
-  gender:            ["gender","sex"],
-  email:             ["email","email address","e-mail","work email"],
-  phone:             ["phone","phone number","mobile","cell","telephone"],
-  employee_id:       ["employee_id","emp id","emp_id","employee id","id","staff id"],
-  ssn_last4:         ["ssn","ssn4","ssn_last4","last 4","last4","social security"],
-  hire_date:         ["hire_date","hire date","start date","start_date","date hired"],
-  employment_status: ["employment_status","emp status","status","active"],
-  employment_type:   ["employment_type","emp type","type","full time","part time"],
-  hours_per_week:    ["hours","hours_per_week","hours per week","weekly hours"],
-  annual_salary:     ["salary","annual_salary","annual salary","compensation","wage"],
-  job_title:         ["job_title","title","position","job title","role"],
-  department:        ["department","dept","division","team"],
-  address:           ["address","street","address1","street address"],
-  city:              ["city","town"],
-  state:             ["state","st","province"],
-  zip:               ["zip","zip_code","postal","postal_code","zipcode"],
-  coverage_tier:     ["coverage_tier","coverage","tier","plan tier","coverage type"],
-  dependent_count:   ["dependents","dependent_count","dep count","# dependents"],
-  class_code:        ["class","class_code","employee class","tier","grade"],
-};
-
-function autoMap(headers) {
-  const mapping = {};
-  headers.forEach(h => {
-    const normalized = h.toLowerCase().replace(/[_\s-]+/g, " ").trim();
-    for (const [field, hints] of Object.entries(AUTOMAP_HINTS)) {
-      if (hints.some(hint => hint.replace(/[_\s-]+/g, " ").trim() === normalized)) {
-        if (!mapping[field]) mapping[field] = h;
-        break;
-      }
-    }
-  });
-  return mapping;
-}
-
-// ─── CSV Parser ───────────────────────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return { headers: [], rows: [] };
-  const headers = lines[0].split(",").map(h => h.replace(/^["']|["']$/g, "").trim());
-  const rows = lines.slice(1).map(line => {
-    const vals = line.split(",").map(v => v.replace(/^["']|["']$/g, "").trim());
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = vals[i] || ""; });
-    return obj;
-  }).filter(r => Object.values(r).some(v => v));
-  return { headers, rows };
-}
-
-// ─── Validation ───────────────────────────────────────────────────────────────
-function validateRow(row, mapping) {
-  const issues = [];
-  const get = (field) => row[mapping[field]] || "";
-
-  if (!get("first_name")) issues.push({ field: "first_name", type: "error", message: "Missing first name" });
-  if (!get("last_name"))  issues.push({ field: "last_name",  type: "error", message: "Missing last name" });
-
-  const dob = get("date_of_birth");
-  if (dob && !/^\d{4}-\d{2}-\d{2}$/.test(dob) && !/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(dob)) {
-    issues.push({ field: "date_of_birth", type: "warning", message: "Unrecognized date format" });
-  }
-
-  const email = get("email");
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    issues.push({ field: "email", type: "warning", message: "Invalid email format" });
-  }
-
-  const salary = get("annual_salary");
-  if (salary && isNaN(parseFloat(salary))) {
-    issues.push({ field: "annual_salary", type: "warning", message: "Salary is not a number" });
-  }
-
-  return issues;
-}
-
-function transformRow(row, mapping) {
-  const get = (field) => row[mapping[field]] || "";
-  const numFields = ["hours_per_week","annual_salary","dependent_count"];
-
-  const obj = { validation_status: "pending", is_eligible: true };
-  CENSUS_FIELDS.forEach(({ key }) => {
-    if (!mapping[key]) return;
-    const val = get(key);
-    if (!val) return;
-    if (numFields.includes(key)) obj[key] = parseFloat(val.replace(/[$,]/g, "")) || undefined;
-    else obj[key] = val;
-  });
-
-  // Normalize gender
-  if (obj.gender) {
-    const g = obj.gender.toLowerCase();
-    if (g.startsWith("m")) obj.gender = "male";
-    else if (g.startsWith("f")) obj.gender = "female";
-    else obj.gender = "other";
-  }
-
-  // Normalize employment_status
-  if (obj.employment_status) {
-    const s = obj.employment_status.toLowerCase();
-    if (s.includes("term")) obj.employment_status = "terminated";
-    else if (s.includes("leave")) obj.employment_status = "leave";
-    else obj.employment_status = "active";
-  }
-
-  // Normalize employment_type
-  if (obj.employment_type) {
-    const t = obj.employment_type.toLowerCase();
-    if (t.includes("part")) obj.employment_type = "part_time";
-    else if (t.includes("contract")) obj.employment_type = "contractor";
-    else obj.employment_type = "full_time";
-  }
-
-  // Normalize coverage_tier
-  if (obj.coverage_tier) {
-    const t = obj.coverage_tier.toLowerCase();
-    if (t.includes("family") || t.includes("fam")) obj.coverage_tier = "family";
-    else if (t.includes("spouse") || t.includes("ee+s")) obj.coverage_tier = "employee_spouse";
-    else if (t.includes("child") || t.includes("ee+c")) obj.coverage_tier = "employee_children";
-    else obj.coverage_tier = "employee_only";
-  }
-
-  return obj;
-}
+import { generateCensusTemplate } from "@/utils/censusHelpers";
+import { CENSUS_FIELDS, autoMap, parseCSV, validateRow, transformRow, detectDuplicates, analyzeDataQuality, buildValidationSummary } from "./censusEngine";
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 const STEPS = ["upload", "mapping", "validate", "done"];
@@ -203,21 +49,13 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
   };
 
   const handleValidate = () => {
-    let errors = 0, warnings = 0;
-    rows.forEach(row => {
-      const issues = validateRow(row, mapping);
-      issues.forEach(i => { if (i.type === "error") errors++; else warnings++; });
-    });
-    
-    // Analyze data quality
+    const summary = buildValidationSummary(rows, mapping);
     const stats = analyzeDataQuality(rows, mapping);
-    setFieldStats(stats);
-    
-    // Detect duplicates
     const dups = detectDuplicates(rows, mapping);
+
+    setFieldStats(stats);
     setDuplicates(dups);
-    
-    setValidationSummary({ errors, warnings, total: rows.length });
+    setValidationSummary(summary);
     setStep("validate");
   };
 
@@ -240,7 +78,7 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
       notes,
     });
 
-    const members = rowsToImport.map((row, idx) => {
+    const members = rowsToImport.map((row) => {
       const issues = validateRow(row, mapping);
       return {
         ...transformRow(row, mapping),
@@ -261,10 +99,19 @@ export default function CensusUploadModal({ caseId, currentVersionCount, open, o
     await base44.entities.CensusVersion.update(version.id, {
       status: finalStatus,
       eligible_employees: members.filter(m => m.is_eligible).length,
+      total_dependents: members.reduce((sum, member) => sum + Number(member.dependent_count || 0), 0),
     });
     await base44.entities.BenefitCase.update(caseId, {
       census_status: finalStatus === "validated" ? "validated" : "issues_found",
-      stage: "census_in_progress",
+      stage: finalStatus === "validated" ? "census_validated" : "census_in_progress",
+    });
+    await base44.entities.ActivityLog.create({
+      case_id: caseId,
+      action: "Census imported",
+      detail: `${rowsToImport.length} census records imported as version ${(currentVersionCount || 0) + 1}`,
+      entity_type: "CensusVersion",
+      entity_id: version.id,
+      new_value: JSON.stringify({ status: finalStatus, eligible_employees: members.filter(m => m.is_eligible).length }),
     });
 
     queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] });

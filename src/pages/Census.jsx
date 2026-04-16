@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Users, FileUp, Search } from "lucide-react";
@@ -13,6 +13,9 @@ import CensusVersionHistory from "@/components/census/CensusVersionHistory";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import RiskDashboard from "@/components/census/RiskDashboard";
 import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel";
+import CensusSystemSummary from "@/components/census/CensusSystemSummary";
+import CensusReadinessPanel from "@/components/census/CensusReadinessPanel";
+import { buildDownstreamReadiness } from "@/components/census/censusEngine";
 
 export default function Census() {
   const [search, setSearch] = useState("");
@@ -37,6 +40,22 @@ export default function Census() {
     ? allVersions.filter(v => v.case_id === selectedCaseId)
     : allVersions;
 
+  const { data: censusMembers = [] } = useQuery({
+    queryKey: ["census-members-page", selectedCaseId],
+    queryFn: () => selectedCaseId ? base44.entities.CensusMember.filter({ case_id: selectedCaseId }, "-created_date", 1000) : Promise.resolve([]),
+    enabled: !!selectedCaseId,
+  });
+
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["census-page-enrollments"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 200),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["census-page-renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-created_date", 200),
+  });
+
   // Filter cases by search
   const filteredCases = cases.filter(c =>
     c.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -45,6 +64,17 @@ export default function Census() {
 
   const selectedCase = cases.find(c => c.id === selectedCaseId);
   const selectedVersionCount = filteredVersions.length;
+
+  const readiness = useMemo(() => {
+    if (!selectedCase) return null;
+    return buildDownstreamReadiness({
+      caseRecord: selectedCase,
+      censusVersions: filteredVersions,
+      members: censusMembers,
+      enrollments,
+      renewals,
+    });
+  }, [selectedCase, filteredVersions, censusMembers, enrollments, renewals]);
 
   return (
     <div className="space-y-6">
@@ -91,6 +121,8 @@ export default function Census() {
         </CardContent>
       </Card>
 
+      <CensusSystemSummary versions={allVersions} members={censusMembers} cases={cases} />
+
       {/* Selected Case Info */}
       {selectedCase && (
         <Card>
@@ -127,6 +159,8 @@ export default function Census() {
         />
       ) : (
         <div className="space-y-6">
+          <CensusReadinessPanel readiness={readiness} />
+
           {/* Version History */}
           <CensusVersionHistory
             versions={filteredVersions}
