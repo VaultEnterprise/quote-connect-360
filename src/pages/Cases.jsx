@@ -21,6 +21,7 @@ import BulkStageModal from "@/components/cases/BulkStageModal";
 import BulkPriorityModal from "@/components/cases/BulkPriorityModal";
 import SavedFiltersPanel from "@/components/cases/SavedFiltersPanel";
 import AssignedUserFilter from "@/components/cases/AssignedUserFilter";
+import ActiveFilterChips from "@/components/cases/ActiveFilterChips";
 import BulkStageAdvanceModal from "@/components/cases/BulkStageAdvanceModal";
 import CasesCommandCenter from "@/components/cases/CasesCommandCenter";
 import CasesSystemSignals from "@/components/cases/CasesSystemSignals";
@@ -435,72 +436,25 @@ export default function Cases() {
         </div>
 
         {(activeFilters > 0 || search) && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">{filtered.length} of {cases.length} cases</span>
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
-              >
-                Search: {search}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            {stageFilter !== "all" && (
-              <button
-                type="button"
-                onClick={() => setStageFilter("all")}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
-              >
-                {STAGE_OPTIONS.find((opt) => opt.value === stageFilter)?.label}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            {typeFilter !== "all" && (
-              <button
-                type="button"
-                onClick={() => setTypeFilter("all")}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
-              >
-                {typeFilter.replace(/_/g, " ")}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            {priorityFilter !== "all" && (
-              <button
-                type="button"
-                onClick={() => setPriorityFilter("all")}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
-              >
-                {priorityFilter}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            {assignedToFilter !== "all" && (
-              <button
-                type="button"
-                onClick={() => setAssignedToFilter("all")}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
-              >
-                {assignedToFilter === "unassigned" ? "Unassigned" : assignedToFilter.split("@")[0]}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            {operationalPreset !== "all" && (
-              <button
-                type="button"
-                onClick={() => setOperationalPreset("all")}
-                className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-              >
-                {OPERATIONAL_OPTIONS.find((opt) => opt.value === operationalPreset)?.label}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-foreground" onClick={clearFilters}>
-              <X className="w-3 h-3 mr-1" /> Clear filters
-            </Button>
-          </div>
+          <ActiveFilterChips
+            filteredCount={filtered.length}
+            totalCount={cases.length}
+            search={search}
+            stageFilter={stageFilter}
+            typeFilter={typeFilter}
+            priorityFilter={priorityFilter}
+            assignedToFilter={assignedToFilter}
+            operationalPreset={operationalPreset}
+            stageOptions={STAGE_OPTIONS}
+            operationalOptions={OPERATIONAL_OPTIONS}
+            onClearSearch={() => setSearch("")}
+            onClearStage={() => setStageFilter("all")}
+            onClearType={() => setTypeFilter("all")}
+            onClearPriority={() => setPriorityFilter("all")}
+            onClearAssigned={() => setAssignedToFilter("all")}
+            onClearOperational={() => setOperationalPreset("all")}
+            onClearAll={clearFilters}
+          />
         )}
       </div>
 
