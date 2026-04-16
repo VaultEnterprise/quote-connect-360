@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Trash2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
+import { buildScenarioFinancialSnapshot } from "@/components/platform/platformFinancialExecution";
 
 /**
  * RenewalDetailModal
@@ -58,6 +59,23 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
     queryKey: ["renewal-case", renewal?.case_id],
     queryFn: () => renewal?.case_id ? base44.entities.BenefitCase.filter({ id: renewal.case_id }) : Promise.resolve([]),
     enabled: open && !!renewal?.case_id,
+  });
+
+  const { data: linkedScenarioPlans = [] } = useQuery({
+    queryKey: ["renewal-linked-scenario-plans", renewal?.case_id],
+    queryFn: async () => {
+      const scenarios = await base44.entities.QuoteScenario.filter({ case_id: renewal.case_id }, "-created_date", 20);
+      const latestScenario = scenarios[0];
+      if (!latestScenario) return [];
+      return base44.entities.ScenarioPlan.filter({ scenario_id: latestScenario.id }, "-created_date", 100);
+    },
+    enabled: open && !!renewal?.case_id,
+  });
+
+  const { data: rateTables = [] } = useQuery({
+    queryKey: ["renewal-detail-rate-tables"],
+    queryFn: () => base44.entities.PlanRateTable.list("-created_date", 500),
+    enabled: open,
   });
 
   const derivedStatus = useMemo(() => {
@@ -140,6 +158,13 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
   };
 
   const caseLink = linkedCase?.[0];
+  const financialSnapshot = buildScenarioFinancialSnapshot({
+    scenarioPlans: linkedScenarioPlans,
+    rateTables,
+    effectiveDate: renewal?.renewal_date,
+    state: caseLink?.state,
+    coverageTier: "employee_only",
+  });
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -181,6 +206,18 @@ export default function RenewalDetailModal({ renewal, open, onClose }) {
               </div>
             )}
           </div>
+
+          {linkedScenarioPlans.length > 0 && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-3 space-y-1">
+                <p className="text-xs font-semibold text-blue-800">Rate-governed financial snapshot</p>
+                <p className="text-xs text-blue-700">Premium ${Number(financialSnapshot.totalMonthlyPremium || 0).toLocaleString()} · Employer ${Number(financialSnapshot.employerMonthlyCost || 0).toLocaleString()} · Employee ${Number(financialSnapshot.employeeMonthlyCost || 0).toLocaleString()}</p>
+                {financialSnapshot.missingRateCount > 0 && (
+                  <p className="text-xs text-red-600">{financialSnapshot.missingRateCount} linked plans are missing effective rate tables.</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Premium section with auto-calc */}
           <Card>

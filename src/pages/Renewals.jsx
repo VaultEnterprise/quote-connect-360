@@ -18,6 +18,7 @@ import CreateRenewalModal from "@/components/renewals/CreateRenewalModal";
 import RenewalRiskForecast from "@/components/renewals/RenewalRiskForecast";
 import RenewalCalendarView from "@/components/renewals/RenewalCalendarView";
 import RenewalWorkloadBar from "@/components/renewals/RenewalWorkloadBar";
+import { buildRateDependencySummary } from "@/components/rates/rateGovernanceEngine";
 
 const SORT_OPTIONS = [
   { value: "urgency", label: "Urgency (Soonest)" },
@@ -61,6 +62,31 @@ export default function Renewals() {
     enabled: !!selectedRenewal?.case_id,
   });
 
+  const { data: plans = [] } = useQuery({
+    queryKey: ["renewal-plans"],
+    queryFn: () => base44.entities.BenefitPlan.list("-created_date", 300),
+  });
+
+  const { data: rateTables = [] } = useQuery({
+    queryKey: ["renewal-rate-tables"],
+    queryFn: () => base44.entities.PlanRateTable.list("-created_date", 500),
+  });
+
+  const { data: scenarioPlans = [] } = useQuery({
+    queryKey: ["renewal-scenario-plans"],
+    queryFn: () => base44.entities.ScenarioPlan.list("-created_date", 500),
+  });
+
+  const { data: quoteScenarios = [] } = useQuery({
+    queryKey: ["renewal-quote-scenarios"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 500),
+  });
+
+  const { data: employeeEnrollments = [] } = useQuery({
+    queryKey: ["renewal-employee-enrollments"],
+    queryFn: () => base44.entities.EmployeeEnrollment.list("-created_date", 500),
+  });
+
   const bulkStatusUpdate = useMutation({
     mutationFn: async ({ ids, status }) => {
       const allRenewals = renewals.filter((renewal) => ids.includes(renewal.id));
@@ -92,6 +118,15 @@ export default function Renewals() {
     const assignees = [...new Set(renewals.map(r => r.assigned_to).filter(Boolean))];
     return assignees.sort();
   }, [renewals]);
+
+  const rateDependencySummary = useMemo(() => buildRateDependencySummary({
+    plans,
+    rateTables,
+    scenarioPlans,
+    quoteScenarios,
+    employeeEnrollments,
+    renewals,
+  }), [plans, rateTables, scenarioPlans, quoteScenarios, employeeEnrollments, renewals]);
 
   const now = new Date();
 
@@ -199,6 +234,12 @@ export default function Renewals() {
 
       {/* KPI Bar — clickable */}
       <RenewalKPIBar renewals={renewals} onFilterClick={handleKpiClick} activeFilter={kpiFilter} />
+
+      {rateDependencySummary.plansWithoutRates > 0 && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+          {rateDependencySummary.plansWithoutRates} active plans are missing rate tables, which can distort renewal decisions.
+        </div>
+      )}
 
       {/* Rate distribution chart */}
       <RateDistributionChart renewals={renewals} />

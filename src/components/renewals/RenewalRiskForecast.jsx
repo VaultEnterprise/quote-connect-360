@@ -30,7 +30,7 @@ export default function RenewalRiskForecast({ renewal, census }) {
   const pmpm = totalPredictedClaims / (totalMembers * 12) || 0;
 
   // Predict rate change
-  const currentPremium = renewal.current_premium || 0;
+  const currentPremium = renewal.current_premium || renewal.renewal_premium || 0;
   const predictedAnnualClaims = totalPredictedClaims;
   const adminFactor = 1.15; // 15% admin/margin
   const predictedPremium = predictedAnnualClaims * adminFactor;
