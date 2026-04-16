@@ -16,7 +16,7 @@ export default function QuickCreateCaseModal({ isOpen, onClose }) {
   });
 
   const handleCreate = async () => {
-    if (!form.employer_name.trim()) return;
+    if (!form.employer_group_id) return;
     setLoading(true);
     try {
       const selectedEmployer = employers.find((item) => item.id === form.employer_group_id);

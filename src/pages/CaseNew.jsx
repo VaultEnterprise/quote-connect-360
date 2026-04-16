@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckSquare, Square, Building2, Briefcase, Users, Phone, MapPin, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,6 +110,7 @@ export default function CaseNew() {
   });
 
   const [newAgency, setNewAgency] = useState({ name: "", code: "" });
+  const [submitError, setSubmitError] = useState("");
   const updateField = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
   const updateAgencyField = (field, value) => setNewAgency(prev => ({ ...prev, [field]: value }));
   const showNewAgencyFields = agencies.length === 0 || form.agency_id === "__new__";
@@ -152,29 +154,26 @@ export default function CaseNew() {
     mutationFn: async (data) => {
       let agencyId = data.agency_id;
       if (agencyId === "__new__") {
-        const agency = await base44.entities.Agency.create({
+        agencyId = (await createValidatedEntityRecord("Agency", {
           name: newAgency.name,
           code: newAgency.code,
           status: "active",
-        });
-        agencyId = agency.id;
+        }, ["name", "code"]))?.id;
       }
-      agencyId = agencyId || agencies[0]?.id || "";
-      const caseNumber = `BC-${Date.now().toString(36).toUpperCase()}`;
 
-      // If no employer_group_id but employer_name given, create EmployerGroup first
-      let empGroupId = data.employer_group_id;
-      if (!agencyId) {
-        const fallbackAgency = await base44.entities.Agency.create({
-          name: newAgency.name || "Default Agency",
-          code: newAgency.code || `AG-${Date.now().toString(36).toUpperCase()}`,
-          status: "active",
-        });
-        agencyId = fallbackAgency.id;
+      if (!agencyId && agencies[0]?.id) {
+        agencyId = agencies[0].id;
       }
+
+      if (!agencyId) {
+        throw new Error("An agency is required before creating a case.");
+      }
+
+      const caseNumber = `BC-${Date.now().toString(36).toUpperCase()}`;
+      let empGroupId = data.employer_group_id;
 
       if (!empGroupId && data.employer_name) {
-        const newEmp = await base44.entities.EmployerGroup.create({
+        const newEmployer = await createValidatedEntityRecord("EmployerGroup", {
           agency_id: agencyId,
           name: data.employer_name,
           dba_name: data.dba_name || undefined,
@@ -193,39 +192,77 @@ export default function CaseNew() {
           renewal_date: data.renewal_date || undefined,
           effective_date: data.effective_date || undefined,
           status: "prospect",
-        });
-        empGroupId = newEmp.id;
+        }, ["agency_id", "name"]);
+        empGroupId = newEmployer.id;
       }
 
-      return base44.entities.BenefitCase.create({
-        agency_id:         agencyId,
+      if (!empGroupId) {
+        throw new Error("Select an existing employer or enter a new employer name.");
+      }
+
+      return createValidatedEntityRecord("BenefitCase", {
+        agency_id: agencyId,
         employer_group_id: empGroupId,
-        employer_name:     data.employer_name,
-        case_number:       caseNumber,
-        case_type:         data.case_type,
-        effective_date:    data.effective_date || undefined,
+        employer_name: data.employer_name,
+        case_number: caseNumber,
+        case_type: data.case_type,
+        effective_date: data.effective_date || undefined,
         target_close_date: data.target_close_date || undefined,
-        priority:          data.priority,
-        assigned_to:       data.assigned_to || undefined,
+        priority: data.priority,
+        assigned_to: data.assigned_to || undefined,
         products_requested: data.products_requested,
-        employee_count:    data.employee_count ? Number(data.employee_count) : undefined,
-        notes:             data.notes || undefined,
-        stage:             "draft",
-        census_status:     "not_started",
-        quote_status:      "not_started",
+        employee_count: data.employee_count ? Number(data.employee_count) : undefined,
+        notes: data.notes || undefined,
+        stage: "draft",
+        census_status: "not_started",
+        quote_status: "not_started",
         enrollment_status: "not_started",
         last_activity_date: new Date().toISOString(),
-      });
+      }, ["agency_id", "employer_group_id", "case_type", "effective_date"]);
     },
     onSuccess: (result) => {
+      setSubmitError("");
       queryClient.invalidateQueries({ queryKey: ["cases"] });
       queryClient.invalidateQueries({ queryKey: ["employers"] });
       navigate(`/cases/${result.id}`);
+    },
+    onError: (error) => {
+      setSubmitError(error.message || "Unable to create case.");
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setSubmitError("");
+
+    const employeeCount = form.employee_count ? Number(form.employee_count) : null;
+    const eligibleCount = form.eligible_count ? Number(form.eligible_count) : null;
+
+    if (!form.employer_name.trim()) {
+      setSubmitError("Employer name is required.");
+      return;
+    }
+
+    if (!form.case_type) {
+      setSubmitError("Case type is required.");
+      return;
+    }
+
+    if (showNewAgencyFields && (!newAgency.name.trim() || !newAgency.code.trim())) {
+      setSubmitError("New agency name and code are required.");
+      return;
+    }
+
+    if (employeeCount !== null && eligibleCount !== null && eligibleCount > employeeCount) {
+      setSubmitError("Eligible count cannot be greater than total employee count.");
+      return;
+    }
+
+    if (form.products_requested.length === 0) {
+      setSubmitError("Select at least one requested product.");
+      return;
+    }
+
     createCase.mutate(form);
   };
 
@@ -421,8 +458,8 @@ export default function CaseNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Effective Date</Label>
-                <Input type="date" value={form.effective_date} onChange={e => updateField("effective_date", e.target.value)} className="mt-1.5" />
+                <Label>Effective Date <span className="text-destructive">*</span></Label>
+                <Input type="date" value={form.effective_date} onChange={e => updateField("effective_date", e.target.value)} className="mt-1.5" required />
               </div>
               <div>
                 <Label>Renewal Date</Label>
@@ -526,6 +563,12 @@ export default function CaseNew() {
               rows={3} />
           </CardContent>
         </Card>
+
+        {submitError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {submitError}
+          </div>
+        )}
 
         <div className="flex justify-end gap-3 pt-1">
           <Link to="/cases"><Button variant="outline">Cancel</Button></Link>
