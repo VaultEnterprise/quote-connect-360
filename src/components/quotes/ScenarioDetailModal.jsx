@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, Copy, Download, DollarSign, Calendar, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Star, CheckCircle, Clock } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import StatusBadge from "@/components/shared/StatusBadge";
 
