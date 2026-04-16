@@ -437,6 +437,56 @@ export default function Cases() {
         {(activeFilters > 0 || search) && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground">{filtered.length} of {cases.length} cases</span>
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
+              >
+                Search: {search}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            {stageFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setStageFilter("all")}
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
+              >
+                {STAGE_OPTIONS.find((opt) => opt.value === stageFilter)?.label}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            {typeFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setTypeFilter("all")}
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
+              >
+                {typeFilter.replace(/_/g, " ")}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            {priorityFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setPriorityFilter("all")}
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
+              >
+                {priorityFilter}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            {assignedToFilter !== "all" && (
+              <button
+                type="button"
+                onClick={() => setAssignedToFilter("all")}
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted"
+              >
+                {assignedToFilter === "unassigned" ? "Unassigned" : assignedToFilter.split("@")[0]}
+                <X className="w-3 h-3" />
+              </button>
+            )}
             {operationalPreset !== "all" && (
               <button
                 type="button"
