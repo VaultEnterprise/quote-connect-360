@@ -35,8 +35,6 @@ export default function HelpSearchAnalytics() {
     queryFn: () => base44.entities.HelpContent.filter({ content_status: "active" }, "-view_count", 100),
   });
 
-  if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
-
   // Top search terms
   const termFreq = useMemo(() => {
     const freq = {};
@@ -83,6 +81,8 @@ export default function HelpSearchAnalytics() {
     else confBuckets["<30%"]++;
   }
   const confChartData = Object.entries(confBuckets).map(([range, count]) => ({ range, count }));
+
+  if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
 
   return (
     <div className="space-y-6">

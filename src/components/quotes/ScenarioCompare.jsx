@@ -77,26 +77,29 @@ const PLAN_ROWS = [
 ];
 
 function PlanComparisonSection({ scenarios }) {
-  // For each scenario, load ScenarioPlan → BenefitPlan data
-  const planQueries = scenarios.map(s =>
-    useQuery({
-      queryKey: ["scenario-plans-full", s.id],
-      queryFn: async () => {
-        const sps = await base44.entities.ScenarioPlan.filter({ scenario_id: s.id });
-        const plans = await Promise.all(
-          sps.map(sp => base44.entities.BenefitPlan.filter({ id: sp.plan_id }).then(r => r[0]).catch(() => null))
-        );
-        return sps.map((sp, i) => ({ sp, plan: plans[i] })).filter(x => x.plan);
-      },
-    })
-  );
+  const scenarioIds = scenarios.map(s => s.id);
 
-  const loading = planQueries.some(q => q.isLoading);
-  if (loading) return <div className="p-4 text-xs text-muted-foreground">Loading plan details…</div>;
+  const { data: scenarioPlanData = {}, isLoading } = useQuery({
+    queryKey: ["scenario-plans-full-compare", scenarioIds.join(",")],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        scenarios.map(async (s) => {
+          const sps = await base44.entities.ScenarioPlan.filter({ scenario_id: s.id });
+          const plans = await Promise.all(
+            sps.map(sp => base44.entities.BenefitPlan.filter({ id: sp.plan_id }).then(r => r[0] || null))
+          );
+          return [s.id, sps.map((sp, i) => ({ sp, plan: plans[i] })).filter(x => x.plan)];
+        })
+      );
+      return Object.fromEntries(entries);
+    },
+    enabled: scenarios.length > 0,
+  });
 
-  // Get all unique plan types across scenarios
+  if (isLoading) return <div className="p-4 text-xs text-muted-foreground">Loading plan details…</div>;
+
   const allTypes = [...new Set(
-    planQueries.flatMap(q => (q.data || []).map(x => x.plan?.plan_type).filter(Boolean))
+    Object.values(scenarioPlanData).flatMap(items => (items || []).map(x => x.plan?.plan_type).filter(Boolean))
   )];
 
   if (allTypes.length === 0) {
@@ -106,9 +109,8 @@ function PlanComparisonSection({ scenarios }) {
   return (
     <div className="space-y-4">
       {allTypes.map(type => {
-        // Get the first plan of this type per scenario
-        const plansByScenario = scenarios.map((_s, i) =>
-          (planQueries[i].data || []).find(x => x.plan?.plan_type === type)?.plan || null
+        const plansByScenario = scenarios.map((s) =>
+          (scenarioPlanData[s.id] || []).find(x => x.plan?.plan_type === type)?.plan || null
         );
 
         if (plansByScenario.every(p => p === null)) return null;

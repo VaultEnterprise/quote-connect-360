@@ -26,6 +26,15 @@ export default function HelpCoverageReport() {
     queryFn: () => base44.entities.HelpContent.list("-updated_date", 500),
   });
 
+  const contentMap = useMemo(() => contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}), [contents]);
+
+  if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
+
+  const { data: contents = [] } = useQuery({
+    queryKey: ["help-cov-contents"],
+    queryFn: () => base44.entities.HelpContent.list("-updated_date", 500),
+  });
+
   if (user?.role !== "admin") return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Admin access required.</p></div>;
 
   const contentMap = useMemo(() => contents.reduce((acc, c) => { acc[c.help_target_code] = c; return acc; }, {}), [contents]);

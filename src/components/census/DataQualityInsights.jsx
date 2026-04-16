@@ -94,7 +94,7 @@ export default function DataQualityInsights({ fieldStats, rows }) {
                 </div>
               </div>
               {outliers.length > 0 && (
-                <p className="text-amber-600 pt-1">⚠️ {outliers.length} salary outlier(s) detected (>50% deviation)</p>
+                <p className="text-amber-600 pt-1">⚠️ {outliers.length} salary outlier(s) detected ({'>'}50% deviation)</p>
               )}
             </div>
           )}
