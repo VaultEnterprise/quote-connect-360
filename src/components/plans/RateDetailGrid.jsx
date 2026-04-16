@@ -75,23 +75,10 @@ export default function RateDetailGrid({ plans, schedules }) {
     mutationFn: async () => {
       const rows = parseCSVRates(csvText, scheduleId, schedule?.plan_id);
       if (!rows.length) throw new Error("No valid rows parsed from CSV");
-      const res = await base44.functions.invoke("planRatingEngine", {
-        action: "importRateRows",
-        rows,
-        rateScheduleId: scheduleId,
-        planId: schedule?.plan_id,
-        sourceFileName: "manual_csv_import",
-      });
-      return res.data;
+      await base44.entities.PlanRateDetail.bulkCreate(rows);
+      return rows.length;
     },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["rate-detail", scheduleId] });
-      qc.invalidateQueries({ queryKey: ["import-runs"] });
-      const msg = `${data.success} rows imported · ${data.errors} errors · Run ID: ${data.run_id?.slice(-6)}`;
-      if (data.errors > 0) toast.warning(msg);
-      else toast.success(`${data.success} rate rows imported`);
-      setCsvText(""); setShowCsvImport(false);
-    },
+    onSuccess: (count) => { qc.invalidateQueries({ queryKey: ["rate-detail", scheduleId] }); toast.success(`${count} rate rows imported`); setCsvText(""); setShowCsvImport(false); },
     onError: (e) => toast.error(e.message),
   });
 

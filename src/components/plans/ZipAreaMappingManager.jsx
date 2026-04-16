@@ -68,21 +68,10 @@ export default function ZipAreaMappingManager({ plans }) {
     mutationFn: async () => {
       const rows = parseZipCSV(csvText, csvPlanId || null);
       if (!rows.length) throw new Error("No valid rows parsed");
-      const res = await base44.functions.invoke("planRatingEngine", {
-        action: "importZipRows",
-        rows,
-        planId: csvPlanId || null,
-        sourceFileName: "manual_csv_import",
-      });
-      return res.data;
+      await base44.entities.PlanZipAreaMap.bulkCreate(rows);
+      return rows.length;
     },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["zip-area-maps"] });
-      qc.invalidateQueries({ queryKey: ["import-runs"] });
-      const msg = `${data.success} ZIP mappings imported · ${data.errors} errors`;
-      if (data.errors > 0) toast.warning(msg); else toast.success(`${data.success} ZIP mappings imported`);
-      setCsvText(""); setShowCsv(false);
-    },
+    onSuccess: (n) => { qc.invalidateQueries({ queryKey: ["zip-area-maps"] }); toast.success(`${n} ZIP mappings imported`); setCsvText(""); setShowCsv(false); },
     onError: e => toast.error(e.message),
   });
 
