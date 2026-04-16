@@ -57,6 +57,15 @@ const SORT_OPTIONS = [
   { value: "sla_risk",     label: "SLA Risk" },
 ];
 
+const OPERATIONAL_OPTIONS = [
+  { value: "all", label: "All Operational" },
+  { value: "open", label: "Open Cases" },
+  { value: "sla_risk", label: "SLA Risk" },
+  { value: "critical_blockers", label: "Critical Blockers" },
+  { value: "stalled", label: "Stalled" },
+  { value: "rate_gaps", label: "Rate Gaps" },
+];
+
 export default function Cases() {
   const queryClient = useQueryClient();
   const [search, setSearch]             = useState("");
@@ -388,6 +397,13 @@ export default function Cases() {
           </Select>
 
           <AssignedUserFilter cases={cases} value={assignedToFilter} onChange={setAssignedToFilter} />
+
+          <Select value={operationalPreset} onValueChange={setOperationalPreset}>
+            <SelectTrigger className="w-44 h-9"><SelectValue placeholder="Operational" /></SelectTrigger>
+            <SelectContent>
+              {OPERATIONAL_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
 
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-40 h-9">
