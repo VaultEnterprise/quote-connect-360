@@ -330,7 +330,7 @@ export default function CaseDetail() {
 
         {/* Documents */}
         <TabsContent value="documents" className="mt-4">
-          <DocumentsTab caseId={caseId} employerName={caseData.employer_name} />
+          <DocumentsTab caseId={caseId} employerName={caseData.employer_name} docs={docs} />
         </TabsContent>
 
         {/* Activity */}
