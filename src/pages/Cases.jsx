@@ -3,13 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
-  Briefcase, Plus, Search, Filter, X, LayoutList, Columns,
-  ArrowUpDown, Download, Trash2,
+  Briefcase, Plus, Download, Trash2,
   Users, Layers, Flag, AlertTriangle, FileWarning, ShieldAlert, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
@@ -20,9 +17,8 @@ import BulkActionsBar from "@/components/shared/BulkActionsBar";
 import BulkAssignModal from "@/components/cases/BulkAssignModal";
 import BulkStageModal from "@/components/cases/BulkStageModal";
 import BulkPriorityModal from "@/components/cases/BulkPriorityModal";
-import SavedFiltersPanel from "@/components/cases/SavedFiltersPanel";
-import AssignedUserFilter from "@/components/cases/AssignedUserFilter";
 import ActiveFilterChips from "@/components/cases/ActiveFilterChips";
+import CasesFilterBar from "@/components/cases/CasesFilterBar";
 import BulkStageAdvanceModal from "@/components/cases/BulkStageAdvanceModal";
 import CasesCommandCenter from "@/components/cases/CasesCommandCenter";
 import CasesSystemSignals from "@/components/cases/CasesSystemSignals";
@@ -353,113 +349,51 @@ export default function Cases() {
         </>
       )}
 
-      {/* Filter Bar */}
-      <div className="rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2.5 xl:flex-row xl:flex-wrap xl:items-center">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search employer, case #, or assignee..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9 rounded-xl border-border/70 bg-background pl-10 shadow-sm"
-            />
-          </div>
+      <CasesFilterBar
+        cases={cases}
+        search={search}
+        setSearch={setSearch}
+        stageFilter={stageFilter}
+        setStageFilter={setStageFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        priorityFilter={priorityFilter}
+        setPriorityFilter={setPriorityFilter}
+        assignedToFilter={assignedToFilter}
+        setAssignedToFilter={setAssignedToFilter}
+        operationalPreset={operationalPreset}
+        setOperationalPreset={setOperationalPreset}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        handleLoadPreset={handleLoadPreset}
+        STAGE_OPTIONS={STAGE_OPTIONS}
+        OPERATIONAL_OPTIONS={OPERATIONAL_OPTIONS}
+        SORT_OPTIONS={SORT_OPTIONS}
+      />
 
-          <Select value={stageFilter} onValueChange={setStageFilter}>
-            <SelectTrigger className="h-9 w-44 rounded-xl border-border/70 bg-background shadow-sm">
-              <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Stage" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border/70 shadow-lg">
-              {STAGE_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="h-9 w-40 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Case Type" /></SelectTrigger>
-            <SelectContent className="rounded-xl border-border/70 shadow-lg">
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="new_business">New Business</SelectItem>
-              <SelectItem value="renewal">Renewal</SelectItem>
-              <SelectItem value="mid_year_change">Mid-Year Change</SelectItem>
-              <SelectItem value="takeover">Takeover</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-9 w-36 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent className="rounded-xl border-border/70 shadow-lg">
-              <SelectItem value="all">All Priorities</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <AssignedUserFilter cases={cases} value={assignedToFilter} onChange={setAssignedToFilter} />
-
-          <Select value={operationalPreset} onValueChange={setOperationalPreset}>
-            <SelectTrigger className="h-9 w-44 rounded-xl border-border/70 bg-background shadow-sm"><SelectValue placeholder="Operational" /></SelectTrigger>
-            <SelectContent className="rounded-xl border-border/70 shadow-lg">
-              {OPERATIONAL_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="h-9 w-40 rounded-xl border-border/70 bg-background shadow-sm">
-              <ArrowUpDown className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border/70 shadow-lg">
-              {SORT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-
-          {/* View Toggle */}
-          <div className="flex flex-shrink-0 overflow-hidden rounded-xl border border-border/70 bg-muted/30 p-1 shadow-sm">
-            <button
-              className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors ${viewMode === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/80"}`}
-              onClick={() => setViewMode("list")}
-            >
-              <LayoutList className="w-3.5 h-3.5" /> List
-            </button>
-            <button
-              className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors ${viewMode === "pipeline" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/80"}`}
-              onClick={() => setViewMode("pipeline")}
-            >
-              <Columns className="w-3.5 h-3.5" /> Pipeline
-            </button>
-          </div>
-
-          <SavedFiltersPanel currentFilters={{ search, stageFilter, typeFilter, priorityFilter, assignedToFilter, operationalPreset }} onLoadPreset={handleLoadPreset} />
-        </div>
-
-          {(activeFilters > 0 || search) && (
-            <ActiveFilterChips
-              filteredCount={filtered.length}
-              totalCount={cases.length}
-              search={search}
-              stageFilter={stageFilter}
-              typeFilter={typeFilter}
-              priorityFilter={priorityFilter}
-              assignedToFilter={assignedToFilter}
-              operationalPreset={operationalPreset}
-              stageOptions={STAGE_OPTIONS}
-              operationalOptions={OPERATIONAL_OPTIONS}
-              onClearSearch={() => setSearch("")}
-              onClearStage={() => setStageFilter("all")}
-              onClearType={() => setTypeFilter("all")}
-              onClearPriority={() => setPriorityFilter("all")}
-              onClearAssigned={() => setAssignedToFilter("all")}
-              onClearOperational={() => setOperationalPreset("all")}
-              onClearAll={clearFilters}
-            />
-          )}
-        </div>
-      </div>
+      {(activeFilters > 0 || search) && (
+        <ActiveFilterChips
+          filteredCount={filtered.length}
+          totalCount={cases.length}
+          search={search}
+          stageFilter={stageFilter}
+          typeFilter={typeFilter}
+          priorityFilter={priorityFilter}
+          assignedToFilter={assignedToFilter}
+          operationalPreset={operationalPreset}
+          stageOptions={STAGE_OPTIONS}
+          operationalOptions={OPERATIONAL_OPTIONS}
+          onClearSearch={() => setSearch("")}
+          onClearStage={() => setStageFilter("all")}
+          onClearType={() => setTypeFilter("all")}
+          onClearPriority={() => setPriorityFilter("all")}
+          onClearAssigned={() => setAssignedToFilter("all")}
+          onClearOperational={() => setOperationalPreset("all")}
+          onClearAll={clearFilters}
+        />
+      )}
 
       {/* Content */}
       {isLoading ? (
