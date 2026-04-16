@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import RateTableEditor from "@/components/plans/RateTableEditor";
 import { summarizeRatePlan } from "@/components/rates/rateGovernanceEngine";
+import VersionTimeline from "@/components/shared/VersionTimeline";
 
 export default function RateTableManagerCard({ plan, rateTables = [] }) {
   const summary = summarizeRatePlan(plan, rateTables);
@@ -53,6 +54,27 @@ export default function RateTableManagerCard({ plan, rateTables = [] }) {
           </div>
         </div>
         <RateTableEditor planId={plan.id} rateTables={rateTables} />
+        <div className="pt-2 border-t">
+          <p className="text-xs font-medium text-muted-foreground mb-3">Rate Version History</p>
+          <VersionTimeline
+            items={rateTables.map((table) => ({
+              id: table.id,
+              timestamp: table.updated_date || table.created_date,
+              status: table.rate_type,
+              effective_date: table.effective_date,
+              ee_rate: table.ee_rate,
+              fam_rate: table.fam_rate,
+              age_banded_count: table.age_banded_rates?.length || 0,
+            }))}
+            emptyLabel="No saved rate versions"
+            renderMeta={(item) => (
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <p>Effective: {item.effective_date || "—"}</p>
+                <p>{item.status === "age_banded" ? `Age rows: ${item.age_banded_count}` : `EE: $${Number(item.ee_rate || 0).toLocaleString()} · Family: $${Number(item.fam_rate || 0).toLocaleString()}`}</p>
+              </div>
+            )}
+          />
+        </div>
       </CardContent>
     </Card>
   );

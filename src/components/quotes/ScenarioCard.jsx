@@ -131,6 +131,11 @@ export default function ScenarioCard({ scenario, isSelected, onToggleSelect, onE
                   Score: {scenario.recommendation_score}/100
                 </span>
               )}
+              {!!scenario.versions?.length && (
+                <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-medium">
+                  {scenario.versions.length} versions
+                </span>
+              )}
               {isExpiringSoon && !isExpired && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-200">
                   <AlertTriangle className="w-2.5 h-2.5" /> Exp. in {daysUntilExpiry}d

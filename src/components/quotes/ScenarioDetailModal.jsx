@@ -12,6 +12,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import QuoteScenarioInsights from "./QuoteScenarioInsights";
 import RecommendationBreakdown from "./RecommendationBreakdown";
 import ScenarioDecisionPanel from "./ScenarioDecisionPanel";
+import VersionTimeline from "@/components/shared/VersionTimeline";
 
 export default function ScenarioDetailModal({ scenario, open, onClose }) {
   const [copiedField, setCopiedField] = useState(null);
@@ -254,15 +255,16 @@ export default function ScenarioDetailModal({ scenario, open, onClose }) {
 
           {/* History Tab */}
           <TabsContent value="history" className="space-y-4">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">
-                  {scenario.versions && scenario.versions.length > 0
-                    ? `${scenario.versions.length} historical versions`
-                    : "No version history available"}
-                </p>
-              </CardContent>
-            </Card>
+            <VersionTimeline
+              items={scenario.versions || []}
+              emptyLabel="No version history available"
+              renderMeta={(item) => (
+                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  <p>Premium: ${Number(item.total_monthly_premium || 0).toLocaleString()} · Employer: ${Number(item.employer_monthly_cost || 0).toLocaleString()} · Employee: ${Number(item.employee_monthly_cost_avg || 0).toLocaleString()}</p>
+                  <p>Plans: {item.plan_count || 0} · Census Version: {item.census_version_number || item.census_version_id || "—"}</p>
+                </div>
+              )}
+            />
           </TabsContent>
         </Tabs>
 

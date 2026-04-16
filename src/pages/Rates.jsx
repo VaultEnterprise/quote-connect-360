@@ -133,7 +133,7 @@ export default function Rates() {
       ) : (
         <div className="space-y-4">
           {filteredPlans.map((plan) => (
-            <RateTableManagerCard key={plan.id} plan={plan} rateTables={ratesByPlan[plan.id] || []} />
+            <RateTableManagerCard key={plan.id} plan={plan} rateTables={(ratesByPlan[plan.id] || []).sort((a, b) => new Date(b.effective_date || 0) - new Date(a.effective_date || 0))} />
           ))}
         </div>
       )}
