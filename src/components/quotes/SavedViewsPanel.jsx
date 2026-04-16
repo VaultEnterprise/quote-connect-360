@@ -15,7 +15,7 @@ const PRESET_VIEWS = [
   { id: "draft", name: "Drafts", filters: { status: "draft" } },
 ];
 
-export default function SavedViewsPanel({ currentFilters, onLoadPreset, onSavePreset }) {
+export default function SavedViewsPanel({ currentFilters, onLoadPreset }) {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [presetName, setPresetName] = useState("");
   const [presetDescription, setPresetDescription] = useState("");
