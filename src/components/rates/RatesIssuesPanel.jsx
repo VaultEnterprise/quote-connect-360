@@ -5,9 +5,6 @@ import { Badge } from "@/components/ui/badge";
 export default function RatesIssuesPanel({ issues, onSelectRow }) {
   return (
     <>
-      <div>
-        <h3 className="text-base font-semibold text-foreground">Rate readiness issues</h3>
-      </div>
       {issues.length === 0 ? (
         <p className="text-sm text-muted-foreground">No operational issues detected in the current scope.</p>
       ) : issues.map((issue) => (
