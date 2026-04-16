@@ -359,7 +359,7 @@ export default function CaseDetail() {
         <CloneCaseModal caseData={caseData} isOpen={showClone} onClose={() => setShowClone(false)} />
       )}
       {showClose && (
-        <CaseCloseModal caseData={caseData} open={showClose} onClose={() => setShowClose(false)} />
+        <CaseCloseModal caseData={caseData} user={user} open={showClose} onClose={() => setShowClose(false)} />
       )}
       {showAdvance && (
         <StageAdvanceModal
