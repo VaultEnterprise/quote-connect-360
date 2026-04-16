@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function RatesIssuesPanel({ issues, onSelectRow }) {
   return (
-    <div className="space-y-3">
+    <>
       <div>
         <h3 className="text-base font-semibold text-foreground">Rate readiness issues</h3>
       </div>
@@ -26,6 +26,6 @@ export default function RatesIssuesPanel({ issues, onSelectRow }) {
           </div>
         </>
       ))}
-    </div>
+    </>
   );
 }
