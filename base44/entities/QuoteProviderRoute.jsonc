@@ -1,0 +1,52 @@
+{
+  "name": "QuoteProviderRoute",
+  "type": "object",
+  "properties": {
+    "provider_code": {
+      "type": "string"
+    },
+    "provider_name": {
+      "type": "string"
+    },
+    "destination_email": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "default_cc": {
+      "type": "string"
+    },
+    "subject_template": {
+      "type": "string"
+    },
+    "body_template": {
+      "type": "string"
+    },
+    "product_mapping": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "environment_restriction": {
+      "type": "string",
+      "enum": [
+        "all",
+        "production",
+        "development"
+      ],
+      "default": "all"
+    },
+    "is_custom": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "provider_code",
+    "provider_name",
+    "destination_email"
+  ]
+}

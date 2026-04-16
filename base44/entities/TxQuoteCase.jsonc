@@ -1,0 +1,101 @@
+{
+  "name": "TxQuoteCase",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "census_version_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_progress",
+        "ready",
+        "sent_partial",
+        "sent_complete",
+        "closed"
+      ],
+      "default": "draft"
+    },
+    "readiness_status": {
+      "type": "string",
+      "enum": [
+        "incomplete",
+        "conditional",
+        "ready"
+      ],
+      "default": "incomplete"
+    },
+    "readiness_score": {
+      "type": "number",
+      "default": 0
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "requested_plan_type": {
+      "type": "string"
+    },
+    "quote_type": {
+      "type": "string"
+    },
+    "funding_type": {
+      "type": "string",
+      "enum": [
+        "level_funded",
+        "fully_insured",
+        "self_funded",
+        "other"
+      ],
+      "default": "level_funded"
+    },
+    "requires_claims": {
+      "type": "boolean",
+      "default": false
+    },
+    "requires_dependents": {
+      "type": "boolean",
+      "default": false
+    },
+    "requires_contribution": {
+      "type": "boolean",
+      "default": true
+    },
+    "requires_current_rates": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    },
+    "created_by_email": {
+      "type": "string"
+    },
+    "updated_by_email": {
+      "type": "string"
+    },
+    "sent_destination_count": {
+      "type": "number",
+      "default": 0
+    },
+    "selected_destination_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_validated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "case_id"
+  ]
+}

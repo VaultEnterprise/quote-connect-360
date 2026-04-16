@@ -1,0 +1,78 @@
+{
+  "name": "QuoteTransmission",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "census_version_id": {
+      "type": "string"
+    },
+    "census_file_name": {
+      "type": "string"
+    },
+    "provider_code": {
+      "type": "string"
+    },
+    "provider_name": {
+      "type": "string"
+    },
+    "recipient_email": {
+      "type": "string"
+    },
+    "cc_email": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "success",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "failure_reason": {
+      "type": "string"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sent_by": {
+      "type": "string"
+    },
+    "turnaround_date_requested": {
+      "type": "string",
+      "format": "date"
+    },
+    "product_type": {
+      "type": "string"
+    },
+    "contact_override": {
+      "type": "string"
+    },
+    "internal_note": {
+      "type": "string"
+    },
+    "selected_provider_batch": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "case_id",
+    "census_version_id",
+    "provider_code",
+    "provider_name",
+    "recipient_email"
+  ]
+}
