@@ -14,7 +14,6 @@ export default function RatesIssuesPanel({ issues, onSelectRow }) {
           <Badge variant="outline" className="capitalize">{issue.severity}</Badge>
           <div className="mt-2 space-y-1">
             {issue.rows.slice(0, 3).map((row) => (
-              <button key={row.id} onClick={() => onSelectRow(row)} className="block text-left text-xs text-primary hover:underline">{row.rate_set_name || row.linkedPlanName}</button>
             ))}
           </div>
         </>
