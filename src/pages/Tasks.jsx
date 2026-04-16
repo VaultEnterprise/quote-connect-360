@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
   CheckCircle2, Search, Filter, Plus, Clock, Pencil, Trash2,
@@ -18,9 +20,6 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import TaskModal from "@/components/cases/TaskModal";
 import { format, isToday, isTomorrow, isPast, isThisWeek } from "date-fns";
-import useRouteContext from "@/hooks/useRouteContext";
-import useTasksPageModel from "@/domain/tasks/useTasksPageModel";
-import { buildRoute } from "@/contracts/routeContracts";
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 };
 const STATUS_ICON = {
@@ -101,7 +100,7 @@ function TaskRow({ task, onEdit, onDelete, onStatusChange, selected, onSelect })
           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             {task.employer_name && task.case_id && (
               <Link
-                to={buildRoute("caseDetail", { caseId: task.case_id })}
+                to={`/cases/${task.case_id}`}
                 className="flex items-center gap-1 text-xs text-primary hover:underline"
                 onClick={e => e.stopPropagation()}
               >
@@ -200,55 +199,167 @@ function GroupedSection({ title, tasks, collapsed, onToggle, onEdit, onDelete, o
 }
 
 export default function Tasks() {
-  const routeContext = useRouteContext();
-  const caseScope = routeContext.caseId || "";
   const [statusFilter, setStatusFilter] = useState("active");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [search, setSearch] = useState("");
-  const [groupBy, setGroupBy] = useState("due_date");
+  const [groupBy, setGroupBy] = useState("due_date"); // due_date | priority | case | status
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [collapsed, setCollapsed] = useState({});
   const [selected, setSelected] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const queryClient = useQueryClient();
 
-  const {
-    cases,
-    isLoading,
-    assignees,
-    filtered,
-    groups,
-    activeTasks,
-    overdueTasks,
-    completedToday,
-    dueTodayCount,
-    toggleStatus,
-    deleteTask,
-    bulkComplete,
-    bulkDelete,
-  } = useTasksPageModel({
-    caseScope,
-    search,
-    statusFilter,
-    priorityFilter,
-    typeFilter,
-    assigneeFilter,
-    myTasksOnly,
-    groupBy,
-    selectedIds: selected,
+  useEffect(() => {
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+  }, []);
+
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ["tasks-all"],
+    queryFn: () => base44.entities.CaseTask.list("-created_date", 200),
   });
 
+  const { data: cases = [] } = useQuery({
+    queryKey: ["cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 100),
+  });
+
+  const toggleStatus = useMutation({
+    mutationFn: (task) => {
+      const next = task.status === "completed" ? "pending" : task.status === "pending" ? "in_progress" : "completed";
+      return base44.entities.CaseTask.update(task.id, {
+        status: next,
+        completed_at: next === "completed" ? new Date().toISOString() : null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks-all"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-pending"] });
+    },
+  });
+
+  const deleteTask = useMutation({
+    mutationFn: (id) => base44.entities.CaseTask.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks-all"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-pending"] });
+    },
+  });
+
+  const bulkComplete = useMutation({
+    mutationFn: () => Promise.all(selected.map(id =>
+      base44.entities.CaseTask.update(id, { status: "completed", completed_at: new Date().toISOString() })
+    )),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks-all"] });
+      setSelected([]);
+    },
+  });
+
+  const bulkDelete = useMutation({
+    mutationFn: () => Promise.all(selected.map(id => base44.entities.CaseTask.delete(id))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks-all"] });
+      setSelected([]);
+    },
+  });
+
+  // ── Unique assignees for dropdown ──────────────────────────────────────────
+  const assignees = useMemo(() => {
+    const set = new Set(tasks.map(t => t.assigned_to).filter(Boolean));
+    return Array.from(set).sort();
+  }, [tasks]);
+
+  // ── Filter ─────────────────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    return tasks
+      .filter(t => {
+        const matchSearch = !search ||
+          t.title?.toLowerCase().includes(search.toLowerCase()) ||
+          t.employer_name?.toLowerCase().includes(search.toLowerCase()) ||
+          t.assigned_to?.toLowerCase().includes(search.toLowerCase());
+        const matchStatus = statusFilter === "all"
+          || (statusFilter === "active" && !["completed", "cancelled"].includes(t.status))
+          || t.status === statusFilter;
+        const matchPriority = priorityFilter === "all" || t.priority === priorityFilter;
+        const matchType = typeFilter === "all" || t.task_type === typeFilter;
+        const matchAssignee = assigneeFilter === "all" || t.assigned_to === assigneeFilter;
+        const matchMyTasks = !myTasksOnly || (currentUser && t.assigned_to === currentUser.email);
+        return matchSearch && matchStatus && matchPriority && matchType && matchAssignee && matchMyTasks;
+      })
+      .sort((a, b) => (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2));
+  }, [tasks, search, statusFilter, priorityFilter, typeFilter, assigneeFilter, myTasksOnly, currentUser]);
+
+  // ── Group ──────────────────────────────────────────────────────────────────
+  const groups = useMemo(() => {
+    if (groupBy === "priority") {
+      const map = { urgent: [], high: [], normal: [], low: [] };
+      filtered.forEach(t => { const p = t.priority || "normal"; (map[p] = map[p] || []).push(t); });
+      return [
+        { key: "urgent", label: "Urgent", tasks: map.urgent, accent: "text-destructive" },
+        { key: "high", label: "High Priority", tasks: map.high, accent: "text-orange-600" },
+        { key: "normal", label: "Normal", tasks: map.normal, accent: "text-foreground" },
+        { key: "low", label: "Low Priority", tasks: map.low, accent: "text-muted-foreground" },
+      ].filter(g => g.tasks.length > 0);
+    }
+
+    if (groupBy === "case") {
+      const map = {};
+      filtered.forEach(t => {
+        const key = t.employer_name || "No Case";
+        if (!map[key]) map[key] = [];
+        map[key].push(t);
+      });
+      return Object.entries(map)
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([label, tasks]) => ({ key: label, label, tasks, accent: "text-foreground" }));
+    }
+
+    if (groupBy === "status") {
+      const order = ["pending", "in_progress", "blocked", "completed", "cancelled"];
+      const map = {};
+      filtered.forEach(t => { (map[t.status] = map[t.status] || []).push(t); });
+      return order
+        .filter(s => map[s]?.length > 0)
+        .map(s => ({ key: s, label: s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()), tasks: map[s], accent: "text-foreground" }));
+    }
+
+    // Due date grouping (default)
+    const overdue = [], today = [], tomorrow = [], thisWeek = [], later = [], noDue = [];
+    filtered.forEach(t => {
+      if (!t.due_date) { noDue.push(t); return; }
+      const d = new Date(t.due_date);
+      if (isPast(d) && !isToday(d) && t.status !== "completed") overdue.push(t);
+      else if (isToday(d)) today.push(t);
+      else if (isTomorrow(d)) tomorrow.push(t);
+      else if (isThisWeek(d, { weekStartsOn: 1 })) thisWeek.push(t);
+      else later.push(t);
+    });
+    return [
+      { key: "overdue", label: "Overdue", tasks: overdue, accent: "text-destructive" },
+      { key: "today", label: "Today", tasks: today, accent: "text-orange-600" },
+      { key: "tomorrow", label: "Tomorrow", tasks: tomorrow, accent: "text-amber-600" },
+      { key: "thisWeek", label: "This Week", tasks: thisWeek, accent: "text-blue-600" },
+      { key: "later", label: "Later", tasks: later, accent: "text-foreground" },
+      { key: "noDue", label: "No Due Date", tasks: noDue, accent: "text-muted-foreground" },
+    ].filter(g => g.tasks.length > 0);
+  }, [filtered, groupBy]);
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  const activeTasks = tasks.filter(t => !["completed", "cancelled"].includes(t.status));
+  const overdueTasks = tasks.filter(t => t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date)) && t.status !== "completed");
+  const completedToday = tasks.filter(t => t.status === "completed" && t.completed_at && isToday(new Date(t.completed_at)));
+
   const handleSelect = (id, val) => {
-    setSelected((prev) => (val ? [...prev, id] : prev.filter((item) => item !== id)));
+    setSelected(prev => val ? [...prev, id] : prev.filter(x => x !== id));
   };
-
   const handleSelectAll = () => {
-    setSelected((prev) => (prev.length === filtered.length ? [] : filtered.map((task) => task.id)));
+    setSelected(prev => prev.length === filtered.length ? [] : filtered.map(t => t.id));
   };
-
-  const toggleGroup = (key) => setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleGroup = (key) => setCollapsed(p => ({ ...p, [key]: !p[key] }));
 
   return (
     <div className="space-y-6">
@@ -267,8 +378,8 @@ export default function Tasks() {
         {[
           { label: "Active", value: activeTasks.length, icon: ListChecks, color: "text-primary", bg: "bg-primary/5" },
           { label: "Overdue", value: overdueTasks.length, icon: AlertCircle, color: "text-destructive", bg: "bg-red-50" },
-          { label: "Due Today", value: dueTodayCount, icon: Calendar, color: "text-orange-600", bg: "bg-orange-50" },
-          { label: "Completed", value: completedToday.length, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Due Today", value: tasks.filter(t => t.due_date && isToday(new Date(t.due_date))).length, icon: Calendar, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Completed", value: tasks.filter(t => t.status === "completed").length, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
         ].map(s => (
           <Card key={s.label} className="cursor-pointer hover:shadow-sm transition-all" onClick={() => setStatusFilter(s.label === "Overdue" ? "active" : s.label === "Active" ? "active" : s.label === "Completed" ? "completed" : "active")}>
             <CardContent className="p-4 flex items-center gap-3">

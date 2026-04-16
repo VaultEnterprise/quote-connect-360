@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import useExceptionsPageModel from "@/domain/exceptions/useExceptionsPageModel";
-import { createValidatedEntityRecord, updateValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { AlertTriangle, Search, Plus, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,13 +27,12 @@ import ExceptionBulkActionsPanel from "@/components/exceptions/ExceptionBulkActi
 import ExceptionNotificationSettings from "@/components/exceptions/ExceptionNotificationSettings";
 import ExceptionFilterPresets from "@/components/exceptions/ExceptionFilterPresets";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useRouteContext from "@/hooks/useRouteContext";
 
 function ResolveModal({ exception, open, onClose }) {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState("");
   const resolve = useMutation({
-    mutationFn: () => updateValidatedEntityRecord("ExceptionItem", exception.id, {
+    mutationFn: () => base44.entities.ExceptionItem.update(exception.id, {
       status: "resolved",
       resolved_at: new Date().toISOString(),
       resolution_notes: notes,
@@ -87,7 +84,7 @@ function CreateExceptionModal({ open, onClose, caseContext }) {
   });
 
   const create = useMutation({
-    mutationFn: () => createValidatedEntityRecord("ExceptionItem", form, ["title", "category", "severity"]),
+    mutationFn: () => base44.entities.ExceptionItem.create(form),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["exceptions"] }); onClose(); },
   });
 
@@ -175,36 +172,86 @@ function CreateExceptionModal({ open, onClose, caseContext }) {
 
 export default function ExceptionQueue() {
   const { user } = useAuth();
-  const routeContext = useRouteContext();
-  const caseScope = routeContext.caseId || "";
+  const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("open");
-  const [sortBy, setSortBy] = useState("created");
+  const [sortBy, setSortBy] = useState("created"); // "created", "severity", "due_date"
   const [showMyOnly, setShowMyOnly] = useState(false);
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("list"); // "list", "board", "analytics", "settings"
 
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [resolving, setResolving] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [detailException, setDetailException] = useState(null);
 
-  const { exceptions, sorted, openCount, dismiss, assignToMe, bulkResolve, bulkDismiss, bulkAssign } = useExceptionsPageModel({
-    caseScope,
-    search,
-    severityFilter,
-    categoryFilter,
-    statusFilter,
-    sortBy,
-    showMyOnly,
-    userEmail: user?.email,
-    selectedIds,
+  const { data: exceptions = [] } = useQuery({
+    queryKey: ["exceptions"],
+    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 500),
   });
 
+  const dismiss = useMutation({
+    mutationFn: (id) => base44.entities.ExceptionItem.update(id, { status: "dismissed" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["exceptions"] }),
+  });
+
+  const assignToMe = useMutation({
+    mutationFn: (id) => base44.entities.ExceptionItem.update(id, { assigned_to: user?.email }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["exceptions"] }),
+  });
+
+  const bulkResolve = useMutation({
+    mutationFn: () => Promise.all([...selectedIds].map(id => base44.entities.ExceptionItem.update(id, { status: "resolved", resolved_at: new Date().toISOString() }))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+      setSelectedIds(new Set());
+    },
+  });
+
+  const bulkDismiss = useMutation({
+    mutationFn: () => Promise.all([...selectedIds].map(id => base44.entities.ExceptionItem.update(id, { status: "dismissed" }))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+      setSelectedIds(new Set());
+    },
+  });
+
+  // ── Filtering ───────────────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    return exceptions.filter(e => {
+      const matchSearch = !search || e.title?.toLowerCase().includes(search.toLowerCase()) || e.employer_name?.toLowerCase().includes(search.toLowerCase());
+      const matchSev = severityFilter === "all" || e.severity === severityFilter;
+      const matchCat = categoryFilter === "all" || e.category === categoryFilter;
+      const matchStatus = statusFilter === "all" || (statusFilter === "open" && !["resolved","dismissed"].includes(e.status)) || e.status === statusFilter;
+      const matchMyOnly = !showMyOnly || e.assigned_to === user?.email;
+      return matchSearch && matchSev && matchCat && matchStatus && matchMyOnly;
+    });
+  }, [exceptions, search, severityFilter, categoryFilter, statusFilter, showMyOnly, user?.email]);
+
+  // ── Sorting ──────────────────────────────────────────────────────────────────
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    if (sortBy === "severity") {
+      const order = { critical: 0, high: 1, medium: 2, low: 3 };
+      arr.sort((a, b) => (order[a.severity] || 4) - (order[b.severity] || 4));
+    } else if (sortBy === "due_date") {
+      arr.sort((a, b) => {
+        if (!a.due_by) return 1;
+        if (!b.due_by) return -1;
+        return new Date(a.due_by) - new Date(b.due_by);
+      });
+    } else {
+      arr.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    }
+    return arr;
+  }, [filtered, sortBy]);
+
+  const openCount = exceptions.filter(e => !["resolved","dismissed"].includes(e.status)).length;
+
   const toggleSelect = (id) => {
-    setSelectedIds((prev) => {
+    setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -326,9 +373,9 @@ export default function ExceptionQueue() {
               selectedCount={selectedIds.size}
               onAction={(action, params) => {
                 if (action === "assign") {
-                  bulkAssign.mutate({ ids: [...selectedIds], email: params.email });
-                } else if (action === "status" && params?.status === "dismissed") {
-                  bulkDismiss.mutate();
+                  Promise.all([...selectedIds].map(id =>
+                    base44.entities.ExceptionItem.update(id, { assigned_to: params.email })
+                  )).then(() => queryClient.invalidateQueries({ queryKey: ["exceptions"] }));
                 } else if (action === "status") {
                   bulkResolve.mutate();
                 }

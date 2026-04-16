@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Upload, Download, Trash2, AlertTriangle, FileUp } from "lucide-react";
 import { toast } from "sonner";
-import SpecialRateImporter from "@/components/plans/SpecialRateImporter";
 
 const AGE_BANDS = ["Under25","25-29","30-34","35-39","40-44","45-49","50-54","55-59","60-64","65+"];
 const TIERS = ["EE","ES","EC","FAM"];
@@ -50,23 +49,13 @@ function parseCSVRates(text, scheduleId, planId) {
   return rows;
 }
 
-export default function RateDetailGrid({ plans, schedules, initialScheduleId = "" }) {
+export default function RateDetailGrid({ plans, schedules }) {
   const qc = useQueryClient();
   const fileInputRef = useRef(null);
-  const [scheduleId, setScheduleId] = useState(initialScheduleId || "");
+  const [scheduleId, setScheduleId] = useState("");
   const [newRow, setNewRow] = useState({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
   const [csvText, setCsvText] = useState("");
   const [showCsvImport, setShowCsvImport] = useState(false);
-
-  useEffect(() => {
-    if (scheduleId && schedules.some((schedule) => schedule.id === scheduleId && schedule.is_active)) return;
-    if (initialScheduleId && schedules.some((schedule) => schedule.id === initialScheduleId && schedule.is_active)) {
-      setScheduleId(initialScheduleId);
-      return;
-    }
-    const activeSchedules = schedules.filter((schedule) => schedule.is_active);
-    if (activeSchedules.length === 1) setScheduleId(activeSchedules[0].id);
-  }, [initialScheduleId, scheduleId, schedules]);
 
   const schedule = schedules.find(s => s.id === scheduleId);
   const plan = plans.find(p => p.id === schedule?.plan_id);
@@ -91,7 +80,6 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
       setNewRow({ rating_area_code: "", age_band_code: "", tier_code: "EE", monthly_rate: "", tobacco_flag: false });
       toast.success("Rate row added");
     },
-    onError: (error) => toast.error(error.message || "Could not save the rate row"),
   });
 
   const deleteMutation = useMutation({
@@ -188,11 +176,6 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => fileInputRef.current?.click()}>
               <FileUp className="w-3 h-3" />Upload File
             </Button>
-            <SpecialRateImporter
-              planId={schedule?.plan_id}
-              rateScheduleId={scheduleId}
-              scheduleName={schedule?.schedule_name}
-            />
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={exportCSV}>
               <Download className="w-3 h-3" />Export
             </Button>
@@ -236,9 +219,7 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
       {!scheduleId && (
         <Card className="border-dashed">
           <CardContent className="p-8 text-center text-muted-foreground text-sm">
-            {schedules.some((schedule) => schedule.is_active)
-              ? "Select a rate schedule to view and manage its rate detail rows."
-              : "No active rate schedules are available to show rate details."}
+            Select a rate schedule to view and manage its rate detail rows.
           </CardContent>
         </Card>
       )}
@@ -289,9 +270,7 @@ export default function RateDetailGrid({ plans, schedules, initialScheduleId = "
           ) : Object.entries(byArea).length === 0 ? (
             <Card className="border-dashed"><CardContent className="p-6 text-center text-muted-foreground text-xs">No rate rows yet. Add rows manually or import from CSV.</CardContent></Card>
           ) : (
-            Object.entries(byArea)
-              .sort(([areaA], [areaB]) => areaA.localeCompare(areaB))
-              .map(([area, areaRates]) => (
+            Object.entries(byArea).map(([area, areaRates]) => (
               <Card key={area}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs flex items-center gap-2 flex-wrap">

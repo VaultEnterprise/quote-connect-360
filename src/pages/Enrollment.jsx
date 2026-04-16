@@ -11,13 +11,10 @@ import EnrollmentKPIBar from "@/components/enrollment/EnrollmentKPIBar";
 import EnrollmentWindowCard from "@/components/enrollment/EnrollmentWindowCard";
 import CreateEnrollmentModal from "@/components/enrollment/CreateEnrollmentModal";
 import { parseISO, differenceInDays } from "date-fns";
-import useRouteContext from "@/hooks/useRouteContext";
 
 const STATUS_ORDER = { open: 0, closing_soon: 1, scheduled: 2, closed: 3, finalized: 4 };
 
 export default function Enrollment() {
-  const routeContext = useRouteContext();
-  const caseScope = routeContext.caseId || "";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
   const [showCreate, setShowCreate] = useState(false);
@@ -38,20 +35,19 @@ export default function Enrollment() {
 
   const filtered = useMemo(() => {
     let result = enrollments.filter(e => {
-      const matchCase = !caseScope || e.case_id === caseScope;
       const matchSearch = !search ||
         e.employer_name?.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "all"
         || (statusFilter === "active" && ["open","closing_soon","scheduled"].includes(e.status))
         || e.status === statusFilter;
       const matchUrgent = !showUrgentOnly || closingSoon.some(c => c.id === e.id);
-      return matchCase && matchSearch && matchStatus && matchUrgent;
+      return matchSearch && matchStatus && matchUrgent;
     });
 
     return [...result].sort((a, b) =>
       (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)
     );
-  }, [enrollments, caseScope, search, statusFilter, showUrgentOnly, closingSoon]);
+  }, [enrollments, search, statusFilter, showUrgentOnly, closingSoon]);
 
   return (
     <div className="space-y-6">

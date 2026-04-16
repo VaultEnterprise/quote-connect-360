@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
-import useRouteContext from "@/hooks/useRouteContext";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import { differenceInDays, parseISO, isAfter } from "date-fns";
@@ -182,7 +181,6 @@ function EmployerModal({ employer, open, onClose, agencies }) {
 }
 
 export default function Employers() {
-  const routeContext = useRouteContext();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -233,12 +231,6 @@ export default function Employers() {
     });
     return map;
   }, [cases]);
-
-  useEffect(() => {
-    if (!routeContext.employerId || employers.length === 0) return;
-    const matchedEmployer = employers.find((employer) => employer.id === routeContext.employerId);
-    if (matchedEmployer) setViewingEmployer(matchedEmployer);
-  }, [routeContext.employerId, employers]);
 
   const now = new Date();
 

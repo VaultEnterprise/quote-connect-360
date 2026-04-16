@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, MapPin, BarChart2, History, Lock, TrendingUp, ShieldCheck, Database, Table2, FileCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import MultiStateRateEditor from "@/components/plans/MultiStateRateEditor";
@@ -17,35 +17,14 @@ import RateDetailGrid from "@/components/plans/RateDetailGrid";
 import RateValidationConsole from "@/components/plans/RateValidationConsole";
 import { format, differenceInDays } from "date-fns";
 
-const ANCILLARY_TYPES = ["dental", "vision", "life", "std", "ltd", "voluntary"];
-
 export default function PlanRateEditor() {
-  const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const planIdFromUrl = urlParams.get("plan_id");
   const [selectedPlanId, setSelectedPlanId] = useState(planIdFromUrl || "");
 
-  useEffect(() => {
-    const nextUrl = new URL(window.location.href);
-    if (selectedPlanId) nextUrl.searchParams.set("plan_id", selectedPlanId);
-    else nextUrl.searchParams.delete("plan_id");
-    window.history.replaceState({}, "", nextUrl.toString());
-  }, [selectedPlanId]);
-
-  useEffect(() => {
-    const unsubscribers = [
-      base44.entities.BenefitPlan.subscribe(() => queryClient.invalidateQueries({ queryKey: ["benefit-plans"] })),
-      base44.entities.PlanRateSchedule.subscribe(() => queryClient.invalidateQueries({ queryKey: ["plan-rate-schedules"] })),
-      base44.entities.PlanRateByState.subscribe(() => queryClient.invalidateQueries({ queryKey: ["plan-rates-by-state"] })),
-      base44.entities.PlanRateDetail.subscribe(() => queryClient.invalidateQueries({ queryKey: ["plan-rate-schedules"] })),
-    ];
-
-    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [queryClient]);
-
-  const { data: allPlans = [] } = useQuery({
+  const { data: plans = [] } = useQuery({
     queryKey: ["benefit-plans"],
-    queryFn: () => base44.entities.BenefitPlan.list("-created_date", 500),
+    queryFn: () => base44.entities.BenefitPlan.filter({ status: "active" }),
   });
 
   const { data: allSchedules = [] } = useQuery({
@@ -60,10 +39,6 @@ export default function PlanRateEditor() {
     enabled: !!selectedPlanId,
   });
 
-  const activePlans = allPlans.filter((plan) => plan.status === "active");
-  const medicalPlans = activePlans.filter((plan) => plan.plan_type === "medical");
-  const ancillaryPlans = activePlans.filter((plan) => ANCILLARY_TYPES.includes(plan.plan_type));
-  const plans = [...medicalPlans, ...ancillaryPlans];
   const selectedPlan = plans.find(p => p.id === selectedPlanId);
   const planSchedules = allSchedules.filter(s => s.plan_id === selectedPlanId);
   const lockedRates = stateRates.filter(r => r.is_locked && r.lock_expiration_date);
@@ -89,29 +64,13 @@ export default function PlanRateEditor() {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 max-w-xs">
           <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
-            <SelectTrigger><SelectValue placeholder="Select a policy..." /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select a plan..." /></SelectTrigger>
             <SelectContent>
-              {medicalPlans.length > 0 && (
-                <SelectGroup>
-                  <SelectLabel>Medical Policies</SelectLabel>
-                  {medicalPlans.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.plan_name} — {p.carrier}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              )}
-              {medicalPlans.length > 0 && ancillaryPlans.length > 0 && <SelectSeparator />}
-              {ancillaryPlans.length > 0 && (
-                <SelectGroup>
-                  <SelectLabel>Ancillary Policies</SelectLabel>
-                  {ancillaryPlans.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.plan_name} — {p.carrier}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              )}
+              {plans.map(p => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.plan_name} — {p.carrier}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

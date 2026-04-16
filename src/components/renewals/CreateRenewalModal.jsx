@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +34,7 @@ export default function CreateRenewalModal({ open, onClose }) {
       const selectedCase = activeCases.find(c => c.id === selectedCaseId);
       if (!selectedCase) throw new Error("Case not found");
 
-      return createValidatedEntityRecord("RenewalCycle", {
+      return base44.entities.RenewalCycle.create({
         case_id: selectedCaseId,
         employer_group_id: selectedCase.employer_group_id,
         employer_name: selectedCase.employer_name,
@@ -43,7 +42,7 @@ export default function CreateRenewalModal({ open, onClose }) {
         current_premium: parseFloat(currentPremium),
         status: "pre_renewal",
         assigned_to: selectedCase.assigned_to,
-      }, ["employer_group_id", "renewal_date"]);
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["renewals-all"] });

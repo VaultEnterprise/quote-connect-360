@@ -1,19 +1,20 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Briefcase, RefreshCw } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import {
+  Briefcase, Users, FileText, ClipboardCheck, RefreshCw, AlertCircle,
+  ArrowRight, Clock, TrendingUp, DollarSign, Star, Target, Activity
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PageHeader from "@/components/shared/PageHeader";
+import { Progress } from "@/components/ui/progress";
+import MetricCard from "@/components/shared/MetricCard";
 import StatusBadge from "@/components/shared/StatusBadge";
+import PageHeader from "@/components/shared/PageHeader";
+import { format, differenceInDays, subMonths, startOfMonth } from "date-fns";
 import { DashboardSkeleton } from "@/components/shared/LoadingSkeleton";
-import DashboardControls from "@/components/dashboard/DashboardControls";
-import DashboardMetricGrid from "@/components/dashboard/DashboardMetricGrid";
-import DashboardSecondaryMetrics from "@/components/dashboard/DashboardSecondaryMetrics";
-import DashboardActivityPanels from "@/components/dashboard/DashboardActivityPanels";
 import TodaysPriorities from "@/components/dashboard/TodaysPriorities";
 import InteractivePipeline from "@/components/dashboard/InteractivePipeline";
 import EnrollmentCountdowns from "@/components/dashboard/EnrollmentCountdowns";
@@ -27,128 +28,401 @@ import ComplianceAlerts from "@/components/dashboard/ComplianceAlerts";
 import CarrierDistribution from "@/components/dashboard/CarrierDistribution";
 import EnrollmentForecast from "@/components/dashboard/EnrollmentForecast";
 import CycleTiming from "@/components/dashboard/CycleTiming";
-import { DEFAULT_DASHBOARD_FILTERS } from "@/utils/dashboardControls";
-import { getDashboardPageModel } from "@/domain/dashboard/useDashboardMetrics";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid
+} from "recharts";
+
+const STAGE_GROUPS = [
+  { key: "draft", label: "Draft", color: "#94a3b8", match: (s) => s === "draft" },
+  { key: "census", label: "Census", color: "#60a5fa", match: (s) => s?.includes("census") },
+  { key: "quoting", label: "Quoting", color: "#f59e0b", match: (s) => ["ready_for_quote", "quoting"].includes(s) },
+  { key: "proposal", label: "Proposal", color: "#a78bfa", match: (s) => ["proposal_ready", "employer_review"].includes(s) },
+  { key: "enrollment", label: "Enrollment", color: "#34d399", match: (s) => s?.includes("enrollment") },
+  { key: "active", label: "Active", color: "#10b981", match: (s) => ["install_in_progress", "active", "renewal_pending"].includes(s) },
+];
 
 const PIE_COLORS = ["#3b82f6", "#f59e0b", "#a78bfa", "#34d399", "#f87171", "#94a3b8"];
-const DASHBOARD_PRESET_QUERY_KEY = ["dashboard-view-presets"];
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState(DEFAULT_DASHBOARD_FILTERS);
-  const [selectedPresetId, setSelectedPresetId] = useState("none");
-  const [hasInitializedPreferences, setHasInitializedPreferences] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { data: user, isLoading: isUserLoading } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
-  const { data: cases = [], isLoading, dataUpdatedAt: casesUpdatedAt } = useQuery({ queryKey: ["cases"], queryFn: () => base44.entities.BenefitCase.list("-created_date", 200) });
-  const { data: tasks = [], dataUpdatedAt: tasksUpdatedAt } = useQuery({ queryKey: ["tasks-pending"], queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 200) });
-  const { data: enrollments = [], dataUpdatedAt: enrollmentsUpdatedAt } = useQuery({ queryKey: ["enrollments"], queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100) });
-  const { data: renewals = [], dataUpdatedAt: renewalsUpdatedAt } = useQuery({ queryKey: ["renewals"], queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100) });
-  const { data: scenarios = [], dataUpdatedAt: scenariosUpdatedAt } = useQuery({ queryKey: ["scenarios-all"], queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100) });
-  const { data: exceptions = [], dataUpdatedAt: exceptionsUpdatedAt } = useQuery({ queryKey: ["exceptions"], queryFn: () => base44.entities.ExceptionItem.list("-created_date", 100) });
-  const { data: proposals = [], dataUpdatedAt: proposalsUpdatedAt } = useQuery({ queryKey: ["proposals"], queryFn: () => base44.entities.Proposal.list("-created_date", 100) });
-  const { data: agencies = [], dataUpdatedAt: agenciesUpdatedAt } = useQuery({ queryKey: ["agencies"], queryFn: () => base44.entities.Agency.list("name", 100) });
-  const { data: presets = [], isFetched: presetsFetched, dataUpdatedAt: presetsUpdatedAt } = useQuery({ queryKey: DASHBOARD_PRESET_QUERY_KEY, enabled: !!user?.email, queryFn: () => base44.entities.DashboardViewPreset.filter({ created_by: user.email }, "name", 50) });
+  const { data: cases = [], isLoading } = useQuery({
+    queryKey: ["cases"],
+    queryFn: () => base44.entities.BenefitCase.list("-created_date", 200),
+  });
 
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["tasks-pending"],
+    queryFn: () => base44.entities.CaseTask.filter({ status: "pending" }, "-created_date", 20),
+  });
+
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["enrollments"],
+    queryFn: () => base44.entities.EnrollmentWindow.list("-created_date", 100),
+  });
+
+  const { data: renewals = [] } = useQuery({
+    queryKey: ["renewals"],
+    queryFn: () => base44.entities.RenewalCycle.list("-renewal_date", 100),
+  });
+
+  const { data: scenarios = [] } = useQuery({
+    queryKey: ["scenarios-all"],
+    queryFn: () => base44.entities.QuoteScenario.list("-created_date", 100),
+  });
+
+  const { data: exceptions = [] } = useQuery({
+    queryKey: ["exceptions"],
+    queryFn: () => base44.entities.ExceptionItem.list("-created_date", 50),
+  });
+
+  const { data: proposals = [] } = useQuery({
+    queryKey: ["proposals"],
+    queryFn: () => base44.entities.Proposal.list("-created_date", 100),
+  });
+
+  // Real-time updates via WebSocket subscriptions
   useEffect(() => {
-    const unsubscribeCases = base44.entities.BenefitCase.subscribe(() => queryClient.invalidateQueries({ queryKey: ["cases"] }));
-    const unsubscribeTasks = base44.entities.CaseTask.subscribe(() => queryClient.invalidateQueries({ queryKey: ["tasks-pending"] }));
-    const unsubscribeEnrollments = base44.entities.EnrollmentWindow.subscribe(() => queryClient.invalidateQueries({ queryKey: ["enrollments"] }));
-    const unsubscribeExceptions = base44.entities.ExceptionItem.subscribe(() => queryClient.invalidateQueries({ queryKey: ["exceptions"] }));
-    const unsubscribeProposals = base44.entities.Proposal.subscribe(() => queryClient.invalidateQueries({ queryKey: ["proposals"] }));
-    return () => { unsubscribeCases?.(); unsubscribeTasks?.(); unsubscribeEnrollments?.(); unsubscribeExceptions?.(); unsubscribeProposals?.(); };
+    const unsubscribeCases = base44.entities.BenefitCase.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+    });
+
+    const unsubscribeTasks = base44.entities.CaseTask.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks-pending"] });
+    });
+
+    const unsubscribeEnrollments = base44.entities.EnrollmentWindow.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+    });
+
+    const unsubscribeExceptions = base44.entities.ExceptionItem.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+    });
+
+    const unsubscribeProposals = base44.entities.Proposal.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+    });
+
+    return () => {
+      unsubscribeCases?.();
+      unsubscribeTasks?.();
+      unsubscribeEnrollments?.();
+      unsubscribeExceptions?.();
+      unsubscribeProposals?.();
+    };
   }, [queryClient]);
 
-  useEffect(() => {
-    if (hasInitializedPreferences || !user || !presetsFetched) return;
-    const defaultPreset = presets.find((preset) => preset.is_default);
-    if (defaultPreset) {
-      setFilters({ dateRange: defaultPreset.date_range || DEFAULT_DASHBOARD_FILTERS.dateRange, viewMode: defaultPreset.view_mode || DEFAULT_DASHBOARD_FILTERS.viewMode, owner: defaultPreset.filters?.owner || "all", team: defaultPreset.filters?.team || "all", agencyId: defaultPreset.filters?.agencyId || "all", employerId: defaultPreset.filters?.employerId || "all", caseType: defaultPreset.filters?.caseType || "all", stage: defaultPreset.filters?.stage || "all" });
-      setSelectedPresetId(defaultPreset.id);
-    } else {
-      setFilters((current) => ({ ...current, viewMode: user.role === "admin" ? "executive" : "my" }));
-    }
-    setHasInitializedPreferences(true);
-  }, [hasInitializedPreferences, presets, presetsFetched, user]);
+  const activeCases = cases.filter(c => !["closed", "renewed"].includes(c.stage));
+  const quotingCases = cases.filter(c => ["ready_for_quote", "quoting"].includes(c.stage));
+  const enrollmentOpen = enrollments.filter(e => ["open", "closing_soon"].includes(e.status));
+  // "pending" status filter on the query already scopes this correctly;
+  // overdue = pending + past due_date
+  const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
+  const openExceptions = exceptions.filter(e => !["resolved", "dismissed"].includes(e.status));
+  // Only aggregate completed scenarios — drafts and expired produce misleading totals
+  const totalPremium = scenarios.filter(s => s.status === "completed" && s.total_monthly_premium).reduce((sum, s) => sum + s.total_monthly_premium, 0);
 
-  const dashboardPageModel = useMemo(() => getDashboardPageModel({
-    cases,
-    tasks,
-    enrollments,
-    renewals,
-    scenarios,
-    exceptions,
-    proposals,
-    agencies,
-    filters,
-    user,
-  }), [cases, tasks, enrollments, renewals, scenarios, exceptions, proposals, agencies, filters, user]);
+  if (isLoading) return <DashboardSkeleton />;
 
-  const options = dashboardPageModel.options;
-  const scopedData = dashboardPageModel.scopedData;
-  const summary = dashboardPageModel.summary;
-  const charts = dashboardPageModel.charts;
+  if (cases.length === 0) return (
+    <div className="space-y-6">
+      <PageHeader title="Dashboard" description="Overview of your benefits operations"
+        actions={<Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>} />
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6">
+          <Briefcase className="w-9 h-9 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold mb-2">Welcome to Connect Quote 360</h2>
+        <p className="text-sm text-muted-foreground max-w-md mb-8">Your benefits operating platform is ready. Start by creating your first benefit case.</p>
+        <div className="flex gap-3">
+          <Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> Create First Case</Button></Link>
+          <Link to="/employers"><Button variant="outline">Add Employer Groups</Button></Link>
+        </div>
+      </div>
+    </div>
+  );
 
-  const lastUpdated = useMemo(() => {
-    const timestamps = [casesUpdatedAt, tasksUpdatedAt, enrollmentsUpdatedAt, renewalsUpdatedAt, scenariosUpdatedAt, exceptionsUpdatedAt, proposalsUpdatedAt, agenciesUpdatedAt, presetsUpdatedAt].filter(Boolean);
-    return timestamps.length === 0 ? "" : format(new Date(Math.max(...timestamps)), "MMM d, yyyy h:mm a");
-  }, [casesUpdatedAt, tasksUpdatedAt, enrollmentsUpdatedAt, renewalsUpdatedAt, scenariosUpdatedAt, exceptionsUpdatedAt, proposalsUpdatedAt, agenciesUpdatedAt, presetsUpdatedAt]);
+  // Pipeline chart data
+  const pipelineData = STAGE_GROUPS.map(g => ({
+    name: g.label,
+    count: cases.filter(c => g.match(c.stage)).length,
+    color: g.color,
+  })).filter(g => g.count > 0);
 
-  const handleFilterChange = (key, value) => { setSelectedPresetId("none"); setFilters((current) => ({ ...current, [key]: value })); };
-  const handleRefresh = async () => { setIsRefreshing(true); await Promise.all([["cases"],["tasks-pending"],["enrollments"],["renewals"],["scenarios-all"],["exceptions"],["proposals"],["agencies"],DASHBOARD_PRESET_QUERY_KEY].map((queryKey) => queryClient.invalidateQueries({ queryKey }))); setIsRefreshing(false); };
-  const handleSaveView = async () => {
-    const name = window.prompt("Name this dashboard view");
-    if (!name) return;
-    await base44.entities.DashboardViewPreset.create({ name, view_mode: filters.viewMode, date_range: filters.dateRange, filters: { owner: filters.owner, team: filters.team, agencyId: filters.agencyId, employerId: filters.employerId, caseType: filters.caseType, stage: filters.stage }, is_default: false });
-    await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
-  };
-  const handlePresetChange = (presetId) => {
-    if (presetId === "none") { setSelectedPresetId("none"); return; }
-    const preset = presets.find((item) => item.id === presetId);
-    if (!preset) return;
-    setSelectedPresetId(presetId);
-    setFilters({ dateRange: preset.date_range || DEFAULT_DASHBOARD_FILTERS.dateRange, viewMode: preset.view_mode || DEFAULT_DASHBOARD_FILTERS.viewMode, owner: preset.filters?.owner || "all", team: preset.filters?.team || "all", agencyId: preset.filters?.agencyId || "all", employerId: preset.filters?.employerId || "all", caseType: preset.filters?.caseType || "all", stage: preset.filters?.stage || "all" });
-  };
-  const handleSetDefault = async () => {
-    if (!selectedPresetId || selectedPresetId === "none") return;
-    await Promise.all(presets.map((preset) => base44.entities.DashboardViewPreset.update(preset.id, { is_default: preset.id === selectedPresetId })));
-    await queryClient.invalidateQueries({ queryKey: DASHBOARD_PRESET_QUERY_KEY });
-  };
+  // Case type distribution for pie
+  const typeData = [
+    { name: "New Business", value: cases.filter(c => c.case_type === "new_business").length },
+    { name: "Renewal", value: cases.filter(c => c.case_type === "renewal").length },
+    { name: "Mid-Year", value: cases.filter(c => c.case_type === "mid_year_change").length },
+    { name: "Takeover", value: cases.filter(c => c.case_type === "takeover").length },
+  ].filter(d => d.value > 0);
 
-  if (isLoading || isUserLoading) return <DashboardSkeleton />;
-  if (cases.length === 0) {
-    return <div className="space-y-6"><PageHeader title="Dashboard" description="Overview of your benefits operations" actions={<Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> New Case</Button></Link>} /><div className="flex flex-col items-center justify-center py-24 text-center"><div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6"><Briefcase className="w-9 h-9 text-primary" /></div><h2 className="text-xl font-bold mb-2">Welcome to Connect Quote 360</h2><p className="text-sm text-muted-foreground max-w-md mb-8">Your benefits operating platform is ready. Start by creating your first benefit case.</p><div className="flex gap-3"><Link to="/cases/new"><Button className="shadow-sm"><Briefcase className="w-4 h-4 mr-2" /> Create First Case</Button></Link><Link to="/employers"><Button variant="outline">Add Employer Groups</Button></Link></div></div></div>;
-  }
+  // Cases created per month (last 6)
+  const monthlyData = [...Array(6)].map((_, i) => {
+    const month = subMonths(new Date(), 5 - i);
+    const start = startOfMonth(month);
+    const end = startOfMonth(subMonths(month, -1));
+    return {
+      name: format(month, "MMM"),
+      cases: cases.filter(c => {
+        const d = new Date(c.created_date);
+        // Guard against malformed dates — isNaN check prevents silent filter failures
+        return !isNaN(d.getTime()) && d >= start && d < end;
+      }).length,
+    };
+  });
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Dashboard" description="Benefits operations overview" />
-      <DashboardControls filters={filters} options={options} presets={presets} selectedPresetId={selectedPresetId} onChange={handleFilterChange} onPresetChange={handlePresetChange} onSaveView={handleSaveView} onSetDefault={handleSetDefault} onRefresh={handleRefresh} isRefreshing={isRefreshing} lastUpdated={lastUpdated} />
-      <QuickActions />
-      <CensusGapAlert cases={scopedData.currentCases} />
-      <TodaysPriorities tasks={scopedData.currentTasks} exceptions={scopedData.currentExceptions} cases={scopedData.currentCases} enrollments={scopedData.currentEnrollments} />
-      <DashboardMetricGrid summary={summary} />
-      <DashboardSecondaryMetrics summary={summary} currentEnrollments={scopedData.currentEnrollments} currentRenewals={scopedData.currentRenewals} upcomingRenewalsCount={charts.upcomingRenewals} />
-      <ProposalsKPI proposals={scopedData.currentProposals} />
-      <ComplianceAlerts cases={scopedData.currentCases} scenarios={scopedData.currentScenarios} />
-      <RevenueMetrics scenarios={scopedData.currentScenarios} />
+      <PageHeader
+        title="Dashboard"
+        description="Benefits operations overview"
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <InteractivePipeline cases={scopedData.currentCases} />
-        <Card><CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Case Types</CardTitle></CardHeader><CardContent>{charts.typeData.length === 0 ? (<div className="flex items-center justify-center h-44 text-sm text-muted-foreground">No data</div>) : (<div className="flex flex-col items-center"><ResponsiveContainer width="100%" height={140}><PieChart><Pie data={charts.typeData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={2} dataKey="value">{charts.typeData.map((_, index) => <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}</Pie><Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} /></PieChart></ResponsiveContainer><div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">{charts.typeData.map((item, index) => <div key={index} className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[index % PIE_COLORS.length] }} /><span className="text-[11px] text-muted-foreground truncate">{item.name}</span><span className="text-[11px] font-semibold ml-auto">{item.value}</span></div>)}</div></div>)}</CardContent></Card>
-        <CarrierDistribution scenarios={scopedData.currentScenarios} />
+      {/* Quick Actions */}
+      <QuickActions />
+
+      {/* Census gap alerts */}
+      <CensusGapAlert cases={cases} />
+
+      {/* Today's Priorities */}
+      <TodaysPriorities tasks={tasks} exceptions={exceptions} cases={cases} enrollments={enrollments} />
+
+      {/* KPI Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard label="Active Cases" value={activeCases.length} icon={Briefcase} trendLabel={`${cases.length} total`} />
+        <MetricCard label="Quoting Now" value={quotingCases.length} icon={FileText} />
+        <MetricCard label="Open Enrollments" value={enrollmentOpen.length} icon={ClipboardCheck} />
+        <MetricCard label="Overdue Tasks" value={overdueTasks.length} icon={AlertCircle} trend={overdueTasks.length > 0 ? "down" : undefined} trendLabel={overdueTasks.length > 0 ? "needs attention" : "on track"} />
       </div>
 
-      <DashboardActivityPanels monthlyData={charts.monthlyData} currentCases={scopedData.currentCases} currentTasks={scopedData.currentTasks} openExceptions={summary.openExceptions} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6"><TeamWorkload cases={scopedData.currentCases} tasks={scopedData.currentTasks} /><EnrollmentForecast enrollments={scopedData.currentEnrollments} /><CycleTiming cases={scopedData.currentCases} /></div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"><EnrollmentCountdowns enrollments={scopedData.currentEnrollments} /><StalledCases cases={scopedData.currentCases} /></div>
-
-      {scopedData.currentRenewals.length > 0 && (
+      {/* Secondary Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-3"><div className="flex items-center justify-between"><CardTitle className="text-base font-semibold flex items-center gap-2"><RefreshCw className="w-4 h-4 text-primary" /> Upcoming Renewals</CardTitle><Link to="/renewals"><Button variant="ghost" size="sm" className="text-xs text-muted-foreground">View all</Button></Link></div></CardHeader>
-          <CardContent><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{scopedData.currentRenewals.slice(0, 6).map((item) => { const daysUntil = item.renewal_date ? differenceInDays(new Date(item.renewal_date), new Date()) : null; return <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors"><div><p className="text-sm font-medium">{item.employer_name || "Unknown"}</p><p className="text-xs text-muted-foreground">{item.renewal_date ? format(new Date(item.renewal_date), "MMM d, yyyy") : "TBD"}</p></div><div className="flex items-center gap-2">{daysUntil !== null && <Badge className={`text-[10px] ${daysUntil <= 30 ? "bg-red-100 text-red-700" : daysUntil <= 60 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{daysUntil}d</Badge>}<StatusBadge status={item.status} /></div></div>; })}</div></CardContent>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Monthly Premium (completed)</p>
+            <p className="text-xl font-bold text-primary">{totalPremium > 0 ? `$${(totalPremium / 1000).toFixed(0)}k` : "—"}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Open Exceptions</p>
+            <p className={`text-xl font-bold ${openExceptions.length > 0 ? "text-destructive" : "text-foreground"}`}>{openExceptions.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Upcoming Renewals (90d)</p>
+            <p className="text-xl font-bold text-amber-600">{renewals.filter(r => r.renewal_date && differenceInDays(new Date(r.renewal_date), new Date()) <= 90 && differenceInDays(new Date(r.renewal_date), new Date()) >= 0).length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Avg Enrollment Rate</p>
+            <p className="text-xl font-bold text-green-600">
+              {(() => {
+                  // Only average windows that have actual activity — zeros from
+                  // scheduled/not-started windows would pull the average down artificially
+                  const active = enrollments.filter(e => e.total_eligible > 0 && e.enrolled_count > 0);
+                  if (active.length === 0) return "—";
+                  const avg = Math.round(active.reduce((s, e) => {
+                    const rate = e.participation_rate ?? Math.round((e.enrolled_count / e.total_eligible) * 100);
+                    return s + rate;
+                  }, 0) / active.length);
+                  return `${avg}%`;
+                })()}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Proposals + Team Workload */}
+      <div>
+        <ProposalsKPI proposals={proposals} />
+      </div>
+
+      {/* Compliance + Revenue + Carrier Distribution */}
+      <ComplianceAlerts cases={cases} scenarios={scenarios} />
+      
+      <RevenueMetrics scenarios={scenarios} />
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <InteractivePipeline cases={cases} />
+
+        {/* Case Type Pie */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold">Case Types</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {typeData.length === 0 ? (
+              <div className="flex items-center justify-center h-44 text-sm text-muted-foreground">No data</div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <ResponsiveContainer width="100%" height={140}>
+                  <PieChart>
+                    <Pie data={typeData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={2} dataKey="value">
+                      {typeData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                  {typeData.map((d, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      <span className="text-[11px] text-muted-foreground truncate">{d.name}</span>
+                      <span className="text-[11px] font-semibold ml-auto">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <CarrierDistribution scenarios={scenarios} />
+      </div>
+
+      {/* Monthly Trend + Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Monthly Trend */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" /> Cases Created
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={130}>
+              <LineChart data={monthlyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} />
+                <Line type="monotone" dataKey="cases" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))", r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Recent Cases */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Recent Cases</CardTitle>
+              <Link to="/cases"><Button variant="ghost" size="sm" className="text-xs text-muted-foreground">View all <ArrowRight className="w-3 h-3 ml-1" /></Button></Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {cases.slice(0, 5).map(c => (
+                <Link key={c.id} to={`/cases/${c.id}`} className="block">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-colors group">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{c.employer_name || "Unnamed"}</p>
+                      <p className="text-xs text-muted-foreground">{c.case_number || `#${c.id?.slice(-6)}`}</p>
+                    </div>
+                    <StatusBadge status={c.stage} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tasks + Exceptions */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Needs Attention</CardTitle>
+              <Link to="/tasks"><Button variant="ghost" size="sm" className="text-xs text-muted-foreground">Tasks <ArrowRight className="w-3 h-3 ml-1" /></Button></Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {tasks.length === 0 && openExceptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">All caught up! ✓</p>
+            ) : (
+              <div className="space-y-2">
+                {openExceptions.slice(0, 2).map(e => (
+                  <Link key={e.id} to="/exceptions">
+                    <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 transition-colors">
+                      <AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-red-700 truncate">{e.title}</p>
+                        <p className="text-[10px] text-red-500 capitalize">{e.severity} • {e.category}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                {tasks.slice(0, 3).map(t => (
+                  <div key={t.id} className="p-2.5 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
+                    <p className="text-xs font-medium truncate">{t.title}</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-[10px] text-muted-foreground">{t.employer_name}</span>
+                      {t.due_date && (
+                        <span className={`text-[10px] flex items-center gap-0.5 ${new Date(t.due_date) < new Date() ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                          <Clock className="w-3 h-3" />{format(new Date(t.due_date), "MMM d")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Team + Enrollment Forecast + Cycle Timing */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TeamWorkload cases={cases} tasks={tasks} />
+        <EnrollmentForecast enrollments={enrollments} />
+        <CycleTiming cases={cases} />
+      </div>
+
+      {/* Enrollment Countdowns + Stalled Cases */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EnrollmentCountdowns enrollments={enrollments} />
+        <StalledCases cases={cases} />
+      </div>
+
+      {/* Renewals row */}
+      {renewals.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-primary" /> Upcoming Renewals
+              </CardTitle>
+              <Link to="/renewals"><Button variant="ghost" size="sm" className="text-xs text-muted-foreground">View all</Button></Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {renewals.slice(0, 6).map(r => {
+                const daysUntil = r.renewal_date ? differenceInDays(new Date(r.renewal_date), new Date()) : null;
+                return (
+                  <div key={r.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                    <div>
+                      <p className="text-sm font-medium">{r.employer_name || "Unknown"}</p>
+                      <p className="text-xs text-muted-foreground">{r.renewal_date ? format(new Date(r.renewal_date), "MMM d, yyyy") : "TBD"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {daysUntil !== null && (
+                        <Badge className={`text-[10px] ${daysUntil <= 30 ? "bg-red-100 text-red-700" : daysUntil <= 60 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                          {daysUntil}d
+                        </Badge>
+                      )}
+                      <StatusBadge status={r.status} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
         </Card>
       )}
     </div>

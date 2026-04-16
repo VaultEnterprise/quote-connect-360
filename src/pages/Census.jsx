@@ -13,12 +13,10 @@ import CensusVersionHistory from "@/components/census/CensusVersionHistory";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import RiskDashboard from "@/components/census/RiskDashboard";
 import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel";
-import useRouteContext from "@/hooks/useRouteContext";
 
 export default function Census() {
-  const routeContext = useRouteContext();
   const [search, setSearch] = useState("");
-  const [selectedCaseId, setSelectedCaseId] = useState(routeContext.caseId || "");
+  const [selectedCaseId, setSelectedCaseId] = useState("");
   const [showUpload, setShowUpload] = useState(false);
   const [viewingVersionId, setViewingVersionId] = useState(null);
 
@@ -53,7 +51,8 @@ export default function Census() {
       <PageHeader
         title="Census Management"
         description="Import, validate, and manage employee census data"
-        actions={selectedCaseId ? <Button onClick={() => setShowUpload(true)} size="sm"><FileUp className="w-4 h-4 mr-2" /> Upload Census</Button> : undefined}
+        actionLabel={selectedCaseId ? "Upload Census" : undefined}
+        onAction={selectedCaseId ? () => setShowUpload(true) : undefined}
       />
 
       {/* Case Selector */}

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { updateValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +44,7 @@ export default function ExceptionDetailDrawer({ exception, open, onClose }) {
   });
 
   const update = useMutation({
-    mutationFn: () => updateValidatedEntityRecord("ExceptionItem", exception.id, formData),
+    mutationFn: () => base44.entities.ExceptionItem.update(exception.id, formData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["exceptions"] });
       setIsEditing(false);

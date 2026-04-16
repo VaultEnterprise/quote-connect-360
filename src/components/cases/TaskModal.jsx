@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createValidatedEntityRecord, updateValidatedEntityRecord } from "@/services/entities/validatedEntityWrites";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,8 +38,8 @@ export default function TaskModal({ caseId, employerName, task, open, onClose, c
       const payload = { ...form };
       if (!payload.case_id) delete payload.case_id;
       return isEdit
-        ? updateValidatedEntityRecord("CaseTask", task.id, payload)
-        : createValidatedEntityRecord("CaseTask", payload, ["title"]);
+        ? base44.entities.CaseTask.update(task.id, payload)
+        : base44.entities.CaseTask.create(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["case-tasks", form.case_id] });

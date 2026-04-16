@@ -28,8 +28,7 @@ import {
   ServerCog,
   HelpCircle,
   ShieldCheck,
-  Scale,
-  CloudCog
+  Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,6 @@ const navGroups = [
       { path: "/tasks", label: "Tasks", icon: AlertCircle },
       { path: "/exceptions", label: "Exceptions", icon: TriangleAlert },
       { path: "/integration-infra", label: "Integration Infra", icon: ServerCog },
-      { path: "/salesforce", label: "Salesforce CRM", icon: CloudCog },
       { path: "/aca-library", label: "ACA Library", icon: Scale },
     ],
   },

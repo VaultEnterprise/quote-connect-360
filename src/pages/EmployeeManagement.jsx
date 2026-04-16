@@ -13,11 +13,9 @@ import EnrollmentWindowsTab from "@/components/employee-mgmt/EnrollmentWindowsTa
 import EnrollmentStatusTab from "@/components/employee-mgmt/EnrollmentStatusTab";
 import DocuSignManagementTab from "@/components/employee-mgmt/DocuSignManagementTab";
 import EmployeeAnalyticsTab from "@/components/employee-mgmt/EmployeeAnalyticsTab";
-import useRouteContext from "@/hooks/useRouteContext";
 
 export default function EmployeeManagement() {
   const { user } = useAuth();
-  const routeContext = useRouteContext();
   const [activeTab, setActiveTab] = useState("roster");
 
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
@@ -41,13 +39,10 @@ export default function EmployeeManagement() {
   });
 
   const isLoading = loadingEnrollments || loadingWindows;
-  const scopedWindows = useMemo(() => windows.filter((windowItem) => !routeContext.caseId || windowItem.case_id === routeContext.caseId), [windows, routeContext.caseId]);
-  const scopedEnrollments = useMemo(() => enrollments.filter((enrollment) => !routeContext.caseId || enrollment.case_id === routeContext.caseId), [enrollments, routeContext.caseId]);
-  const scopedCases = useMemo(() => cases.filter((caseItem) => (!routeContext.caseId || caseItem.id === routeContext.caseId) && (!routeContext.employerId || caseItem.employer_group_id === routeContext.employerId)), [cases, routeContext.caseId, routeContext.employerId]);
 
   // Summary counts for tab badges
-  const pendingCount = scopedEnrollments.filter(e => e.status === "invited").length;
-  const docuSignPending = scopedEnrollments.filter(e =>
+  const pendingCount = enrollments.filter(e => e.status === "invited").length;
+  const docuSignPending = enrollments.filter(e =>
     e.docusign_status && !["not_sent", "completed"].includes(e.docusign_status)
   ).length;
 
@@ -55,7 +50,7 @@ export default function EmployeeManagement() {
     <div className="space-y-5">
       <PageHeader
         title="Employee Management"
-        description={`${scopedEnrollments.length} total employee enrollments across ${scopedWindows.length} windows`}
+        description={`${enrollments.length} total employee enrollments across ${windows.length} windows`}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -79,9 +74,9 @@ export default function EmployeeManagement() {
 
         <TabsContent value="roster" className="mt-5">
           <EmployeeRosterTab
-            enrollments={scopedEnrollments}
-            windows={scopedWindows}
-            cases={scopedCases}
+            enrollments={enrollments}
+            windows={windows}
+            cases={cases}
             plans={plans}
             isLoading={isLoading}
             currentUser={user}
@@ -90,17 +85,17 @@ export default function EmployeeManagement() {
 
         <TabsContent value="windows" className="mt-5">
           <EnrollmentWindowsTab
-            windows={scopedWindows}
-            enrollments={scopedEnrollments}
-            cases={scopedCases}
+            windows={windows}
+            enrollments={enrollments}
+            cases={cases}
             isLoading={loadingWindows}
           />
         </TabsContent>
 
         <TabsContent value="status" className="mt-5">
           <EnrollmentStatusTab
-            enrollments={scopedEnrollments}
-            windows={scopedWindows}
+            enrollments={enrollments}
+            windows={windows}
             plans={plans}
             isLoading={loadingEnrollments}
           />
@@ -108,15 +103,15 @@ export default function EmployeeManagement() {
 
         <TabsContent value="docusign" className="mt-5">
           <DocuSignManagementTab
-            enrollments={scopedEnrollments}
+            enrollments={enrollments}
             isLoading={loadingEnrollments}
           />
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-5">
           <EmployeeAnalyticsTab
-            enrollments={scopedEnrollments}
-            windows={scopedWindows}
+            enrollments={enrollments}
+            windows={windows}
             plans={plans}
           />
         </TabsContent>

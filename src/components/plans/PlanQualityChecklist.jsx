@@ -1,6 +1,7 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export default function PlanQualityChecklist({ plans }) {
   const issues = [];
@@ -55,5 +56,56 @@ export default function PlanQualityChecklist({ plans }) {
     );
   }
 
-  return null;
+  return (
+    <Card className="border-amber-200 bg-amber-50/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-600" /> Quality Issues ({issues.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {issues.map((issue, i) => (
+          <div key={i} className={`p-3 rounded-lg border ${
+            issue.severity === "high"
+              ? "bg-red-50 border-red-200"
+              : issue.severity === "medium"
+                ? "bg-amber-50 border-amber-200"
+                : "bg-blue-50 border-blue-200"
+          }`}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-semibold ${
+                  issue.severity === "high"
+                    ? "text-red-700"
+                    : issue.severity === "medium"
+                      ? "text-amber-700"
+                      : "text-blue-700"
+                }`}>
+                  {issue.title}
+                </p>
+                <p className={`text-[10px] mt-0.5 ${
+                  issue.severity === "high"
+                    ? "text-red-600"
+                    : issue.severity === "medium"
+                      ? "text-amber-600"
+                      : "text-blue-600"
+                }`}>
+                  {issue.desc}
+                </p>
+              </div>
+              <Badge className={
+                issue.severity === "high"
+                  ? "bg-red-100 text-red-700 border-red-200 border text-[9px] py-0 flex-shrink-0"
+                  : issue.severity === "medium"
+                    ? "bg-amber-100 text-amber-700 border-amber-200 border text-[9px] py-0 flex-shrink-0"
+                    : "bg-blue-100 text-blue-700 border-blue-200 border text-[9px] py-0 flex-shrink-0"
+              }>
+                {issue.count}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
 }

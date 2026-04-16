@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign, Calendar, MapPin, ExternalLink } from "lucide-react";
+import { Pencil, Archive, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
 import RateTableEditor from "./RateTableEditor";
 
 const TYPE_COLORS = {
@@ -19,7 +18,6 @@ const TYPE_COLORS = {
 };
 
 export default function PlanCard({ plan, onEdit, onArchive }) {
-  const navigate = useNavigate();
   const [showRates, setShowRates] = useState(false);
 
   const { data: rateTables = [] } = useQuery({
@@ -30,13 +28,8 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
 
   const primaryRate = rateTables[0];
 
-  const { data: zipMappings = [] } = useQuery({
-    queryKey: ["plan-zip-count", plan.id],
-    queryFn: () => base44.entities.PlanZipAreaMap.filter({ plan_id: plan.id }),
-  });
-
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/plans/${plan.id}`)}>
+    <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -51,10 +44,10 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
             <p className="text-xs text-muted-foreground mt-0.5">{plan.carrier}{plan.plan_code ? ` · ${plan.plan_code}` : ""}</p>
           </div>
           <div className="flex gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(plan); }}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(plan)}>
               <Pencil className="w-3 h-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); onArchive(); }}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onArchive}>
               <Archive className="w-3 h-3" />
             </Button>
           </div>
@@ -72,42 +65,6 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
           </div>
         )}
 
-        {(plan.effective_date || plan.policy_expiration_date) && (
-          <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 font-medium text-foreground">
-              <Calendar className="w-3.5 h-3.5 text-primary" />
-              Policy Dates
-            </div>
-            {plan.effective_date && <p className="text-muted-foreground">Effective: <span className="text-foreground font-medium">{plan.effective_date}</span></p>}
-            {plan.policy_expiration_date && <p className="text-muted-foreground">Expires: <span className="text-foreground font-medium">{plan.policy_expiration_date}</span></p>}
-          </div>
-        )}
-
-        <div className="rounded-lg border bg-muted/20 px-3 py-2 text-xs">
-          <div className="flex items-center gap-1.5 font-medium text-foreground mb-1">
-            <MapPin className="w-3.5 h-3.5 text-primary" />
-            ZIP Mapping
-          </div>
-          <p className="text-muted-foreground">
-            Imported ZIP codes: <span className="text-foreground font-medium">{zipMappings.length}</span>
-          </p>
-        </div>
-
-        {plan.schedule_of_benefits_url && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-8 text-xs justify-between"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(plan.schedule_of_benefits_url, "_blank", "noopener,noreferrer");
-            }}
-          >
-            <span>Launch Website</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </Button>
-        )}
-
         {/* Rate preview */}
         {!showRates && primaryRate == null && (
           <p className="text-xs text-muted-foreground italic">No rate table</p>
@@ -117,16 +74,14 @@ export default function PlanCard({ plan, onEdit, onArchive }) {
           variant="ghost"
           size="sm"
           className="w-full h-7 text-xs text-muted-foreground hover:text-foreground justify-between px-2"
-          onClick={(e) => { e.stopPropagation(); setShowRates(!showRates); }}
+          onClick={() => setShowRates(!showRates)}
         >
           <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> Rate Table</span>
           {showRates ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </Button>
 
         {showRates && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <RateTableEditor planId={plan.id} rateTables={rateTables} />
-          </div>
+          <RateTableEditor planId={plan.id} rateTables={rateTables} />
         )}
       </CardContent>
     </Card>
