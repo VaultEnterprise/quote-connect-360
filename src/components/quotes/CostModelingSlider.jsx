@@ -38,8 +38,6 @@ export default function CostModelingSlider({ scenarios }) {
 
       const employerCost = (eePortion * eeContribPct / 100) + (depPortion * depContribPct / 100);
       const employeeCost = totalPremium - employerCost;
-      const avgEEMonthly = s.plan_count > 0 ? employeeCost / (s.plan_count || 1) : employeeCost;
-
       // ACA affordability: employee EE-only premium <= 9.02% of W-2 wages
       const eeOnlyMonthly = eePortion * (1 - eeContribPct / 100);
       const affordabilityPct = BASELINE_MONTHLY_INCOME > 0 ? (eeOnlyMonthly / BASELINE_MONTHLY_INCOME) * 100 : 0;
