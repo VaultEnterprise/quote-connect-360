@@ -364,7 +364,12 @@ export default function CaseDetail() {
 
         {/* Census */}
         <TabsContent value="census" className="mt-4">
-          <CaseCensusTab caseId={caseId} censusVersions={censusVersions} />
+          <CaseCensusTab
+            caseId={caseId}
+            censusVersions={censusVersions}
+            onOpenTxQuote={() => setShowTxQuote(true)}
+            txQuoteAvailable={!txQuoteDisabledReason}
+          />
         </TabsContent>
 
         {/* Quotes */}

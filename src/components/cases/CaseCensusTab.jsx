@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Send } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import CensusUploadModal from "@/components/census/CensusUploadModal";
@@ -17,7 +17,7 @@ import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel
  *   caseId          — string (BenefitCase.id)
  *   censusVersions  — CensusVersion[]
  */
-export default function CaseCensusTab({ caseId, censusVersions }) {
+export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, txQuoteAvailable }) {
   const [showUpload, setShowUpload] = useState(false);
   const [selectedVersionId, setSelectedVersionId] = useState(null);
 
@@ -27,11 +27,18 @@ export default function CaseCensusTab({ caseId, censusVersions }) {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <h3 className="text-sm font-medium text-muted-foreground">{censusVersions.length} version(s)</h3>
-        <Button size="sm" onClick={() => setShowUpload(true)}>
-          <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload Census
-        </Button>
+        <div className="flex items-center gap-2">
+          {txQuoteAvailable && (
+            <Button size="sm" variant="outline" onClick={onOpenTxQuote}>
+              <Send className="w-3.5 h-3.5 mr-1.5" /> TxQuote
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setShowUpload(true)}>
+            <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload Census
+          </Button>
+        </div>
       </div>
 
       {censusVersions.length === 0 ? (

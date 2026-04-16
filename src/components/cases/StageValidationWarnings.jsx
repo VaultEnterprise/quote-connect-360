@@ -22,7 +22,7 @@ export default function StageValidationWarnings({ nextStage, workflowContext }) 
           )}
           <div className="flex-1">
             <p className="font-semibold text-sm">
-              {canProceed ? `Ready to advance to ${nextStage}` : `Requirements to advance`}
+              {canProceed ? `Ready to advance to ${nextStage.replace(/_/g, " ")}` : `Requirements to advance`}
             </p>
           </div>
         </div>
