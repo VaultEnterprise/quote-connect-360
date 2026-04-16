@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ensureTxQuoteWorkspace, buildReadinessSummary, computeParticipationPercent } from "@/components/cases/txQuoteEngine";
+import TxQuoteDestinationProgressCard from "@/components/cases/TxQuoteDestinationProgressCard";
 
 function SectionCard({ title, children, action }) {
   return (
@@ -192,7 +193,22 @@ export default function TxQuoteWorkspace({ open, onClose, caseData, censusVersio
               </SectionCard>
             </div>
 
-            <SectionCard title="F — Readiness Results">
+            <SectionCard title="F — Destination Progress">
+              <div className="grid gap-3 md:grid-cols-3 mb-4">
+                {data.destinations.filter((destination) => destination.is_selected).map((destination) => (
+                  <TxQuoteDestinationProgressCard
+                    key={destination.id}
+                    destination={destination}
+                    readinessResults={data.readinessResults}
+                  />
+                ))}
+              </div>
+              {data.destinations.filter((destination) => destination.is_selected).length === 0 && (
+                <p className="text-sm text-muted-foreground mb-4">Select one or more destinations to see destination-level progress.</p>
+              )}
+            </SectionCard>
+
+            <SectionCard title="G — Readiness Results">
               <div className="space-y-2">
                 {data.readinessResults.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Run validation to see readiness checks.</p>
@@ -209,7 +225,7 @@ export default function TxQuoteWorkspace({ open, onClose, caseData, censusVersio
               </div>
             </SectionCard>
 
-            <SectionCard title="G — Submission History">
+            <SectionCard title="H — Submission History">
               <div className="space-y-2">
                 {data.submissions.length === 0 ? <p className="text-sm text-muted-foreground">No submissions yet.</p> : data.submissions.map((submission) => (
                   <div key={submission.id} className="rounded-lg border p-3 flex items-center justify-between gap-3">
