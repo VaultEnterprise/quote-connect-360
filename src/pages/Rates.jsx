@@ -173,8 +173,12 @@ export default function Rates() {
       ) : filteredRows.length === 0 ? (
         <EmptyState icon={DollarSign} title="No rate sets found" description="Adjust scope or create a new rate set to continue." actionLabel="Create Rate Set" onAction={() => setShowPlanModal(true)} />
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <RatesGridSection rows={filteredRows} selectedIds={selectedIds} setSelectedIds={setSelectedIds} onOpenPreview={setPreviewRow} />
+        <div className="space-y-6">
+          <div className="overflow-x-auto">
+            <div className="min-w-[1600px]">
+              <RatesGridSection rows={filteredRows} selectedIds={selectedIds} setSelectedIds={setSelectedIds} onOpenPreview={setPreviewRow} />
+            </div>
+          </div>
           <RatesIssuesPanel issues={issues} onSelectRow={setPreviewRow} />
         </div>
       )}

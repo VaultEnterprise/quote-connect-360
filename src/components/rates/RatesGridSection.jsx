@@ -18,7 +18,7 @@ export default function RatesGridSection({ rows, selectedIds, setSelectedIds, on
       </div>
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1700px] text-sm">
+          <table className="min-w-[1900px] text-sm">
             <thead className="sticky top-0 bg-muted/50">
               <tr>
                 <th className="px-3 py-3"><Checkbox checked={rows.length > 0 && selectedIds.length === rows.length} onCheckedChange={() => {}} /></th>
