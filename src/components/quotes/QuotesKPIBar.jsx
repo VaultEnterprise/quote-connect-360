@@ -17,9 +17,6 @@ export default function QuotesKPIBar({ scenarios }) {
   const avgEmployerCost = completed.length > 0
     ? Math.round(completed.reduce((sum, s) => sum + (s.employer_monthly_cost || 0), 0) / completed.length)
     : 0;
-  const avgEECost = completed.length > 0
-    ? Math.round(completed.reduce((sum, s) => sum + (s.employee_monthly_cost_avg || 0), 0) / completed.length)
-    : 0;
   const recommended = scenarios.filter(s => s.is_recommended).length;
 
   const metrics = [
