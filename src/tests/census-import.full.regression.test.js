@@ -7,6 +7,7 @@ import {
   parseHouseholds,
   buildValidationIssues,
   extractGroupMetadata,
+  summarizeValidation,
 } from '../lib/census/importPipeline.js';
 import fs from 'fs';
 
@@ -57,5 +58,25 @@ describe('census import regression', () => {
     const issues = buildValidationIssues({ relationship_code: 'EMP', first_name: '', last_name: 'Smith', dob: '', household_key: 'x', zip: '12' });
     expect(issues.some((item) => item.recommended_fix)).toBe(true);
     expect(issues.some((item) => item.severity === 'critical')).toBe(true);
+  });
+
+  test('produces file-level summary counts from parsed households', () => {
+    const rows = extractRowsFromWorksheet(worksheetFixture);
+    const section = locateCensusSection(rows);
+    const headerMap = normalizeCensusHeaders(rows[section.headerIndex]);
+    const records = parseHouseholds(rows.slice(section.headerIndex + 1), headerMap, section.headerIndex);
+    const results = records.map((record, index) => {
+      const issues = buildValidationIssues(record);
+      return {
+        record_id: `r-${index + 1}`,
+        critical_error_count: issues.filter((item) => item.severity === 'critical').length,
+        warning_count: issues.filter((item) => item.severity === 'warning').length,
+        informational_count: issues.filter((item) => item.severity === 'informational').length,
+      };
+    });
+    const summary = summarizeValidation(records, results);
+    expect(summary.employee_count).toBe(1);
+    expect(summary.dependent_count).toBe(1);
+    expect(summary.household_count).toBe(1);
   });
 });
