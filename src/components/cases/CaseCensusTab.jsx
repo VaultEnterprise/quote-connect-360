@@ -30,14 +30,14 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
       <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <h3 className="text-sm font-medium text-muted-foreground">{censusVersions.length} version(s)</h3>
         <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setShowUpload(true)}>
+            <Plus className="w-3.5 h-3.5 mr-1.5" /> Census
+          </Button>
           {txQuoteAvailable && (
             <Button size="sm" variant="outline" onClick={onOpenTxQuote}>
               TxQuote
             </Button>
           )}
-          <Button size="sm" onClick={() => setShowUpload(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1.5" /> Upload Census
-          </Button>
         </div>
       </div>
 

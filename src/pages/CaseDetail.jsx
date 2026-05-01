@@ -32,6 +32,7 @@ import StageValidationWarnings from "@/components/cases/StageValidationWarnings"
 import DependencyCheckPanel from "@/components/cases/DependencyCheckPanel";
 import CloneCaseModal    from "@/components/cases/CloneCaseModal";
 import TxQuoteWorkspace from "@/components/cases/TxQuoteWorkspace";
+import TxQuoteOptionsModal from "@/components/cases/TxQuoteOptionsModal";
 import AuditTrailViewer  from "@/components/shared/AuditTrailViewer";
 import { getCaseWorkflowSignals, getNextCaseStage, getStageRequirements } from "@/components/cases/caseWorkflow";
 import { getTxQuoteDisabledReason, isTxQuoteStepComplete } from "@/components/cases/txQuoteWorkflow";
@@ -460,11 +461,9 @@ export default function CaseDetail() {
         />
       )}
       {showTxQuote && (
-        <TxQuoteWorkspace
+        <TxQuoteOptionsModal
           open={showTxQuote}
           onClose={() => setShowTxQuote(false)}
-          caseData={caseData}
-          censusVersions={censusVersions}
         />
       )}
 
