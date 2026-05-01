@@ -1,5 +1,6 @@
 /* global Deno */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { determineCaseImportStatus } from '../lib/census/importPipeline.js';
 
 Deno.serve(async (req) => {
   try {
@@ -13,13 +14,14 @@ Deno.serve(async (req) => {
     if (!caseId) return Response.json({ error: 'caseId is required' }, { status: 400 });
 
     const existingVersions = await base44.asServiceRole.entities.CensusVersion.filter({ case_id: caseId }, '-version_number', 200);
+    const caseStatus = determineCaseImportStatus(summary);
     const version = await base44.asServiceRole.entities.CensusVersion.create({
       case_id: caseId,
       census_import_id,
       version_number: existingVersions.length + 1,
       file_url: source_file_url,
       file_name: source_file_name,
-      status: summary.critical_error_count > 0 ? 'has_issues' : 'validated',
+      status: caseStatus.version_status,
       total_employees: summary.employee_count,
       total_dependents: summary.dependent_count,
       validation_errors: summary.critical_error_count,
@@ -60,8 +62,8 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.entities.BenefitCase.update(caseId, {
       census_import_id,
-      census_status: summary.critical_error_count > 0 ? 'issues_found' : 'validated',
-      stage: summary.critical_error_count > 0 ? 'census_in_progress' : 'census_validated',
+      census_status: caseStatus.census_status,
+      stage: caseStatus.stage,
       last_activity_date: new Date().toISOString(),
     });
 

@@ -1,6 +1,7 @@
 /* global Deno */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { canonicalCensusSchema } from '../lib/census/canonicalSchema.ts';
+import { normalizeDateValue, normalizeCell } from '../lib/census/importPipeline.js';
 
 Deno.serve(async (req) => {
   try {
@@ -15,11 +16,13 @@ Deno.serve(async (req) => {
 
     const normalized = { ...record };
     Object.entries(canonicalCensusSchema).forEach(([field, config]) => {
-      if (typeof config.transform === 'function') {
+      if (field === 'dob') {
+        normalized[field] = normalizeDateValue(normalized[field]);
+      } else if (typeof config.transform === 'function') {
         normalized[field] = config.transform(normalized[field]);
       }
       if (typeof normalized[field] === 'string') {
-        normalized[field] = normalized[field].trim();
+        normalized[field] = normalizeCell(normalized[field]);
       }
     });
 
