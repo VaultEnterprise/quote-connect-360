@@ -1068,3 +1068,671 @@ Recommended final position:
 - Execute a staged migration with validation gates before hard enforcement.
 
 This should be treated as a **production multi-tenant enterprise architecture program**, not a simple feature addition.
+
+---
+
+## 18. Revision Round 1 Additions
+
+This section is a precision hardening pass intended to remove ambiguity from core control areas and make the package implementation-ready.
+
+## 18.1 Canonical Scope Resolution Model (P0)
+
+### Authoritative policy
+The platform shall use **one canonical scope-resolution algorithm** for every protected operation.
+
+### Source of truth for user scope
+The authoritative source of user scope shall be **server-side membership records**, not client claims and not frontend route context.
+
+Primary source of truth:
+1. `MasterGeneralAgentUser`
+2. any approved lower-scope membership structure such as `MasterGroupUser` if introduced
+3. platform-level `User.role` only for platform-super-admin or explicitly approved support/admin roles
+
+The frontend must never be treated as a source of truth for scope.
+
+### Membership policy
+- A standard operational user may belong to **multiple MasterGroups within the same MGA**.
+- A standard operational user may **not** belong to multiple MGAs.
+- A platform super admin may operate across MGAs by privileged role, not by ordinary membership.
+- A support/admin impersonation mode may exist only under explicit governance controls defined below.
+
+### Precedence rules
+Precedence order is fixed:
+1. `platform_super_admin`
+2. explicitly approved `platform_support_impersonation` mode
+3. `mga_admin`
+4. `mga_manager`
+5. `mga_user`
+6. `mga_read_only`
+7. lower-scope group-specific restrictions if introduced
+
+Where a user has multiple memberships within the same MGA:
+- effective MGA scope is the single MGA shared by those memberships
+- effective permissions are the union of allowed MasterGroup visibility but the **maximum role within that MGA does not automatically bypass domain restrictions** defined in the permission matrix
+
+Where conflicting memberships are detected across multiple MGAs:
+- the account is considered **invalid for operational access**
+- all protected requests are denied
+- a security audit event is created
+- remediation is required by platform administration
+
+### Impersonation / support policy
+- Impersonation is **allowed only for `platform_super_admin` and explicitly designated platform support roles**.
+- Default impersonation mode is **read-only**.
+- Write-capable impersonation is allowed only through an explicit elevated support action with reason capture.
+- Every impersonated request must be audited with:
+  - true actor
+  - impersonated subject
+  - reason
+  - timestamp
+  - action
+  - outcome
+
+### Standardized scope passing rule
+**Scope is derived internally by the service, not passed as an authoritative input.**
+
+Allowed client inputs:
+- target entity identifiers
+- filters
+- pagination data
+- user-entered fields
+
+Not authoritative:
+- `master_general_agent_id`
+- `master_group_id`
+- role claims
+- support mode claims
+
+### Deterministic scope-resolution flow
+For every protected service request:
+1. Authenticate the caller.
+2. Resolve caller principal type (`platform_super_admin`, support impersonation, or MGA-scoped principal).
+3. Load server-side membership records.
+4. If no valid membership exists, deny.
+5. If multiple MGA memberships exist for a non-platform user, deny and audit as configuration violation.
+6. Determine effective MGA scope.
+7. Determine effective allowed MasterGroups within that MGA.
+8. Resolve target entity scope from persisted data, never from client payload.
+9. Compare effective caller scope to target scope.
+10. If mismatch, deny and audit.
+11. If match, apply permission matrix for the exact domain + action.
+12. If action allowed, execute within transactional boundary.
+13. Write audit event.
+14. Return scoped response.
+
+### Async and non-request flows
+#### Synchronous requests
+- scope resolved from authenticated user membership using the canonical flow above.
+
+#### Async jobs
+- job must persist initiating actor, initiating MGA scope, target entities, and correlation id at enqueue time.
+- worker must re-validate scope from stored job context before execution.
+- worker may not widen scope beyond stored initiating scope.
+
+#### Scheduled workflows
+- scheduled workflows must run under an explicit service principal.
+- each schedule must have a configured target scope: platform-global or one specific MGA.
+- platform-global schedules may only perform operations explicitly approved for global scope.
+- MGA schedules may only operate inside their configured MGA.
+
+#### Imports / exports
+- import job inherits scope from the initiating protected request at creation time.
+- processing workers must reject if referenced entities resolve to a different MGA.
+- exports must build result sets only from scoped query services; no raw cross-entity assembly outside scope validation.
+
+#### Webhook-triggered processes
+- webhook handlers must first resolve the owning entity/process in the system.
+- resulting downstream actions inherit the persisted scope of that owning entity.
+- if no owning in-scope entity can be resolved, processing is denied and logged.
+
+## 18.2 Complete Entity Coverage Table (P0)
+
+All entities must have an explicit rule. No entity may be treated as implicitly in-scope.
+
+| Entity | Has `master_general_agent_id` | Scope enforcement | Read rule | Write rule | Cross-scope behavior |
+|---|---|---|---|---|---|
+| MasterGeneralAgent | YES | direct field | platform admins or same MGA roles only | platform admin create/update; own-MGA admin limited updates | deny |
+| MasterGeneralAgentUser | YES | direct field | platform admin or same-MGA user admin scope | only authorized user-management services | deny |
+| MasterGeneralAgentAgreement | YES | direct field | same MGA only | admin/settings permission only | deny |
+| MasterGeneralAgentCommissionProfile | YES | direct field | same MGA only, financial visibility required | admin/settings only | deny |
+| MasterGeneralAgentActivityLog | YES | direct field | same MGA audit/security permission only | system/service writes only | deny |
+| MasterGroup | YES | direct field | same MGA only | scoped service only | deny |
+| Tenant | YES | direct field | same MGA only | scoped service only | deny |
+| Agency | YES if operationally scoped, otherwise GLOBAL registry with explicit service gate | direct or global controlled | if scoped, same MGA only; if global, via admin registry service only | admin-only service | deny |
+| EmployerGroup | YES | direct field | same MGA only | scoped service only | deny |
+| BenefitCase | YES | direct field | same MGA and allowed group only | scoped service only | deny |
+| CaseTask | YES | direct field | same MGA and allowed group only | scoped service only | deny |
+| ActivityLog | YES | direct field | same MGA audit visibility only | system/service writes only | deny |
+| ExceptionItem | YES | direct field | same MGA only | scoped service only | deny |
+| Document | YES | direct field | same MGA only, document permission required | scoped service only | deny |
+| CensusVersion | YES | direct field | same MGA only | scoped service only | deny |
+| CensusMember | YES | direct field | same MGA only | system/import service writes only | deny |
+| CensusImportJob | YES | direct field | same MGA only | import services only | deny |
+| CensusImportAuditEvent | YES | direct field | same MGA audit visibility only | system writes only | deny |
+| CensusValidationResult | YES | direct field | same MGA only | validation services only | deny |
+| QuoteScenario | YES | direct field | same MGA only | scoped quote services only | deny |
+| QuoteVersion / scenario version history | YES | direct field | same MGA only | quote services only | deny |
+| ScenarioPlan | YES | direct field | same MGA only | quote services only | deny |
+| ContributionModel | YES | direct field | same MGA only | quote services only | deny |
+| QuoteTransmission | YES | direct field | same MGA only | transmission services only | deny |
+| QuoteProviderRoute | YES when owned by MGA; GLOBAL only if explicitly designated platform route | direct field or global controlled registry | same MGA if custom; platform-controlled if global | route admin service only | deny |
+| BenefitPlan | YES when plan library is MGA-owned; GLOBAL if shared catalog is approved | direct field or global controlled registry | same MGA or approved global plan catalog service | plan admin service only | deny |
+| PlanRateTable | YES when MGA-scoped; GLOBAL if tied to approved shared catalog | direct field or global controlled registry | same MGA or approved global rate service | rate admin service only | deny |
+| Proposal | YES | direct field | same MGA only | proposal services only | deny |
+| EnrollmentWindow | YES | direct field | same MGA only | enrollment services only | deny |
+| EmployeeEnrollment | YES | direct field | same MGA only | enrollment services only | deny |
+| EnrollmentMember | YES | direct field | same MGA only | enrollment services only | deny |
+| RenewalCycle | YES | direct field | same MGA only | renewal services only | deny |
+| PolicyMatchResult | YES | direct field | same MGA only | policy match services only | deny |
+| TxQuoteCase | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteDestination | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteReadinessResult | YES | direct field | same MGA only | txquote validation services only | deny |
+| TxQuoteSubmissionLog | YES | direct field | same MGA only | txquote send/retry services only | deny |
+| TxQuoteEmployerProfile | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteCurrentPlanInfo | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteContributionStrategy | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteClaimsRequirement | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteSupportingDocument | YES | direct field | same MGA only | txquote services only | deny |
+| TxQuoteDestinationContact | YES | direct field | same MGA only | txquote/admin services only | deny |
+| TxQuoteDestinationRule | YES if customized per MGA; GLOBAL only if centrally managed | direct field or global registry | same MGA if custom; admin/global service if global | controlled service only | deny |
+| TxQuoteCensusOverride | YES | direct field | same MGA only | txquote services only | deny |
+| RateSetAssignment | YES unless truly global | direct field or global controlled | same MGA or approved global rate service | controlled service only | deny |
+| Notifications | YES | direct field | only recipients in same MGA | notification services only | deny |
+| Email delivery log | YES | direct field | same MGA audit/ops visibility only | system writes only | deny |
+| Export manifest / PDF bundle / ZIP bundle | YES | direct field | same MGA only | export services only | deny |
+| Reporting snapshot | YES | direct field | same MGA only | reporting services only | deny |
+| Reporting aggregate / KPI cache | YES | direct field | same MGA only | reporting services only | deny |
+| Background job record / queue item | YES | direct field | admin/ops visibility in same MGA or platform admin | system/service writes only | deny |
+| Retry queue item | YES | direct field | same MGA only | system/service writes only | deny |
+| Webhook receipt log | YES once ownership resolved; unresolved items quarantined | direct field after resolution | scoped audit visibility only | system writes only | unresolved quarantined / deny |
+| Security audit log | YES | direct field | audit permission only | system writes only | deny |
+
+Policy conclusion:
+- all operational entities, derived artifacts, logs, jobs, exports, and caches must carry `master_general_agent_id`
+- global catalogs are permitted only by explicit designation and must be accessed through controlled registry services, never direct broad reads
+
+## 18.3 Global Scoped Service Contract Standard (P0)
+
+This contract standard applies to every scoped service.
+
+### Request model
+All protected service requests must follow a canonical structure:
+- `target`: entity identifiers or domain-specific target selectors
+- `payload`: user-supplied data for the action
+- `query`: filters, search, sort, pagination
+- `context`: optional client metadata only (never authoritative scope)
+- `idempotency_key`: required for create/transmit/retry operations
+- `if_match_version`: required for mutable updates where concurrency applies
+
+Authoritative scope is never accepted from the client.
+
+### Response model
+All protected service responses must follow a canonical structure:
+- `success`
+- `data`
+- `meta`
+  - `correlation_id`
+  - `page`
+  - `page_size`
+  - `total_count` where relevant
+  - `sort`
+- `error` when unsuccessful
+
+### Error model
+Standardized rule:
+- **403 Forbidden** for authenticated users lacking permission or attempting cross-scope access
+- **404 Not Found** only when the target truly does not exist within the allowed scoped search space
+
+The platform will not use security-through-obscurity masking for known-scope authorization failures; the standard is explicit 403 with audit logging.
+
+### Idempotency rules
+Required for:
+- create operations that may be retried by client or network
+- TXQuote transmit
+- retry / resend flows
+- import job creation
+- export job creation
+
+If the same `idempotency_key` is submitted for the same actor + operation + target within retention window, the service must return the original logical result rather than creating duplicates.
+
+### Pagination / filtering / sorting
+- all list endpoints must scope-filter first, then apply user filters
+- pagination is mandatory for list services above configured thresholds
+- sorting must use an approved allowlist of sortable fields
+- filters may not bypass scope predicates
+
+### Bulk operation rules
+- each record in a bulk operation must be individually scope-validated
+- mixed-scope bulk actions are denied in full
+- partial success is disallowed by default for destructive or externally sensitive actions
+- partial success may be allowed for non-destructive maintenance actions only if explicitly documented and audited item-by-item
+
+### Transaction boundaries
+- scope validation and primary write must occur in one controlled operation boundary
+- multi-entity writes must be atomic where platform capability permits
+- if an external side effect exists (email, TXQuote transmission, webhook callback), internal audit + state transition must be committed before dispatch, with retry-safe state tracking
+
+### Concurrency model
+The standard concurrency model is **optimistic locking** using record version or updated timestamp comparison.
+- mutable services must require `if_match_version` or equivalent
+- stale writes are rejected
+- rejected stale writes are audited as failed concurrency events where business-significant
+
+### File / document access rules
+- files inherit scope from owning persisted entity
+- signed links may be generated only by scoped document services
+- signed links must be short-lived and tied to in-scope authorization at generation time
+- raw direct file references must not be exposed as permanent cross-scope-accessible URLs
+
+### Audit requirements per operation
+Every protected service must audit:
+- actor
+- effective role
+- effective MGA scope
+- target entity/domain
+- action
+- result (`success | failed | blocked`)
+- correlation id
+- idempotency key when relevant
+
+## 18.4 Domain Permission Matrix (P0)
+
+This matrix replaces optional interpretations with explicit allow/deny logic.
+
+Legend: A = allow, D = deny
+
+### Census
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | A | A |
+| read | A | A | A | A |
+| create | A | A | A | D |
+| edit | A | A | A | D |
+| delete | A | D | D | D |
+| approve | A | A | D | D |
+| transmit | D | D | D | D |
+| retry | A | A | D | D |
+| export | A | A | A | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | D | D | D | D |
+
+### Quotes
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | A | A |
+| read | A | A | A | A |
+| create | A | A | A | D |
+| edit | A | A | A | D |
+| delete | A | D | D | D |
+| approve | A | A | D | D |
+| transmit | D | D | D | D |
+| retry | A | A | D | D |
+| export | A | A | A | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | A | A | D | D |
+
+### TXQuote
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | A | A |
+| read | A | A | A | A |
+| create | A | A | D | D |
+| edit | A | A | D | D |
+| delete | A | D | D | D |
+| approve | A | A | D | D |
+| transmit | A | A | D | D |
+| retry | A | A | D | D |
+| export | A | A | D | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | A | A | D | D |
+
+### Enrollment
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | A | A |
+| read | A | A | A | A |
+| create | A | A | A | D |
+| edit | A | A | A | D |
+| delete | A | D | D | D |
+| approve | A | A | D | D |
+| transmit | D | D | D | D |
+| retry | A | A | D | D |
+| export | A | A | A | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | D | D | D | D |
+
+### Documents
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | A | A |
+| read | A | A | A | A |
+| create | A | A | A | D |
+| edit | A | A | A | D |
+| delete | A | D | D | D |
+| approve | D | D | D | D |
+| transmit | D | D | D | D |
+| retry | D | D | D | D |
+| export | A | A | A | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | D | D | D | D |
+
+### Reporting
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | A | A |
+| read | A | A | A | A |
+| create | A | A | D | D |
+| edit | D | D | D | D |
+| delete | D | D | D | D |
+| approve | D | D | D | D |
+| transmit | D | D | D | D |
+| retry | A | A | D | D |
+| export | A | A | A | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | A | A | D | D |
+
+### Users
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | D | D |
+| read | A | A | D | D |
+| create | A | D | D | D |
+| edit | A | D | D | D |
+| delete | A | D | D | D |
+| approve | A | D | D | D |
+| transmit | D | D | D | D |
+| retry | D | D | D | D |
+| export | A | D | D | D |
+| manage_users | A | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | D | D | D | D |
+
+### Settings
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | D | D |
+| read | A | A | D | D |
+| create | A | D | D | D |
+| edit | A | D | D | D |
+| delete | A | D | D | D |
+| approve | A | D | D | D |
+| transmit | D | D | D | D |
+| retry | D | D | D | D |
+| export | A | D | D | D |
+| manage_users | D | D | D | D |
+| manage_settings | A | D | D | D |
+| view_financials | A | D | D | D |
+
+### Audit
+| Permission | mga_admin | mga_manager | mga_user | mga_read_only |
+|---|---:|---:|---:|---:|
+| view | A | A | D | D |
+| read | A | A | D | D |
+| create | D | D | D | D |
+| edit | D | D | D | D |
+| delete | D | D | D | D |
+| approve | D | D | D | D |
+| transmit | D | D | D | D |
+| retry | D | D | D | D |
+| export | A | D | D | D |
+| manage_users | D | D | D | D |
+| manage_settings | D | D | D | D |
+| view_financials | D | D | D | D |
+
+## 18.5 Cross-MGA Isolation Edge Case Rules (P0)
+
+### Cloned cases / duplicated quotes
+- clone/duplicate operations may only target records within the same MGA
+- cross-MGA cloning is denied
+- cloned records receive fresh IDs but retain the same `master_general_agent_id`
+
+### Imported files processed asynchronously
+- import file ownership is fixed at import-job creation
+- async processors must reject if parent case/group resolves to a different MGA at processing time
+- rejected items are quarantined and audited
+
+### Background jobs with elevated roles
+- background jobs may use service credentials only to execute pre-authorized scoped work
+- service role is not a license for cross-MGA access
+- job must carry persisted scope context and re-validate before each sensitive action
+
+### Cached dashboards / reports
+- cache keys must include `master_general_agent_id` and, where relevant, role or allowed group set
+- cross-MGA shared caches are prohibited for scoped data
+- stale cache entries from previous scope contexts must not be reused
+
+### Search / indexing
+- search indexes must include `master_general_agent_id`
+- search queries must apply scope predicates before returning results
+- global indexing without scoped filtering is prohibited
+
+### Notifications and email references
+- notifications must only reference in-scope entities
+- email rendering must not include links or metadata for out-of-scope objects
+- retrying a notification may not widen recipient scope
+
+### Document URLs / signed links
+- signed document links may only be generated through scoped services
+- signed links must be short-lived
+- links are generated only after authorization succeeds
+- export-time document inclusion must re-validate scope record-by-record
+
+### Export bundles (PDF / ZIP)
+- export bundles must be assembled exclusively from scoped service query results
+- each included artifact must pass scope validation
+- any detected out-of-scope item causes the export job to fail closed and audit the violation
+
+### Stale or partially migrated records
+- records missing `master_general_agent_id` after enforcement are treated as **not operationally accessible**
+- reads are denied through protected services
+- writes are denied except approved migration remediation services
+- each access attempt is logged as migration-state violation
+
+## 18.6 Migration Plan Operational Hardening (P0)
+
+### Pre-migration inventory
+Before migration execution, produce a full inventory of:
+- total records by entity
+- records with null parent references
+- records with missing `master_group_id`
+- records with conflicting case/employer/group lineage
+- records with external artifacts (documents, exports, transmissions)
+
+### Anomaly classification
+Every anomalous record must be categorized into exactly one of:
+1. orphaned record
+2. conflicting parent chain
+3. missing `master_group_id`
+4. missing upstream owner mapping
+5. invalid duplicate lineage
+6. unsupported legacy artifact
+
+### Mapping ownership
+- every existing MasterGroup → MGA mapping must have an explicit business owner approver
+- no production mapping may be inferred silently for disputed ownership cases
+- disputed mappings block cutover for affected records
+
+### Dry-run migration
+A dry-run is mandatory and must produce a reconciliation report including:
+- total records evaluated
+- total records mapped
+- total anomalies by class
+- unresolved records count
+- before/after counts per entity and MGA
+
+### Acceptance thresholds
+Migration may proceed to cutover only if:
+- 100% of MasterGroups have approved MGA mapping
+- 100% of protected operational entities have resolved MGA scope or are formally quarantined
+- 0 unresolved conflicting parent-chain records remain in active operational domains
+- reporting reconciliation variance is <= 0.1% for non-financial counts and 0% for financial/control totals
+
+### Rollback triggers
+Rollback is triggered if any of the following occurs:
+- unresolved conflicting parent-chain records appear in active data post-cutover
+- cross-scope access validation fails
+- reconciliation thresholds are breached
+- protected services return inconsistent scope results in certification tests
+
+### Cutover plan
+- define freeze window for writes to affected domains
+- execute final pre-cutover reconciliation
+- run migration
+- run post-migration validation suite
+- release only after validation passes
+
+### Post-migration monitoring
+For a defined monitoring period:
+- track blocked migration-state violations
+- track scoped query failures
+- track authorization denials by domain
+- track export/report anomalies
+
+### Dual-read / dual-write strategy
+- dual-read may be used during transition if required for validation
+- dual-write is permitted only for a temporary controlled period and must include reconciliation logging
+- no long-term dual-write state is allowed
+
+## 18.7 Validation Plan with Measurable Criteria (P0)
+
+### RBAC test grid
+Every role × domain × action combination in the permission matrix must be tested with explicit pass/fail outcomes.
+Pass condition:
+- allowed actions succeed only within scope
+- denied actions fail with standardized authorization behavior
+
+### Cross-scope violation tests
+Required tests include:
+- MGA A user attempts to read/write/export/transmit/report against MGA B data
+Pass condition:
+- request denied
+- no data returned
+- security audit event written
+
+### Performance benchmarks
+Scoped query performance must be benchmarked for major list/report domains.
+Pass condition:
+- agreed production performance thresholds are met under representative dataset volumes
+- no scoped query introduces unacceptable degradation relative to baseline tolerance
+
+### Reporting accuracy validation
+Compare scoped reports to approved baseline datasets.
+Pass condition:
+- operational reports match baseline within approved reconciliation threshold
+- financial/control totals match exactly where required
+
+### Migration reconciliation thresholds
+Pass condition:
+- counts and totals meet thresholds defined in migration acceptance section
+- quarantined records are fully enumerated and excluded from operational reports
+
+### Negative tests
+Required negative tests:
+- invalid bulk action across mixed scopes
+- repeated idempotent retry submission
+- stale concurrency update
+- failed external transmission retry
+- invalid signed document request
+Pass condition:
+- system fails closed
+- no unauthorized side effects occur
+- audit trail is complete
+
+### File/document access validation
+Pass condition:
+- only in-scope authorized users can obtain document metadata or signed links
+- expired or invalid link behavior is enforced correctly
+
+### Audit completeness validation
+Pass condition:
+- every protected operation class generates expected audit record(s)
+- correlation ids connect multi-step operations end-to-end
+
+### Impersonation tests
+If impersonation is enabled:
+Pass condition:
+- impersonated reads follow scope of impersonated subject
+- write impersonation requires elevated support mode and reason capture
+- all impersonated operations are separately auditable
+
+## 18.8 Onboarding Governance (P1)
+
+- MGA creation is **invite-only or platform-admin-created**, not open public self-provisioning by default.
+- A platform admin may create an MGA directly or invite a prospective MGA to complete onboarding.
+- Approval workflow requires platform admin approval before activation.
+- Required compliance data includes legal entity data, contact data, jurisdiction/licensing fields required by business policy, and agreement status.
+- On activation, the first designated user must be assigned `mga_admin`.
+- Incomplete onboarding leaves MGA in `pending_onboarding` and blocks operational workflows.
+- Re-verification requirements must be defined for compliance-sensitive fields on a periodic basis.
+
+## 18.9 Reporting Architecture (P1)
+
+### Standard MGA report set
+At minimum:
+- MasterGroup operational summary
+- case pipeline report
+- census quality/status report
+- quote pipeline report
+- TXQuote transmission report
+- enrollment progress report
+- renewal pipeline report
+- exception/SLA report
+- user activity/audit summary
+
+### Financial vs operational separation
+- financial reports are distinct from operational reports
+- financial visibility requires explicit permission
+
+### Export permissions
+- exports follow the same scoped permission model as reports
+- no read-only export by default unless explicitly allowed in the permission matrix
+
+### Cached vs real-time
+- cached reports must be scope-keyed
+- control/financial reports should prefer reproducible snapshot generation
+
+### Report reproducibility
+- major exported reports must persist generation metadata, filters, actor, timestamp, and scope for traceability
+
+### Cross-MasterGroup comparison inside same MGA
+- allowed within same MGA subject to reporting permissions
+
+### Cross-MGA analytics
+- allowed only for platform-super-admin and only through explicit platform reporting services
+
+## 18.10 Audit Model Hardening (P1)
+
+### Audit categories
+1. **Operational audit** — workflow actions and state transitions
+2. **Security audit** — blocked access, impersonation, policy violations, suspicious events
+3. **Governance audit** — user-role changes, settings changes, MGA lifecycle approvals
+
+### Retention policy
+- retention periods must be formally defined by compliance policy
+- security and governance audit should have the longest retention class
+
+### Access control
+- audit visibility is permission-controlled
+- security audit access is more restricted than ordinary operational audit
+
+### Tamper resistance expectations
+- audit records are append-only from application perspective
+- direct mutation/deletion of audit records through operational UI or standard services is prohibited
+
+### Redaction rules
+- sensitive values must be redacted or summarized where full raw payload retention creates privacy/compliance risk
+
+### Correlation
+- multi-step processes must share correlation ids across service, job, export, and notification actions
+
+### Alerting thresholds
+At minimum define alerting for:
+- repeated blocked cross-scope attempts
+- repeated impersonation write attempts
+- repeated authorization failures against sensitive domains
