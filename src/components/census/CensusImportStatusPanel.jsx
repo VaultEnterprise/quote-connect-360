@@ -2,8 +2,10 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import CensusErrorSummary from "@/components/census/CensusErrorSummary";
+import CensusImportTimeline from "@/components/census/CensusImportTimeline";
 
-export default function CensusImportStatusPanel({ job, onReprocess, reprocessing }) {
+export default function CensusImportStatusPanel({ job, onReprocess, reprocessing, events = [] }) {
   if (!job) return null;
 
   const progress = job.status === "completed" || job.status === "reprocessed"
@@ -49,6 +51,9 @@ export default function CensusImportStatusPanel({ job, onReprocess, reprocessing
             {job.failure_reason}
           </div>
         )}
+
+        <CensusErrorSummary job={job} />
+        <CensusImportTimeline events={events} />
       </CardContent>
     </Card>
   );

@@ -13,8 +13,17 @@ Deno.serve(async (req) => {
     if (!census_import_id) return Response.json({ error: 'census_import_id is required' }, { status: 400 });
     if (!caseId) return Response.json({ error: 'caseId is required' }, { status: 400 });
 
+    let hasActiveEmployee = false;
+    const seenMembers = new Set();
+
     const results = records.map((record, index) => {
-      const errors = buildValidationIssues(record);
+      const duplicateKey = [record.household_key, record.first_name, record.last_name, record.dob, record.relationship_code].join('|').toLowerCase();
+      const errors = buildValidationIssues(record, {
+        hasActiveEmployee,
+        isDuplicateMember: seenMembers.has(duplicateKey),
+      });
+      if (record.relationship_code === 'EMP') hasActiveEmployee = true;
+      seenMembers.add(duplicateKey);
       return {
         case_id: caseId,
         census_import_id,

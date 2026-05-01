@@ -14,6 +14,24 @@ Deno.serve(async (req) => {
     if (!caseId) return Response.json({ error: 'caseId is required' }, { status: 400 });
 
     const existingVersions = await base44.asServiceRole.entities.CensusVersion.filter({ case_id: caseId }, '-version_number', 200);
+    const existingMembers = await base44.asServiceRole.entities.CensusMember.filter({ census_import_id }, '-created_date', 5000);
+    const existingResults = await base44.asServiceRole.entities.CensusValidationResult.filter({ census_import_id }, '-created_date', 5000);
+    if (existingMembers.length) {
+      for (let index = 0; index < existingMembers.length; index += 200) {
+        const chunk = existingMembers.slice(index, index + 200);
+        await Promise.all(chunk.map((item) => base44.asServiceRole.entities.CensusMember.delete(item.id)));
+      }
+    }
+    if (existingResults.length) {
+      for (let index = 0; index < existingResults.length; index += 200) {
+        const chunk = existingResults.slice(index, index + 200);
+        await Promise.all(chunk.map((item) => base44.asServiceRole.entities.CensusValidationResult.delete(item.id)));
+      }
+    }
+    const archivedVersions = existingVersions.filter((item) => item.census_import_id === census_import_id && item.status !== 'archived');
+    if (archivedVersions.length) {
+      await Promise.all(archivedVersions.map((item) => base44.asServiceRole.entities.CensusVersion.update(item.id, { status: 'archived' })));
+    }
     const caseStatus = determineCaseImportStatus(summary);
     const version = await base44.asServiceRole.entities.CensusVersion.create({
       case_id: caseId,

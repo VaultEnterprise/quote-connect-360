@@ -126,15 +126,29 @@ export function extractGroupMetadata(rows = []) {
 export function normalizeCensusHeaders(headerRow = []) {
   const aliases = {
     relationship: 'relationship',
+    relation: 'relationship',
+    employee_dependent: 'relationship',
     first_name: 'first_name',
+    first: 'first_name',
+    first_name_middle_initial: 'first_name',
     last_name: 'last_name',
+    last: 'last_name',
+    surname: 'last_name',
     address: 'address',
+    home_address: 'address',
     city: 'city',
     state: 'state',
     zip: 'zip',
+    zipcode: 'zip',
+    postal_code: 'zip',
     gender: 'gender',
+    sex: 'gender',
     dob: 'dob',
+    date_of_birth: 'dob',
+    birth_date: 'dob',
     coverage_type: 'coverage_type',
+    coverage: 'coverage_type',
+    elected_coverage: 'coverage_type',
   };
   return headerRow.map((cell, index) => {
     const normalized = normalizeHeaderLabel(cell)
@@ -184,6 +198,8 @@ export function parseHouseholds(rows = [], headerMap = [], headerIndex = 0) {
   const coverageIndex = getIndex('coverage_type');
 
   let activeHouseholdKey = '';
+  let householdSequence = 0;
+  const seenHouseholds = new Set();
   const records = [];
   rows.forEach((row, rowOffset) => {
     const rowNumber = headerIndex + rowOffset + 2;
@@ -204,8 +220,19 @@ export function parseHouseholds(rows = [], headerMap = [], headerIndex = 0) {
       source_row_number: rowNumber,
       source_payload: Object.fromEntries(headerMap.map((item) => [item.source || `col_${item.index}`, row[item.index] ?? ''])),
     };
-    const householdKey = [record.first_name, record.last_name, record.dob].filter(Boolean).join('|').toLowerCase();
-    if (relationship === 'EMP') activeHouseholdKey = householdKey;
+    let householdKey = [record.first_name, record.last_name, record.dob].filter(Boolean).join('|').toLowerCase();
+    if (relationship === 'EMP') {
+      if (!householdKey) {
+        householdSequence += 1;
+        householdKey = `household_${householdSequence}`;
+      }
+      if (seenHouseholds.has(householdKey)) {
+        householdSequence += 1;
+        householdKey = `${householdKey}_${householdSequence}`;
+      }
+      seenHouseholds.add(householdKey);
+      activeHouseholdKey = householdKey;
+    }
     record.household_key = relationship === 'EMP' ? householdKey : activeHouseholdKey;
     record.employee_id = '';
     record.dependent_link_type = relationship === 'EMP' ? 'employee' : relationship === 'SPS' ? 'spouse' : 'dependent';
@@ -214,7 +241,7 @@ export function parseHouseholds(rows = [], headerMap = [], headerIndex = 0) {
   return records;
 }
 
-export function buildValidationIssues(record) {
+export function buildValidationIssues(record, context = {}) {
   const issues = [];
   if (!record.relationship_code) issues.push({ field: 'relationship_code', severity: 'critical', code: 'REQUIRED_FIELD_MISSING', message: 'Relationship code is required', recommended_fix: 'Set relationship to EMP, SPS, or DEP.' });
   if (!record.first_name) issues.push({ field: 'first_name', severity: 'critical', code: 'REQUIRED_FIELD_MISSING', message: 'First name is required', recommended_fix: 'Fill in the first name for this member row.' });
@@ -222,6 +249,11 @@ export function buildValidationIssues(record) {
   if (!record.dob || !/^\d{4}-\d{2}-\d{2}$/.test(record.dob)) issues.push({ field: 'dob', severity: 'critical', code: 'INVALID_DATE', message: 'DOB must normalize to YYYY-MM-DD', recommended_fix: 'Use a valid date in the DOB column.' });
   if (record.relationship_code !== 'EMP' && !record.household_key) issues.push({ field: 'household_key', severity: 'critical', code: 'MISSING_EMPLOYEE_LINK', message: 'Dependent row is not linked to an employee household', recommended_fix: 'Ensure dependent rows come after a matching EMP row.' });
   if (record.zip && !/^\d{5}(-\d{4})?$/.test(record.zip)) issues.push({ field: 'zip', severity: 'warning', code: 'INVALID_ZIP', message: 'ZIP should be 5 or 9 digits', recommended_fix: 'Enter a 5-digit ZIP or ZIP+4.' });
+  if (!['EMP', 'SPS', 'DEP'].includes(record.relationship_code || '')) issues.push({ field: 'relationship_code', severity: 'critical', code: 'INVALID_RELATIONSHIP', message: 'Relationship must be EMP, SPS, or DEP', recommended_fix: 'Use EMP, SPS, or DEP in the relationship column.' });
+  if (record.relationship_code === 'DEP' && !context.hasActiveEmployee) issues.push({ field: 'relationship_code', severity: 'critical', code: 'DEPENDENT_BEFORE_EMPLOYEE', message: 'Dependent row appears before a valid employee row', recommended_fix: 'Place employee rows before related dependent rows.' });
+  if (record.relationship_code === 'SPS' && !context.hasActiveEmployee) issues.push({ field: 'relationship_code', severity: 'critical', code: 'SPOUSE_BEFORE_EMPLOYEE', message: 'Spouse row appears before a valid employee row', recommended_fix: 'Place employee rows before spouse rows.' });
+  if (!['EE', 'ES', 'EC', 'EF', 'W', ''].includes(record.coverage_type || '')) issues.push({ field: 'coverage_type', severity: 'warning', code: 'UNKNOWN_COVERAGE_CODE', message: 'Coverage code is not recognized', recommended_fix: 'Use EE, ES, EC, EF, or W.' });
+  if (context.isDuplicateMember) issues.push({ field: 'household_key', severity: 'critical', code: 'DUPLICATE_MEMBER', message: 'Duplicate member record detected', recommended_fix: 'Remove duplicate member rows for the same household/person combination.' });
   if (record.coverage_type === 'W') issues.push({ field: 'coverage_type', severity: 'informational', code: 'WAIVED_COVERAGE', message: 'Coverage is waived', recommended_fix: 'No action needed if waiver is intentional.' });
   return issues;
 }
