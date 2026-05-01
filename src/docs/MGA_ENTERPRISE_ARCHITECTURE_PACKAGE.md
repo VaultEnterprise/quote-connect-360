@@ -1736,3 +1736,95 @@ At minimum define alerting for:
 - repeated blocked cross-scope attempts
 - repeated impersonation write attempts
 - repeated authorization failures against sensitive domains
+
+---
+
+# 19. MGA Architecture Certification Remediation — Revision Round 2
+
+Planning-only remediation. No implementation is authorized. Default posture: deny by default, scope every protected operation, audit every material action, and fail closed when scope cannot be resolved.
+
+## 19.1 Universal Protected Scope Gate
+
+No protected service, read model, UI data load, API read/write, list/detail query, dashboard, report, export, notification, document link, signed URL, file thumbnail, document preview, search result, autocomplete result, global search preview, real-time subscription, event stream, async job, scheduled job, import, webhook-triggered flow, TXQuote transmission, or TXQuote retry may execute until scope has been resolved and authorized through the canonical scope-resolution algorithm in Section 18.1.
+
+Direct frontend entity list/filter/read operations are prohibited in all protected domains. Protected UI screens may only load data through scoped service functions.
+
+A service must fail closed if actor scope, target scope, parent scope, or derived scope cannot be resolved deterministically. Any unresolved, missing, conflicting, stale, or partially migrated scope results in: deny; quarantine where applicable; security audit event; and no user-visible cross-scope data. No protected service may use fallback, default, inferred, or client-provided MGA scope at runtime.
+
+## 19.2 Final Support / Impersonation Policy
+
+Platform super admins may have elevated cross-MGA visibility through explicit role checks. Standard support impersonation is read-only only. Write-capable impersonation is disabled by default and may only occur through a separately approved, time-limited break-glass governance process.
+
+Every impersonation session logs: real actor, impersonated actor, effective scope, reason, start time, end time, actions viewed, actions attempted, actions completed, and outcome. No support/admin operation may bypass scope logging.
+
+## 19.3 Final Entity Classification Certification Table
+
+Classification values: Scoped - Direct; Scoped - Inherited; Global - Intentional; Platform-Only - Not MGA Visible. No entity is implicitly scoped.
+
+| Classification | Entities / artifacts | Scope rule |
+|---|---|---|
+| Scoped - Direct | MasterGeneralAgent, MasterGeneralAgentUser, MasterGeneralAgentAgreement, MasterGeneralAgentCommissionProfile, MasterGeneralAgentActivityLog, MasterGroup, Tenant, AgencyOperationalRecord, EmployerGroup, BenefitCase, CaseTask, ActivityLog, ExceptionItem, Document, CensusVersion, CensusMember, CensusImportJob, CensusImportAuditEvent, CensusValidationResult, QuoteScenario, QuoteVersion, ScenarioPlan, ContributionModel, QuoteTransmission, Proposal, EnrollmentWindow, EmployeeEnrollment, EnrollmentMember, RenewalCycle, PolicyMatchResult, TxQuoteCase, TxQuoteDestination, TxQuoteReadinessResult, TxQuoteSubmissionLog, TxQuoteEmployerProfile, TxQuoteCurrentPlanInfo, TxQuoteContributionStrategy, TxQuoteClaimsRequirement, TxQuoteSupportingDocument, TxQuoteDestinationContact, TxQuoteDestinationRule, TxQuoteDestinationRuleOverride, TxQuoteCensusOverride, RateSetAssignment, NotificationRecord, EmailDeliveryLog, RealTimeEventRecord, WebhookReceiptLog, RetryQueueItem, BackgroundJobRecord, ScheduledJobRecord, SecurityAuditLog, UserManual, GeneratedManual, ManualExport, ManualPDF, ManualSnapshot, HelpSearchLog, HelpAIQuestionLog, HelpCoverageSnapshot, HelpAuditLog, HelpAITrainingQueue, ViewPreset, CaseFilterPreset | Must store `master_general_agent_id`; user presets also scoped to user |
+| Scoped - Inherited | DocumentArtifact, ExportArtifact, ReportArtifact, DocumentPreviewMetadata, DocumentThumbnailMetadata, SignedLinkRecord, ExportManifestChildArtifact, GeneratedPDF, ZIPBundle, QuoteProviderRoute, BenefitPlan, CaseBenefitPlanSnapshot, PlanRateTable, CasePlanRateSnapshot | Inherits from already-scoped source record and is accessible only through scoped service resolution |
+| Global - Intentional | AgencyPlatformCatalog, BenefitPlanCatalog, PlanRateCatalog, PlatformQuoteProviderRouteCatalog, PlatformTxQuoteDestinationRule, HelpModule, HelpPage, HelpSection, HelpContent, HelpContentVersion, HelpManualTopic, HelpManualTopicTargetMap, HelpTarget | Static/reference content only; cannot contain tenant, MGA, MasterGroup, case, quote, census, document, employer, employee, or user-specific operational data |
+| Platform-Only - Not MGA Visible | SeedRun, SeedRunStep, User, WebhookQuarantineRecord, QuarantineRecord, PlatformScheduledJobRecord, internal setup/bootstrap records | Not visible to MGA users; access limited to platform/security/compliance roles |
+
+If global static help/manual content ever includes operational data, the generated record must be reclassified as Scoped - Direct before use.
+
+## 19.4 Scoped Service Contract Conformance Matrix
+
+All protected service categories use the canonical request, response, 403/404 error, audit, and cross-scope-deny model from Section 18.3.
+
+| Service category | Gate | Idempotency | Bulk | Concurrency | File/document implications | Audit | Cross-scope behavior |
+|---|---|---|---|---|---|---|---|
+| Authentication/session/scope resolution | YES | NO | NO | NO | none | YES | deny |
+| MGA, MasterGroup, user invitation, user management, RBAC, settings | YES | YES for create/change | YES | YES | scoped settings/agreements | YES | deny |
+| Case, census import/validation, quote generation/versioning/comparison, enrollment | YES | YES for create/import/calculate/version | YES | YES | uploaded/generated artifacts scoped | YES | deny/quarantine |
+| TXQuote transmit and retry | YES | YES | YES | YES | census/supporting docs scoped | YES | deny/fail closed |
+| Documents/files, signed links, previews, thumbnails | YES | YES for create/generate | YES except signed links | YES | metadata protected as document; links expire and reauthorize | YES | deny/fail closed |
+| Reporting, dashboards, exports | YES | YES for snapshot/export | YES | YES for snapshots/exports | bundles/cache scoped | YES | deny/fail closed |
+| Search, autocomplete, global search previews | YES | NO | NO | NO | snippets/previews scoped | YES | deny/no result |
+| Notifications, email delivery, email deep links | YES | YES for creation/delivery | YES | YES | rendered links scoped and reauthorized | YES | suppress/deny/fail closed |
+| Real-time subscriptions and event streams | YES | NO | YES for event delivery | YES on reconnect/scope change | payloads filtered by recipient scope | YES | no event delivered |
+| Webhook intake, background jobs, scheduled jobs, retry queues | YES | YES | YES | YES | artifacts scoped after ownership resolution | YES | quarantine/deny |
+| Webhook quarantine, quarantine queue | NO for MGA users; YES for platform/security roles | YES for release | YES | YES | quarantined artifacts hidden | YES | hidden from MGA users |
+| Audit logs | YES | NO | YES | NO | audit data access-controlled | YES | deny |
+| Help/manual content | NO | YES for admin writes | YES | YES for writes | no operational data allowed | YES for writes | global intentional |
+| Help/manual activity logs | YES | YES | YES | YES | generated artifacts scoped | YES | deny |
+| Platform catalogs | NO | YES for admin writes | YES | YES for writes | reference-only, no operational data | YES for writes | platform/global controlled |
+| Support/admin impersonation | YES | YES | NO | YES | viewed artifacts scoped/logged | YES | read-only unless break-glass |
+
+## 19.5 Cross-Scope Edge Case Closure Rules
+
+Real-time subscriptions/event streams: subscription requests pass scope resolution; tokens include actor, role, MGA scope, and correlation ID; protected events may not publish to global unscoped channels; payloads are filtered by recipient scope; reconnects re-resolve scope; moved, quarantined, deleted, or reassigned records stop producing visible events to prior scopes.
+
+Search/autocomplete/snippets/previews: indexes are partitioned or filtered by `master_general_agent_id`; autocomplete cannot leak out-of-scope names, case references, document names, quote IDs, employer names, user names, or metadata; snippets are generated only from authorized records; global help appears globally only if static and non-operational.
+
+Document thumbnails/previews: thumbnails, previews, filenames, file sizes, generated summaries, and preview metadata are protected like the source document. Signed links are generated only after authorization, expire, and must re-authorize at click/view/download time. Old links fail closed if the object moved, was quarantined, archived, reassigned, or deleted.
+
+Dashboard/reporting joins: joins operate only on pre-scoped datasets; no report may join a scoped entity to an unscoped operational entity; global catalog joins are allowed only for non-sensitive reference data; report caches include MGA scope in the key; scope changes invalidate affected caches.
+
+Quarantine visibility: quarantined records are invisible to MGA users by default and visible only to platform super admin or authorized compliance/security roles. Release requires explicit reassignment and audit. Quarantine records never appear in MGA dashboards, search, reports, exports, notifications, or document lists until resolved.
+
+Stale email/deep links: possession of a link grants no access. Every click re-authenticates and re-authorizes. If the target is out-of-scope, quarantined, archived, reassigned, deleted, or migrated to another scope, the link fails closed and writes a security audit event.
+
+## 19.6 Revision Round 2 Validation Addendum
+
+Service contract conformance tests must validate request structure, response structure, error structure, 403/404 behavior, idempotency where required, audit event creation, and cross-scope denial for every service category. Pass: 100% of protected service categories conform.
+
+Real-time tests: in-scope subscription receives event; cross-MGA subscription receives no event; reassigned object stops sending to old scope; reconnect re-resolves scope; global unscoped channel cannot deliver protected payload. Pass: no protected event reaches an out-of-scope user.
+
+Search tests: in-scope results appear; cross-MGA records do not; autocomplete leaks no out-of-scope names; snippets use only authorized records; global help appears only when non-operational. Pass: zero out-of-scope identifiers, metadata, snippets, or previews.
+
+Notification/email deep-link tests: in-scope notification renders; out-of-scope notification is suppressed; old links to moved/quarantined/deleted/archived/reassigned objects fail closed; failed access creates security audit. Pass: link possession never bypasses authentication, authorization, or scope validation.
+
+Quarantine tests: unresolved webhook enters quarantine; ambiguous import ownership enters quarantine; quarantined records are hidden from MGA dashboard/search/report/export; platform compliance user can view queue; release requires explicit assignment and audit. Pass: quarantined records are invisible to all non-authorized MGA users.
+
+Document preview/thumbnail tests: in-scope preview works; cross-scope user cannot see filename, thumbnail, preview metadata, summary, or file size; expired signed link fails closed; moved/reassigned/quarantined document link fails closed. Pass: document-derived metadata is protected exactly like the document.
+
+Performance certification targets: scoped list/detail API P95 under 750ms; scoped dashboard load P95 under 2.5s; scoped global search P95 under 2s; signed document authorization check P95 under 500ms; export job enqueue P95 under 1s; report generation async if expected to exceed 3s; no scoped query may perform full-table scans on operational records in production. Pass: scoped controls create no unacceptable performance degradation or unindexed production queries.
+
+## 19.7 Residual Risk Cleanup
+
+Former P0 blockers resolved by Revision Round 2: conditional entity classifications; write-capable support impersonation ambiguity; service compliance matrix absence; protected UI read ambiguity; event stream/real-time gap; document preview/thumbnail gap; search autocomplete/snippet gap; quarantine visibility gap; stale email deep-link gap; numeric performance target gap.
+
+Remaining risks are P1 or lower: audit retention duration requires compliance policy; exact break-glass approval workflow is needed only if write-capable support is ever enabled; platform catalog governance requires ownership; global help/manual content must remain free of operational data; performance targets may require implementation-time indexing.
