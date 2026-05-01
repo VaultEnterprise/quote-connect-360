@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Plus } from "lucide-react";
@@ -7,6 +9,8 @@ import EmptyState from "@/components/shared/EmptyState";
 import CensusUploadModal from "@/components/census/CensusUploadModal";
 import CensusMemberTable from "@/components/census/CensusMemberTable";
 import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel";
+import CensusImportStatusPanel from "@/components/census/CensusImportStatusPanel";
+import CensusValidationDetailsDialog from "@/components/census/CensusValidationDetailsDialog";
 
 /**
  * CaseCensusTab
@@ -20,6 +24,28 @@ import GradientAIAnalysisPanel from "@/components/census/GradientAIAnalysisPanel
 export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, txQuoteAvailable }) {
   const [showUpload, setShowUpload] = useState(false);
   const [selectedVersionId, setSelectedVersionId] = useState(null);
+  const [showValidationDetails, setShowValidationDetails] = useState(false);
+
+  const { data: importJobs = [] } = useQuery({
+    queryKey: ["census-import-job", caseId],
+    queryFn: () => base44.entities.CensusImportJob.filter({ case_id: caseId }, "-created_date", 10),
+    enabled: !!caseId,
+  });
+
+  const { data: validationResults = [] } = useQuery({
+    queryKey: ["census-validation-results", caseId],
+    queryFn: async () => {
+      const latestJob = await base44.entities.CensusImportJob.filter({ case_id: caseId }, "-created_date", 1).then((items) => items[0] || null);
+      if (!latestJob) return [];
+      return base44.entities.CensusValidationResult.filter({ census_import_id: latestJob.census_import_id }, "row_number", 500);
+    },
+    enabled: !!caseId,
+  });
+
+  const latestJob = importJobs[0] || null;
+  const reprocessMutation = useMutation({
+    mutationFn: () => latestJob ? base44.functions.invoke("reprocessCensusImport", { census_import_id: latestJob.census_import_id }) : Promise.resolve(),
+  });
 
   const toggleVersion = (id) => {
     setSelectedVersionId(prev => (prev === id ? null : id));
@@ -40,6 +66,21 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
           )}
         </div>
       </div>
+
+      {latestJob && (
+        <div className="space-y-3 mb-4">
+          <CensusImportStatusPanel
+            job={latestJob}
+            onReprocess={() => reprocessMutation.mutate()}
+            reprocessing={reprocessMutation.isPending}
+          />
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => setShowValidationDetails(true)}>
+              View Validation Details
+            </Button>
+          </div>
+        </div>
+      )}
 
       {censusVersions.length === 0 ? (
         <EmptyState
@@ -100,6 +141,12 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
           onClose={() => setShowUpload(false)}
         />
       )}
+
+      <CensusValidationDetailsDialog
+        open={showValidationDetails}
+        onOpenChange={setShowValidationDetails}
+        results={validationResults}
+      />
     </>
   );
 }

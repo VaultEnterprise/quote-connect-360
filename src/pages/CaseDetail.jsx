@@ -168,6 +168,12 @@ export default function CaseDetail() {
     enabled: !!caseId,
   });
 
+  const { data: censusImportJobs = [] } = useQuery({
+    queryKey: ["census-import-job", caseId],
+    queryFn: () => base44.entities.CensusImportJob.filter({ case_id: caseId }, "-created_date", 10),
+    enabled: !!caseId,
+  });
+
   // ── Stage advance mutation ─────────────────────────────────────────────────
   const advanceStageMutation = useMutation({
     mutationFn: async (nextStage) => {
@@ -222,7 +228,7 @@ export default function CaseDetail() {
     }),
   };
 
-  const txQuoteDisabledReason = getTxQuoteDisabledReason({ caseData, censusVersions, routes: quoteRoutes, user });
+  const txQuoteDisabledReason = getTxQuoteDisabledReason({ caseData, censusVersions, routes: quoteRoutes, user, latestImportJob: censusImportJobs[0] || null });
   const txQuoteComplete = isTxQuoteStepComplete({ censusVersions, transmissions: quoteTransmissions }) || txQuoteCase?.status === "sent_complete";
   const txQuoteButtonState = getTxQuoteButtonState({
     txQuoteCase,

@@ -1,0 +1,16 @@
+{
+  "name": "CensusImportAuditEvent",
+  "type": "object",
+  "properties": {
+    "case_id": { "type": "string" },
+    "census_import_id": { "type": "string" },
+    "census_import_job_id": { "type": "string" },
+    "event_type": {
+      "type": "string",
+      "enum": ["upload", "parse_start", "parse_complete", "normalize_complete", "validation_complete", "persist_complete", "process_failed", "reprocess_started", "reprocess_complete", "user_action"]
+    },
+    "actor_id": { "type": "string" },
+    "payload": { "type": "object" }
+  },
+  "required": ["census_import_id", "event_type"]
+}

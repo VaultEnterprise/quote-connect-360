@@ -1,0 +1,31 @@
+{
+  "name": "CensusImportJob",
+  "type": "object",
+  "properties": {
+    "case_id": { "type": "string" },
+    "census_import_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["uploaded", "queued", "processing", "completed", "failed", "reprocessed"],
+      "default": "uploaded"
+    },
+    "source_template": { "type": "string" },
+    "source_file_name": { "type": "string" },
+    "source_file_url": { "type": "string" },
+    "parsed_snapshot_url": { "type": "string" },
+    "normalized_snapshot_url": { "type": "string" },
+    "row_count": { "type": "number", "default": 0 },
+    "employee_count": { "type": "number", "default": 0 },
+    "dependent_count": { "type": "number", "default": 0 },
+    "household_count": { "type": "number", "default": 0 },
+    "critical_error_count": { "type": "number", "default": 0 },
+    "warning_count": { "type": "number", "default": 0 },
+    "informational_count": { "type": "number", "default": 0 },
+    "validation_summary": { "type": "object" },
+    "last_processed_at": { "type": "string", "format": "date-time" },
+    "last_reprocessed_at": { "type": "string", "format": "date-time" },
+    "created_by_email": { "type": "string" },
+    "failure_reason": { "type": "string" }
+  },
+  "required": ["case_id", "census_import_id", "status", "source_file_name"]
+}

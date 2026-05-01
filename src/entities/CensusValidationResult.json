@@ -1,0 +1,25 @@
+{
+  "name": "CensusValidationResult",
+  "type": "object",
+  "properties": {
+    "case_id": { "type": "string" },
+    "census_import_id": { "type": "string" },
+    "census_import_job_id": { "type": "string" },
+    "census_version_id": { "type": "string" },
+    "record_id": { "type": "string" },
+    "row_number": { "type": "number" },
+    "errors": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "warning"],
+      "default": "passed"
+    },
+    "critical_error_count": { "type": "number", "default": 0 },
+    "warning_count": { "type": "number", "default": 0 },
+    "informational_count": { "type": "number", "default": 0 }
+  },
+  "required": ["census_import_id", "record_id", "status"]
+}

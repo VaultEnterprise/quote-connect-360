@@ -1,15 +1,18 @@
 export const TXQUOTE_PROVIDER_CODES = ["AST", "SUS", "TRIAD", "NATIONWIDE", "MEC_MVP", "BENEFITTER"];
 
 export function getLatestValidatedCensus(censusVersions = []) {
-  return censusVersions.find((item) => item.status === "validated" && item.file_url) || null;
+  return censusVersions.find((item) => item.status === "validated" && item.file_url && item.validation_errors === 0) || null;
 }
 
 export function canUserTransmitTxQuote(caseData, user) {
   return !!user && (user.role === "admin" || caseData?.assigned_to === user.email);
 }
 
-export function getTxQuoteDisabledReason({ caseData, censusVersions = [], routes = [], user }) {
+export function getTxQuoteDisabledReason({ caseData, censusVersions = [], routes = [], user, latestImportJob = null }) {
   const validatedCensus = getLatestValidatedCensus(censusVersions);
+  if (!latestImportJob || !["completed", "reprocessed"].includes(latestImportJob.status) || Number(latestImportJob.critical_error_count || 0) > 0) {
+    return "Census must pass validation before transmission.";
+  }
   if (!validatedCensus) return "No validated census file exists.";
   if (!canUserTransmitTxQuote(caseData, user)) return "You do not have permission to transmit quote requests.";
   if (!caseData?.employer_name || !caseData?.effective_date) return "Case data is incomplete.";
