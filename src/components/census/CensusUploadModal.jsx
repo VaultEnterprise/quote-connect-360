@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,13 +16,28 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
   const [file, setFile] = useState(null);
   const [notes, setNotes] = useState("");
   const [importing, setImporting] = useState(false);
+  const [entityReady, setEntityReady] = useState(true);
+  const [entityError, setEntityError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    base44.entities.CensusImportJob.list('-created_date', 1)
+      .then(() => {
+        setEntityReady(true);
+        setEntityError('');
+      })
+      .catch(() => {
+        setEntityReady(false);
+        setEntityError('Census import system not initialized. Entity missing.');
+      });
+  }, [open]);
 
   const handleFile = (selectedFile) => {
     setFile(selectedFile);
   };
 
   const handleImport = async () => {
-    if (!file) return;
+    if (!file || !entityReady) return;
     setImporting(true);
     setStep("processing");
 
@@ -122,8 +137,14 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
               <Upload className="w-10 h-10 text-muted-foreground mb-3" />
               <p className="text-sm font-medium text-muted-foreground">Click to select a census file</p>
               <p className="text-xs text-muted-foreground mt-1">Server-side parsing, validation, audit tracking, and reprocessing ready</p>
-              <input type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+              <input type="file" accept=".csv,.xlsx" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} disabled={!entityReady} />
             </label>
+
+            {!entityReady && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                {entityError}
+              </div>
+            )}
 
             {file && (
               <div className="rounded-lg border bg-muted/30 p-3 text-sm">

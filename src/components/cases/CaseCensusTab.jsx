@@ -26,7 +26,7 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
   const [selectedVersionId, setSelectedVersionId] = useState(null);
   const [showValidationDetails, setShowValidationDetails] = useState(false);
 
-  const { data: importJobs = [] } = useQuery({
+  const { data: importJobs = [], error: importJobError } = useQuery({
     queryKey: ["census-import-job", caseId],
     queryFn: () => base44.entities.CensusImportJob.filter({ case_id: caseId }, "-created_date", 10),
     enabled: !!caseId,
@@ -53,10 +53,16 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
 
   return (
     <>
+      {importJobError && (
+        <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+          Census import system not initialized. Entity missing.
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <h3 className="text-sm font-medium text-muted-foreground">{censusVersions.length} version(s)</h3>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => setShowUpload(true)}>
+          <Button size="sm" onClick={() => setShowUpload(true)} disabled={!!importJobError}>
             <Plus className="w-3.5 h-3.5 mr-1.5" /> Census
           </Button>
           {txQuoteAvailable && (
