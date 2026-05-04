@@ -1,0 +1,85 @@
+{
+  "name": "HelpAITrainingQueue",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 present when queue item originates from MGA-scoped content; null for platform-global static help content reindex operations"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "platform_global",
+        "mga_scoped"
+      ],
+      "default": "platform_global",
+      "description": "platform_global = reindex of static non-operational help content; mga_scoped = reindex triggered by MGA operational content change"
+    },
+    "source_entity_type": {
+      "type": "string",
+      "enum": [
+        "HelpContent",
+        "HelpManualTopic",
+        "HelpTarget"
+      ],
+      "description": "Which entity type to reindex"
+    },
+    "source_entity_id": {
+      "type": "string",
+      "description": "ID of the entity to reindex"
+    },
+    "source_target_code": {
+      "type": "string"
+    },
+    "change_reason": {
+      "type": "string"
+    },
+    "queue_status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "processed",
+        "failed",
+        "skipped"
+      ],
+      "default": "queued"
+    },
+    "attempt_count": {
+      "type": "number",
+      "default": 0
+    },
+    "queued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "processed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "processing_notes": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "source_entity_type",
+    "source_entity_id"
+  ]
+}

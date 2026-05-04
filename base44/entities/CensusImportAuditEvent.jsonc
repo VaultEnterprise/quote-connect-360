@@ -1,0 +1,62 @@
+{
+  "name": "CensusImportAuditEvent",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "census_import_id": {
+      "type": "string"
+    },
+    "census_import_job_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "upload",
+        "parse_start",
+        "parse_complete",
+        "normalize_complete",
+        "validation_complete",
+        "persist_complete",
+        "process_failed",
+        "reprocess_started",
+        "reprocess_complete",
+        "user_action"
+      ]
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "census_import_id",
+    "event_type"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "name": "HelpSearchLog",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 required for operational users; null only for unauthenticated or platform-only sessions"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable; set when actor belongs to a specific master group"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "module_code": {
+      "type": "string"
+    },
+    "page_code": {
+      "type": "string"
+    },
+    "context_help_target_code": {
+      "type": "string"
+    },
+    "search_channel": {
+      "type": "string",
+      "enum": [
+        "manual_search",
+        "contextual_help",
+        "help_ai",
+        "global_help_launcher"
+      ],
+      "default": "manual_search"
+    },
+    "search_text": {
+      "type": "string"
+    },
+    "normalized_search_text": {
+      "type": "string"
+    },
+    "result_count": {
+      "type": "number",
+      "default": 0
+    },
+    "selected_help_content_id": {
+      "type": "string"
+    },
+    "selected_manual_topic_id": {
+      "type": "string"
+    },
+    "answered_by_help_ai": {
+      "type": "boolean",
+      "default": false
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "search_text"
+  ]
+}

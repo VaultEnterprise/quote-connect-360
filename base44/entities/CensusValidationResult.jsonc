@@ -1,0 +1,78 @@
+{
+  "name": "CensusValidationResult",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "census_import_id": {
+      "type": "string"
+    },
+    "census_import_job_id": {
+      "type": "string"
+    },
+    "census_version_id": {
+      "type": "string"
+    },
+    "record_id": {
+      "type": "string"
+    },
+    "row_number": {
+      "type": "number"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "failed",
+        "warning"
+      ],
+      "default": "passed"
+    },
+    "critical_error_count": {
+      "type": "number",
+      "default": 0
+    },
+    "warning_count": {
+      "type": "number",
+      "default": 0
+    },
+    "informational_count": {
+      "type": "number",
+      "default": 0
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "census_import_id",
+    "record_id",
+    "status"
+  ]
+}

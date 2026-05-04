@@ -1,0 +1,88 @@
+{
+  "name": "HelpAuditLog",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 present when log event is associated with an operational user or MGA-scoped content action; null for platform-admin-only events"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "HELP_TARGET_CREATED",
+        "HELP_TARGET_UPDATED",
+        "HELP_TARGET_DEACTIVATED",
+        "HELP_TARGET_SCANNED",
+        "HELP_TARGET_RESCANNED",
+        "HELP_CONTENT_CREATED",
+        "HELP_CONTENT_UPDATED",
+        "HELP_CONTENT_ACTIVATED",
+        "HELP_CONTENT_DEACTIVATED",
+        "HELP_CONTENT_ARCHIVED",
+        "HELP_CONTENT_RESTORED",
+        "HELP_CONTENT_APPROVED",
+        "HELP_CONTENT_VERSION_RESTORED",
+        "HELP_MANUAL_TOPIC_CREATED",
+        "HELP_MANUAL_TOPIC_UPDATED",
+        "HELP_MANUAL_TOPIC_PUBLISHED",
+        "HELP_MANUAL_TOPIC_UNPUBLISHED",
+        "HELP_MANUAL_TOPIC_TARGETS_MAPPED",
+        "HELP_SEARCH_EXECUTED",
+        "HELP_MODAL_OPENED",
+        "HELP_MANUAL_TOPIC_VIEWED",
+        "HELP_AI_QUESTION_ASKED",
+        "HELP_AI_LOW_CONFIDENCE_FLAGGED",
+        "HELP_AI_UNANSWERED_FLAGGED",
+        "HELP_AI_REVIEW_RESOLVED",
+        "HELP_AI_REINDEX_QUEUED",
+        "HELP_AI_REINDEX_PROCESSED",
+        "HELP_COVERAGE_SNAPSHOT_TAKEN"
+      ]
+    },
+    "entity_type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "target_code": {
+      "type": "string"
+    },
+    "actor_email": {
+      "type": "string"
+    },
+    "actor_role": {
+      "type": "string"
+    },
+    "before_payload": {
+      "type": "object"
+    },
+    "after_payload": {
+      "type": "object"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "event_type"
+  ]
+}

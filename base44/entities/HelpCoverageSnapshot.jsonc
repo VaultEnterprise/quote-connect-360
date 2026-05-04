@@ -1,0 +1,84 @@
+{
+  "name": "HelpCoverageSnapshot",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 present when snapshot is generated from MGA-specific usage data; null for platform-global admin snapshots"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "platform_global",
+        "mga_scoped"
+      ],
+      "default": "platform_global",
+      "description": "platform_global = admin-level aggregate across all users (non-operational); mga_scoped = generated from MGA operational usage data"
+    },
+    "snapshot_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_targets": {
+      "type": "number",
+      "default": 0
+    },
+    "targets_with_active_help": {
+      "type": "number",
+      "default": 0
+    },
+    "targets_missing_help": {
+      "type": "number",
+      "default": 0
+    },
+    "targets_with_draft_only": {
+      "type": "number",
+      "default": 0
+    },
+    "inactive_help_count": {
+      "type": "number",
+      "default": 0
+    },
+    "review_required_count": {
+      "type": "number",
+      "default": 0
+    },
+    "low_confidence_question_count": {
+      "type": "number",
+      "default": 0
+    },
+    "unanswered_question_count": {
+      "type": "number",
+      "default": 0
+    },
+    "coverage_pct": {
+      "type": "number",
+      "default": 0
+    },
+    "by_module": {
+      "type": "object",
+      "description": "Per-module breakdown keyed by module_code"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "snapshot_date"
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "name": "HelpAIQuestionLog",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 required for operational users; null only for unauthenticated or platform-only sessions"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable; set when actor belongs to a specific master group"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "module_code": {
+      "type": "string"
+    },
+    "page_code": {
+      "type": "string"
+    },
+    "context_help_target_code": {
+      "type": "string"
+    },
+    "question_text": {
+      "type": "string"
+    },
+    "normalized_question_text": {
+      "type": "string"
+    },
+    "answer_text": {
+      "type": "string"
+    },
+    "confidence_score": {
+      "type": "number",
+      "description": "0.0 to 1.0"
+    },
+    "answer_status": {
+      "type": "string",
+      "enum": [
+        "answered",
+        "low_confidence",
+        "unanswered",
+        "escalated",
+        "reviewed",
+        "resolved"
+      ],
+      "default": "answered"
+    },
+    "source_help_content_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_manual_topic_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_target_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "feedback_rating": {
+      "type": "number",
+      "description": "1-5 stars"
+    },
+    "feedback_notes": {
+      "type": "string"
+    },
+    "requires_admin_review": {
+      "type": "boolean",
+      "default": false
+    },
+    "resolved_by": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_by_admin": {
+      "type": "boolean",
+      "default": false
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "question_text"
+  ]
+}

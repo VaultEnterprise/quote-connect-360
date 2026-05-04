@@ -1,0 +1,158 @@
+{
+  "name": "UserManual",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 present when manual is generated from operational context; null for platform-global seeded content"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 present when manual is specific to a master group context; null for platform-global"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "platform_global",
+        "mga_scoped"
+      ],
+      "default": "platform_global",
+      "description": "Explicit scope classification: platform_global = non-operational static content; mga_scoped = generated from operational context"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the manual (e.g., 'Dashboard Overview')"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "getting_started",
+        "features",
+        "workflows",
+        "integrations",
+        "settings",
+        "troubleshooting",
+        "best_practices"
+      ],
+      "description": "Category for organization"
+    },
+    "module": {
+      "type": "string",
+      "description": "Which module/page this manual covers (e.g., 'Dashboard', 'Cases', 'Proposals')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of what this manual covers"
+    },
+    "content": {
+      "type": "string",
+      "description": "Markdown-formatted detailed content of the manual"
+    },
+    "setup_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "Step-by-step setup or configuration instructions"
+    },
+    "best_practices": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of recommended best practices"
+    },
+    "common_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issue": {
+            "type": "string"
+          },
+          "solution": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Common issues and how to resolve them"
+    },
+    "screenshot_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs to screenshot images showing the feature"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Optional URL to tutorial video"
+    },
+    "related_manuals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of related manual entries for cross-referencing"
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "default": "beginner"
+    },
+    "estimated_read_time": {
+      "type": "number",
+      "description": "Estimated reading time in minutes"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published": {
+      "type": "boolean",
+      "default": false
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "module",
+    "description",
+    "content"
+  ]
+}
