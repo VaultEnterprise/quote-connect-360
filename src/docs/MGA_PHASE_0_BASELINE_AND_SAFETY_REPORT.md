@@ -1,6 +1,6 @@
 # MGA Phase 0 — Baseline and Safety Preparation Report
 
-Status: **Phase 0 Complete — Planning / Inventory Only**  
+Status: **Phase 0 Revision Round 1 Complete — Documentation Remediation Only**  
 Date: 2026-05-02  
 Canonical architecture document: `docs/MGA_ENTERPRISE_ARCHITECTURE_PACKAGE.md`  
 Canonical build planning document: `docs/MGA_BUILD_PLANNING_PACKAGE.md`  
@@ -26,8 +26,8 @@ Path ambiguity control:
 |---|---:|---:|
 | Current entity inventory | Complete | 58 entities / artifacts inventoried |
 | Current page inventory | Complete | 29 routed pages + portal/help/admin surfaces inventoried |
-| Current backend function/service inventory | Complete | 37 backend functions inventoried |
-| Direct frontend read/mutation inventory | Complete | 157 direct access findings identified |
+| Current backend function/service inventory | Complete | 37 deployed backend functions + 2 referenced service artifacts = 39 combined inventory rows |
+| Direct frontend read/mutation inventory | Complete | 57 grouped findings; 99 direct reads; 58 direct mutations; 157 combined direct access findings |
 | Protected domain classification | Complete | 26 domains classified |
 | Migration candidate inventory | Complete | 45 migration candidate entities/artifacts identified |
 | Document/file access inventory | Complete | 10 access path categories identified |
@@ -204,6 +204,135 @@ Function inventory result: **Complete**. Do not modify functions until Phase 3 o
 
 ---
 
+## 4A. Function / Service Inventory Count Reconciliation
+
+This section resolves the count discrepancy identified in the Phase 0 Completion Audit (37 stated vs 39 table rows observed).
+
+### A. Deployed Backend Functions
+
+These are confirmed callable deployed backend/server functions as listed in the platform function registry.
+
+| Function name | Domain | Deployed/callable | Protected operation | Current scope enforcement | Required scoped replacement | Notes |
+|---|---|---|---|---|---|---|
+| calculateQuoteRates | quotes/rates | YES | YES | unclear | calculateQuoteRatesByMGAScope | Must scope scenario/census/plans |
+| cleanupOrphanedHelpContent | help/cleanup | YES | PARTIAL | admin likely | cleanupHelpContentGoverned | Deletion audit required |
+| cleanupOrphanedHelpContentStaggered | help/cleanup | YES | PARTIAL | admin likely | cleanupHelpContentGoverned | Scheduled; must be scoped |
+| createHighRiskExceptions | exceptions/automation | YES | YES | unknown | createHighRiskExceptionsByMGAScope | Must avoid duplicate exceptions |
+| docuSignWebhook | webhook/DocuSign | YES | YES | webhook signature likely | docuSignWebhookByMGAScope | Ownership resolution or quarantine |
+| exportProposalPDF | proposals/export | YES | YES | unknown | exportProposalPDFByMGAScope | Generated PDF protected |
+| fullDocumentationExport | help/export | YES | PARTIAL | admin likely | fullDocumentationExportGoverned | Export bundle protected |
+| generateCoverageSnapshot | help/report | YES | PARTIAL | admin likely | generateCoverageSnapshotGoverned | Coverage snapshot access controlled |
+| generateHelpForTarget | help/admin/AI | YES | PARTIAL | admin likely | generateHelpForTargetGoverned | Generated content must not leak ops data |
+| generatePageHelpBulk | help/admin/AI | YES | PARTIAL | admin likely | generatePageHelpBulkGoverned | Bulk generation must be audited |
+| generateUserManual | help/manual/export | YES | PARTIAL | admin likely | generateUserManualGoverned | Generated manual may be scoped |
+| getDocuSignSigningURL | enrollment/DocuSign | YES | YES | unknown | getDocuSignSigningURLByMGAScope | Signed URL must be short-lived and scoped |
+| helpAIAnswer | help/AI | YES | PARTIAL | user auth likely | helpAIAnswerScopedActivity | Static help global; question logs scoped |
+| matchPoliciesWithGradient | policy/AI | YES | YES | unknown | matchPoliciesWithGradientByMGAScope | Must not use cross-scope policy inputs |
+| policyMatchAI | policy/AI | YES | YES | unknown | policyMatchAIByMGAScope | Scoped prompt/results required |
+| populateHelpFromManual | help/import | YES | PARTIAL | admin likely | populateHelpFromManualGoverned | Imported manual content classification |
+| processGradientAI | census/AI | YES | YES | unknown | processGradientAIByMGAScope | PII and AI output protected |
+| runHelpMasterSeed | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| saveHelpContent | help/admin | YES | PARTIAL | admin likely | saveHelpContentGoverned | Global static only unless operational |
+| seedApplicationManualPart1 | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedApplicationManualPart2 | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedDashboardHelp | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedDocumentationSystem | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedFullAuditReport | help/seed/report | YES | PARTIAL | admin likely | platformSeedGoverned | May include audit summary |
+| seedHelpContent | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedHelpPack | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedManualArchitectureDoc | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedManualFAQBank | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedManualPageGuides | help/seed | YES | NO/PARTIAL | admin likely | platformSeedGoverned | Platform-only |
+| seedPageInventory | help/seed | YES | PARTIAL | admin likely | seedPageInventoryGoverned | Page inventory reveals app structure |
+| sendDocuSignEnvelope | enrollment/DocuSign | YES | YES | unknown | sendDocuSignEnvelopeByMGAScope | Must validate employee enrollment scope |
+| sendEnrollmentInvite | enrollment/email | YES | YES | unknown | sendEnrollmentInviteByMGAScope | Employee access tokens protected |
+| sendProposalEmail | proposal/email | YES | YES | unknown | sendProposalEmailByMGAScope | Deep links must reauthorize |
+| sendTxQuote | TXQuote | YES | YES | case/user checks isolated | sendTxQuoteByMGAScope | Highest-risk external transmission |
+| syncBulkEmployersToZoho | external CRM | YES | YES | unknown | syncBulkEmployersToZohoByMGAScope | Mixed-scope bulk must deny or split safely |
+| syncEmployerToZohoCRM | external CRM | YES | YES | Salesforce connector likely | syncEmployerToZohoCRMByMGAScope | Must validate employer scope before sync |
+| syncZohoContactsToEmployers | external CRM | YES | YES | unknown | syncZohoContactsToEmployersByMGAScope | Webhook/import ownership ambiguity |
+
+**Total deployed backend functions inventoried: 37**
+
+---
+
+### B. Referenced Service / Function Files or Code References
+
+These are function or service references observed in codebase context, component files, or documentation that are **not** confirmed as deployed callable backend functions in the platform function registry.
+
+| Referenced name | File/module/source reference | Deployed/callable | Reason included in inventory | Affects Phase 1/2 design | Notes |
+|---|---|---|---|---|---|
+| sendTxQuoteV2 | `src/functions/sendTxQuoteV2.js` — referenced in codebase file list and Phase 0 report context | UNCLEAR — not in deployed function registry | Codebase file reference; may be a draft or candidate replacement for sendTxQuote | YES — Phase 3 TXQuote service redesign must account for V1 vs V2 | Must confirm whether deployed, draft, or retired before Phase 3. Treat as protected operation until confirmed. |
+| validateTxQuote | `src/functions/validateTxQuote.js` — referenced in codebase file list | UNCLEAR — not in deployed function registry | Codebase file reference; may be a readiness validation helper or candidate service | YES — Phase 2/3 scope-gate design for TXQuote must account for this validation function | Must confirm whether deployed, a local utility, or candidate function before Phase 3 TXQuote remediation. |
+
+**Total referenced service/function artifacts inventoried: 2**
+
+---
+
+### C. Combined Inventory Count
+
+| Category | Count |
+|---|---:|
+| Deployed backend functions (confirmed in function registry) | 37 |
+| Referenced service/function artifacts (codebase files, not confirmed deployed) | 2 |
+| **Total combined function/service inventory rows** | **39** |
+
+**Explanation of prior 37 vs 39 mismatch:**
+The original Phase 0 report summary stated 37 functions inventoried, correctly matching the deployed function registry. However, the function/service table included 2 additional rows — `sendTxQuoteV2` and `validateTxQuote` — which are codebase file references observed in the inventory context but are **not** confirmed callable deployed backend functions. This caused the table to contain 39 rows against a stated count of 37. The mismatch is now resolved by separating sections A and B.
+
+The 37-function deployed count is confirmed correct. The 2 referenced artifacts require deployment-status verification before Phase 3 TXQuote remediation begins.
+
+---
+
+## 4B. Function / Service Scope Enforcement Unknowns
+
+Many function/service entries in the Phase 4 inventory are marked `unknown` or `unclear` for current scope enforcement. This is acceptable for Phase 0 inventory purposes. This section explicitly summarizes those entries as Phase 1 / Phase 2 / Phase 3 design inputs.
+
+**Total functions/services with current scope enforcement marked unknown/unclear: 28**
+
+| Function/service | Domain | Scope enforcement status | Design input phase | Risk level | Required next action |
+|---|---|---|---|---|---|
+| calculateQuoteRates | quotes/rates | unclear | Phase 3 scoped-service replacement | P0 | Must confirm whether current function validates scenario ownership before rate calculation |
+| exportProposalPDF | proposals/export | unknown | Phase 3 scoped-service replacement | P0 | Must confirm whether current function validates proposal ownership before generating PDF |
+| sendProposalEmail | proposal/email | unknown | Phase 3 scoped-service replacement | P0 | Confirm email scope validation; assess stale-link risk |
+| sendEnrollmentInvite | enrollment/email | unknown | Phase 3 scoped-service replacement | P0 | Confirm enrollment ownership and access token generation scope |
+| sendDocuSignEnvelope | enrollment/DocuSign | unknown | Phase 3 scoped-service replacement | P0 | Must validate employee enrollment record belongs to correct MGA before envelope creation |
+| getDocuSignSigningURL | enrollment/DocuSign | unknown | Phase 3 scoped-service replacement | P0 | Signed URL must reauthorize scope; must not be cacheable cross-scope |
+| processGradientAI | census/AI | unknown | Phase 3 scoped-service replacement | P0 | Must confirm member PII is not exposed across scope in AI API call |
+| matchPoliciesWithGradient | policy/AI | unknown | Phase 3 scoped-service replacement | P0 | AI input/output must be scoped and not cross case/MGA boundaries |
+| policyMatchAI | policy/AI | unknown | Phase 3 scoped-service replacement | P0 | Scoped AI prompt and result storage required |
+| createHighRiskExceptions | exceptions/automation | unknown | Phase 3 scoped-service replacement | P0 | Must confirm exception creation validates case_id / entity scope |
+| syncBulkEmployersToZoho | external CRM | unknown | Phase 3 scoped-service replacement | P0 | Mixed-scope bulk operation; must validate per-employer scope before external sync |
+| syncZohoContactsToEmployers | external CRM | unknown | Phase 3 scoped-service replacement | P0 | Import ownership resolution required before any record creation |
+| fullDocumentationExport | help/export | admin likely | Phase 3/6 governed replacement | P1 | Confirm export bundle content does not include operational data outside admin authorization |
+| generateCoverageSnapshot | help/report | admin likely | Phase 3/6 governed replacement | P1 | Confirm coverage snapshot scope classification at generation time |
+| generateHelpForTarget | help/admin/AI | admin likely | Phase 3/6 governed replacement | P1 | Confirm generated content classification |
+| generatePageHelpBulk | help/admin/AI | admin likely | Phase 3/6 governed replacement | P1 | Audit all generated content before publishing |
+| generateUserManual | help/manual/export | admin likely | Phase 3/6 governed replacement | P1 | Classify generated manual as scoped when operational data is included |
+| populateHelpFromManual | help/import | admin likely | Phase 3/6 governed replacement | P1 | Imported content classification required |
+| helpAIAnswer | help/AI | user auth likely | Phase 3/6 governed replacement | P1 | Question/answer logs must be scoped by user and MGA |
+| saveHelpContent | help/admin | admin likely | Phase 3/6 governed replacement | P1 | Confirm content write is admin-only and does not include operational data |
+| runHelpMasterSeed | help/seed | admin likely | Platform-only / Phase 3 | P1 | Confirm seed does not execute against operational records |
+| seedApplicationManualPart1 | help/seed | admin likely | Platform-only / Phase 3 | P1 | Platform-only; no operational data |
+| seedApplicationManualPart2 | help/seed | admin likely | Platform-only / Phase 3 | P1 | Platform-only; no operational data |
+| seedDashboardHelp | help/seed | admin likely | Platform-only / Phase 3 | P1 | Platform-only; no operational data |
+| seedDocumentationSystem | help/seed | admin likely | Platform-only / Phase 3 | P1 | Platform-only; no operational data |
+| seedHelpContent | help/seed | admin likely | Platform-only / Phase 3 | P1 | Platform-only; no operational data |
+| seedPageInventory | help/seed | admin likely | Phase 3 scope input | P1 | Page inventory may reveal app structure; must be audited |
+| cleanupOrphanedHelpContentStaggered | help/cleanup | admin likely | Phase 6 governed replacement | P1 | Scheduled cleanup must confirm deletion only touches platform-owned records |
+
+**Summary:**
+- Functions with `unknown` or `unclear` scope enforcement that are P0 risk: **12**
+- Functions with `admin likely` or `user auth likely` (partial clarity) that are P1 risk: **16**
+- These are not Phase 0 inventory gaps. They are explicit Phase 1 data-model inputs, Phase 2 scope-resolution inputs, and Phase 3 scoped-service replacement inputs as defined.
+
+**Classification by design input phase:**
+- Phase 1 data-model inputs: rate/case/plan ownership decisions that affect function scope resolution
+- Phase 2 scope-resolution inputs: canonical scope resolver design must cover all 12 P0-unknown functions
+- Phase 3 scoped-service replacement inputs: all 28 functions listed above require scoped replacements before MGA-protected operations are enabled
+
+---
+
 ## 5. Direct Frontend Read / Mutation Inventory
 
 157 direct frontend access findings were identified. The table groups findings by page/component and entity/action pattern.
@@ -269,6 +398,64 @@ Function inventory result: **Complete**. Do not modify functions until Phase 3 o
 | AI assistants | case/help context | read/function prompt | P1 | prompt context may contain protected data | invokeAIScopedContext | 2 | Phase 3/6 |
 
 Direct access inventory result: **Complete for current Phase 0 static baseline**. These findings must not be fixed during Phase 0.
+
+---
+
+## 5A. Direct Frontend Read / Mutation Count Reconciliation
+
+This section resolves the Phase 0 Completion Audit finding that direct read count and direct mutation count were not separately stated.
+
+### Action Type Count Table
+
+| Action type | Count |
+|---|---:|
+| list | 67 |
+| filter / detail read | 14 |
+| read / view / search / autocomplete | 18 |
+| **total direct reads** | **99** |
+| create | 8 |
+| update | 11 |
+| delete | 7 |
+| export | 14 |
+| transmit / send / upload / import | 10 |
+| other mutation (bulk status, invite, print) | 8 |
+| **total direct mutations** | **58** |
+| **total direct access findings** | **157** |
+
+**Counting method definitions:**
+- **Reads** include: list, filter, detail, search, autocomplete, and view-style access where data is retrieved from an entity or service without a write.
+- **Mutations** include: create, update, delete, export, transmit, send, upload, import, bulk status change, invite, and print-style side-effect actions. Export and transmit are treated as sensitive mutation/side-effect actions for risk purposes regardless of their read-like appearance.
+- Where a single grouped finding contains both read and mutation behavior (e.g., `list/update/delete/export`), it is counted once in mutations and the read component is captured in the read total.
+- The 157 combined total is the sum of all distinct read actions (99) and mutation actions (58) observed across grouped findings.
+
+---
+
+## 5B. Direct Access Finding Granularity
+
+**Finding type: grouped findings**
+
+The 157 direct access findings reported in Section 5 are **grouped findings**, not exact individual code-level findings. Each row in the inventory table represents one page/component and entity/action group, which may correspond to multiple individual direct SDK calls within that page or component.
+
+**Total grouped findings: 57 rows in the inventory table**
+
+The action-type counts in Section 5A (99 reads, 58 mutations, 157 total) are derived by counting each action type listed within each grouped finding row. For example, a finding row recording `list/update/delete/export` for a single page/entity combination contributes 1 to list, 1 to update, 1 to delete, and 1 to export.
+
+**Deeper line-level remediation audit required: YES**
+
+Line-level replacement planning will be performed during the remediation phase assigned to each finding. The following components are already identified as requiring deeper inspection before remediation:
+
+| Component | Reason | Required inspection phase |
+|---|---|---|
+| CaseDetail imported subcomponents | Aggregates many child components; direct SDK calls may exist in subcomponents not individually listed | Phase 3 / Phase 5 line-level audit |
+| Settings subcomponents (QuoteProviderRoutingPanel, TxQuoteRulesPanel, TxQuoteContactsPanel, AuditLogPanel, WebhookConfigPanel, etc.) | Settings panels may contain direct admin reads/mutations not fully inventoried at row level | Phase 3 / Phase 5 line-level audit |
+| Help/Admin subcomponents (BulkAIGeneratePanel, AdminSeedPanel, ImportExportPanel, etc.) | Help admin panels may call functions or entities with operational scope | Phase 3 / Phase 6 line-level audit |
+| Employee Portal subcomponents (EnrollmentWizard, PlanSelectionStep, DocuSignSigningPane, etc.) | Employee-facing portal has PII and signing data; portal-scoped service contracts required | Phase 3 / Phase 6 line-level audit |
+| Employer Portal subcomponents (ProposalReviewPanel, DocumentsPanel, FinancialModeling, etc.) | Employer-facing portal aggregates case/proposal/enrollment/document data | Phase 3 / Phase 6 line-level audit |
+| TXQuote workspace subcomponents (TxQuoteWorkspace, TxQuoteOptionsModal, txQuoteEngine, txQuoteWorkflow) | TXQuote workspace has the highest external transmission risk; line-level scope gate required before Phase 3 TXQuote transmit service | Phase 3 line-level audit — highest priority |
+
+**Confirmed: these components have not been remediated. This is inventory clarification only.**
+
+The grouped findings in Section 5 represent Phase 0 baseline identification. Line-level replacement will occur in Phase 3, Phase 5, and Phase 6 as assigned per the implementation tracking checklist.
 
 ---
 
@@ -557,7 +744,13 @@ Important: the P0 risks above are implementation blockers for release of protect
 | current entity inventory is complete | PASS |
 | current page inventory is complete | PASS |
 | current function/service inventory is complete | PASS |
+| function/service inventory count reconciled (deployed vs referenced separated) | PASS |
+| scope enforcement unknowns summarized as Phase 1/2/3 design inputs | PASS |
 | all direct frontend reads/mutations in protected domains are identified | PASS |
+| direct read count provided separately | PASS |
+| direct mutation count provided separately | PASS |
+| 157 finding granularity clarified (grouped findings, not individual code-level) | PASS |
+| deeper line-level inspection components identified | PASS |
 | protected domains are classified | PASS |
 | migration candidate inventory is complete | PASS |
 | document/file access paths are inventoried | PASS |
@@ -575,15 +768,19 @@ Phase 0 exit criteria: **PASS**
 
 ## 16. Required Output Summary
 
-Confirmation: only planning/inventory documentation was created.  
-Confirmation: no code, schema, UI, database, service, entity, permission, TXQuote, reporting, document, or behavior changes were made.  
+Confirmation: only `docs/MGA_PHASE_0_BASELINE_AND_SAFETY_REPORT.md` was updated in Revision Round 1.  
+Confirmation: no code, schema, UI, database, service, entity, permission, TXQuote, reporting, document, navigation, or behavior changes were made.  
 Phase 0 report path: `docs/MGA_PHASE_0_BASELINE_AND_SAFETY_REPORT.md`
 
 Inventories completed:
 - Current Entity Inventory
 - Current Page Inventory
 - Current Function / Service Inventory
+- Function / Service Inventory Count Reconciliation (Section 4A)
+- Function / Service Scope Enforcement Unknowns (Section 4B)
 - Direct Frontend Read / Mutation Inventory
+- Direct Frontend Read / Mutation Count Reconciliation (Section 5A)
+- Direct Access Finding Granularity (Section 5B)
 - Protected Domain Identification
 - Migration Candidate Inventory
 - Existing Document / File Access Inventory
@@ -594,12 +791,34 @@ Inventories completed:
 - Rollback and Containment Baseline
 - Phase 0 Risk and Blocker Register
 
-Counts:
-- Direct frontend reads/mutations identified: **157**
-- Migration candidate entities/artifacts identified: **45**
-- P0 risks identified: **24**
-- P1 risks identified: **11**
-- P2 risks identified: **5**
+Corrected counts:
+- Total entities inventoried: **58**
+- Total pages/surfaces inventoried: **29 routed pages plus portal/help/admin surfaces**
+- Total deployed backend functions inventoried: **37**
+- Total referenced service/function artifacts inventoried: **2**
+- Total combined function/service inventory rows: **39**
+- Total direct frontend reads identified: **99**
+- Total direct frontend mutations identified: **58**
+- Total direct frontend access findings: **157** (grouped findings; 57 grouped rows; line-level audit required in Phase 3/5/6)
+- Total migration candidate entities/artifacts: **45**
+- Total document/file access path categories: **10**
+- Total report/search/notification/event paths: **18**
+- P0 / P1 / P2 risks: **24 / 11 / 5**
+
+Prior count discrepancy explanation:
+- The 37 vs 39 mismatch was caused by two codebase file references (`sendTxQuoteV2`, `validateTxQuote`) being included in the inventory table but not matching deployed function registry entries. Sections A, B, and C of 4A now formally separate and reconcile these counts.
+- The 157 combined direct access findings = 99 reads + 58 mutations, derived from grouped page/component/entity/action findings. Section 5A provides the breakdown; Section 5B clarifies granularity.
+
+Phase 0 audit blockers remediated:
+- Function/service count reconciliation: **YES**
+- Deployed vs referenced functions separated: **YES**
+- Direct read count provided: **YES — 99**
+- Direct mutation count provided: **YES — 58**
+- 157 finding granularity clarified: **YES — grouped findings, line-level audit in Phase 3/5/6**
+- Scope enforcement unknowns summarized as Phase 1/2/3 inputs: **YES**
+- No unresolved P0 Phase 0 documentation gaps remain: **YES**
+
+Report ready for Phase 0 Completion Audit rerun: **YES**
 
 Blockers:
 - No blocker prevents moving to Phase 1 approval discussion.
