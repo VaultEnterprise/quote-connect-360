@@ -2,6 +2,14 @@
   "name": "TxQuoteCase",
   "type": "object",
   "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
     "case_id": {
       "type": "string"
     },
@@ -93,6 +101,24 @@
     "last_sent_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Phase 3 service design: idempotency key for TXQuote transmit operations on this case"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
     }
   },
   "required": [

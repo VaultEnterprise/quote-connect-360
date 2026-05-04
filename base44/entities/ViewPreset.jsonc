@@ -1,0 +1,75 @@
+{
+  "name": "ViewPreset",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 user presets are scoped to the user's MGA. Nullable during migration staging."
+    },
+    "owner_user_email": {
+      "type": "string",
+      "description": "Email of the user who owns this preset \u2014 presets are user + MGA scoped"
+    },
+    "name": {
+      "type": "string",
+      "description": "Preset name (e.g. 'Recommended Scenarios')"
+    },
+    "description": {
+      "type": "string"
+    },
+    "filters": {
+      "type": "object",
+      "description": "Filter criteria as JSON",
+      "properties": {
+        "search": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "caseFilter": {
+          "type": "string"
+        },
+        "carrierFilter": {
+          "type": "string"
+        },
+        "showExpiringOnly": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sort_by": {
+      "type": "string",
+      "enum": [
+        "created_date",
+        "premium",
+        "expiry",
+        "score"
+      ],
+      "default": "created_date"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Load this view by default"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "name",
+    "filters"
+  ]
+}

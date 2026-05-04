@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteSubmissionLog",
+  "name": "ExceptionItem",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,59 +10,75 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "case_id": {
       "type": "string"
     },
-    "destination_code": {
+    "employer_name": {
       "type": "string"
     },
-    "submission_type": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "census",
+        "quote",
+        "enrollment",
+        "carrier",
+        "document",
+        "billing",
+        "system"
+      ],
+      "default": "system"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "triaged",
+        "in_progress",
+        "waiting_external",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "new"
+    },
+    "title": {
       "type": "string"
     },
-    "sent_by": {
+    "description": {
       "type": "string"
     },
-    "sent_at": {
+    "suggested_action": {
+      "type": "string"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "due_by": {
+      "type": "string",
+      "format": "date"
+    },
+    "resolved_at": {
       "type": "string",
       "format": "date-time"
     },
-    "email_to": {
+    "resolution_notes": {
       "type": "string"
     },
-    "email_cc": {
+    "entity_type": {
       "type": "string"
     },
-    "email_bcc": {
+    "entity_id": {
       "type": "string"
-    },
-    "subject_line": {
-      "type": "string"
-    },
-    "body_snapshot": {
-      "type": "string"
-    },
-    "attachment_manifest": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "delivery_status": {
-      "type": "string"
-    },
-    "external_message_id": {
-      "type": "string"
-    },
-    "error_message": {
-      "type": "string"
-    },
-    "idempotency_key": {
-      "type": "string",
-      "description": "Phase 3 service design: idempotency key for this transmission attempt"
-    },
-    "correlation_id": {
-      "type": "string",
-      "description": "Links this submission log to the originating MGA activity log entry"
     },
     "mga_migration_batch_id": {
       "type": "string"
@@ -80,8 +96,8 @@
     }
   },
   "required": [
-    "txquote_case_id",
-    "destination_code",
-    "delivery_status"
+    "title",
+    "category",
+    "severity"
   ]
 }

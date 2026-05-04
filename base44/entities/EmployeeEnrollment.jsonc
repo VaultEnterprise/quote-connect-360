@@ -1,0 +1,131 @@
+{
+  "name": "EmployeeEnrollment",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "enrollment_window_id": {
+      "type": "string"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "employee_email": {
+      "type": "string"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "access_token": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "started",
+        "completed",
+        "waived"
+      ],
+      "default": "invited"
+    },
+    "coverage_tier": {
+      "type": "string",
+      "enum": [
+        "employee_only",
+        "employee_spouse",
+        "employee_children",
+        "family"
+      ]
+    },
+    "selected_plan_id": {
+      "type": "string"
+    },
+    "selected_plan_name": {
+      "type": "string"
+    },
+    "waiver_reason": {
+      "type": "string"
+    },
+    "dependents": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "employer_name": {
+      "type": "string"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "docusign_envelope_id": {
+      "type": "string",
+      "description": "DocuSign envelope ID for this enrollment"
+    },
+    "docusign_status": {
+      "type": "string",
+      "enum": [
+        "not_sent",
+        "sent",
+        "delivered",
+        "completed",
+        "declined",
+        "voided"
+      ],
+      "default": "not_sent"
+    },
+    "docusign_signed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "docusign_document_url": {
+      "type": "string"
+    },
+    "docusign_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "docusign_declined_reason": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "case_id",
+    "employee_email",
+    "employee_name"
+  ]
+}

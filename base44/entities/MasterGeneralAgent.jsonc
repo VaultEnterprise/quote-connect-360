@@ -1,0 +1,200 @@
+{
+  "name": "MasterGeneralAgent",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Business/display name of the MGA"
+    },
+    "legal_entity_name": {
+      "type": "string",
+      "description": "Legal registered name of the MGA entity"
+    },
+    "dba_name": {
+      "type": "string",
+      "description": "Doing business as name (optional)"
+    },
+    "code": {
+      "type": "string",
+      "description": "Unique business code for this MGA (system-assigned or admin-assigned)"
+    },
+    "primary_contact_name": {
+      "type": "string"
+    },
+    "primary_contact_email": {
+      "type": "string"
+    },
+    "primary_contact_phone": {
+      "type": "string"
+    },
+    "business_address_line1": {
+      "type": "string"
+    },
+    "business_address_line2": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string",
+      "default": "US"
+    },
+    "tax_id_ein": {
+      "type": "string",
+      "description": "EIN \u2014 audit-sensitive; access restricted to platform admin and mga_admin with financial permission"
+    },
+    "producer_license_number": {
+      "type": "string"
+    },
+    "resident_state": {
+      "type": "string"
+    },
+    "licensed_states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "States in which this MGA holds a license"
+    },
+    "commission_structure_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "flat",
+        "tiered",
+        "custom",
+        "none"
+      ],
+      "description": "High-level commission model classification"
+    },
+    "override_structure_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "flat",
+        "tiered",
+        "custom",
+        "none"
+      ],
+      "description": "Override commission model classification"
+    },
+    "banking_setup_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "complete",
+        "on_hold"
+      ],
+      "default": "not_started",
+      "description": "ACH/banking setup status \u2014 audit-sensitive"
+    },
+    "carrier_access_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "partial",
+        "full",
+        "suspended"
+      ],
+      "default": "pending",
+      "description": "Carrier access enrollment status"
+    },
+    "agreement_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "pending_signature",
+        "signed",
+        "expired",
+        "terminated"
+      ],
+      "default": "not_started"
+    },
+    "compliance_status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "compliant",
+        "issues_found",
+        "suspended"
+      ],
+      "default": "pending_review"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_onboarding",
+        "active",
+        "inactive",
+        "suspended"
+      ],
+      "default": "pending_onboarding",
+      "description": "Operational status of this MGA"
+    },
+    "onboarding_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "business_identity",
+        "licensing_compliance",
+        "agreements",
+        "carrier_access",
+        "banking",
+        "admin_review",
+        "activated"
+      ],
+      "default": "not_started",
+      "description": "Stage within the onboarding workflow"
+    },
+    "activation_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date MGA was activated for production operations"
+    },
+    "suspension_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "suspension_reason": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal/admin notes \u2014 not visible to MGA users"
+    },
+    "created_by_platform_user": {
+      "type": "string",
+      "description": "Email of the platform admin who created this MGA record"
+    },
+    "mga_migration_batch_id": {
+      "type": "string",
+      "description": "Phase 4 migration staging: batch ID if this record was created or modified during migration"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly"
+      ],
+      "default": "not_migrated",
+      "description": "Phase 4 migration staging: tracks whether this MGA has been through migration validation"
+    }
+  },
+  "required": [
+    "name",
+    "legal_entity_name",
+    "code",
+    "primary_contact_name",
+    "primary_contact_email"
+  ]
+}

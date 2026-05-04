@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteClaimsRequirement",
+  "name": "ScenarioPlan",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,36 +10,51 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "scenario_id": {
       "type": "string"
     },
-    "total_enrolled_count": {
-      "type": "number"
+    "case_id": {
+      "type": "string"
     },
-    "claims_required": {
+    "plan_id": {
+      "type": "string"
+    },
+    "plan_name": {
+      "type": "string"
+    },
+    "carrier": {
+      "type": "string"
+    },
+    "plan_type": {
+      "type": "string"
+    },
+    "network_type": {
+      "type": "string"
+    },
+    "rate_table_id": {
+      "type": "string"
+    },
+    "employer_contribution_ee": {
+      "type": "number",
+      "default": 100
+    },
+    "employer_contribution_dep": {
+      "type": "number",
+      "default": 50
+    },
+    "contribution_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "flat_dollar"
+      ],
+      "default": "percentage"
+    },
+    "is_recommended": {
       "type": "boolean",
       "default": false
     },
-    "claims_months_required": {
-      "type": "number"
-    },
-    "claims_received": {
-      "type": "boolean",
-      "default": false
-    },
-    "claims_document_id": {
-      "type": "string"
-    },
-    "large_claimant_document_id": {
-      "type": "string"
-    },
-    "rx_report_document_id": {
-      "type": "string"
-    },
-    "claims_notes": {
-      "type": "string"
-    },
-    "underwriting_risk_notes": {
+    "notes": {
       "type": "string"
     },
     "mga_migration_batch_id": {
@@ -58,6 +73,9 @@
     }
   },
   "required": [
-    "txquote_case_id"
+    "scenario_id",
+    "case_id",
+    "plan_id",
+    "plan_name"
   ]
 }

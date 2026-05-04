@@ -1,0 +1,172 @@
+{
+  "name": "PolicyMatchResult",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "scenario_id": {
+      "type": "string"
+    },
+    "member_id": {
+      "type": "string",
+      "description": "census member id or 'group' for group-level"
+    },
+    "member_name": {
+      "type": "string"
+    },
+    "employer_name": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "full_auto",
+        "guided",
+        "hybrid"
+      ],
+      "default": "guided"
+    },
+    "risk_score": {
+      "type": "number"
+    },
+    "risk_tier": {
+      "type": "string",
+      "enum": [
+        "preferred",
+        "standard",
+        "elevated",
+        "high"
+      ],
+      "default": "standard"
+    },
+    "gradient_ai_risk_tier": {
+      "type": "string",
+      "enum": [
+        "preferred",
+        "standard",
+        "elevated",
+        "high"
+      ]
+    },
+    "gradient_ai_predicted_claims": {
+      "type": "number"
+    },
+    "risk_factors": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "base_plan_id": {
+      "type": "string"
+    },
+    "base_plan_name": {
+      "type": "string"
+    },
+    "optimized_plan_id": {
+      "type": "string"
+    },
+    "optimized_plan_name": {
+      "type": "string"
+    },
+    "enhancements": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "base_monthly_cost": {
+      "type": "number"
+    },
+    "optimized_monthly_cost": {
+      "type": "number"
+    },
+    "risk_adjusted_monthly_cost": {
+      "type": "number"
+    },
+    "cost_delta_pmpm": {
+      "type": "number"
+    },
+    "value_score": {
+      "type": "number"
+    },
+    "recommendation_summary": {
+      "type": "string"
+    },
+    "optimization_rationale": {
+      "type": "string"
+    },
+    "broker_talking_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "auto_bindable": {
+      "type": "boolean",
+      "default": false
+    },
+    "member_count": {
+      "type": "number"
+    },
+    "avg_age": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "analyzing",
+        "optimized",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "declined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "trigger_stage": {
+      "type": "string",
+      "enum": [
+        "pre_quote",
+        "post_quote",
+        "proposal",
+        "renewal",
+        "mid_year"
+      ]
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "case_id",
+    "employer_name"
+  ]
+}

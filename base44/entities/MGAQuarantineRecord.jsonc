@@ -1,0 +1,112 @@
+{
+  "name": "MGAQuarantineRecord",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "description": "Type of the quarantined entity (e.g. BenefitCase, CensusMember, EmployeeEnrollment)"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the quarantined entity record"
+    },
+    "suspected_master_group_id": {
+      "type": "string",
+      "description": "Best-guess MasterGroup at time of quarantine \u2014 not authoritative"
+    },
+    "suspected_master_general_agent_id": {
+      "type": "string",
+      "description": "Best-guess MGA at time of quarantine \u2014 not authoritative"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Human-readable reason this record was quarantined"
+    },
+    "anomaly_class": {
+      "type": "string",
+      "enum": [
+        "orphaned_record",
+        "conflicting_parent_chain",
+        "missing_master_group_id",
+        "missing_upstream_owner_mapping",
+        "invalid_duplicate_lineage",
+        "unsupported_legacy_artifact",
+        "ambiguous_ownership",
+        "other"
+      ],
+      "description": "Anomaly classification from the migration plan"
+    },
+    "detected_by": {
+      "type": "string",
+      "description": "System process, migration batch, or user email that flagged this record"
+    },
+    "detected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_workflow": {
+      "type": "string",
+      "description": "Workflow or process that generated this quarantine entry (e.g. migration_dry_run, import_pipeline, webhook_handler)"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "quarantined",
+        "under_review",
+        "resolved",
+        "released",
+        "dismissed"
+      ],
+      "default": "quarantined"
+    },
+    "resolution_owner": {
+      "type": "string",
+      "description": "Email of the platform admin or migration owner responsible for resolving this quarantine"
+    },
+    "resolution_action": {
+      "type": "string",
+      "description": "Action taken to resolve (e.g. assigned_to_mga, deleted_orphan, merged_duplicate)"
+    },
+    "release_approved_by": {
+      "type": "string",
+      "description": "Email of the platform admin who approved release from quarantine"
+    },
+    "release_approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolution_notes": {
+      "type": "string"
+    },
+    "audit_correlation_id": {
+      "type": "string",
+      "description": "Correlation ID linking this quarantine event to the originating migration batch or service audit log"
+    },
+    "migration_batch_id": {
+      "type": "string",
+      "description": "Phase 4 migration batch ID this record belongs to"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id",
+    "reason",
+    "anomaly_class",
+    "detected_by",
+    "detected_at"
+  ]
+}

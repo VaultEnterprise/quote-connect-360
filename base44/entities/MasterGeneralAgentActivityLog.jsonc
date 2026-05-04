@@ -1,0 +1,122 @@
+{
+  "name": "MasterGeneralAgentActivityLog",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "Owning MGA scope \u2014 required; system-written only"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup in scope if action was MasterGroup-specific; nullable"
+    },
+    "case_id": {
+      "type": "string",
+      "description": "Case in scope if action was case-specific; nullable"
+    },
+    "entity_type": {
+      "type": "string",
+      "description": "Entity type the action was performed on (e.g. BenefitCase, QuoteScenario)"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the specific entity record"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of the user who performed the action (or system service name)"
+    },
+    "actor_role": {
+      "type": "string",
+      "enum": [
+        "platform_super_admin",
+        "mga_admin",
+        "mga_manager",
+        "mga_user",
+        "mga_read_only",
+        "system",
+        "support_impersonation"
+      ],
+      "description": "Effective role at time of action"
+    },
+    "real_actor_email": {
+      "type": "string",
+      "description": "If impersonation: the actual platform user performing the action. Null otherwise."
+    },
+    "impersonated_actor_email": {
+      "type": "string",
+      "description": "If impersonation: the user being acted as. Null otherwise."
+    },
+    "action": {
+      "type": "string",
+      "description": "Action code or description (e.g. case.stage_advanced, txquote.sent, mga.user_invited)"
+    },
+    "action_category": {
+      "type": "string",
+      "enum": [
+        "operational",
+        "security",
+        "governance"
+      ],
+      "description": "Audit category: operational = workflow; security = blocked/impersonation/policy; governance = role/settings/mga lifecycle"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed",
+        "blocked"
+      ],
+      "description": "Result of the action"
+    },
+    "before_value": {
+      "type": "string",
+      "description": "Serialized before-state for the changed field(s); redacted for sensitive fields per redaction policy"
+    },
+    "after_value": {
+      "type": "string",
+      "description": "Serialized after-state for the changed field(s); redacted for sensitive fields per redaction policy"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable detail or reason"
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "Links multi-step operations (e.g. TXQuote send \u2192 email dispatch \u2192 receipt log) with a shared ID"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Idempotency key of the originating request, if present"
+    },
+    "request_channel": {
+      "type": "string",
+      "enum": [
+        "ui",
+        "api",
+        "webhook",
+        "scheduled_job",
+        "async_job",
+        "import",
+        "system"
+      ],
+      "description": "Source channel of the triggering request"
+    },
+    "security_event_flag": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this is a security-relevant event (cross-scope attempt, blocked access, policy violation)"
+    },
+    "governance_event_flag": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this is a governance-relevant event (role change, MGA lifecycle, settings change)"
+    }
+  },
+  "required": [
+    "master_general_agent_id",
+    "actor_email",
+    "action",
+    "outcome"
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "name": "MGAMigrationBatch",
+  "type": "object",
+  "properties": {
+    "batch_id": {
+      "type": "string",
+      "description": "Unique identifier for this migration batch (used as correlation key across all stamped entities)"
+    },
+    "batch_name": {
+      "type": "string",
+      "description": "Human-readable name (e.g. 'Phase 4 Dry Run 1 \u2014 MasterGroup MGA Mapping')"
+    },
+    "batch_type": {
+      "type": "string",
+      "enum": [
+        "dry_run",
+        "production_backfill",
+        "validation_pass",
+        "rollback"
+      ],
+      "description": "Type of migration operation this batch represents"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "failed",
+        "rolled_back"
+      ],
+      "default": "pending"
+    },
+    "initiated_by": {
+      "type": "string",
+      "description": "Email or system process that created this batch"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target_entity_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Entity types included in this migration batch"
+    },
+    "total_records_evaluated": {
+      "type": "number"
+    },
+    "total_records_mapped": {
+      "type": "number"
+    },
+    "total_records_failed": {
+      "type": "number"
+    },
+    "total_anomalies": {
+      "type": "number"
+    },
+    "total_quarantined": {
+      "type": "number"
+    },
+    "total_unresolved": {
+      "type": "number"
+    },
+    "anomaly_counts_by_class": {
+      "type": "object",
+      "description": "Breakdown of anomaly_class counts across quarantined records in this batch"
+    },
+    "before_after_count_snapshot": {
+      "type": "object",
+      "description": "Pre/post record count by entity type and MGA \u2014 for reconciliation"
+    },
+    "reconciliation_variance_pct": {
+      "type": "number",
+      "description": "Largest non-financial count variance percentage observed \u2014 must be <= 0.1% for migration approval"
+    },
+    "financial_control_totals_match": {
+      "type": "boolean",
+      "description": "Whether all financial/control totals matched 100% \u2014 required for approval"
+    },
+    "dry_run_approval_status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "approved",
+        "rejected",
+        "blocked"
+      ],
+      "default": "pending_review",
+      "description": "Business/migration owner approval status before cutover"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of migration owner who approved this batch for cutover"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rollback_triggered": {
+      "type": "boolean",
+      "default": false
+    },
+    "rollback_reason": {
+      "type": "string"
+    },
+    "rollback_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "batch_id",
+    "batch_name",
+    "batch_type"
+  ]
+}

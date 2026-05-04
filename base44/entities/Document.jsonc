@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteClaimsRequirement",
+  "name": "Document",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,36 +10,45 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "case_id": {
       "type": "string"
     },
-    "total_enrolled_count": {
+    "employer_group_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "census",
+        "proposal",
+        "sbc",
+        "application",
+        "contract",
+        "correspondence",
+        "enrollment_form",
+        "other"
+      ],
+      "default": "other"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "file_size": {
       "type": "number"
     },
-    "claims_required": {
-      "type": "boolean",
-      "default": false
-    },
-    "claims_months_required": {
-      "type": "number"
-    },
-    "claims_received": {
-      "type": "boolean",
-      "default": false
-    },
-    "claims_document_id": {
+    "notes": {
       "type": "string"
     },
-    "large_claimant_document_id": {
+    "uploaded_by": {
       "type": "string"
     },
-    "rx_report_document_id": {
-      "type": "string"
-    },
-    "claims_notes": {
-      "type": "string"
-    },
-    "underwriting_risk_notes": {
+    "employer_name": {
       "type": "string"
     },
     "mga_migration_batch_id": {
@@ -58,6 +67,7 @@
     }
   },
   "required": [
-    "txquote_case_id"
+    "case_id",
+    "name"
   ]
 }

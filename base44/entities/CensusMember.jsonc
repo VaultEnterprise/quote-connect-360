@@ -1,0 +1,194 @@
+{
+  "name": "CensusMember",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "census_version_id": {
+      "type": "string"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "External employee ID from employer"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female",
+        "other"
+      ]
+    },
+    "ssn_last4": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "hire_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "employment_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "leave",
+        "terminated"
+      ],
+      "default": "active"
+    },
+    "employment_type": {
+      "type": "string",
+      "enum": [
+        "full_time",
+        "part_time",
+        "contractor"
+      ],
+      "default": "full_time"
+    },
+    "hours_per_week": {
+      "type": "number"
+    },
+    "annual_salary": {
+      "type": "number"
+    },
+    "job_title": {
+      "type": "string"
+    },
+    "department": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "class_code": {
+      "type": "string",
+      "description": "Employee class/tier assignment"
+    },
+    "is_eligible": {
+      "type": "boolean",
+      "default": true
+    },
+    "eligibility_reason": {
+      "type": "string"
+    },
+    "dependent_count": {
+      "type": "number",
+      "default": 0
+    },
+    "coverage_tier": {
+      "type": "string",
+      "enum": [
+        "employee_only",
+        "employee_spouse",
+        "employee_children",
+        "family"
+      ]
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "valid",
+        "has_warnings",
+        "has_errors"
+      ],
+      "default": "pending"
+    },
+    "validation_issues": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "gradient_ai_data": {
+      "type": "object",
+      "description": "GradientAI risk scoring results",
+      "properties": {
+        "risk_score": {
+          "type": "number"
+        },
+        "risk_tier": {
+          "type": "string",
+          "enum": [
+            "preferred",
+            "standard",
+            "elevated",
+            "high"
+          ]
+        },
+        "risk_factors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "predicted_annual_claims": {
+          "type": "number"
+        },
+        "confidence_score": {
+          "type": "number"
+        },
+        "analyzed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "census_version_id",
+    "case_id",
+    "first_name",
+    "last_name"
+  ]
+}

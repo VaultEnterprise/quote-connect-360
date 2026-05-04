@@ -1,0 +1,120 @@
+{
+  "name": "EmployerGroup",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "Parent MasterGroup \u2014 nullable during migration staging; required for operational use"
+    },
+    "agency_id": {
+      "type": "string",
+      "description": "Parent agency ID (existing field preserved)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Employer/company name"
+    },
+    "dba_name": {
+      "type": "string",
+      "description": "Doing business as name"
+    },
+    "ein": {
+      "type": "string",
+      "description": "Employer Identification Number"
+    },
+    "industry": {
+      "type": "string"
+    },
+    "sic_code": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "employee_count": {
+      "type": "number",
+      "description": "Total employee count"
+    },
+    "eligible_count": {
+      "type": "number",
+      "description": "Benefit-eligible employee count"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "prospect",
+        "active",
+        "inactive",
+        "terminated"
+      ],
+      "default": "prospect"
+    },
+    "primary_contact_name": {
+      "type": "string"
+    },
+    "primary_contact_email": {
+      "type": "string"
+    },
+    "primary_contact_phone": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    },
+    "mga_migration_anomaly_class": {
+      "type": "string",
+      "enum": [
+        "orphaned_record",
+        "conflicting_parent_chain",
+        "missing_master_group_id",
+        "missing_upstream_owner_mapping",
+        "invalid_duplicate_lineage",
+        "unsupported_legacy_artifact",
+        "none"
+      ],
+      "default": "none"
+    }
+  },
+  "required": [
+    "agency_id",
+    "name"
+  ]
+}

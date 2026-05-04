@@ -1,0 +1,64 @@
+{
+  "name": "RateSetAssignment",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable for global assignments; required for mga-level assignments after Phase 4 validation"
+    },
+    "rate_table_id": {
+      "type": "string",
+      "description": "Assigned rate table id"
+    },
+    "assignment_type": {
+      "type": "string",
+      "enum": [
+        "global",
+        "mga",
+        "master_group",
+        "tenant"
+      ],
+      "default": "global",
+      "description": "Scope level of this assignment. 'mga' level added for MGA architecture. 'global' assignments have no MGA owner."
+    },
+    "master_group_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "is_direct": {
+      "type": "boolean",
+      "default": true
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "rate_table_id",
+    "assignment_type"
+  ]
+}

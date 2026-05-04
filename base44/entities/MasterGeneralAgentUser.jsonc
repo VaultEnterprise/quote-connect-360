@@ -1,0 +1,76 @@
+{
+  "name": "MasterGeneralAgentUser",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "Parent MGA scope \u2014 required; server-resolved"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the app user being associated with this MGA"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "mga_admin",
+        "mga_manager",
+        "mga_user",
+        "mga_read_only"
+      ],
+      "default": "mga_user",
+      "description": "Role of this user within the MGA \u2014 controls permission matrix"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "active",
+        "disabled"
+      ],
+      "default": "invited"
+    },
+    "allowed_master_group_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional: restrict user visibility to specific MasterGroups within this MGA. Empty array = all MasterGroups in MGA."
+    },
+    "permissions_override": {
+      "type": "object",
+      "description": "Optional: per-user permission overrides beyond role defaults. Admin-only write."
+    },
+    "invited_by": {
+      "type": "string",
+      "description": "Email of the user who sent the invitation"
+    },
+    "invited_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_login_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "disabled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "disabled_by": {
+      "type": "string"
+    },
+    "disabled_reason": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin-only notes on this membership record"
+    }
+  },
+  "required": [
+    "master_general_agent_id",
+    "user_email",
+    "role"
+  ]
+}

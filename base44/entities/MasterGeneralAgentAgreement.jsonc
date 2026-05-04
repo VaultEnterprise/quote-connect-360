@@ -1,0 +1,73 @@
+{
+  "name": "MasterGeneralAgentAgreement",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "Parent MGA scope \u2014 required; server-resolved"
+    },
+    "agreement_type": {
+      "type": "string",
+      "enum": [
+        "mga_producer_agreement",
+        "carrier_appointment",
+        "data_processing_agreement",
+        "e_and_o_certificate",
+        "w9",
+        "other"
+      ],
+      "description": "Type of agreement or compliance document"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent_for_signature",
+        "signed",
+        "expired",
+        "terminated",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "document_url": {
+      "type": "string",
+      "description": "URL to the signed or pending agreement document \u2014 access restricted"
+    },
+    "signed_by_name": {
+      "type": "string"
+    },
+    "signed_by_email": {
+      "type": "string"
+    },
+    "signed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Platform admin who reviewed/approved this agreement"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin-only notes"
+    }
+  },
+  "required": [
+    "master_general_agent_id",
+    "agreement_type",
+    "status"
+  ]
+}

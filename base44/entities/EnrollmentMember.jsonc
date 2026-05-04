@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteReadinessResult",
+  "name": "EnrollmentMember",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,38 +10,56 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "enrollment_window_id": {
       "type": "string"
     },
-    "validator_code": {
+    "case_id": {
       "type": "string"
     },
-    "validator_name": {
+    "census_member_id": {
       "type": "string"
     },
-    "severity": {
-      "type": "string",
-      "enum": [
-        "info",
-        "warning",
-        "error"
-      ]
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
     },
     "status": {
       "type": "string",
       "enum": [
-        "pass",
-        "fail",
-        "conditional"
+        "pending",
+        "invited",
+        "enrolled",
+        "waived",
+        "terminated"
+      ],
+      "default": "pending"
+    },
+    "coverage_tier": {
+      "type": "string",
+      "enum": [
+        "employee_only",
+        "employee_spouse",
+        "employee_children",
+        "family"
       ]
     },
-    "message": {
+    "waiver_reason": {
       "type": "string"
     },
-    "field_path": {
-      "type": "string"
+    "enrolled_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "destination_code": {
+    "invited_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "employer_name": {
       "type": "string"
     },
     "mga_migration_batch_id": {
@@ -60,10 +78,9 @@
     }
   },
   "required": [
-    "txquote_case_id",
-    "validator_code",
-    "severity",
-    "status",
-    "message"
+    "enrollment_window_id",
+    "case_id",
+    "first_name",
+    "last_name"
   ]
 }

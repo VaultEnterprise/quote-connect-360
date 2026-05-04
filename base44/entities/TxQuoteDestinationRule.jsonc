@@ -2,6 +2,10 @@
   "name": "TxQuoteDestinationRule",
   "type": "object",
   "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope for MGA-specific override rules. Null for platform-global rules. See is_platform_global."
+    },
     "destination_code": {
       "type": "string",
       "enum": [
@@ -26,6 +30,11 @@
     "is_active": {
       "type": "boolean",
       "default": true
+    },
+    "is_platform_global": {
+      "type": "boolean",
+      "default": true,
+      "description": "True = Global - Intentional (platform-managed, no MGA ownership). False = MGA-specific override (master_general_agent_id must be set). See architecture Section 19.3 classification table."
     }
   },
   "required": [

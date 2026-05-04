@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteReadinessResult",
+  "name": "CensusVersion",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,38 +10,57 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "case_id": {
       "type": "string"
     },
-    "validator_code": {
-      "type": "string"
+    "version_number": {
+      "type": "number",
+      "default": 1
     },
-    "validator_name": {
-      "type": "string"
-    },
-    "severity": {
+    "file_url": {
       "type": "string",
-      "enum": [
-        "info",
-        "warning",
-        "error"
-      ]
+      "description": "URL to uploaded census file"
+    },
+    "file_name": {
+      "type": "string"
     },
     "status": {
       "type": "string",
       "enum": [
-        "pass",
-        "fail",
-        "conditional"
-      ]
+        "uploaded",
+        "mapping",
+        "validating",
+        "validated",
+        "has_issues",
+        "archived"
+      ],
+      "default": "uploaded"
     },
-    "message": {
+    "total_employees": {
+      "type": "number"
+    },
+    "total_dependents": {
+      "type": "number"
+    },
+    "eligible_employees": {
+      "type": "number"
+    },
+    "validation_errors": {
+      "type": "number",
+      "default": 0
+    },
+    "validation_warnings": {
+      "type": "number",
+      "default": 0
+    },
+    "uploaded_by": {
       "type": "string"
     },
-    "field_path": {
-      "type": "string"
+    "validated_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "destination_code": {
+    "notes": {
       "type": "string"
     },
     "mga_migration_batch_id": {
@@ -60,10 +79,6 @@
     }
   },
   "required": [
-    "txquote_case_id",
-    "validator_code",
-    "severity",
-    "status",
-    "message"
+    "case_id"
   ]
 }

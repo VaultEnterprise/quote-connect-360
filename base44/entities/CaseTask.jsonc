@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteEmployerProfile",
+  "name": "CaseTask",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,61 +10,72 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "case_id": {
       "type": "string"
     },
-    "legal_company_name": {
+    "title": {
       "type": "string"
     },
-    "dba_name": {
+    "description": {
       "type": "string"
     },
-    "primary_contact_name": {
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "action_required",
+        "follow_up",
+        "review",
+        "approval",
+        "document",
+        "system"
+      ],
+      "default": "action_required"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "blocked"
+      ],
+      "default": "pending"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "assigned_to": {
       "type": "string"
     },
-    "primary_contact_email": {
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_by": {
       "type": "string"
     },
-    "primary_contact_phone": {
+    "related_entity_type": {
       "type": "string"
     },
-    "sic_code": {
+    "related_entity_id": {
       "type": "string"
     },
-    "industry_type": {
+    "notes": {
       "type": "string"
     },
-    "headquarters_state": {
-      "type": "string"
-    },
-    "coverage_states": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "fein": {
-      "type": "string"
-    },
-    "group_size_total": {
-      "type": "number"
-    },
-    "eligible_employee_count": {
-      "type": "number"
-    },
-    "enrolling_employee_count": {
-      "type": "number"
-    },
-    "waiting_period": {
-      "type": "string"
-    },
-    "class_structure_notes": {
-      "type": "string"
-    },
-    "union_non_union_flag": {
-      "type": "string"
-    },
-    "cobra_retiree_flag": {
+    "employer_name": {
       "type": "string"
     },
     "mga_migration_batch_id": {
@@ -83,6 +94,7 @@
     }
   },
   "required": [
-    "txquote_case_id"
+    "case_id",
+    "title"
   ]
 }

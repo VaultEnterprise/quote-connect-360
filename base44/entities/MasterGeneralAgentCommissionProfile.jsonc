@@ -1,0 +1,79 @@
+{
+  "name": "MasterGeneralAgentCommissionProfile",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "Parent MGA scope \u2014 required; server-resolved"
+    },
+    "profile_name": {
+      "type": "string",
+      "description": "Display name for this commission profile"
+    },
+    "commission_model": {
+      "type": "string",
+      "enum": [
+        "percentage_of_premium",
+        "flat_per_member",
+        "tiered",
+        "custom"
+      ],
+      "description": "Commission calculation model"
+    },
+    "override_model": {
+      "type": "string",
+      "enum": [
+        "percentage_of_commission",
+        "flat_override",
+        "tiered_override",
+        "none"
+      ],
+      "description": "Override commission model applied above base commission"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "expired",
+        "superseded"
+      ],
+      "default": "draft"
+    },
+    "rules": {
+      "type": "object",
+      "description": "Structured commission rules object \u2014 financial-sensitive; access restricted to mga_admin with view_financials permission"
+    },
+    "applies_to_carriers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional: list of carrier codes this profile applies to. Empty = all carriers."
+    },
+    "applies_to_product_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional: product types (medical, dental, vision, etc.) this profile applies to"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin-only notes \u2014 not visible to standard MGA users"
+    }
+  },
+  "required": [
+    "master_general_agent_id",
+    "profile_name",
+    "status"
+  ]
+}

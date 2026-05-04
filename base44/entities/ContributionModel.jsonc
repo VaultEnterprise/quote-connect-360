@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteContributionStrategy",
+  "name": "ContributionModel",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,52 +10,70 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "scenario_id": {
       "type": "string"
     },
-    "employer_contribution_type": {
+    "case_id": {
       "type": "string"
     },
-    "employee_only_contribution": {
-      "type": "number"
-    },
-    "employee_spouse_contribution": {
-      "type": "number"
-    },
-    "employee_children_contribution": {
-      "type": "number"
-    },
-    "family_contribution": {
-      "type": "number"
-    },
-    "contribution_percent_employee_only": {
-      "type": "number"
-    },
-    "contribution_percent_family": {
-      "type": "number"
-    },
-    "composite_or_age_banded": {
+    "name": {
       "type": "string"
     },
-    "participation_percent": {
+    "strategy": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "flat_dollar",
+        "defined_contribution",
+        "custom"
+      ],
+      "default": "percentage"
+    },
+    "ee_contribution_pct": {
       "type": "number"
     },
-    "valid_waiver_count": {
+    "dep_contribution_pct": {
       "type": "number"
     },
-    "enrolled_count_by_tier": {
-      "type": "object"
+    "ee_contribution_flat": {
+      "type": "number"
     },
-    "contribution_notes": {
-      "type": "string"
+    "dep_contribution_flat": {
+      "type": "number"
     },
-    "meets_minimum_contribution": {
+    "class_rules": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "total_ee_count": {
+      "type": "number"
+    },
+    "total_monthly_employer_cost": {
+      "type": "number"
+    },
+    "total_monthly_employee_cost": {
+      "type": "number"
+    },
+    "total_monthly_premium": {
+      "type": "number"
+    },
+    "avg_employee_cost_ee_only": {
+      "type": "number"
+    },
+    "avg_employee_cost_family": {
+      "type": "number"
+    },
+    "aca_affordability_flag": {
       "type": "boolean",
       "default": false
     },
-    "meets_minimum_participation": {
-      "type": "boolean",
-      "default": false
+    "aca_affordability_threshold": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
     },
     "mga_migration_batch_id": {
       "type": "string"
@@ -73,6 +91,8 @@
     }
   },
   "required": [
-    "txquote_case_id"
+    "scenario_id",
+    "case_id",
+    "name"
   ]
 }

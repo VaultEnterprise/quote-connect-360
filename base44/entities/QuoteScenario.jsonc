@@ -1,0 +1,189 @@
+{
+  "name": "QuoteScenario",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Scenario name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Scenario assumptions and notes"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "running",
+        "completed",
+        "error",
+        "expired"
+      ],
+      "default": "draft"
+    },
+    "census_version_id": {
+      "type": "string"
+    },
+    "products_included": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Product types in this scenario"
+    },
+    "carriers_included": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "contribution_strategy": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "flat_dollar",
+        "defined_contribution",
+        "custom"
+      ],
+      "default": "percentage"
+    },
+    "employer_contribution_ee": {
+      "type": "number"
+    },
+    "employer_contribution_dep": {
+      "type": "number"
+    },
+    "total_monthly_premium": {
+      "type": "number"
+    },
+    "employer_monthly_cost": {
+      "type": "number"
+    },
+    "employee_monthly_cost_avg": {
+      "type": "number"
+    },
+    "plan_count": {
+      "type": "number"
+    },
+    "is_recommended": {
+      "type": "boolean",
+      "default": false
+    },
+    "recommendation_score": {
+      "type": "number"
+    },
+    "confidence_level": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium"
+    },
+    "disruption_score": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "talking_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quoted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rate_lock_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rate_locked_by": {
+      "type": "string"
+    },
+    "rate_locked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "none"
+    },
+    "approval_requested_by": {
+      "type": "string"
+    },
+    "approval_requested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approval_approved_by": {
+      "type": "string"
+    },
+    "approval_approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approval_notes": {
+      "type": "string"
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Historical versions/snapshots"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "case_id",
+    "name"
+  ]
+}

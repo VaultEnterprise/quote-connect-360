@@ -1,5 +1,5 @@
 {
-  "name": "TxQuoteEmployerProfile",
+  "name": "Proposal",
   "type": "object",
   "properties": {
     "master_general_agent_id": {
@@ -10,61 +10,85 @@
       "type": "string",
       "description": "MasterGroup scope \u2014 nullable during migration staging"
     },
-    "txquote_case_id": {
+    "case_id": {
       "type": "string"
     },
-    "legal_company_name": {
+    "scenario_id": {
       "type": "string"
     },
-    "dba_name": {
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "title": {
       "type": "string"
     },
-    "primary_contact_name": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent",
+        "viewed",
+        "approved",
+        "rejected",
+        "expired"
+      ],
+      "default": "draft"
+    },
+    "employer_name": {
       "type": "string"
     },
-    "primary_contact_email": {
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "broker_name": {
       "type": "string"
     },
-    "primary_contact_phone": {
+    "broker_email": {
       "type": "string"
     },
-    "sic_code": {
+    "agency_name": {
       "type": "string"
     },
-    "industry_type": {
+    "cover_message": {
       "type": "string"
     },
-    "headquarters_state": {
-      "type": "string"
-    },
-    "coverage_states": {
+    "plan_summary": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object"
       }
     },
-    "fein": {
-      "type": "string"
+    "contribution_summary": {
+      "type": "object"
     },
-    "group_size_total": {
+    "total_monthly_premium": {
       "type": "number"
     },
-    "eligible_employee_count": {
+    "employer_monthly_cost": {
       "type": "number"
     },
-    "enrolling_employee_count": {
+    "employee_avg_cost": {
       "type": "number"
     },
-    "waiting_period": {
-      "type": "string"
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "class_structure_notes": {
-      "type": "string"
+    "viewed_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "union_non_union_flag": {
-      "type": "string"
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
     },
-    "cobra_retiree_flag": {
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
       "type": "string"
     },
     "mga_migration_batch_id": {
@@ -83,6 +107,7 @@
     }
   },
   "required": [
-    "txquote_case_id"
+    "case_id",
+    "title"
   ]
 }

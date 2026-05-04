@@ -1,0 +1,92 @@
+{
+  "name": "EnrollmentWindow",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope \u2014 nullable during migration staging"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "open",
+        "closing_soon",
+        "closed",
+        "finalized"
+      ],
+      "default": "scheduled"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_eligible": {
+      "type": "number"
+    },
+    "invited_count": {
+      "type": "number",
+      "default": 0
+    },
+    "enrolled_count": {
+      "type": "number",
+      "default": 0
+    },
+    "waived_count": {
+      "type": "number",
+      "default": 0
+    },
+    "pending_count": {
+      "type": "number",
+      "default": 0
+    },
+    "participation_rate": {
+      "type": "number"
+    },
+    "employer_name": {
+      "type": "string"
+    },
+    "reminder_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finalized_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    }
+  },
+  "required": [
+    "case_id",
+    "start_date",
+    "end_date"
+  ]
+}

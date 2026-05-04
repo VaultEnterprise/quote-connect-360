@@ -1,0 +1,168 @@
+{
+  "name": "BenefitCase",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope \u2014 nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "Parent MasterGroup \u2014 nullable during migration staging"
+    },
+    "agency_id": {
+      "type": "string"
+    },
+    "employer_group_id": {
+      "type": "string"
+    },
+    "case_number": {
+      "type": "string",
+      "description": "Auto-generated case reference number"
+    },
+    "case_type": {
+      "type": "string",
+      "enum": [
+        "new_business",
+        "renewal",
+        "mid_year_change",
+        "takeover"
+      ],
+      "default": "new_business"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "census_in_progress",
+        "census_validated",
+        "ready_for_quote",
+        "quoting",
+        "proposal_ready",
+        "employer_review",
+        "approved_for_enrollment",
+        "enrollment_open",
+        "enrollment_complete",
+        "install_in_progress",
+        "active",
+        "renewal_pending",
+        "renewed",
+        "closed"
+      ],
+      "default": "draft"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "User email of assigned broker/rep"
+    },
+    "products_requested": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of product types requested"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "employer_name": {
+      "type": "string",
+      "description": "Denormalized employer name for display"
+    },
+    "employee_count": {
+      "type": "number"
+    },
+    "census_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "uploaded",
+        "validated",
+        "issues_found"
+      ],
+      "default": "not_started"
+    },
+    "quote_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "expired"
+      ],
+      "default": "not_started"
+    },
+    "enrollment_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "open",
+        "in_progress",
+        "completed",
+        "closed"
+      ],
+      "default": "not_started"
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target_close_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "closed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "closed_reason": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated"
+    },
+    "mga_migration_anomaly_class": {
+      "type": "string",
+      "enum": [
+        "orphaned_record",
+        "conflicting_parent_chain",
+        "missing_master_group_id",
+        "missing_upstream_owner_mapping",
+        "invalid_duplicate_lineage",
+        "unsupported_legacy_artifact",
+        "none"
+      ],
+      "default": "none"
+    }
+  },
+  "required": [
+    "agency_id",
+    "employer_group_id",
+    "case_type"
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "name": "MasterGroup",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "Parent MGA scope \u2014 nullable during migration staging; required after Phase 4 migration validation"
+    },
+    "mga_assigned_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this MasterGroup was assigned to its MGA (migration or creation timestamp)"
+    },
+    "mga_assigned_by": {
+      "type": "string",
+      "description": "Email or system process that assigned the MGA scope"
+    },
+    "ownership_status": {
+      "type": "string",
+      "enum": [
+        "unassigned",
+        "assigned",
+        "disputed",
+        "quarantined"
+      ],
+      "default": "unassigned",
+      "description": "MGA ownership assignment status \u2014 used during migration staging"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of this Master Group"
+    },
+    "code": {
+      "type": "string",
+      "description": "Unique business code for this Master Group"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "suspended"
+      ],
+      "default": "active"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "primary_contact_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "mga_migration_batch_id": {
+      "type": "string",
+      "description": "Phase 4 migration staging: batch ID under which this record was stamped"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": [
+        "not_migrated",
+        "migrated",
+        "validated",
+        "anomaly",
+        "quarantined"
+      ],
+      "default": "not_migrated",
+      "description": "Phase 4 migration staging: per-record migration lifecycle status"
+    },
+    "mga_migration_anomaly_class": {
+      "type": "string",
+      "enum": [
+        "orphaned_record",
+        "conflicting_parent_chain",
+        "missing_master_group_id",
+        "missing_upstream_owner_mapping",
+        "invalid_duplicate_lineage",
+        "unsupported_legacy_artifact",
+        "none"
+      ],
+      "default": "none",
+      "description": "Phase 4 migration staging: anomaly classification if migration_status = anomaly or quarantined"
+    },
+    "mga_migration_anomaly_detail": {
+      "type": "string",
+      "description": "Phase 4 migration staging: human-readable description of the anomaly"
+    },
+    "mga_business_approval_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "disputed",
+        "blocked"
+      ],
+      "default": "pending",
+      "description": "Phase 4 migration staging: whether the business owner has approved this MasterGroup \u2192 MGA mapping"
+    },
+    "mga_business_approver": {
+      "type": "string",
+      "description": "Phase 4 migration staging: email of the business owner who approved the mapping"
+    },
+    "mga_business_approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Phase 4 migration staging: timestamp of business approval"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
