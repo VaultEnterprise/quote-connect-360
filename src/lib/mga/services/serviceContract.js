@@ -149,14 +149,15 @@ export async function prepareAndRecordAudit(decision, operationResult, idempoten
 // ─── Scope-pending guard ──────────────────────────────────────────────────
 
 /**
- * SCOPE_PENDING_ENTITY_TYPES — Re-exported from scopeResolver for service-layer use.
+ * SCOPE_PENDING_ENTITY_TYPES — Single authoritative source is scopeResolver.js.
+ * Re-imported here for service-layer use. Do NOT declare a second copy.
  * Services that define placeholders for these entities should call isScopePending().
+ *
+ * @see lib/mga/scopeResolver.js — authoritative declaration
+ * @see docs/MGA_SCOPE_PENDING_ENTITY_MINI_PASS_REPORT.md — mini-pass gate audit
  */
-export const SCOPE_PENDING_ENTITY_TYPES = [
-  'Tenant', 'CensusImportJob', 'CensusImportAuditEvent', 'CensusValidationResult',
-  'UserManual', 'HelpSearchLog', 'HelpAIQuestionLog', 'HelpCoverageSnapshot',
-  'HelpAuditLog', 'HelpAITrainingQueue',
-];
+import { SCOPE_PENDING_ENTITY_TYPES } from '../scopeResolver.js';
+export { SCOPE_PENDING_ENTITY_TYPES };
 
 export function isScopePending(entityType) {
   return SCOPE_PENDING_ENTITY_TYPES.includes(entityType);
