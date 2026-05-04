@@ -139,7 +139,7 @@ These counts are preserved unchanged. Phase 1 does not modify Phase 0 findings.
 | Phase 2 authorization dependency | Audit service writes; scope resolver referenced in every protected service |
 | Phase 3 service dependency | Every scoped service writes to this log |
 
-#### F. `MasterGroup` (new entity file — previously referenced but not defined)
+#### F. `MasterGroup` (pre-existing entity — extended with Phase 1 scope foundation; new canonical file created at entities/ path)
 
 | Attribute | Value |
 |---|---|
@@ -153,6 +153,7 @@ These counts are preserved unchanged. Phase 1 does not modify Phase 0 findings.
 | Phase 2 authorization dependency | Scope resolver uses MasterGroup to derive `master_general_agent_id` for downstream |
 | Phase 3 service dependency | `createMasterGroupUnderMGA`, `listMasterGroupsByMGA`, `updateMasterGroupWithinMGAScope` |
 | Migration staging fields | `mga_migration_batch_id`, `mga_migration_status`, `mga_migration_anomaly_class`, `mga_migration_anomaly_detail`, `mga_business_approval_status`, `mga_business_approver`, `mga_business_approved_at` |
+| Pre-existing entity status | YES — a minimal MasterGroup schema existed at `src/entities/MasterGroup.json` (fields: name, code, status, notes). That file was NOT modified. A new canonical Phase 1 entity file was created at `entities/MasterGroup.json` with the full scope foundation schema. The src/entities/ file is a legacy/stale path. It must be explicitly confirmed as retired before Phase 4 migration targets MasterGroup records. |
 
 ---
 
@@ -170,7 +171,7 @@ All fields added are **nullable during migration staging**. Fields must become r
 | MasterGeneralAgentCommissionProfile | master_general_agent_id | YES (parent field) | N/A | NO — required at creation | YES | Direct | NO | NO | master_general_agent_id, status, effective_date | None | New entity |
 | MasterGeneralAgentActivityLog | master_general_agent_id | YES (parent field) | YES (nullable) | NO — required at creation | YES | Direct | NO | NO | master_general_agent_id, actor_email, action_category, security_event_flag, correlation_id | None | New entity; append-only from service |
 | MasterGroup | none — new entity | YES | N/A | YES | YES — after Phase 4 | Direct | YES | YES | master_general_agent_id, status, ownership_status | mga_migration_batch_id/status/anomaly_class/detail, mga_business_approval_status/approver/approved_at | New entity file; previously referenced concept |
-| Tenant | master_group_id | YES | existing | YES | YES — after Phase 4 | Direct | YES | YES | master_general_agent_id | mga_migration_batch_id, mga_migration_status | Pre-existing entity — field added |
+| Tenant | master_group_id | YES | existing | YES | YES — after Phase 4 | Direct | YES | YES | master_general_agent_id | mga_migration_batch_id, mga_migration_status | Pre-existing entity — propagation documented but entity file update DEFERRED (entity file is at src/entities/Tenant.json; entities/Tenant.json does not exist). Update required before Phase 3 Tenant services and Phase 4 migration. |
 | EmployerGroup | agency_id | YES | YES | YES | YES — after Phase 4 | Direct | YES | YES | master_general_agent_id, master_group_id | mga_migration_batch_id, mga_migration_status, mga_migration_anomaly_class | Pre-existing entity |
 | BenefitCase | agency_id, employer_group_id | YES | YES | YES | YES — after Phase 4 | Direct | YES | YES | master_general_agent_id, master_group_id | mga_migration_batch_id, mga_migration_status, mga_migration_anomaly_class | Core protected entity — highest risk |
 | CaseTask | case_id | YES | YES | YES | YES — after Phase 4 | Direct | YES | YES | master_general_agent_id | mga_migration_batch_id, mga_migration_status | Pre-existing entity |
@@ -208,7 +209,11 @@ All fields added are **nullable during migration staging**. Fields must become r
 | PlanRateTable | plan_id | NOT ADDED — Global - Intentional (platform catalog) | NOT ADDED | N/A | N/A | Global - Intentional | NO (as catalog) | NO | none added | None | See Section 4 — global catalog confirmed |
 | QuoteProviderRoute | provider_code | NOT ADDED — global default; MGA-custom uses separate pattern | NOT ADDED | N/A | N/A | Global - Intentional (platform routes); Phase 3 will add MGA-override pattern | NO | NO | none added | None | See Section 4 |
 
-**Total `master_general_agent_id` fields added or defined: 38** (5 new entities carry it natively + 33 existing entities modified)
+**Total `master_general_agent_id` fields added or defined: 37** (5 new entity canonical files carry it natively + 32 corrected existing entities modified)
+
+**Audit correction C-04:** Count corrected from 38 to 37 following removal of non-existent entity CaseMember (see Section 12 correction C-02) from the modified-entity count.
+
+**Phase 1 propagation gaps (P1 — not Phase 2 blockers):** The following entities have master_general_agent_id propagation documented in this map but entity file updates DEFERRED because their canonical files are at src/entities/ paths which were not modified during Phase 1: Tenant, CensusImportJob, CensusImportAuditEvent, CensusValidationResult. Additionally, the following entities were classified as Scoped - Direct in Phase 0 but were not included in Phase 1 propagation: UserManual, HelpSearchLog, HelpAIQuestionLog, HelpCoverageSnapshot, HelpAuditLog, HelpAITrainingQueue. All must be addressed in a dedicated mini-pass before Phase 3 services targeting these entities and before Phase 4.
 
 ---
 
@@ -437,11 +442,15 @@ All changes were additive (new fields, new entities). All new fields on existing
 | MasterGeneralAgentAgreement | New entity | Created |
 | MasterGeneralAgentCommissionProfile | New entity | Created |
 | MasterGeneralAgentActivityLog | New entity | Created |
-| MasterGroup | New entity file (concept previously referenced) | Created |
+| MasterGroup | Pre-existing entity extended with Phase 1 scope foundation — new canonical file created at entities/MasterGroup.json; legacy minimal schema at src/entities/MasterGroup.json preserved without modification | Extended (not new) |
 | MGAQuarantineRecord | New entity | Created |
 | MGAMigrationBatch | New entity | Created |
 
-**Total new entities created: 8**
+**Truly new entities created: 7** (MasterGeneralAgent, MasterGeneralAgentUser, MasterGeneralAgentAgreement, MasterGeneralAgentCommissionProfile, MasterGeneralAgentActivityLog, MGAQuarantineRecord, MGAMigrationBatch)
+
+**Pre-existing entity with new canonical Phase 1 entities/ file: 1** (MasterGroup — pre-existing legacy schema at src/entities/MasterGroup.json; new canonical file with Phase 1 scope foundation at entities/MasterGroup.json; legacy file must be confirmed stale before Phase 4)
+
+**Total entity files created at entities/ path: 8**
 
 ---
 
@@ -452,7 +461,6 @@ All changes were additive (new fields, new entities). All new fields on existing
 | ActivityLog | master_general_agent_id, master_group_id, actor_role, outcome, correlation_id, mga_migration_batch_id, mga_migration_status |
 | BenefitCase | master_general_agent_id, master_group_id, mga_migration_batch_id, mga_migration_status, mga_migration_anomaly_class |
 | CaseFilterPreset | master_general_agent_id, owner_user_email, mga_migration_batch_id, mga_migration_status |
-| CaseMember | master_general_agent_id, master_group_id, mga_migration_batch_id, mga_migration_status |
 | CaseTask | master_general_agent_id, master_group_id, mga_migration_batch_id, mga_migration_status |
 | CensusMember | master_general_agent_id, master_group_id, mga_migration_batch_id, mga_migration_status |
 | CensusVersion | master_general_agent_id, master_group_id, mga_migration_batch_id, mga_migration_status |
@@ -484,7 +492,9 @@ All changes were additive (new fields, new entities). All new fields on existing
 | TxQuoteSupportingDocument | master_general_agent_id, master_group_id, mga_migration_batch_id, mga_migration_status |
 | ViewPreset | master_general_agent_id, owner_user_email, mga_migration_batch_id, mga_migration_status |
 
-**Total existing entities modified: 34**
+**Total existing entities modified: 33** (corrected from 34 — removed CaseMember which is a non-existent entity erroneously included; see Phase 1 Completion Audit Report correction C-02)
+
+**Note — entities with propagation documented but file updates pending (P1 gaps — not Phase 2 blockers):** Tenant (src/entities/Tenant.json), CensusImportJob, CensusImportAuditEvent, CensusValidationResult (all at src/entities/ paths). These must be updated in a dedicated mini-pass before Phase 3 services targeting these entities and before Phase 4 migration targeting these records. Also pending: UserManual, HelpSearchLog, HelpAIQuestionLog, HelpCoverageSnapshot, HelpAuditLog, HelpAITrainingQueue (Scoped - Direct per Phase 0 but not addressed in Phase 1).
 
 ---
 
@@ -492,9 +502,11 @@ All changes were additive (new fields, new entities). All new fields on existing
 
 | Metric | Count |
 |---|---:|
-| New entities created | 8 |
-| Existing entities modified | 34 |
-| Total entities with master_general_agent_id added or defined | 38 |
+| Truly new entities created | 7 |
+| Pre-existing entities with new canonical entities/ file (Phase 1 scope foundation applied) | 1 (MasterGroup) |
+| Total entity files created at entities/ path | 8 |
+| Existing entities modified (corrected) | 33 |
+| Total entities with master_general_agent_id added or defined (corrected) | 37 |
 | Total migration staging field groups added | 34 entities × up to 4 fields = 136 field additions across migration staging |
 | Total quarantine structure fields defined | 16 (in MGAQuarantineRecord) |
 | Total audit structure fields defined | 20 (in MasterGeneralAgentActivityLog) + 5 (in ActivityLog extension) |
@@ -505,7 +517,23 @@ All changes were additive (new fields, new entities). All new fields on existing
 | Blockers discovered | 0 (no P0 data-model blockers) |
 | Anomalies discovered | 1 (noted below) |
 
-**Anomaly discovered:** The `Tenant` entity is referenced in the architecture and Phase 0 inventory but its entity file is located at `src/entities/Tenant.json` rather than `entities/Tenant.json`. `master_general_agent_id` propagation was documented in the propagation map (Section 3.1) but the file update was deferred until the canonical entity file path is confirmed. This is a **P1 non-blocking documentation/path anomaly** — it does not block Phase 1 exit. The Tenant entity schema update must be completed before Phase 4 migration targeting Tenant records.
+**Path anomaly group — P1 non-blocking (Phase 2 not blocked; Phase 3/4 partially gated):**
+
+The following entities are at `src/entities/` paths (legacy location) and were NOT modified during Phase 1. Their `master_general_agent_id` propagation is documented in Section 3.1 but entity file updates are deferred:
+
+- `Tenant` — src/entities/Tenant.json. Propagation documented. File update required before Phase 3 Tenant services and Phase 4 migration.
+- `CensusImportJob` — src/entities path. Propagation NOT in Section 3.1. Must be added to propagation map and entity file updated before Phase 3 census import services and Phase 4 migration.
+- `CensusImportAuditEvent` — src/entities path. Same as above.
+- `CensusValidationResult` — src/entities path. Same as above.
+
+Additionally, the following entities were classified as Scoped - Direct in Phase 0 but were not included in Phase 1 propagation (propagation-pending, not path-blocked):
+- `UserManual`, `HelpSearchLog`, `HelpAIQuestionLog`, `HelpCoverageSnapshot`, `HelpAuditLog`, `HelpAITrainingQueue`
+
+**Required next action for all the above:** A dedicated mini-pass must be approved to resolve src/entities/ path entities and apply master_general_agent_id propagation to all the above before Phase 3 services targeting any of these entities begin and before Phase 4 migration. This mini-pass does not require Phase 2 to be completed first.
+
+**Also confirmed by Phase 1 Completion Audit:** MasterGroup was a pre-existing entity (legacy at src/entities/MasterGroup.json). The entities/MasterGroup.json file is the new canonical Phase 1 file. The legacy file must be confirmed stale before Phase 4.
+
+**All of the above are P1 — no item blocks Phase 2 approval.**
 
 ---
 
@@ -547,19 +575,23 @@ Phase 1 exit criteria: **PASS**
 
 Phase 1 report path: `docs/MGA_PHASE_1_DATA_MODEL_AND_SCOPE_FOUNDATION_REPORT.md`
 
-Entities created:
+Truly new entities created (7):
 - MasterGeneralAgent
 - MasterGeneralAgentUser
 - MasterGeneralAgentAgreement
 - MasterGeneralAgentCommissionProfile
 - MasterGeneralAgentActivityLog
-- MasterGroup
 - MGAQuarantineRecord
 - MGAMigrationBatch
 
-Existing entities modified: **34** (see Section 12)
+Pre-existing entities with new canonical entities/ Phase 1 file (1):
+- MasterGroup (legacy at src/entities/MasterGroup.json — preserved without modification; entities/MasterGroup.json is new canonical Phase 1 file)
 
-Count of `master_general_agent_id` fields added or defined: **38**
+Total entity files created at entities/ path: **8**
+
+Existing entities modified: **33** (corrected — see Section 12 and Phase 1 Completion Audit Report)
+
+Count of `master_general_agent_id` fields added or defined: **37** (corrected — see Section 3.1 and Phase 1 Completion Audit Report)
 
 Count of indexes added (schema-enforced): **1** (MasterGeneralAgentUser composite unique)
 
@@ -580,7 +612,9 @@ Audit structures created or defined:
 
 Global/platform-only entities confirmed: **17** (see Section 4)
 
-Blockers discovered: **None**
+Blockers discovered: **None (0 P0 blockers)**
+
+Phase 1 Completion Audit result: **PASS** — see `docs/MGA_PHASE_1_COMPLETION_AUDIT_REPORT.md` for full audit findings, all 8 required corrections (C-01 through C-08), and corrected metrics. All corrections applied to this document.
 
 Anomalies discovered: **1 — P1 non-blocking** — Tenant entity file path at `src/entities/Tenant.json` vs `entities/Tenant.json`; `master_general_agent_id` propagation documented but entity file update deferred pending path confirmation. Must be resolved before Phase 4 migration targeting Tenant.
 
