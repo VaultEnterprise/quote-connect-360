@@ -9,8 +9,8 @@
  * - Cross-MGA TXQuote fails closed.
  * - Existing sendTxQuote production behavior is unchanged.
  *
- * PHASE 3 CONSTRAINT: Inert until explicitly approved and wired in a future phase.
- * @see docs/MGA_PHASE_3_SCOPED_SERVICE_LAYER_REPORT.md Section 6.1-F
+ * Gate 6B (GATE-6B-20260505): transmitTXQuote() and service paths are now active.
+ * Scope: /mga/command — Cases / Census / Quotes panel only.
  */
 
 import { base44 } from '@/api/base44Client';
@@ -56,7 +56,7 @@ export async function authorizeTXQuoteTransmit(request) {
 
 /**
  * transmitTXQuote — Scoped TXQuote transmission service.
- * MUST NOT be wired to live production traffic until explicitly approved in a future phase.
+ * Gate 6B active. Wired to /mga/command — Cases / Census / Quotes panel only.
  * Existing sendTxQuote function is unchanged and continues to serve live traffic.
  */
 export async function transmitTXQuote(request) {

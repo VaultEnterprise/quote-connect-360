@@ -155,6 +155,8 @@ export default function MasterGeneralAgentCommandPage() {
                 scopeRequest={scopeRequest}
                 isManager={isManager}
                 isReadOnly={isReadOnly}
+                userRole={user.role}
+                actorEmail={user.email}
               />
             </MGAScopeErrorBoundary>
           </TabsContent>

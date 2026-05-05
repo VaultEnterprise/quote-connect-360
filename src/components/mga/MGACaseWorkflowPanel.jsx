@@ -2,15 +2,29 @@
  * MGA Phase 5 — Section 4: Case / Quote / Census Workflow Panel
  * Sub-panels: Cases, Census, Quotes.
  * All data via Phase 3 scoped services only. No direct entity reads.
+ *
+ * Gate 6B (GATE-6B-20260505): TXQuote Transmit button active in Quotes tab.
+ * Rollback switch: set TXQUOTE_TRANSMIT_ENABLED = false to disable.
  */
 import React, { useState, useEffect } from 'react';
 import { listCases } from '@/lib/mga/services/caseService';
 import { listCensusVersions } from '@/lib/mga/services/censusService';
 import { listQuotes } from '@/lib/mga/services/quoteService';
+import MGATXQuoteTransmitModal from '@/components/mga/MGATXQuoteTransmitModal.jsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Briefcase, Users, FileText } from 'lucide-react';
+import { Briefcase, Users, FileText, Send } from 'lucide-react';
+
+// Gate 6B rollback switch — set false to disable transmit feature without code removal
+const TXQUOTE_TRANSMIT_ENABLED = true;
+
+// Roles authorized to see and execute TXQuote transmit
+const TRANSMIT_AUTHORIZED_ROLES = ['mga_admin', 'mga_manager', 'platform_super_admin', 'admin'];
+
+// Quote statuses eligible for transmit
+const TRANSMIT_ELIGIBLE_STATUSES = ['completed', 'approved'];
 
 const STAGE_COLORS = {
   draft: 'bg-gray-100 text-gray-600',
@@ -31,11 +45,15 @@ const QUOTE_STATUS_COLORS = {
   error: 'bg-red-100 text-red-800',
 };
 
-export default function MGACaseWorkflowPanel({ mgaId, scopeRequest }) {
+export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, actorEmail }) {
   const [cases, setCases] = useState([]);
   const [census, setCensus] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [transmitTarget, setTransmitTarget] = useState(null); // quote record to transmit
+
+  // RBAC: transmit visible only to authorized roles when feature is enabled
+  const canTransmit = TXQUOTE_TRANSMIT_ENABLED && TRANSMIT_AUTHORIZED_ROLES.includes(userRole);
 
   useEffect(() => {
     if (!mgaId) return;
@@ -57,6 +75,7 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest }) {
   }
 
   return (
+    <>
     <Tabs defaultValue="cases">
       <TabsList>
         <TabsTrigger value="cases" className="gap-1.5">
@@ -146,31 +165,57 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest }) {
             <EmptyState label="No quote scenarios in scope." />
           ) : (
             <div className="divide-y">
-              {quotes.slice(0, 20).map(q => (
-                <div key={q.id} className="flex items-center gap-4 px-5 py-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground truncate">{q.name}</span>
+              {quotes.slice(0, 20).map(q => {
+                const isEligible = TRANSMIT_ELIGIBLE_STATUSES.includes(q.status);
+                return (
+                  <div key={q.id} className="flex items-center gap-4 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground truncate">{q.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${QUOTE_STATUS_COLORS[q.status] || 'bg-gray-100 text-gray-600'}`}>
+                          {q.status}
+                        </span>
+                        {q.total_monthly_premium && (
+                          <span className="text-xs text-muted-foreground">${q.total_monthly_premium?.toLocaleString()}/mo</span>
+                        )}
+                        {q.approval_status && q.approval_status !== 'none' && (
+                          <span className="text-xs font-medium text-muted-foreground capitalize">Approval: {q.approval_status}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${QUOTE_STATUS_COLORS[q.status] || 'bg-gray-100 text-gray-600'}`}>
-                        {q.status}
-                      </span>
-                      {q.total_monthly_premium && (
-                        <span className="text-xs text-muted-foreground">${q.total_monthly_premium?.toLocaleString()}/mo</span>
-                      )}
-                      {q.approval_status && q.approval_status !== 'none' && (
-                        <span className="text-xs font-medium text-muted-foreground capitalize">Approval: {q.approval_status}</span>
-                      )}
-                    </div>
+                    {/* Gate 6B: Transmit button — authorized roles, eligible quotes only */}
+                    {canTransmit && isEligible && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs h-7 shrink-0"
+                        onClick={() => setTransmitTarget(q)}
+                      >
+                        <Send className="w-3 h-3" /> Transmit
+                      </Button>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </TabsContent>
     </Tabs>
+
+    {/* Gate 6B: TXQuote Transmit Modal */}
+    {canTransmit && transmitTarget && (
+      <MGATXQuoteTransmitModal
+        open={!!transmitTarget}
+        onClose={() => setTransmitTarget(null)}
+        quote={transmitTarget}
+        scopeRequest={scopeRequest}
+        actorEmail={actorEmail}
+      />
+    )}
+    </>
   );
 }
 
