@@ -2,10 +2,10 @@
 
 Report date: 2026-05-05
 Author: Base44 AI agent
-Phase: 4A — Level 1 MasterGroup Approval Capture → Level 2 EmployerGroup Assignment
-Session ID: SESSION-4A-20260505-005
+Phase: 4A — Level 1 MasterGroup Approval Capture → Level 2 EmployerGroup Assignment → Level 3 BenefitCase Repair
+Session ID: SESSION-4A-20260505-006
 Remediation batch ID: REMEDIATION-BATCH-4A-20260504
-Status: **SESSION UPDATED — BA-03 and BA-04 RECORDED APPROVED. B4B-02 RESOLVED AT APPROVAL LEVEL. BA-05 through BA-08 NOW PRESENTED.**
+Status: **SESSION UPDATED — BA-05 through BA-08 RECORDED APPROVED. B4B-03 RESOLVED AT APPROVAL LEVEL. BA-09 through BA-12 NOW PRESENTED.**
 
 Canonical documents:
 - Owner decision intake forms: `docs/MGA_PHASE_4A_OWNER_DECISION_INTAKE_REPORT.md`
@@ -145,6 +145,92 @@ Before presenting BA-03 and BA-04, confirming BA-01 and BA-02 contain complete n
 
 ---
 
+## Session 5 — New Decisions: BA-05, BA-06, BA-07, BA-08
+
+### BA-05 — EmployerGroup Redwood Family Dental → NBG Master Group — APPROVED ✓
+
+| Field | Value |
+|---|---|
+| Approval item ID | BA-05 |
+| Blocker ID | B4B-03 (resolved at approval level) |
+| **Decision** | **APPROVED** |
+| EmployerGroup record | cd90 — Redwood Family Dental |
+| Target MasterGroup | NBG-MG-001 — NBG Master Group (BA-03 ✓ APPROVED) |
+| Parent MGA | NBG (BA-01 ✓ APPROVED) |
+| Source signal / evidence | EmployerGroup agency_id is NBG, BA-01 approved NBG as the parent MGA, BA-03 approved NBG-MG-001 as the NBG MasterGroup, and the Phase 4A remediation plan identified this EmployerGroup as part of the NBG grouping |
+| Confidence level | MEDIUM |
+| Approving owner name | Mark Joseph |
+| Approving owner role | Business Owner |
+| Timestamp | 2026-05-05 |
+| Decision reason | Redwood Family Dental is approved for assignment to NBG-MG-001 based on the agency_id grouping and approved NBG MGA / MasterGroup hierarchy. This approval is for future controlled remediation execution only. |
+| Execution implication | APPROVAL ONLY — EmployerGroup record NOT updated. Assignment executes at RE-05 under controlled remediation execution step only. |
+| Downstream unlocked | BA-09 now presentable |
+
+---
+
+### BA-06 — EmployerGroup Pacific Harbor Tech → NBG Master Group — APPROVED ✓
+
+| Field | Value |
+|---|---|
+| Approval item ID | BA-06 |
+| Blocker ID | B4B-03 (resolved at approval level) |
+| **Decision** | **APPROVED** |
+| EmployerGroup record | cd91 — Pacific Harbor Tech |
+| Target MasterGroup | NBG-MG-001 — NBG Master Group (BA-03 ✓ APPROVED) |
+| Parent MGA | NBG (BA-01 ✓ APPROVED) |
+| Source signal / evidence | EmployerGroup agency_id is NBG, BA-01 approved NBG as the parent MGA, BA-03 approved NBG-MG-001 as the NBG MasterGroup, and the Phase 4A remediation plan identified this EmployerGroup as part of the NBG grouping |
+| Confidence level | MEDIUM |
+| Approving owner name | Mark Joseph |
+| Approving owner role | Business Owner |
+| Timestamp | 2026-05-05 |
+| Decision reason | Pacific Harbor Tech is approved for assignment to NBG-MG-001 based on the agency_id grouping and approved NBG MGA / MasterGroup hierarchy. This approval is for future controlled remediation execution only. |
+| Execution implication | APPROVAL ONLY — EmployerGroup record NOT updated. Assignment executes at RE-05 under controlled remediation execution step only. |
+| Downstream unlocked | BA-10 now presentable |
+
+---
+
+### BA-07 — EmployerGroup Summit Outdoor Supply → SCP Master Group — APPROVED ✓
+
+| Field | Value |
+|---|---|
+| Approval item ID | BA-07 |
+| Blocker ID | B4B-03 (resolved at approval level) |
+| **Decision** | **APPROVED** |
+| EmployerGroup record | cd92 — Summit Outdoor Supply |
+| Target MasterGroup | SCP-MG-001 — SCP Master Group (BA-04 ✓ APPROVED) |
+| Parent MGA | SCP (BA-02 ✓ APPROVED) |
+| Source signal / evidence | EmployerGroup agency_id is SCP, BA-02 approved SCP as the parent MGA, BA-04 approved SCP-MG-001 as the SCP MasterGroup, and the Phase 4A remediation plan identified this EmployerGroup as part of the SCP grouping |
+| Confidence level | MEDIUM |
+| Approving owner name | Mark Joseph |
+| Approving owner role | Business Owner |
+| Timestamp | 2026-05-05 |
+| Decision reason | Summit Outdoor Supply is approved for assignment to SCP-MG-001 based on the agency_id grouping and approved SCP MGA / MasterGroup hierarchy. This approval is for future controlled remediation execution only. |
+| Execution implication | APPROVAL ONLY — EmployerGroup record NOT updated. Assignment executes at RE-05 under controlled remediation execution step only. |
+| Downstream unlocked | BA-11 now presentable |
+
+---
+
+### BA-08 — EmployerGroup Front Range Manufacturing → SCP Master Group — APPROVED ✓
+
+| Field | Value |
+|---|---|
+| Approval item ID | BA-08 |
+| Blocker ID | B4B-03 (resolved at approval level) |
+| **Decision** | **APPROVED** |
+| EmployerGroup record | cd93 — Front Range Manufacturing |
+| Target MasterGroup | SCP-MG-001 — SCP Master Group (BA-04 ✓ APPROVED) |
+| Parent MGA | SCP (BA-02 ✓ APPROVED) |
+| Source signal / evidence | EmployerGroup agency_id is SCP, BA-02 approved SCP as the parent MGA, BA-04 approved SCP-MG-001 as the SCP MasterGroup, and the Phase 4A remediation plan identified this EmployerGroup as part of the SCP grouping |
+| Confidence level | MEDIUM |
+| Approving owner name | Mark Joseph |
+| Approving owner role | Business Owner |
+| Timestamp | 2026-05-05 |
+| Decision reason | Front Range Manufacturing is approved for assignment to SCP-MG-001 based on the agency_id grouping and approved SCP MGA / MasterGroup hierarchy. This approval is for future controlled remediation execution only. |
+| Execution implication | APPROVAL ONLY — EmployerGroup record NOT updated. Assignment executes at RE-05 under controlled remediation execution step only. |
+| Downstream unlocked | BA-12 now presentable |
+
+---
+
 ## Session 4 — New Decisions: BA-03 and BA-04
 
 ### BA-03 — NBG MasterGroup Candidate — APPROVED ✓
@@ -206,14 +292,14 @@ Before presenting BA-03 and BA-04, confirming BA-01 and BA-02 contain complete n
 | BA-02 — SCP MGA | Executive / Platform Owner | **APPROVED** | 2026-05-04 | Resolved pending execution |
 | BA-03 — NBG MasterGroup | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
 | BA-04 — SCP MasterGroup | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
-| BA-05 — EG Redwood → NBG MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
-| BA-06 — EG Pacific Harbor → NBG MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
-| BA-07 — EG Summit → SCP MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
-| BA-08 — EG Front Range → SCP MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
-| BA-09 — BC NBG-1001 repair | Migration Owner | **BLOCKED on BA-05** | — | YES |
-| BA-10 — BC NBG-1002 repair | Migration Owner | **BLOCKED on BA-06** | — | YES |
-| BA-11 — BC SCP-2001 repair | Migration Owner | **BLOCKED on BA-07** | — | YES |
-| BA-12 — BC SCP-2002 repair | Migration Owner | **BLOCKED on BA-08** | — | YES |
+| BA-05 — EG Redwood → NBG MG | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
+| BA-06 — EG Pacific Harbor → NBG MG | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
+| BA-07 — EG Summit → SCP MG | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
+| BA-08 — EG Front Range → SCP MG | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
+| BA-09 — BC NBG-1001 repair | Migration Owner | **PENDING — form presented** | — | YES |
+| BA-10 — BC NBG-1002 repair | Migration Owner | **PENDING — form presented** | — | YES |
+| BA-11 — BC SCP-2001 repair | Migration Owner | **PENDING — form presented** | — | YES |
+| BA-12 — BC SCP-2002 repair | Migration Owner | **PENDING — form presented** | — | YES |
 | BA-13 — Vault New Case 1 | Business Owner | **APPROVE QUARANTINE** | 2026-05-04 | Resolved pending execution |
 | BA-14 — Vault New Group | Business Owner | **APPROVE QUARANTINE** | 2026-05-04 | Resolved pending execution |
 | BA-15 — New Client | Business Owner | **APPROVE QUARANTINE** | 2026-05-04 | Resolved pending execution |
@@ -233,18 +319,18 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 
 | Category | Count |
 |---|---|
-| Approved | **4** (BA-01, BA-02, BA-03, BA-04) |
+| Approved | **8** (BA-01, BA-02, BA-03, BA-04, BA-05, BA-06, BA-07, BA-08) |
 | Quarantine approved (pending execution) | **3** (BA-13, BA-14, BA-15) |
 | Deferred (P1 — non-blocking) | **2** (BA-18, BA-19) |
-| Pending — awaiting owner | **4** (BA-05, BA-06, BA-07, BA-08) |
-| Blocked on prerequisites | **6** (BA-09–BA-12, BA-16, BA-17) |
+| Pending — awaiting owner | **4** (BA-09, BA-10, BA-11, BA-12) |
+| Blocked on prerequisites | **2** (BA-16, BA-17) |
 | **Total** | **19** |
 
-**BA counts: approved 4 / quarantine-approved 3 / deferred 2 (P1) / pending 4 / blocked 6**
-**P0 BA counts: approved 4 / quarantine-approved 3 / pending 4 / blocked 6 / rejected 0**
+**BA counts: approved 8 / quarantine-approved 3 / deferred 2 (P1) / pending 4 / blocked 2**
+**P0 BA counts: approved 8 / quarantine-approved 3 / pending 4 / blocked 2 / rejected 0**
 
 ### Combined register (PA + BA — all 20 items)
-**Combined counts: approved 5 (PA-INDEX-01, BA-01, BA-02, BA-03, BA-04) / pending 15**
+**Combined counts: approved 9 (PA-INDEX-01, BA-01 through BA-08) / pending 11**
 
 ---
 
@@ -254,8 +340,8 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 |---|---|
 | B4B-01 | ✅ **RESOLVED — BA-01 and BA-02 approved** |
 | B4B-02 | ✅ **RESOLVED AT APPROVAL LEVEL — BA-03 and BA-04 approved** |
-| B4B-03 | **ACTIVE — BA-05–BA-08 blocked on B4B-02** |
-| B4B-04 | **ACTIVE — Group A all quarantine-approved; Group B blocked on B4B-03** |
+| B4B-03 | ✅ **RESOLVED AT APPROVAL LEVEL — BA-05 through BA-08 approved** |
+| B4B-04 | **ACTIVE — Group A all quarantine-approved; Group B (BA-09–BA-12) now presented — pending owner decisions** |
 | B4B-05 | **ACTIVE — BA-16, BA-17 blocked on B4B-04 Group B** |
 | B4B-06 | **Authorization approved (PA-INDEX-01) / Physical creation PENDING — awaiting DBA confirmation** |
 | Phase 4B | **BLOCKED** |
@@ -269,6 +355,8 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 | BA-01 / BA-02 complete and valid | **YES** |
 | B4B-01 resolved | **YES** |
 | BA-03 / BA-04 decided | **YES — APPROVED** |
+| BA-05 / BA-06 / BA-07 / BA-08 decided | **YES — APPROVED** |
+| B4B-03 resolved | **YES — AT APPROVAL LEVEL** |
 | Remediation execution rerun eligible | **NO** |
 | Second dry-run eligible | **NO** |
 | Phase 4B eligible | **NO — BLOCKED** |
@@ -296,10 +384,202 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 
 ---
 
-*End of MGA Phase 4A Owner Decision Session Report — Session 4A-004.*
-*Session ID: SESSION-4A-20260505-004*
-*Decisions recorded: BA-01 (APPROVED), BA-02 (APPROVED)*
-*Decisions recorded this session: BA-03 (APPROVED), BA-04 (APPROVED)*
-*Decisions presented: BA-05, BA-06, BA-07, BA-08*
-*Decisions still pending: BA-05, BA-06, BA-07, BA-08*
+---
+
+## BA-09 through BA-12 — BenefitCase Repair Approval Forms
+
+All four are now unlocked by BA-05 through BA-08. Fill each form and return.
+
+---
+
+### BA-09 — BenefitCase NBG-1001 Repair → Redwood Family Dental / NBG-MG-001
+
+**Depends on:** BA-05 ✓ APPROVED (cd90 — Redwood Family Dental → NBG-MG-001)
+**Candidate BenefitCase:** NBG-1001 — currently missing `master_group_id` and `master_general_agent_id`
+**Proposed repair:** stamp `master_group_id = NBG-MG-001`, `master_general_agent_id = NBG`, link to employer_group_id cd90
+**Blocks:** BA-16 (deduplication pass)
+
+```
+BA-09 Decision (mark ONE): [ ] APPROVE REPAIR   [ ] REJECT   [ ] DEFER   [ ] APPROVE QUARANTINE
+
+─── If APPROVE REPAIR ────────────────────────────────────────────────
+Target EmployerGroup confirmed: cd90 — Redwood Family Dental
+Target MasterGroup confirmed:   NBG-MG-001
+Target MGA confirmed:           NBG
+
+Source signal / evidence for this repair:
+> ________________________________________________________________
+
+Confidence level (HIGH / MEDIUM / LOW):
+> ________________________________________________________________
+
+Approving owner name:
+> ________________________________________________________________
+
+Approving owner role:
+> ________________________________________________________________
+
+Timestamp (YYYY-MM-DD):
+> ________________________________________________________________
+
+Decision reason:
+> ________________________________________________________________
+
+─── If APPROVE QUARANTINE ────────────────────────────────────────────
+Quarantine reason:
+> ________________________________________________________________
+
+─── If REJECT or DEFER ───────────────────────────────────────────────
+Reason:
+> ________________________________________________________________
+```
+
+**Recorded — BA-09:** `PENDING`
+
+---
+
+### BA-10 — BenefitCase NBG-1002 Repair → Pacific Harbor Tech / NBG-MG-001
+
+**Depends on:** BA-06 ✓ APPROVED (cd91 — Pacific Harbor Tech → NBG-MG-001)
+**Candidate BenefitCase:** NBG-1002 — currently missing `master_group_id` and `master_general_agent_id`
+**Proposed repair:** stamp `master_group_id = NBG-MG-001`, `master_general_agent_id = NBG`, link to employer_group_id cd91
+**Blocks:** BA-16 (deduplication pass)
+
+```
+BA-10 Decision (mark ONE): [ ] APPROVE REPAIR   [ ] REJECT   [ ] DEFER   [ ] APPROVE QUARANTINE
+
+─── If APPROVE REPAIR ────────────────────────────────────────────────
+Target EmployerGroup confirmed: cd91 — Pacific Harbor Tech
+Target MasterGroup confirmed:   NBG-MG-001
+Target MGA confirmed:           NBG
+
+Source signal / evidence for this repair:
+> ________________________________________________________________
+
+Confidence level (HIGH / MEDIUM / LOW):
+> ________________________________________________________________
+
+Approving owner name:
+> ________________________________________________________________
+
+Approving owner role:
+> ________________________________________________________________
+
+Timestamp (YYYY-MM-DD):
+> ________________________________________________________________
+
+Decision reason:
+> ________________________________________________________________
+
+─── If APPROVE QUARANTINE ────────────────────────────────────────────
+Quarantine reason:
+> ________________________________________________________________
+
+─── If REJECT or DEFER ───────────────────────────────────────────────
+Reason:
+> ________________________________________________________________
+```
+
+**Recorded — BA-10:** `PENDING`
+
+---
+
+### BA-11 — BenefitCase SCP-2001 Repair → Summit Outdoor Supply / SCP-MG-001
+
+**Depends on:** BA-07 ✓ APPROVED (cd92 — Summit Outdoor Supply → SCP-MG-001)
+**Candidate BenefitCase:** SCP-2001 — currently missing `master_group_id` and `master_general_agent_id`
+**Proposed repair:** stamp `master_group_id = SCP-MG-001`, `master_general_agent_id = SCP`, link to employer_group_id cd92
+**Blocks:** BA-16 (deduplication pass)
+
+```
+BA-11 Decision (mark ONE): [ ] APPROVE REPAIR   [ ] REJECT   [ ] DEFER   [ ] APPROVE QUARANTINE
+
+─── If APPROVE REPAIR ────────────────────────────────────────────────
+Target EmployerGroup confirmed: cd92 — Summit Outdoor Supply
+Target MasterGroup confirmed:   SCP-MG-001
+Target MGA confirmed:           SCP
+
+Source signal / evidence for this repair:
+> ________________________________________________________________
+
+Confidence level (HIGH / MEDIUM / LOW):
+> ________________________________________________________________
+
+Approving owner name:
+> ________________________________________________________________
+
+Approving owner role:
+> ________________________________________________________________
+
+Timestamp (YYYY-MM-DD):
+> ________________________________________________________________
+
+Decision reason:
+> ________________________________________________________________
+
+─── If APPROVE QUARANTINE ────────────────────────────────────────────
+Quarantine reason:
+> ________________________________________________________________
+
+─── If REJECT or DEFER ───────────────────────────────────────────────
+Reason:
+> ________________________________________________________________
+```
+
+**Recorded — BA-11:** `PENDING`
+
+---
+
+### BA-12 — BenefitCase SCP-2002 Repair → Front Range Manufacturing / SCP-MG-001
+
+**Depends on:** BA-08 ✓ APPROVED (cd93 — Front Range Manufacturing → SCP-MG-001)
+**Candidate BenefitCase:** SCP-2002 — currently missing `master_group_id` and `master_general_agent_id`
+**Proposed repair:** stamp `master_group_id = SCP-MG-001`, `master_general_agent_id = SCP`, link to employer_group_id cd93
+**Blocks:** BA-16 (deduplication pass)
+
+```
+BA-12 Decision (mark ONE): [ ] APPROVE REPAIR   [ ] REJECT   [ ] DEFER   [ ] APPROVE QUARANTINE
+
+─── If APPROVE REPAIR ────────────────────────────────────────────────
+Target EmployerGroup confirmed: cd93 — Front Range Manufacturing
+Target MasterGroup confirmed:   SCP-MG-001
+Target MGA confirmed:           SCP
+
+Source signal / evidence for this repair:
+> ________________________________________________________________
+
+Confidence level (HIGH / MEDIUM / LOW):
+> ________________________________________________________________
+
+Approving owner name:
+> ________________________________________________________________
+
+Approving owner role:
+> ________________________________________________________________
+
+Timestamp (YYYY-MM-DD):
+> ________________________________________________________________
+
+Decision reason:
+> ________________________________________________________________
+
+─── If APPROVE QUARANTINE ────────────────────────────────────────────
+Quarantine reason:
+> ________________________________________________________________
+
+─── If REJECT or DEFER ───────────────────────────────────────────────
+Reason:
+> ________________________________________________________________
+```
+
+**Recorded — BA-12:** `PENDING`
+
+---
+
+*End of MGA Phase 4A Owner Decision Session Report — Session 4A-006.*
+*Session ID: SESSION-4A-20260505-006*
+*Decisions recorded prior sessions: BA-01 (APPROVED), BA-02 (APPROVED), BA-03 (APPROVED), BA-04 (APPROVED)*
+*Decisions recorded this session: BA-05 (APPROVED), BA-06 (APPROVED), BA-07 (APPROVED), BA-08 (APPROVED)*
+*Decisions presented: BA-09, BA-10, BA-11, BA-12*
+*Decisions still pending: BA-09, BA-10, BA-11, BA-12*
 *Report path: `docs/MGA_PHASE_4A_OWNER_DECISION_SESSION_REPORT.md`*
