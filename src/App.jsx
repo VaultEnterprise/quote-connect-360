@@ -39,6 +39,7 @@ import HelpSearchAnalytics from '@/pages/HelpSearchAnalytics';
 import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
 import HelpManualManager from '@/pages/HelpManualManager';
 import ACALibrary from '@/pages/ACALibrary';
+import MasterGeneralAgentCommand from '@/pages/MasterGeneralAgentCommand';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -93,6 +94,11 @@ const AuthenticatedApp = () => {
         <Route path="/help-target-registry" element={<HelpTargetRegistry />} />
         <Route path="/help-manual-manager" element={<HelpManualManager />} />
         <Route path="/aca-library" element={<ACALibrary />} />
+        <Route path="/mga/command" element={
+          ['mga_admin','mga_manager','mga_user','mga_read_only','platform_super_admin','admin'].includes(user?.role)
+            ? <MasterGeneralAgentCommand />
+            : <PageNotFound />
+        } />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
