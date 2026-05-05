@@ -2,10 +2,10 @@
 
 Report date: 2026-05-05
 Author: Base44 AI agent
-Phase: 4A — Level 1 MasterGroup Approval Capture
-Session ID: SESSION-4A-20260505-004
+Phase: 4A — Level 1 MasterGroup Approval Capture → Level 2 EmployerGroup Assignment
+Session ID: SESSION-4A-20260505-005
 Remediation batch ID: REMEDIATION-BATCH-4A-20260504
-Status: **SESSION UPDATED — BA-01 and BA-02 RECORDED APPROVED. BA-03 and BA-04 PRESENTED. All other statuses unchanged.**
+Status: **SESSION UPDATED — BA-03 and BA-04 RECORDED APPROVED. B4B-02 RESOLVED AT APPROVAL LEVEL. BA-05 through BA-08 NOW PRESENTED.**
 
 Canonical documents:
 - Owner decision intake forms: `docs/MGA_PHASE_4A_OWNER_DECISION_INTAKE_REPORT.md`
@@ -147,27 +147,53 @@ Before presenting BA-03 and BA-04, confirming BA-01 and BA-02 contain complete n
 
 ## Session 4 — New Decisions: BA-03 and BA-04
 
-### BA-03 — NBG MasterGroup Candidate — PENDING
+### BA-03 — NBG MasterGroup Candidate — APPROVED ✓
 
 | Field | Value |
 |---|---|
 | Approval item ID | BA-03 |
-| Blocker ID | B4B-02 |
+| Blocker ID | B4B-02 (resolved at approval level) |
+| **Decision** | **APPROVED** |
+| MasterGroup legal or operating name | NBG Master Group |
+| Unique MasterGroup code | NBG-MG-001 |
 | Parent MGA | NBG (BA-01 ✓ APPROVED) |
-| **Decision** | **PENDING — form presented; awaiting Business Owner** |
-| Downstream blocked | BA-05, BA-06, BA-09, BA-10, BA-16, BA-17 |
+| Source signal used | Approved BA-01 NBG MGA root, agency grouping signal, and Phase 4A dry-run/remediation plan identifying the NBG MasterGroup candidate |
+| Confidence level | MEDIUM |
+| Business owner | Mark Joseph |
+| Primary contact name | Mark Joseph |
+| Primary contact email | markjosip@outlook.com |
+| Initial status | migration-only |
+| Approving owner name | Mark Joseph |
+| Approving owner role | Business Owner |
+| Timestamp | 2026-05-05 |
+| Decision reason | NBG Master Group is approved as the business-recognized MasterGroup candidate under the approved NBG MGA for controlled migration remediation. This approval is for future controlled remediation execution only. |
+| Execution implication | APPROVAL ONLY — MasterGroup record seeded at RE-04 under controlled remediation execution step |
+| Downstream unlocked | BA-05, BA-06 now presentable |
 
 ---
 
-### BA-04 — SCP MasterGroup Candidate — PENDING
+### BA-04 — SCP MasterGroup Candidate — APPROVED ✓
 
 | Field | Value |
 |---|---|
 | Approval item ID | BA-04 |
-| Blocker ID | B4B-02 |
+| Blocker ID | B4B-02 (resolved at approval level) |
+| **Decision** | **APPROVED** |
+| MasterGroup legal or operating name | SCP Master Group |
+| Unique MasterGroup code | SCP-MG-001 |
 | Parent MGA | SCP (BA-02 ✓ APPROVED) |
-| **Decision** | **PENDING — form presented; awaiting Business Owner** |
-| Downstream blocked | BA-07, BA-08, BA-11, BA-12 |
+| Source signal used | Approved BA-02 SCP MGA root, agency grouping signal, and Phase 4A dry-run/remediation plan identifying the SCP MasterGroup candidate |
+| Confidence level | MEDIUM |
+| Business owner | Mark Joseph |
+| Primary contact name | Mark Joseph |
+| Primary contact email | markjosip@outlook.com |
+| Initial status | migration-only |
+| Approving owner name | Mark Joseph |
+| Approving owner role | Business Owner |
+| Timestamp | 2026-05-05 |
+| Decision reason | SCP Master Group is approved as the business-recognized MasterGroup candidate under the approved SCP MGA for controlled migration remediation. This approval is for future controlled remediation execution only. |
+| Execution implication | APPROVAL ONLY — MasterGroup record seeded at RE-04 under controlled remediation execution step |
+| Downstream unlocked | BA-07, BA-08 now presentable |
 
 ---
 
@@ -178,12 +204,12 @@ Before presenting BA-03 and BA-04, confirming BA-01 and BA-02 contain complete n
 | PA-INDEX-01 — 29 Indexes | Platform Admin | **APPROVED** | 2026-05-04 | YES (via B4B-06) |
 | BA-01 — NBG MGA | Executive / Platform Owner | **APPROVED** | 2026-05-04 | Resolved pending execution |
 | BA-02 — SCP MGA | Executive / Platform Owner | **APPROVED** | 2026-05-04 | Resolved pending execution |
-| BA-03 — NBG MasterGroup | Business Owner | **PENDING** | — | YES |
-| BA-04 — SCP MasterGroup | Business Owner | **PENDING** | — | YES |
-| BA-05 — EG Redwood → NBG MG | Business/Migration Owner | **BLOCKED on BA-03** | — | YES |
-| BA-06 — EG Pacific Harbor → NBG MG | Business/Migration Owner | **BLOCKED on BA-03** | — | YES |
-| BA-07 — EG Summit → SCP MG | Business/Migration Owner | **BLOCKED on BA-04** | — | YES |
-| BA-08 — EG Front Range → SCP MG | Business/Migration Owner | **BLOCKED on BA-04** | — | YES |
+| BA-03 — NBG MasterGroup | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
+| BA-04 — SCP MasterGroup | Business Owner | **APPROVED** | 2026-05-05 | Resolved pending execution |
+| BA-05 — EG Redwood → NBG MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
+| BA-06 — EG Pacific Harbor → NBG MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
+| BA-07 — EG Summit → SCP MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
+| BA-08 — EG Front Range → SCP MG | Business/Migration Owner | **PENDING — form presented** | — | YES |
 | BA-09 — BC NBG-1001 repair | Migration Owner | **BLOCKED on BA-05** | — | YES |
 | BA-10 — BC NBG-1002 repair | Migration Owner | **BLOCKED on BA-06** | — | YES |
 | BA-11 — BC SCP-2001 repair | Migration Owner | **BLOCKED on BA-07** | — | YES |
@@ -207,18 +233,18 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 
 | Category | Count |
 |---|---|
-| Approved | **2** (BA-01, BA-02) |
+| Approved | **4** (BA-01, BA-02, BA-03, BA-04) |
 | Quarantine approved (pending execution) | **3** (BA-13, BA-14, BA-15) |
 | Deferred (P1 — non-blocking) | **2** (BA-18, BA-19) |
-| Pending — awaiting owner | **2** (BA-03, BA-04) |
-| Blocked on prerequisites | **10** (BA-05–BA-12, BA-16, BA-17) |
+| Pending — awaiting owner | **4** (BA-05, BA-06, BA-07, BA-08) |
+| Blocked on prerequisites | **6** (BA-09–BA-12, BA-16, BA-17) |
 | **Total** | **19** |
 
-**BA counts: approved 2 / quarantine-approved 3 / deferred 2 (P1) / pending 2 / blocked 10**
-**P0 BA counts: approved 2 / quarantine-approved 3 / pending 2 / blocked 10 / rejected 0**
+**BA counts: approved 4 / quarantine-approved 3 / deferred 2 (P1) / pending 4 / blocked 6**
+**P0 BA counts: approved 4 / quarantine-approved 3 / pending 4 / blocked 6 / rejected 0**
 
 ### Combined register (PA + BA — all 20 items)
-**Combined counts: approved 3 (PA-INDEX-01, BA-01, BA-02) / pending 17**
+**Combined counts: approved 5 (PA-INDEX-01, BA-01, BA-02, BA-03, BA-04) / pending 15**
 
 ---
 
@@ -227,7 +253,7 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 | Blocker | Status |
 |---|---|
 | B4B-01 | ✅ **RESOLVED — BA-01 and BA-02 approved** |
-| B4B-02 | **ACTIVE — BA-03, BA-04 pending** |
+| B4B-02 | ✅ **RESOLVED AT APPROVAL LEVEL — BA-03 and BA-04 approved** |
 | B4B-03 | **ACTIVE — BA-05–BA-08 blocked on B4B-02** |
 | B4B-04 | **ACTIVE — Group A all quarantine-approved; Group B blocked on B4B-03** |
 | B4B-05 | **ACTIVE — BA-16, BA-17 blocked on B4B-04 Group B** |
@@ -242,7 +268,7 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 |---|---|
 | BA-01 / BA-02 complete and valid | **YES** |
 | B4B-01 resolved | **YES** |
-| BA-03 / BA-04 decided | **NO — PENDING** |
+| BA-03 / BA-04 decided | **YES — APPROVED** |
 | Remediation execution rerun eligible | **NO** |
 | Second dry-run eligible | **NO** |
 | Phase 4B eligible | **NO — BLOCKED** |
@@ -273,6 +299,7 @@ PA counts: **approved 1 / rejected 0 / deferred 0 / pending 0**
 *End of MGA Phase 4A Owner Decision Session Report — Session 4A-004.*
 *Session ID: SESSION-4A-20260505-004*
 *Decisions recorded: BA-01 (APPROVED), BA-02 (APPROVED)*
-*Decisions presented: BA-03, BA-04*
-*Decisions still pending: BA-03, BA-04*
+*Decisions recorded this session: BA-03 (APPROVED), BA-04 (APPROVED)*
+*Decisions presented: BA-05, BA-06, BA-07, BA-08*
+*Decisions still pending: BA-05, BA-06, BA-07, BA-08*
 *Report path: `docs/MGA_PHASE_4A_OWNER_DECISION_SESSION_REPORT.md`*
