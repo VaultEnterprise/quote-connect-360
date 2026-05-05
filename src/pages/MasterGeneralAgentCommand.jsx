@@ -9,7 +9,7 @@
  * 3. master_general_agent_id resolved server-side via scopeGate (never client-trusted)
  * 4. Fail-closed on denied/ambiguous scope
  * 5. No cross-MGA visibility under any condition
- * 6. Sub-features (invite, TXQuote transmit, report exports) remain inactive
+ * 6. Sub-features: Invite (Gate 6A ✅ active 2026-05-05), TXQuote transmit (inactive), report exports (inactive)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -177,7 +177,7 @@ export default function MasterGeneralAgentCommandPage() {
                 <MGAUsersPanel
                   mgaId={mgaRecord.id}
                   scopeRequest={scopeRequest}
-                  isAdmin={isAdmin}
+                  userRole={user.role}
                 />
               </MGAScopeErrorBoundary>
             </TabsContent>

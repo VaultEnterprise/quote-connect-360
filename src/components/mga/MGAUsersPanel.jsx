@@ -1,11 +1,14 @@
 /**
  * MGA Phase 5 — Section 6: Users & Roles Panel
- * All data via userAdminService. Invite action: INACTIVE (Phase 5 sub-feature).
+ * Gate 6A (2026-05-05): Invite User activated for mga_admin only.
+ * All data via userAdminService. scopeGate enforced in service layer.
  * Visible to mga_manager+ only.
  */
 import React, { useState, useEffect } from 'react';
 import { listMGAUsers } from '@/lib/mga/services/userAdminService';
-import { Users, Lock } from 'lucide-react';
+import MGAInviteUserModal from './MGAInviteUserModal';
+import { Users, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 
 const ROLE_COLORS = {
@@ -22,10 +25,13 @@ const STATUS_COLORS = {
   inactive: 'bg-gray-100 text-gray-500',
 };
 
-export default function MGAUsersPanel({ mgaId, scopeRequest }) {
+export default function MGAUsersPanel({ mgaId, scopeRequest, userRole }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+
+  const isMGAAdmin = userRole === 'mga_admin';
 
   useEffect(() => {
     if (!mgaId) return;
@@ -53,10 +59,16 @@ export default function MGAUsersPanel({ mgaId, scopeRequest }) {
         <Users className="w-4 h-4 text-muted-foreground" />
         <h2 className="font-medium text-sm">Users & Roles</h2>
         {!loading && <span className="text-xs text-muted-foreground">({users.length})</span>}
-        {/* Invite action: INACTIVE — Phase 5 sub-feature activation pending */}
-        <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-          <Lock className="w-3 h-3" /> Invite pending activation
-        </span>
+        {isMGAAdmin && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="ml-auto gap-1.5 text-xs h-7"
+            onClick={() => setShowInviteModal(true)}
+          >
+            <UserPlus className="w-3.5 h-3.5" /> Invite User
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -86,6 +98,16 @@ export default function MGAUsersPanel({ mgaId, scopeRequest }) {
             </div>
           ))}
         </div>
+      )}
+
+      {isMGAAdmin && (
+        <MGAInviteUserModal
+          open={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          mgaId={mgaId}
+          scopeRequest={scopeRequest}
+          onSuccess={load}
+        />
       )}
     </div>
   );
