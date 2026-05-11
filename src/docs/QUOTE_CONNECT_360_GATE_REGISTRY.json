@@ -124,6 +124,10 @@
       "testMatrixDefined": true,
       "testCount": 59,
       "testsPassed": 0,
+      "staticInventory": "docs/MGA_GATE_6C_STATIC_INVENTORY.md",
+      "staticInventoryDate": "2026-05-11",
+      "staticInventoryComplete": true,
+      "proposedNewFiles": 7,
       "implementationStarted": false,
       "blockageReason": "Awaiting formal approval — no implementation, no tests, no security review, no business requirements approved",
       "targetPhase": "Future (not yet scheduled)",
@@ -162,7 +166,8 @@
     "phase5CompletionAudit": "docs/MGA_PHASE_5_COMPLETION_AUDIT_REPORT.md",
     "gate6cPreflightReport": "docs/MGA_GATE_6C_PREFLIGHT_REPORT.md",
     "gate6cImplementationPlan": "docs/MGA_GATE_6C_IMPLEMENTATION_PLAN.md",
-    "gate6cTestMatrix": "docs/MGA_GATE_6C_TEST_MATRIX.md"
+    "gate6cTestMatrix": "docs/MGA_GATE_6C_TEST_MATRIX.md",
+    "gate6cStaticInventory": "docs/MGA_GATE_6C_STATIC_INVENTORY.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
