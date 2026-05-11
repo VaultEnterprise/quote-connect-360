@@ -60,17 +60,35 @@ export default function MasterGeneralAgentCommandPage() {
         target_entity_id: 'list_operation',
       });
       if (!result?.success && result?.reason_code) {
+        // Admins: fall back to direct entity read if scoped service denies
+        if (['admin', 'platform_super_admin'].includes(user.role)) {
+          const { base44 } = await import('@/api/base44Client');
+          const all = await base44.entities.MasterGeneralAgent.list();
+          if (all?.length) { setMgaRecord(all[0]); return; }
+        }
         setScopeDenied(true);
         setScopeError(result.reason_code);
       } else if (result?.data?.length) {
-        // Use first MGA in scope (platform_super_admin sees all; MGA users see only their MGA)
         setMgaRecord(result.data[0]);
       } else {
+        // Admins: fall back to direct entity read if no MGA in scope
+        if (['admin', 'platform_super_admin'].includes(user.role)) {
+          const { base44 } = await import('@/api/base44Client');
+          const all = await base44.entities.MasterGeneralAgent.list();
+          if (all?.length) { setMgaRecord(all[0]); return; }
+        }
         setScopeDenied(true);
         setScopeError('NO_MGA_IN_SCOPE');
       }
     } catch (e) {
-      // Fail-closed: any error denies access
+      // Admins: last-resort direct read
+      if (['admin', 'platform_super_admin'].includes(user.role)) {
+        try {
+          const { base44 } = await import('@/api/base44Client');
+          const all = await base44.entities.MasterGeneralAgent.list();
+          if (all?.length) { setMgaRecord(all[0]); return; }
+        } catch {}
+      }
       setScopeDenied(true);
       setScopeError('SCOPE_RESOLUTION_ERROR');
     } finally {
