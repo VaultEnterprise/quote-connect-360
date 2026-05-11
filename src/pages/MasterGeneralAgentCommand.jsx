@@ -22,9 +22,11 @@ import MGADocumentsPanel from '@/components/mga/MGADocumentsPanel';
 import MGAUsersPanel from '@/components/mga/MGAUsersPanel';
 import MGAAuditPanel from '@/components/mga/MGAAuditPanel';
 import MGAScopeErrorBoundary from '@/components/mga/MGAScopeErrorBoundary';
+import { base44 } from '@/api/base44Client';
 
 import { listMGAs } from '@/lib/mga/services/mgaService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield } from 'lucide-react';
 
 const MGA_ROLES = ['mga_admin', 'mga_manager', 'mga_user', 'mga_read_only', 'platform_super_admin', 'admin'];
@@ -32,9 +34,11 @@ const MGA_ROLES = ['mga_admin', 'mga_manager', 'mga_user', 'mga_read_only', 'pla
 export default function MasterGeneralAgentCommandPage() {
   const { user } = useAuth();
   const [mgaRecord, setMgaRecord] = useState(null);
+  const [allMGAs, setAllMGAs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scopeDenied, setScopeDenied] = useState(false);
   const [scopeError, setScopeError] = useState(null);
+  const isPlatformAdmin = user && ['admin', 'platform_super_admin'].includes(user.role);
 
   // Safety rule: fail-closed role check
   const hasAccess = user && MGA_ROLES.includes(user.role);
@@ -53,6 +57,19 @@ export default function MasterGeneralAgentCommandPage() {
     setScopeDenied(false);
     setScopeError(null);
     try {
+      // Platform admins: load all MGAs directly
+      if (isPlatformAdmin) {
+        const all = await base44.entities.MasterGeneralAgent.list();
+        if (all?.length) {
+          setAllMGAs(all);
+          setMgaRecord(all[0]);
+        } else {
+          setScopeDenied(true);
+          setScopeError('NO_MGA_RECORDS');
+        }
+        return;
+      }
+      // MGA-scoped users: use scoped service
       const result = await listMGAs({
         actor_email: user.email,
         actor_session_token: user.id,
@@ -60,35 +77,15 @@ export default function MasterGeneralAgentCommandPage() {
         target_entity_id: 'list_operation',
       });
       if (!result?.success && result?.reason_code) {
-        // Admins: fall back to direct entity read if scoped service denies
-        if (['admin', 'platform_super_admin'].includes(user.role)) {
-          const { base44 } = await import('@/api/base44Client');
-          const all = await base44.entities.MasterGeneralAgent.list();
-          if (all?.length) { setMgaRecord(all[0]); return; }
-        }
         setScopeDenied(true);
         setScopeError(result.reason_code);
       } else if (result?.data?.length) {
         setMgaRecord(result.data[0]);
       } else {
-        // Admins: fall back to direct entity read if no MGA in scope
-        if (['admin', 'platform_super_admin'].includes(user.role)) {
-          const { base44 } = await import('@/api/base44Client');
-          const all = await base44.entities.MasterGeneralAgent.list();
-          if (all?.length) { setMgaRecord(all[0]); return; }
-        }
         setScopeDenied(true);
         setScopeError('NO_MGA_IN_SCOPE');
       }
     } catch (e) {
-      // Admins: last-resort direct read
-      if (['admin', 'platform_super_admin'].includes(user.role)) {
-        try {
-          const { base44 } = await import('@/api/base44Client');
-          const all = await base44.entities.MasterGeneralAgent.list();
-          if (all?.length) { setMgaRecord(all[0]); return; }
-        } catch {}
-      }
       setScopeDenied(true);
       setScopeError('SCOPE_RESOLUTION_ERROR');
     } finally {
@@ -129,13 +126,30 @@ export default function MasterGeneralAgentCommandPage() {
     request_channel: 'web_ui',
   };
 
-  const isAdmin = user.role === 'mga_admin' || user.role === 'admin' || user.role === 'platform_super_admin';
+  const isAdmin = user.role === 'mga_admin' || isPlatformAdmin;
   const isManager = isAdmin || user.role === 'mga_manager';
   const isReadOnly = user.role === 'mga_read_only';
 
   return (
     <MGAScopeErrorBoundary>
       <div className="p-6 space-y-6">
+        {/* Admin MGA Switcher */}
+        {isPlatformAdmin && allMGAs.length > 1 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Viewing MGA:</span>
+            <Select value={mgaRecord.id} onValueChange={id => setMgaRecord(allMGAs.find(m => m.id === id))}>
+              <SelectTrigger className="w-72">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {allMGAs.map(m => (
+                  <SelectItem key={m.id} value={m.id}>{m.name} {m.code ? `(${m.code})` : ''}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         {/* Section 1 — MGA Header */}
         <MGAHeader mgaRecord={mgaRecord} user={user} scopeRequest={scopeRequest} />
 
