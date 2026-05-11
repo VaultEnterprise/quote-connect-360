@@ -1,0 +1,140 @@
+{
+  "framework": {
+    "name": "Quote Connect 360",
+    "version": "1.0",
+    "lastUpdated": "2026-05-11",
+    "status": "ACTIVE",
+    "description": "Master framework registry for feature gates, closure status, and validation records"
+  },
+  "gates": [
+    {
+      "gateId": "GATE-6A-20260505",
+      "gateName": "Invite User / MGA User Management",
+      "phase": 5,
+      "status": "CLOSED",
+      "approved": true,
+      "live": true,
+      "validated": true,
+      "closureDate": "2026-05-05",
+      "closureType": "standard",
+      "description": "MGA administrators can invite users with role-based access control",
+      "authorizedRoles": [
+        "mga_admin",
+        "mga_manager",
+        "platform_super_admin",
+        "admin"
+      ],
+      "implementationFiles": [
+        "components/mga/MGAInviteUserModal",
+        "lib/mga/services/userAdminService.js",
+        "components/mga/MGAUsersPanel.jsx"
+      ],
+      "featureFlag": null,
+      "buildStatus": "PASS",
+      "testCount": 6,
+      "testsPassed": 6,
+      "rollbackReady": true,
+      "closureReport": "docs/MGA_GATE_6A_CLOSEOUT_REPORT.md",
+      "notes": "Fully functional; no blockers; live in production"
+    },
+    {
+      "gateId": "GATE-6B-20260505",
+      "gateName": "TXQuote Transmit / MGA TX Quote Transmit",
+      "phase": 5,
+      "status": "CLOSED",
+      "closureType": "amended_postfix",
+      "approved": true,
+      "live": true,
+      "validated": true,
+      "closureDate": "2026-05-05",
+      "amendedClosureDate": "2026-05-11",
+      "description": "Authorized MGA administrators and managers can transmit validated quote scenarios to carrier systems",
+      "authorizedRoles": [
+        "mga_admin",
+        "mga_manager",
+        "platform_super_admin",
+        "admin"
+      ],
+      "implementationFiles": [
+        "components/mga/MGATXQuoteTransmitModal.jsx",
+        "components/mga/MGACaseWorkflowPanel.jsx",
+        "lib/mga/services/txquoteService.js"
+      ],
+      "featureFlag": {
+        "name": "TXQUOTE_TRANSMIT_ENABLED",
+        "location": "components/mga/MGACaseWorkflowPanel.jsx",
+        "lineNumber": 13,
+        "value": true,
+        "rollbackValue": false,
+        "rollbackBehavior": "button hidden, modal unmounted, no transmit operations possible"
+      },
+      "buildStatus": "PASS",
+      "testCount": 9,
+      "testsPassed": 9,
+      "rollbackReady": true,
+      "rollbackVerified": true,
+      "blockers": [
+        {
+          "id": "BUILD_ENOENT",
+          "description": "Missing MGATXQuoteTransmitModal.jsx file",
+          "status": "RESOLVED",
+          "resolutionDate": "2026-05-11",
+          "resolution": "Modal file created with full implementation"
+        },
+        {
+          "id": "FEATURE_FLAG_CONTRADICTION",
+          "description": "Documentation stated flag was false but code expected true",
+          "status": "RESOLVED",
+          "resolutionDate": "2026-05-11",
+          "resolution": "Clarified as documentation error; code was correct; amended closeout issued"
+        }
+      ],
+      "closureReport": "docs/MGA_GATE_6B_AMENDED_CLOSEOUT_REPORT.md",
+      "amendedClosureReport": "docs/MGA_GATE_6B_AMENDED_CLOSEOUT_REPORT.md",
+      "notes": "Amended post-fix closeout: build and test issues resolved; feature flag contradiction clarified as documentation error only; all 9 tests passing; rollback verified; production-ready"
+    },
+    {
+      "gateId": "GATE-6C-PENDING",
+      "gateName": "Report Exports / MGA Dashboard Reporting",
+      "phase": "5+",
+      "status": "NOT_APPROVED",
+      "approved": false,
+      "live": false,
+      "validated": false,
+      "description": "Export case data, activity logs, and performance metrics in PDF/CSV/XLSX formats",
+      "authorizedRoles": [],
+      "implementationFiles": [],
+      "featureFlag": null,
+      "blockageReason": "Awaiting business requirements and security review",
+      "targetPhase": "Future (not yet scheduled)",
+      "notes": "Unapproved and inactive; no files created; reserved for future implementation"
+    }
+  ],
+  "validationSummary": {
+    "totalGates": 3,
+    "closedGates": 2,
+    "activeGates": 2,
+    "pendingGates": 1,
+    "approvedGates": 2,
+    "totalTests": 15,
+    "passedTests": 15,
+    "failedTests": 0,
+    "buildStatus": "PASS",
+    "securityReviewStatus": "PASS",
+    "lastValidationDate": "2026-05-11",
+    "validator": "Platform Engineering"
+  },
+  "fileReferences": {
+    "amendedClosureReport": "docs/MGA_GATE_6B_AMENDED_CLOSEOUT_REPORT.md",
+    "gateRegistryJson": "docs/QUOTE_CONNECT_360_GATE_REGISTRY.json",
+    "frameworkSummary": "docs/QUOTE_CONNECT_360_FRAMEWORK.md",
+    "phase5CompletionAudit": "docs/MGA_PHASE_5_COMPLETION_AUDIT_REPORT.md"
+  },
+  "metadata": {
+    "createdDate": "2026-05-11",
+    "lastModifiedDate": "2026-05-11",
+    "owner": "Platform Engineering — MGA Program Management",
+    "version": "1.0",
+    "schemaVersion": "1.0"
+  }
+}
