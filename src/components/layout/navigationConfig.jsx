@@ -25,6 +25,7 @@ import {
 
 export const primaryWorkflowItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard, description: "Start here" },
+  { path: "/mga/command", label: "MGA Command", icon: Building2, description: "Master General Agent operations", roles: ['mga_admin','mga_manager','mga_user','mga_read_only','platform_super_admin','admin'] },
   { path: "/employers", label: "Master Groups", icon: Building2, description: "Manage employer accounts" },
   { path: "/cases", label: "Cases", icon: Briefcase, description: "Run end-to-end workflows" },
   { path: "/census", label: "Census & Employees", icon: Users, description: "Upload and validate employee data" },
@@ -51,10 +52,6 @@ export const portalItems = [
   { path: "/employee-management", label: "Employees", icon: UserCog, description: "Roster, windows, status" },
 ];
 
-export const mgaItems = [
-  { path: "/mga/command", label: "MGA Command", icon: Building2, description: "Master General Agent operations", roles: ['mga_admin','mga_manager','mga_user','mga_read_only','platform_super_admin','admin'] },
-];
-
 export const supportItems = [
   { path: "/help", label: "Help Center", icon: HelpCircle, description: "Guides and help" },
   { path: "/help-admin", label: "Help Console", icon: ShieldCheck, description: "Admin help tools" },
@@ -65,5 +62,4 @@ export const navGroups = [
   { label: "Workflow", items: primaryWorkflowItems },
   { label: "Reference & Operations", items: referenceItems },
   { label: "Portals & People", items: portalItems },
-  { label: "MGA Operations", items: mgaItems },
 ];
