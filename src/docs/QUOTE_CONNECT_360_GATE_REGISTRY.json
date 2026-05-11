@@ -127,6 +127,9 @@
       "staticInventory": "docs/MGA_GATE_6C_STATIC_INVENTORY.md",
       "staticInventoryDate": "2026-05-11",
       "staticInventoryComplete": true,
+      "designSpecification": "docs/MGA_GATE_6C_DESIGN_SPECIFICATION.md",
+      "designSpecificationDate": "2026-05-11",
+      "designSpecificationLocked": true,
       "proposedNewFiles": 7,
       "implementationStarted": false,
       "blockageReason": "Awaiting formal approval — no implementation, no tests, no security review, no business requirements approved",
@@ -167,7 +170,8 @@
     "gate6cPreflightReport": "docs/MGA_GATE_6C_PREFLIGHT_REPORT.md",
     "gate6cImplementationPlan": "docs/MGA_GATE_6C_IMPLEMENTATION_PLAN.md",
     "gate6cTestMatrix": "docs/MGA_GATE_6C_TEST_MATRIX.md",
-    "gate6cStaticInventory": "docs/MGA_GATE_6C_STATIC_INVENTORY.md"
+    "gate6cStaticInventory": "docs/MGA_GATE_6C_STATIC_INVENTORY.md",
+    "gate6cDesignSpecification": "docs/MGA_GATE_6C_DESIGN_SPECIFICATION.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
