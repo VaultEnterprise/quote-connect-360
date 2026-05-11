@@ -101,6 +101,7 @@
       "status": "IMPLEMENTED_ACTIVATION_PENDING",
       "activationState": "INACTIVE",
       "reportExports": "DISABLED",
+      "activationDecision": "OPERATOR_REVIEW_PENDING",
       "exportAuthorized": false,
       "approved": false,
       "live": false,
