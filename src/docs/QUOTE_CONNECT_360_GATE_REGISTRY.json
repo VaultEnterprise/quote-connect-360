@@ -3,6 +3,7 @@
     "name": "Quote Connect 360",
     "version": "1.0",
     "lastUpdated": "2026-05-11",
+    "gate6cPreflightDate": "2026-05-11",
     "status": "ACTIVE",
     "description": "Master framework registry for feature gates, closure status, and validation records"
   },
@@ -98,16 +99,37 @@
       "gateName": "Report Exports / MGA Dashboard Reporting",
       "phase": "5+",
       "status": "NOT_APPROVED",
+      "activationState": "INACTIVE",
+      "reportExports": "DISABLED",
+      "exportAuthorized": false,
       "approved": false,
       "live": false,
       "validated": false,
       "description": "Export case data, activity logs, and performance metrics in PDF/CSV/XLSX formats",
       "authorizedRoles": [],
       "implementationFiles": [],
-      "featureFlag": null,
-      "blockageReason": "Awaiting business requirements and security review",
+      "featureFlag": {
+        "name": "MGA_REPORT_EXPORTS_ENABLED",
+        "defined": false,
+        "value": null,
+        "note": "Flag not yet defined; must default to false when created"
+      },
+      "preflightReport": "docs/MGA_GATE_6C_PREFLIGHT_REPORT.md",
+      "preflightDate": "2026-05-11",
+      "preflightStatus": "COMPLETE",
+      "approvalCriteriaDocumented": true,
+      "implementationStarted": false,
+      "blockageReason": "Awaiting formal approval — no implementation, no tests, no security review, no business requirements approved",
       "targetPhase": "Future (not yet scheduled)",
-      "notes": "Unapproved and inactive; no files created; reserved for future implementation"
+      "approvalRequirements": [
+        "All 8 RBAC/scope/idempotency/audit tests passing",
+        "Feature flag MGA_REPORT_EXPORTS_ENABLED defined and defaults false",
+        "Fail-closed behavior verified",
+        "Rollback verified (flag-only, no deploy required)",
+        "Security review complete",
+        "Business requirements document approved"
+      ],
+      "notes": "Preflight complete 2026-05-11. Zero implementation footprint confirmed. Gate 6B unaffected. Do not approve or activate until all approval requirements are met."
     }
   ],
   "validationSummary": {
@@ -122,13 +144,17 @@
     "buildStatus": "PASS",
     "securityReviewStatus": "PASS",
     "lastValidationDate": "2026-05-11",
-    "validator": "Platform Engineering"
+    "validator": "Platform Engineering",
+    "gate6cPreflightComplete": true,
+    "gate6cActivation": "INACTIVE",
+    "gate6cReportExports": "DISABLED"
   },
   "fileReferences": {
     "amendedClosureReport": "docs/MGA_GATE_6B_AMENDED_CLOSEOUT_REPORT.md",
     "gateRegistryJson": "docs/QUOTE_CONNECT_360_GATE_REGISTRY.json",
     "frameworkSummary": "docs/QUOTE_CONNECT_360_FRAMEWORK.md",
-    "phase5CompletionAudit": "docs/MGA_PHASE_5_COMPLETION_AUDIT_REPORT.md"
+    "phase5CompletionAudit": "docs/MGA_PHASE_5_COMPLETION_AUDIT_REPORT.md",
+    "gate6cPreflightReport": "docs/MGA_GATE_6C_PREFLIGHT_REPORT.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
