@@ -20,6 +20,9 @@ import { Briefcase, Users, FileText, Send } from 'lucide-react';
 // Gate 6B rollback switch — set false to disable transmit feature without code removal
 const TXQUOTE_TRANSMIT_ENABLED = true;
 
+// Gate 6C rollback switch — set false to disable report exports without code removal
+const MGA_REPORT_EXPORTS_ENABLED = false;
+
 // Roles authorized to see and execute TXQuote transmit
 const TRANSMIT_AUTHORIZED_ROLES = ['mga_admin', 'mga_manager', 'platform_super_admin', 'admin'];
 
