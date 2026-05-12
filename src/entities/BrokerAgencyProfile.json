@@ -1,0 +1,231 @@
+{
+  "name": "BrokerAgencyProfile",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope — required"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "Unique broker agency identifier"
+    },
+    "legal_name": {
+      "type": "string",
+      "description": "Legal business entity name"
+    },
+    "dba_name": {
+      "type": "string",
+      "description": "Doing business as name (optional)"
+    },
+    "code": {
+      "type": "string",
+      "description": "Unique business code"
+    },
+    "primary_contact_email": {
+      "type": "string",
+      "format": "email"
+    },
+    "primary_contact_name": {
+      "type": "string"
+    },
+    "primary_phone": {
+      "type": "string"
+    },
+    "zip_code": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "service_states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "JSON array of states where broker operates"
+    },
+    "service_zip_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "service_radius_miles": {
+      "type": "number"
+    },
+    "insurance_lines": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "health",
+          "dental",
+          "vision",
+          "life",
+          "disability",
+          "workers_comp",
+          "property_casualty",
+          "liability",
+          "epli",
+          "accident",
+          "critical_illness",
+          "hospital_indemnity"
+        ]
+      }
+    },
+    "active_for_lines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Insurance lines currently active"
+    },
+    "preferred_lines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "restricted_lines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "industry_specialties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target industry specialties (e.g., healthcare, tech, manufacturing)"
+    },
+    "employer_size_min": {
+      "type": "number",
+      "description": "Minimum employee count broker serves"
+    },
+    "employer_size_max": {
+      "type": "number",
+      "description": "Maximum employee count broker serves"
+    },
+    "license_states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "States where broker is licensed"
+    },
+    "license_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "npn": {
+      "type": "string",
+      "description": "National Producer Number"
+    },
+    "delegation_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Can this broker accept delegated quotes"
+    },
+    "accepts_new_assignments": {
+      "type": "boolean",
+      "default": true
+    },
+    "capacity_status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "limited",
+        "at_capacity",
+        "over_capacity"
+      ],
+      "default": "available"
+    },
+    "current_open_case_count": {
+      "type": "number",
+      "default": 0
+    },
+    "current_open_quote_count": {
+      "type": "number",
+      "default": 0
+    },
+    "max_open_case_capacity": {
+      "type": "number"
+    },
+    "max_open_quote_capacity": {
+      "type": "number"
+    },
+    "compliance_status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "compliant",
+        "issues_found",
+        "suspended"
+      ],
+      "default": "pending_review"
+    },
+    "onboarding_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "invited",
+        "pending_profile_completion",
+        "pending_approval",
+        "active",
+        "suspended",
+        "inactive",
+        "terminated",
+        "rejected"
+      ],
+      "default": "draft"
+    },
+    "relationship_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending",
+        "active",
+        "suspended",
+        "inactive",
+        "terminated"
+      ],
+      "default": "draft"
+    },
+    "portal_access_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "approved_by_user_email": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "suspended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "suspension_reason": {
+      "type": "string"
+    },
+    "self_signup_source": {
+      "type": "string",
+      "description": "How broker found the platform (direct, referral, broker search, etc.)"
+    },
+    "created_by_user_email": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal admin notes"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "legal_name",
+    "primary_contact_email"
+  ]
+}

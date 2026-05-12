@@ -40,6 +40,8 @@ import HelpTargetRegistry from '@/pages/HelpTargetRegistry';
 import HelpManualManager from '@/pages/HelpManualManager';
 import ACALibrary from '@/pages/ACALibrary';
 import MasterGeneralAgentCommand from '@/pages/MasterGeneralAgentCommand';
+import BrokerSignup from '@/pages/BrokerSignup';
+import PlatformBrokerAgencies from '@/pages/PlatformBrokerAgencies';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -99,7 +101,11 @@ const AuthenticatedApp = () => {
             ? <MasterGeneralAgentCommand />
             : <PageNotFound />
         } />
+        <Route path="/command-center/broker-agencies" element={
+          user?.role === 'admin' || user?.role === 'platform_super_admin' ? <PlatformBrokerAgencies /> : <PageNotFound />
+        } />
       </Route>
+      <Route path="/broker-signup" element={<BrokerSignup />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
