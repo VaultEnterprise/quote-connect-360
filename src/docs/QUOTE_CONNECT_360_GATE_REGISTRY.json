@@ -272,7 +272,8 @@
     "gateStatusLedger": "docs/MGA_GATE_STATUS_LEDGER.md",
     "preActivationChecklist": "docs/MGA_GATES_6C_6D_PRE_ACTIVATION_EVIDENCE_CHECKLIST.md",
     "evidenceGapClosurePlan": "docs/MGA_GATES_6C_6D_EVIDENCE_GAP_CLOSURE_PLAN.md",
-    "gate6cOperatorApprovalPacket": "docs/MGA_GATE_6C_OPERATOR_APPROVAL_PACKET.md"
+    "gate6cOperatorApprovalPacket": "docs/MGA_GATE_6C_OPERATOR_APPROVAL_PACKET.md",
+    "gate6cActivationRunbook": "docs/MGA_GATE_6C_ACTIVATION_RUNBOOK.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
