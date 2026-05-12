@@ -413,9 +413,10 @@
       "featureFlagValue": false,
       "featureFlagDefault": false,
       "featureFlagBehavior": "FAIL_CLOSED",
-      "testCount": 55,
-      "testsPassed": 55,
+      "testCount": 56,
+      "testsPassed": 56,
       "buildStatus": "PASS",
+      "lintStatus": "PASS",
       "regressionStatus": "PASS",
       "readOnly": true,
       "noMutations": true,
@@ -429,7 +430,31 @@
       "rollbackReady": true,
       "runtimeActivationStatus": "INACTIVE",
       "activationStatus": "PENDING_OPERATOR_APPROVAL",
-      "notes": "Gate 6K IMPLEMENTED_ACTIVATION_PENDING 2026-05-12. All 9 files created and tested. 55/55 tests PASS. Feature flag MGA_ANALYTICS_DASHBOARD_ENABLED = false (fail-closed). No user-facing analytics behavior. Backend returns 403 when disabled. Full rollback via feature flag. Awaiting operator approval for activation."
+      "validationStatus": "FINAL_FALLBACK_STATE_RECONCILIATION_PASSING",
+      "fallbackState": {
+        "activeTestFile": "src/tests/mga/gate6k-analytics-dashboard-expansion.test.js",
+        "duplicateTestFiles": false,
+        "finalHeader": "/* eslint-disable no-undef */\\n/* eslint-env jest */",
+        "conflictingGlobalDirective": "absent",
+        "fallbackRequired": true,
+        "fallbackReason": "Project ESLint config does not recognize Jest globals via environment directive alone",
+        "fallbackScope": "test-file-only",
+        "productionLintRulesDisabled": false,
+        "hiddenUndefinedDefects": false,
+        "autoFixReTriggered": false
+      },
+      "operatorReviewHold": {
+        "status": "HELD_FOR_OPERATOR_DECISION",
+        "holdDate": "2026-05-12",
+        "readyForReview": true,
+        "activationProhibited": true,
+        "operatorOptions": [
+          "APPROVE_ACTIVATION",
+          "HOLD_INACTIVE",
+          "REQUEST_CHANGES"
+        ]
+      },
+      "notes": "Gate 6K FINAL FALLBACK-STATE RECONCILIATION COMPLETE 2026-05-12. Active test file: src/tests/mga/gate6k-analytics-dashboard-expansion.test.js (no duplicates). Fallback applied: /* eslint-disable no-undef */ + /* eslint-env jest */ (test-file-local only). Lint: 0 violations. Tests: 56/56 PASS. No auto-fix re-trigger. Feature flag MGA_ANALYTICS_DASHBOARD_ENABLED = false (fail-closed). Runtime INACTIVE. Closeout report and operator packet amended. HELD FOR OPERATOR APPROVAL DECISION."
     },
     {
       "gateId": "GATE-6G",
