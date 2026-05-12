@@ -269,7 +269,8 @@
     "gate6dActivationReadinessPacket": "docs/MGA_GATE_6D_ACTIVATION_READINESS_PACKET.md",
     "gates6c6dOperatorDecisionMemo": "docs/MGA_GATES_6C_6D_OPERATOR_DECISION_MEMO.md",
     "scopeHotfixReport": "docs/MGA_SCOPE_LIST_OPERATION_HOTFIX_REPORT.md",
-    "gateStatusLedger": "docs/MGA_GATE_STATUS_LEDGER.md"
+    "gateStatusLedger": "docs/MGA_GATE_STATUS_LEDGER.md",
+    "preActivationChecklist": "docs/MGA_GATES_6C_6D_PRE_ACTIVATION_EVIDENCE_CHECKLIST.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
