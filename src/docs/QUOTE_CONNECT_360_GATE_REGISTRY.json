@@ -175,9 +175,16 @@
       "phase": "6",
       "status": "IMPLEMENTED_ACTIVATION_PENDING",
       "activationDecision": "OPERATOR_REVIEW_PENDING",
+      "operatorReviewHold": true,
+      "operatorReviewHoldDate": "2026-05-12",
+      "operatorReviewHoldReason": "Activation Readiness Packet accepted; awaiting formal operator approval before any flag change",
       "activation": "INACTIVE",
       "implementation": "COMPLETE",
       "capability": "Export Delivery History & Tracking",
+      "featureFlag": "MGA_EXPORT_HISTORY_ENABLED",
+      "featureFlagValue": false,
+      "readinessPacket": "docs/MGA_GATE_6D_ACTIVATION_READINESS_PACKET.md",
+      "operatorDecisionMemo": "docs/MGA_GATES_6C_6D_OPERATOR_DECISION_MEMO.md",
       "blockedBy": ["GATE-6C"],
       "description": "Track, retrieve, and audit historical report exports with visibility into who exported what data, when, and for what purpose",
       "discoveryDate": "2026-05-11",
@@ -222,7 +229,7 @@
         "checksPassed": 13,
         "amendmentDoc": "docs/MGA_GATE_6D_IMPLEMENTATION_CLOSEOUT_REPORT.md#post-implementation-validation-amendment"
       },
-      "notes": "Implementation complete 2026-05-12. Post-implementation validation complete 2026-05-12. Structural fix applied (GATE6D-STRUCT-01). All 13 validation checks PASS. All 33 tests PASS. Feature flag disabled by default. Zero Gate 6A/6B/6C regression. Awaiting operator activation approval."
+      "notes": "Implementation complete 2026-05-12. Post-implementation validation complete 2026-05-12. Structural fix applied (GATE6D-STRUCT-01). All 13 validation checks PASS. All 33 tests PASS. Feature flag disabled by default. Zero Gate 6A/6B/6C regression. Activation Readiness Packet accepted 2026-05-12. Placed on OPERATOR_REVIEW_HOLD 2026-05-12. Awaiting formal operator activation approval. Do not set MGA_EXPORT_HISTORY_ENABLED = true without operator authorization."
     }
   ],
   "validationSummary": {
@@ -258,6 +265,8 @@
   "metadata": {
     "createdDate": "2026-05-11",
     "lastModifiedDate": "2026-05-12",
+    "gate6dOperatorReviewHoldDate": "2026-05-12",
+    "gate6dOperatorDecisionMemo": "docs/MGA_GATES_6C_6D_OPERATOR_DECISION_MEMO.md",
     "owner": "Platform Engineering — MGA Program Management",
     "version": "1.0",
     "schemaVersion": "1.0"
