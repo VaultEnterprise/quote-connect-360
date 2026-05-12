@@ -179,6 +179,27 @@
       "notes": "CLOSED 2026-05-12. Export History UI confirmed active for authorized scoped users. MGA_EXPORT_HISTORY_ENABLED = true confirmed. No signed URLs, private URIs, or exported content exposed. Gates 6A–6C, 6E–6G unaffected. Rollback ready."
     },
     {
+      "gateId": "GATE-6H",
+      "gateName": "Broker / Agency Lifecycle Management",
+      "phase": "6",
+      "status": "DESIGN_SPEC_COMPLETE",
+      "activationState": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "designSpecStatus": "LOCKED",
+      "approved": false,
+      "live": false,
+      "validated": false,
+      "internalEntity": "MasterGroup",
+      "internalScopeField": "master_group_id",
+      "capability": "Edit, deactivate, reactivate Broker / Agency organizations; full lifecycle management and audit trail",
+      "authorizedRoles": ["mga_admin", "platform_super_admin"],
+      "implementationFiles": ["components/mga/MGABrokerAgencyDetailDrawer.jsx", "components/mga/MGABrokerAgencyEditModal.jsx", "components/mga/MGABrokerAgencyDeactivateDialog.jsx", "lib/mga/services/masterGroupService.js"],
+      "featureFlags": [{"name": "MGA_BROKER_AGENCY_EDIT_ENABLED", "default": true}, {"name": "MGA_BROKER_AGENCY_DEACTIVATION_ENABLED", "default": true}],
+      "designSpec": "docs/MGA_GATE_6H_BROKER_AGENCY_LIFECYCLE_DESIGN_SPECIFICATION.md",
+      "discoveryPreflight": "docs/MGA_GATE_6H_BROKER_AGENCY_LIFECYCLE_DISCOVERY_PREFLIGHT.md",
+      "notes": "Design specification LOCKED. Implementation work order pending. No schema migration required. MasterGroup/master_group_id preserved."
+    },
+    {
       "gateId": "GATE-6G",
       "gateName": "Report Export UI Surface Activation",
       "phase": "post-5",
