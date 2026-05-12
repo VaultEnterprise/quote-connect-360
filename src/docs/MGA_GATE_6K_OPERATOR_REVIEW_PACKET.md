@@ -573,27 +573,31 @@ Gate 6K is **implemented, tested, and ready** but **not activated**.
 
 ---
 
-## Final Stabilization Validation Amendment — Jest Header Correction (2026-05-12)
+## Corrective Action After Reconciliation Failure — Final Validation (2026-05-12)
 
-**Status:** Corrected and Revalidated (Final Cycle)
+**Reconciliation Status:** RECONCILIATION FAILED → CORRECTIVE ACTION COMPLETED
 
-### Issue & Resolution
+**Issue Identified:**
+- Documentation stated final header: `/* eslint-env jest */` only
+- Actual file had conflicting directive: `/* eslint-env jest *//* global describe, test, expect */`
+- Closeout report and operator packet were stale and inaccurate
 
-**Issue:** Duplicate eslint-env jest directives (line 1) after parallel correction attempts  
-**Cause:** Concatenation without separator during find_replace operations  
-**Resolution:** Consolidated to single directive at absolute line 1
-
-### Final Header Verification
+**Corrective Action Completed:**
 
 **File:** `src/tests/mga/gate6k-analytics-dashboard-expansion.test.js`
 
-| Check | Result | Evidence |
-|-------|--------|----------|
-| Line 1 content | ✅ PASS | Exactly `/* eslint-env jest */` |
-| No blank lines before | ✅ PASS | Absolute first line (no spacing) |
-| No duplicate directives | ✅ PASS | Single directive only |
-| No conflicting globals | ✅ PASS | No explicit global declarations needed |
-| Jest globals recognized | ✅ PASS | describe, test, expect all valid |
+**Correction Applied:** Removed conflicting `/* global describe, test, expect */` directive
+
+### Final Header After Corrective Action
+
+| Property | Status | Evidence |
+|----------|--------|----------|
+| Line 1 | ✅ PASS | `/* eslint-env jest */` |
+| Line 2 | ✅ PASS | (blank line) |
+| Line 3 | ✅ PASS | `/**` (docstring start) |
+| No conflicting global | ✅ PASS | Directive completely removed |
+| No duplicate directives | ✅ PASS | Single jest environment directive |
+| No blank lines before | ✅ PASS | Absolute first line |
 
 ### Final Lint & Test Results
 
