@@ -182,7 +182,7 @@
       "gateId": "GATE-6H",
       "gateName": "Broker / Agency Lifecycle Management",
       "phase": "6",
-      "status": "DESIGN_SPEC_COMPLETE",
+      "status": "IMPLEMENTATION_WORK_ORDER_COMPLETE",
       "activationState": "INACTIVE",
       "implementation": "NOT_STARTED",
       "designSpecStatus": "LOCKED",
@@ -197,7 +197,9 @@
       "featureFlags": [{"name": "MGA_BROKER_AGENCY_EDIT_ENABLED", "default": true}, {"name": "MGA_BROKER_AGENCY_DEACTIVATION_ENABLED", "default": true}],
       "designSpec": "docs/MGA_GATE_6H_BROKER_AGENCY_LIFECYCLE_DESIGN_SPECIFICATION.md",
       "discoveryPreflight": "docs/MGA_GATE_6H_BROKER_AGENCY_LIFECYCLE_DISCOVERY_PREFLIGHT.md",
-      "notes": "Design specification LOCKED. Implementation work order pending. No schema migration required. MasterGroup/master_group_id preserved."
+      "implementationWorkOrder": "docs/MGA_GATE_6H_BROKER_AGENCY_LIFECYCLE_IMPLEMENTATION_WORK_ORDER.md",
+      "testCount": 23,
+      "notes": "Implementation work order COMPLETE. Awaiting operator approval before code changes begin. No schema migration required. MasterGroup/master_group_id preserved. Rollback ready via feature flags."
     },
     {
       "gateId": "GATE-6G",
