@@ -292,6 +292,13 @@ const MATRIX = {
       pause:           { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
       cancel:          { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
       audit:           { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    },
+    delivery: {
+      view:            { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: A, mga_read_only: A, support_impersonation_read_only: D },
+      retry:           { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+      cancel:          { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: A, mga_read_only: D, support_impersonation_read_only: D },
+      resend:          { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+      audit:           { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
     }
   },
 };

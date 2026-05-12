@@ -30,6 +30,7 @@ import { errorModel } from '../errorModel.js';
 const IDEMPOTENCY_REQUIRED_ACTIONS = new Set([
   'create', 'transmit', 'retry', 'upload', 'import',
   'export', 'report_generation', 'webhook_processing', 'notification_send',
+  'delivery_retry', 'delivery_cancel', 'delivery_resend', 'delivery_track',
 ]);
 
 // ─── Request validation ───────────────────────────────────────────────────────
