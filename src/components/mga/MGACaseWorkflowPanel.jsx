@@ -11,19 +11,21 @@ import { listCases } from '@/lib/mga/services/caseService';
 import { listCensusVersions } from '@/lib/mga/services/censusService';
 import { listQuotes } from '@/lib/mga/services/quoteService';
 import MGATXQuoteTransmitModal from '@/components/mga/MGATXQuoteTransmitModal.jsx';
+import MGAReportExportModal from '@/components/mga/MGAReportExportModal.jsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Briefcase, Users, FileText, Send, History } from 'lucide-react';
+import { Briefcase, Users, FileText, Send, History, Download } from 'lucide-react';
 import MGAExportHistoryPanel from '@/components/mga/MGAExportHistoryPanel';
 import { hasHistoryPermission, HISTORY_PERMISSIONS } from '@/lib/mga/reportExportHistoryPermissions';
+import { hasPermission, EXPORT_PERMISSIONS } from '@/lib/mga/reportExportPermissions';
 
 // Gate 6B rollback switch — set false to disable transmit feature without code removal
 const TXQUOTE_TRANSMIT_ENABLED = true;
 
-// Gate 6C rollback switch — set false to disable report exports without code removal
-const MGA_REPORT_EXPORTS_ENABLED = false;
+// Gate 6G rollback switch — set false to hide report export UI without code removal
+const MGA_REPORT_EXPORTS_ENABLED = true;
 
 // Gate 6D rollback switch — set false to disable export history without code removal
 // DO NOT SET TRUE until operator activation approval is obtained
@@ -60,9 +62,13 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, ac
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [transmitTarget, setTransmitTarget] = useState(null); // quote record to transmit
+  const [exportOpen, setExportOpen] = useState(false); // Gate 6G: export modal state
 
   // RBAC: transmit visible only to authorized roles when feature is enabled
   const canTransmit = TXQUOTE_TRANSMIT_ENABLED && TRANSMIT_AUTHORIZED_ROLES.includes(userRole);
+
+  // Gate 6G: export UI visible only when flag true AND user has export.view permission
+  const canExport = MGA_REPORT_EXPORTS_ENABLED && hasPermission(userRole, EXPORT_PERMISSIONS.VIEW);
 
   // Gate 6D: history tab visible only when flag true AND user has history.view permission
   const canViewHistory = MGA_EXPORT_HISTORY_ENABLED && hasHistoryPermission(userRole, HISTORY_PERMISSIONS.VIEW);
@@ -89,21 +95,34 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, ac
   return (
     <>
     <Tabs defaultValue="cases">
-      <TabsList>
-        <TabsTrigger value="cases" className="gap-1.5">
-          <Briefcase className="w-3.5 h-3.5" /> Cases {!loading && <span className="text-xs">({cases.length})</span>}
-        </TabsTrigger>
-        <TabsTrigger value="census" className="gap-1.5">
-          <Users className="w-3.5 h-3.5" /> Census {!loading && <span className="text-xs">({census.length})</span>}
-        </TabsTrigger>
-        <TabsTrigger value="quotes" className="gap-1.5">
-          <FileText className="w-3.5 h-3.5" /> Quotes {!loading && <span className="text-xs">({quotes.length})</span>}
-        </TabsTrigger>
-        {/* Gate 6D: Export History tab — hidden while MGA_EXPORT_HISTORY_ENABLED = false */}
-        {canViewHistory && (
-          <TabsTrigger value="history" className="gap-1.5">
-            <History className="w-3.5 h-3.5" /> Export History
+      <TabsList className="flex items-center justify-between">
+        <div className="flex gap-1">
+          <TabsTrigger value="cases" className="gap-1.5">
+            <Briefcase className="w-3.5 h-3.5" /> Cases {!loading && <span className="text-xs">({cases.length})</span>}
           </TabsTrigger>
+          <TabsTrigger value="census" className="gap-1.5">
+            <Users className="w-3.5 h-3.5" /> Census {!loading && <span className="text-xs">({census.length})</span>}
+          </TabsTrigger>
+          <TabsTrigger value="quotes" className="gap-1.5">
+            <FileText className="w-3.5 h-3.5" /> Quotes {!loading && <span className="text-xs">({quotes.length})</span>}
+          </TabsTrigger>
+          {/* Gate 6D: Export History tab — hidden while MGA_EXPORT_HISTORY_ENABLED = false */}
+          {canViewHistory && (
+            <TabsTrigger value="history" className="gap-1.5">
+              <History className="w-3.5 h-3.5" /> Export History
+            </TabsTrigger>
+          )}
+        </div>
+        {/* Gate 6G: Export button — authorized scoped users only */}
+        {canExport && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 text-xs h-7 shrink-0"
+            onClick={() => setExportOpen(true)}
+          >
+            <Download className="w-3 h-3" /> Export
+          </Button>
         )}
       </TabsList>
 
@@ -242,6 +261,16 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, ac
         quote={transmitTarget}
         scopeRequest={scopeRequest}
         actorEmail={actorEmail}
+      />
+    )}
+
+    {/* Gate 6G: Report Export Modal — authorized scoped users only */}
+    {canExport && (
+      <MGAReportExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        mgaId={mgaId}
+        scopeRequest={scopeRequest}
       />
     )}
     </>
