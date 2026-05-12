@@ -464,30 +464,32 @@ Gate 6K requires explicit operator approval before:
 
 **Decision:** HOLD INACTIVE  
 **Decision Date:** 2026-05-12  
+**Lint Repair Accepted:** 2026-05-12  
 **Recorded By:** Operator Decision Hold  
 
-**Current State:**
+**Current State (Accepted Final):**
 - ✅ Code is placed and validated
 - ✅ Feature flag is disabled (fail-closed)
 - ✅ No user-facing analytics behavior
 - ✅ Fully rollback-ready
 - ✅ All guardrails intact
-- ✅ Implementation complete and reconciled
-- ✅ Proper lint configuration repair applied (explicit Jest imports)
+- ✅ Implementation complete
+- ✅ Proper lint configuration repair applied (explicit Jest imports) — **ACCEPTED**
 - ✅ No file-local lint suppressions remain
-- ✅ Final validation PASSING
+- ✅ Final validation: PROPER_LINT_CONFIGURATION_REPAIR_PASSING
 
 **Decision Rationale:**
-Gate 6K is implemented, validated, properly repaired with explicit Jest imports, and intentionally held inactive pending future activation approval.
+Gate 6K is implemented, validated with proper lint repair (explicit Jest imports from @jest/globals), and intentionally held inactive pending future activation approval. Prior fallback-state lint posture (with file-local /* eslint-disable no-undef */) is superseded.
 
-**Posture:**
+**Posture (Final Accepted):**
 - Gate 6K status: IMPLEMENTED_ACTIVATION_PENDING
 - Runtime status: INACTIVE
 - Feature flag: MGA_ANALYTICS_DASHBOARD_ENABLED = false
 - Analytics tab: NOT exposed
 - Backend calls: NOT permitted (returns 403 when disabled)
 - Activation: NOT performed
-- Lint configuration: Proper (explicit Jest imports, no file-local suppressions)
+- Lint configuration: Proper (explicit Jest imports, no file-local suppressions) — **ACCEPTED FINAL STATE**
+- Validation status: PROPER_LINT_CONFIGURATION_REPAIR_PASSING
 
 **Operator Options (for future):**
 If activation is desired in the future, operator may initiate APPROVE ACTIVATION workflow:

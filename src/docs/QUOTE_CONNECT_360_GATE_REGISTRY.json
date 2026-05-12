@@ -389,6 +389,7 @@
       "activation": "INACTIVE",
       "implementation": "IMPLEMENTED",
       "implementationDate": "2026-05-12",
+      "lintRepairDate": "2026-05-12",
       "analyticsMode": "READ_ONLY_SCOPE_SAFE",
       "capability": "Read-only analytics dashboard aggregating metrics from Gates 6A–6J-A and 6L-A",
       "metricCategories": 9,
@@ -407,7 +408,7 @@
         "components/mga/MGAAnalyticsTrendPanel.jsx",
         "components/mga/MGAAnalyticsFilterBar.jsx",
         "components/mga/MGAAnalyticsErrorBoundary.jsx",
-        "tests/mga/gate6k-analytics-dashboard-expansion.test.js"
+        "src/tests/mga/gate6k-analytics-dashboard-expansion.test.js"
       ],
       "featureFlag": "MGA_ANALYTICS_DASHBOARD_ENABLED",
       "featureFlagValue": false,
@@ -430,27 +431,35 @@
       "rollbackReady": true,
       "runtimeActivationStatus": "INACTIVE",
       "activationStatus": "HELD_INACTIVE_BY_OPERATOR",
-      "validationStatus": "FINAL_FALLBACK_STATE_RECONCILIATION_PASSING",
-      "fallbackState": {
+      "validationStatus": "PROPER_LINT_CONFIGURATION_REPAIR_PASSING",
+      "lintRepair": {
         "activeTestFile": "src/tests/mga/gate6k-analytics-dashboard-expansion.test.js",
         "duplicateTestFiles": false,
-        "finalHeader": "/* eslint-disable no-undef */\\n/* eslint-env jest */",
-        "conflictingGlobalDirective": "absent",
-        "fallbackRequired": true,
-        "fallbackReason": "Project ESLint config does not recognize Jest globals via environment directive alone",
-        "fallbackScope": "test-file-only",
+        "jestGlobalHandling": "Explicit imports from @jest/globals",
+        "finalHeader": "import { describe, test, expect } from '@jest/globals';",
+        "eslintDisableNoUndef": "Removed",
+        "eslintEnvJest": "No longer needed",
+        "fileLocalSuppression": "None",
+        "rootCauseFixed": true,
+        "rootCauseExplanation": "Project ESLint configuration does not recognize Jest globals via directive alone; proper fix uses explicit imports",
         "productionLintRulesDisabled": false,
         "hiddenUndefinedDefects": false,
         "autoFixReTriggered": false
       },
+      "priorFallbackState": {
+        "status": "SUPERSEDED",
+        "reason": "Proper lint repair applied; file-local /* eslint-disable no-undef */ workaround no longer used",
+        "date": "2026-05-12",
+        "historicalNote": "Prior validation used fallback-state reconciliation with file-local no-undef suppression; now replaced with explicit Jest imports"
+      },
       "operatorDecision": {
         "decision": "HOLD_INACTIVE",
         "decisionDate": "2026-05-12",
-        "reason": "Gate 6K is implemented, validated, reconciled to final fallback-state validation, and intentionally held inactive pending future activation approval",
+        "reason": "Gate 6K is implemented, validated with proper lint repair, and intentionally held inactive pending future activation approval",
         "activationProhibited": true,
         "futureActivationAllowed": true
       },
-      "notes": "Gate 6K FINAL FALLBACK-STATE RECONCILIATION COMPLETE 2026-05-12. Active test file: src/tests/mga/gate6k-analytics-dashboard-expansion.test.js (no duplicates). Fallback applied: /* eslint-disable no-undef */ + /* eslint-env jest */ (test-file-local only). Lint: 0 violations. Tests: 56/56 PASS. No auto-fix re-trigger. Feature flag MGA_ANALYTICS_DASHBOARD_ENABLED = false (fail-closed). Runtime INACTIVE. Closeout report and operator packet amended. HELD FOR OPERATOR APPROVAL DECISION."
+      "notes": "Gate 6K PROPER_LINT_CONFIGURATION_REPAIR_PASSING 2026-05-12. Active test file: src/tests/mga/gate6k-analytics-dashboard-expansion.test.js (no duplicates). Proper lint repair: explicit Jest imports from @jest/globals (no file-local suppressions). Lint: 0 violations. Tests: 56/56 PASS. No auto-fix re-trigger. Feature flag MGA_ANALYTICS_DASHBOARD_ENABLED = false (fail-closed). Runtime INACTIVE. Prior fallback-state reconciliation (with file-local /* eslint-disable no-undef */) is superseded. HELD FOR OPERATOR APPROVAL DECISION."
     },
     {
       "gateId": "GATE-6G",
