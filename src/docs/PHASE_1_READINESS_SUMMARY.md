@@ -1,7 +1,7 @@
-# Phase 1 Standalone Broker Signup — Final Readiness Summary
+# Phase 1 Broker Signup — Automation Implementation Complete
 
 **Date:** 2026-05-12  
-**Status:** ✅ READY FOR MANUAL SMOKE TESTING
+**Status:** ✅ AUTOMATED SMOKE TEST READY (Awaiting Execution & Sign-off)
 
 ---
 
@@ -83,20 +83,34 @@
 
 ---
 
-## Known Limitations (Phase 1 Scope)
+## Phase 1 Standardized Behaviors
 
-❌ **Not Implemented (Deferred to Phase 2+)**
+### ✅ Duplicate Signup Prevention
+
+**STANDARDIZED FOR PHASE 1 (No longer ambiguous):**
+
+When `brokerSignup` is called with an email that already exists:
+- **Response:** `{success: false, error_code: "DUPLICATE_BROKER_SIGNUP"}`
+- **Result:** No profile or relationship created
+- **Database:** Only 1 BrokerAgencyProfile per email
+- **Verification:** Automated test step 3 validates this
+
+### ✅ BrokerAgencyUser Deferral
+
+**CONFIRMED PHASE 2 DEFERRAL:**
+- BrokerAgencyUser NOT created in Phase 1 signup
+- User invitation flows reserved for Phase 2
+- Phase 1 smoke test data: BrokerAgencyUser count = 0
+- Verification: Automated test step validates count remains 0
+
+### ❌ Not Implemented (Deferred to Phase 2+)
 - Broker rejection workflow
 - Broker agency user invitation
 - MGA affiliation relationships
 - Broker dashboard/home page
 - Broker case workflows
 - Broker quote functionality
-
-❌ **By Design**
-- BrokerAgencyUser not created during signup (reserved for Phase 2)
-- Duplicate signup prevention not enforced (re-submissions allowed)
-- No rate limiting on signup endpoint
+- Rate limiting on signup endpoint
 
 ---
 
@@ -156,20 +170,36 @@
 
 ---
 
-## How to Execute Smoke Test
+## How to Execute Phase 1 Finalization
 
-1. **Open** `docs/PHASE_1_SMOKE_TEST_CHECKLIST.md`
-2. **Use test data provided:**
-   - Test Broker #1 (Acme Benefits Consulting LLC)
-   - Test Broker #3 (Premier Health Solutions Inc)
-3. **Execute each section step-by-step**
-4. **Record results in** `docs/PHASE_1_SMOKE_TEST_RUN_LOG.md`
-5. **For any failures:**
-   - Record the exact error message
-   - Identify the component/file involved
-   - Follow root cause analysis
-   - Fix and re-test affected section
-   - Update run log with before/after results
+### Step 1: Run Automated Smoke Test
+1. Navigate to `/command-center/qa/phase-1-broker-smoke-test` (admin only)
+2. Click "Run Smoke Test" button
+3. Wait 2–3 minutes for automated execution
+4. **Expected:** All 8 steps show PASS status
+5. Copy the Run ID (e.g., PHASE1-20260512-143022)
+
+### Step 2: Complete Manual Checks
+1. Hard refresh `/broker-signup` — should load form
+2. Hard refresh `/command-center/broker-agencies` (as admin) — should load broker list
+3. Attempt `/command-center/broker-agencies` as non-admin — should get 404/Access Denied
+4. Verify automated test brokers appear in list (Acme + Premier Health)
+5. Verify Broker 1 shows "active" status (automated approval completed)
+
+### Step 3: Generate Run Log
+1. Copy markdown run log from QA page
+2. Paste into `docs/PHASE_1_SMOKE_TEST_RUN_LOG.md`
+3. Fill in manual check results
+4. Record QA lead review and operator approval
+
+### Step 4: Cleanup Test Data
+1. In `/command-center/qa/phase-1-broker-smoke-test`
+2. Enter the Run ID from automated test
+3. Check "Dry run" checkbox (preview only)
+4. Click "Preview Cleanup"
+5. Verify only smoke-test records targeted
+6. Uncheck "Dry run"
+7. Click "Execute Cleanup"
 
 ---
 
@@ -177,40 +207,47 @@
 
 | Task | Duration | Notes |
 |---|---|---|
-| Section 1 (Public Signup) | 10-15 min | 3 signups, 6 database checks |
-| Section 2 (Access Control) | 5 min | Quick access tests |
-| Section 3 (Detail Drawer) | 5 min | UI inspection |
-| Section 4 (Approval Modal) | 10-15 min | 2 approvals, database verification |
-| Section 5 (Route Sanity) | 5 min | Navigation and hard refresh |
-| Section 6 (Edge Cases) | 10 min | Field validation, error handling |
-| **Total** | **45-60 min** | One person, one environment |
+| Automated Smoke Test (8 steps) | 2–3 min | Via QA harness |
+| Manual Checks (6 checks) | 10–15 min | Browser/auth verification |
+| Run Log Generation | 5 min | Copy markdown + fill sections |
+| Cleanup (dry run + execute) | 5 min | Delete test data |
+| **Total** | **25–35 min** | One admin user |
 
 ---
 
-## Success Criteria for Phase 1 Clearance
+## Success Criteria for Phase 1 PASS
 
-✅ **All 6 sections must PASS**
-✅ **No critical issues**
-✅ **Database state correct after each operation**
-✅ **Access control enforced**
-✅ **Routes survive hard refresh**
-✅ **No console errors or warnings**
+✅ **Automated smoke test:** All 8 steps PASS  
+✅ **Manual checks:** All 6 checks PASS  
+✅ **No critical/high failures**  
+✅ **Database states correct** (pending → active after approval)  
+✅ **Access control enforced** (admin-only routes)  
+✅ **Routes survive hard refresh**  
+✅ **Run log:** Complete with database IDs and sign-off  
+✅ **Cleanup:** Test data safely deleted
 
-### If all criteria met:
-→ Phase 1 CLEARED for Phase 2 (Broker Agency User Invitation)
+### Phase 1 Cleared for Phase 2:
+- [ ] Automated PASS
+- [ ] Manual checks PASS
+- [ ] Run log complete
+- [ ] QA lead signed off
+- [ ] Operator approved
 
-### If any failures occur:
-→ Document in run log, fix code, re-test affected section
+### If failures occur:
+→ Document in run log, fix backend function, re-run automated test, retest failed step
 
 ---
 
-## Next Steps After Phase 1 Smoke Test
+## Next Steps After Phase 1 Automation
 
-1. **Document Results** → Fill in `PHASE_1_SMOKE_TEST_RUN_LOG.md`
-2. **Archive Run Log** → Save with test date/tester name
-3. **Review Issues** → If any failures, apply fixes and retest
-4. **Approval Gate** → QA lead sign-off required
-5. **Phase 2 Kickoff** → Begin broker agency user invitation flows
+1. ✅ Execute automated smoke test (`/command-center/qa/phase-1-broker-smoke-test`)
+2. ✅ Complete 6 manual checks (browser/auth/visual)
+3. ✅ Generate and save run log (copy markdown from QA page)
+4. ✅ Run cleanup (delete test data by run ID)
+5. ✅ QA lead review and sign-off
+6. ✅ Operator approval decision
+7. ✅ **IF PASS:** Begin Phase 2 design/work order
+8. ✅ **IF FAIL:** Fix backend function, re-run test, retest failed steps
 
 ---
 

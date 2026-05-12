@@ -42,6 +42,7 @@ import ACALibrary from '@/pages/ACALibrary';
 import MasterGeneralAgentCommand from '@/pages/MasterGeneralAgentCommand';
 import BrokerSignup from '@/pages/BrokerSignup';
 import PlatformBrokerAgencies from '@/pages/PlatformBrokerAgencies';
+import Phase1BrokerSmokeTest from '@/pages/Phase1BrokerSmokeTest';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -103,6 +104,9 @@ const AuthenticatedApp = () => {
         } />
         <Route path="/command-center/broker-agencies" element={
           user?.role === 'admin' || user?.role === 'platform_super_admin' ? <PlatformBrokerAgencies /> : <PageNotFound />
+        } />
+        <Route path="/command-center/qa/phase-1-broker-smoke-test" element={
+          user?.role === 'admin' || user?.role === 'platform_super_admin' ? <Phase1BrokerSmokeTest /> : <PageNotFound />
         } />
       </Route>
       <Route path="/broker-signup" element={<BrokerSignup />} />
