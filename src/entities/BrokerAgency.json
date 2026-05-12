@@ -1,0 +1,186 @@
+{
+  "name": "BrokerAgency",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope"
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope — required if created_scope = 'mga'"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "Unique broker identifier"
+    },
+    "broker_name": {
+      "type": "string",
+      "description": "Legal name of broker agency"
+    },
+    "primary_contact_user_id": {
+      "type": "string",
+      "description": "User ID of primary contact"
+    },
+    "primary_contact_email": {
+      "type": "string",
+      "description": "Primary contact email"
+    },
+    "primary_phone": {
+      "type": "string",
+      "description": "Primary contact phone"
+    },
+    "business_address_json": {
+      "type": "string",
+      "description": "JSON-serialized address object"
+    },
+    "service_states_json": {
+      "type": "string",
+      "description": "JSON array of state codes"
+    },
+    "service_zip_codes_json": {
+      "type": "string",
+      "description": "JSON array of zip codes"
+    },
+    "service_counties_json": {
+      "type": "string",
+      "description": "JSON array of county codes"
+    },
+    "service_radius_miles": {
+      "type": "number",
+      "description": "Service radius in miles"
+    },
+    "insurance_lines_json": {
+      "type": "string",
+      "description": "JSON array of insurance line types"
+    },
+    "active_for_lines_json": {
+      "type": "string",
+      "description": "JSON array of active insurance lines"
+    },
+    "preferred_lines_json": {
+      "type": "string",
+      "description": "JSON array of preferred insurance lines"
+    },
+    "restricted_lines_json": {
+      "type": "string",
+      "description": "JSON array of restricted insurance lines"
+    },
+    "carrier_appointments_json": {
+      "type": "string",
+      "description": "JSON array of carrier appointment details"
+    },
+    "carrier_access_json": {
+      "type": "string",
+      "description": "JSON object of carrier access status"
+    },
+    "industry_specialties_json": {
+      "type": "string",
+      "description": "JSON array of industry specialties"
+    },
+    "employer_size_min": {
+      "type": "number",
+      "description": "Minimum employer size preference"
+    },
+    "employer_size_max": {
+      "type": "number",
+      "description": "Maximum employer size preference"
+    },
+    "preferred_group_sizes_json": {
+      "type": "string",
+      "description": "JSON array of preferred group sizes"
+    },
+    "license_states_json": {
+      "type": "string",
+      "description": "JSON array of licensed states"
+    },
+    "license_numbers_json": {
+      "type": "string",
+      "description": "JSON array of license numbers"
+    },
+    "license_expiration_json": {
+      "type": "string",
+      "description": "JSON object of license expirations by state"
+    },
+    "compliance_status": {
+      "type": "string",
+      "enum": ["compliant", "at_risk", "non_compliant", "pending_review"],
+      "default": "pending_review",
+      "description": "Compliance status"
+    },
+    "onboarding_status": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "completed", "paused"],
+      "default": "not_started",
+      "description": "Onboarding progress"
+    },
+    "relationship_status": {
+      "type": "string",
+      "enum": ["active", "inactive", "suspended", "prospect"],
+      "default": "prospect",
+      "description": "Relationship status with MGA"
+    },
+    "delegation_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether broker can delegate quotes to sub-brokers"
+    },
+    "accepts_new_assignments": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether broker accepts new quote assignments"
+    },
+    "capacity_status": {
+      "type": "string",
+      "enum": ["available", "at_capacity", "over_capacity"],
+      "default": "available",
+      "description": "Current capacity status"
+    },
+    "current_open_quote_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of open quotes"
+    },
+    "max_open_quote_capacity": {
+      "type": "number",
+      "description": "Maximum open quotes allowed"
+    },
+    "average_quote_turnaround_hours": {
+      "type": "number",
+      "description": "Average quote turnaround time"
+    },
+    "quote_completion_rate": {
+      "type": "number",
+      "description": "Percentage of quotes completed (0-100)"
+    },
+    "quote_win_rate": {
+      "type": "number",
+      "description": "Percentage of quotes won (0-100)"
+    },
+    "last_assignment_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time broker received quote assignment"
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last activity timestamp"
+    },
+    "created_scope": {
+      "type": "string",
+      "enum": ["mga", "broker"],
+      "description": "Where broker agency was created (MGA cmd or Broker page)"
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["mga_only", "broker_only", "both"],
+      "description": "Where broker agency is visible"
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "description": "User ID of creator"
+    }
+  },
+  "required": ["broker_name", "primary_contact_email", "created_scope"]
+}
