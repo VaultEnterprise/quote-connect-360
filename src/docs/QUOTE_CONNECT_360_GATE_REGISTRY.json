@@ -173,16 +173,20 @@
       "gateId": "GATE-6D",
       "gateName": "Export Delivery History & Tracking",
       "phase": "6",
-      "status": "DISCOVERY_PREFLIGHT",
+      "status": "PLANNING_PACKET_COMPLETE",
       "activation": "INACTIVE",
       "implementation": "NOT_STARTED",
+      "capability": "Export Delivery History & Tracking",
       "blockedBy": ["GATE-6C"],
       "description": "Track, retrieve, and audit historical report exports with visibility into who exported what data, when, and for what purpose",
       "discoveryDate": "2026-05-11",
+      "planningDate": "2026-05-12",
       "discoveryReport": "docs/MGA_GATE_6D_DISCOVERY_PREFLIGHT.md",
+      "planningPacket": "docs/MGA_GATE_6D_PLANNING_PACKET.md",
       "estimatedImplementationLines": 1500,
       "estimatedTestCount": 45,
-      "notes": "Natural progression from Gate 6C; low implementation risk; high operational value; deferred until Gate 6C is activated"
+      "gate6cDependency": "ACTIVE_APPROVAL_REQUIRED_BEFORE_GATE_6D_ACTIVATION",
+      "notes": "Planning packet complete 2026-05-12. No implementation started. No feature flags created. Gate 6C operator approval required before Gate 6D implementation may begin."
     }
   ],
   "validationSummary": {
@@ -197,7 +201,7 @@
     "failedTests": 0,
     "buildStatus": "PASS",
     "securityReviewStatus": "PASS",
-    "lastValidationDate": "2026-05-11",
+    "lastValidationDate": "2026-05-12",
     "validator": "Platform Engineering",
     "gate6cPreflightComplete": true,
     "gate6cActivation": "INACTIVE",
@@ -217,7 +221,7 @@
   },
   "metadata": {
     "createdDate": "2026-05-11",
-    "lastModifiedDate": "2026-05-11",
+    "lastModifiedDate": "2026-05-12",
     "owner": "Platform Engineering — MGA Program Management",
     "version": "1.0",
     "schemaVersion": "1.0"
