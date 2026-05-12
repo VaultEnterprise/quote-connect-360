@@ -434,6 +434,31 @@ Gate 6C is confirmed operational at the UI layer. The report export feature is v
 
 ---
 
+## Section 11 — Backend Environment Variable Decision Record
+
+| Field | Value |
+|-------|-------|
+| Action proposed | Set `MGA_REPORT_EXPORTS_ENABLED=true` as backend environment variable (secret) |
+| Decision date | 2026-05-12 |
+| Operator decision | **REJECTED** — backend env var will not be set at this time |
+| Current backend state | **FAIL-CLOSED** — `mgaReportExport` function returns `FEATURE_DISABLED` for all requests |
+| Current frontend state | **ACTIVE** — export UI rendered for authorized roles |
+| Post-env validation | **NOT RUN** — blocked by operator rejection of env var |
+| Registry status | Remains `ACTIVATED_SMOKE_VALIDATION_PASSING` — not advanced to `ACTIVATED_END_TO_END_VALIDATION_PASSING` |
+| Gate 6C closure | **NOT AUTHORIZED** — operator final sign-off not yet received |
+| Gate 6D | **INACTIVE / DISABLED** — unchanged |
+| `MGA_EXPORT_HISTORY_ENABLED` | `false` — unchanged |
+
+**Operational implication:** Gate 6C is frontend-active but backend-closed. The export UI is visible to authorized roles, but no export can be generated until the operator sets the backend env var. This is a safe intermediate state — the system remains fail-closed for all export operations.
+
+**Required to complete end-to-end activation:**
+1. Operator sets `MGA_REPORT_EXPORTS_ENABLED=true` as a backend environment variable via Base44 dashboard → Settings → Environment Variables
+2. Post-env validation is run (13-item checklist from operator directive)
+3. Registry advanced to `ACTIVATED_END_TO_END_VALIDATION_PASSING`
+4. Operator final sign-off received to mark Gate 6C `CLOSED`
+
+---
+
 ## Document Control
 
 | Field | Value |
