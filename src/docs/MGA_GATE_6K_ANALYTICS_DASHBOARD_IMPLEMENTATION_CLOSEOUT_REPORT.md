@@ -773,9 +773,28 @@ Gate 6K Analytics Dashboard Expansion has been successfully implemented with all
 
 ---
 
-## Final Fallback-State Reconciliation — Gate 6K (2026-05-12)
+## Proper Lint Configuration Repair — Gate 6K (2026-05-12)
 
-**Reconciliation Status:** FINAL FALLBACK STATE CONFIRMED — VALIDATION PASSING
+**Repair Status:** COMPLETE — EXPLICIT JEST IMPORTS APPLIED
+
+**Root Cause Identified:**
+- Project's ESLint configuration does not recognize Jest globals (describe, test, expect) via the `/* eslint-env jest */` directive alone
+- Prior temporary workaround: `/* eslint-disable no-undef */` at file level (test-local only)
+- Issue: File-local lint suppression is temporary and masks the root configuration problem
+
+**Proper Fix Applied:**
+Instead of disabling the no-undef rule, the test file now explicitly imports Jest globals:
+
+```javascript
+import { describe, test, expect } from '@jest/globals';
+```
+
+This approach:
+- ✅ Eliminates the need for file-local lint suppression
+- ✅ Makes Jest globals explicit and properly recognized
+- ✅ Avoids masking real undefined-variable issues
+- ✅ Works across all linting environments
+- ✅ Follows Jest best practices
 
 **Active Test File Path:**
 ```
@@ -786,53 +805,39 @@ src/tests/mga/gate6k-analytics-dashboard-expansion.test.js
 - `src/tests/mga/` — Contains ONLY `gate6k-analytics-dashboard-expansion.test.js` (active)
 - `tests/mga/` — No Gate 6K test file exists (alternate path inactive)
 
-**Final Header After Fallback Applied:**
+**Final Header After Repair:**
 
-| Property | Status | Content |
-|----------|--------|---------|
-| Line 1 | ✅ PRESENT | `/* eslint-disable no-undef */` |
-| Line 2 | ✅ PRESENT | `/* eslint-env jest */` |
-| Line 3 | ✅ BLANK | (blank line) |
-| Line 4 | ✅ START | `/**` (docstring start) |
-| No conflicting global | ✅ ABSENT | `/* global describe, test, expect */` completely removed |
-| No duplicate directives | ✅ CONFIRMED | Single disable + single env directive |
-| No blank lines before | ✅ CONFIRMED | Absolute first line |
+| Line | Content |
+|------|---------|
+| 1 | `/**` |
+| 2 | ` * MGA Gate 6K — Analytics Dashboard Expansion Test Suite` |
+| 3 | ` * src/tests/mga/gate6k-analytics-dashboard-expansion.test.js` |
+| 4 | ` *` |
+| 5 | ` * Comprehensive validation of read-only analytics dashboard` |
+| 6 | ` * 56 tests covering scope, permission, payload, and regression` |
+| 7 | ` */` |
+| 8 | (blank) |
+| 9 | `import { describe, test, expect } from '@jest/globals';` |
+| 10 | (blank) |
 
-**Why Fallback Was Required:**
-- Clean header `/* eslint-env jest */` alone did not resolve ESLint no-undef rejections of Jest globals (describe, test, expect)
-- Project ESLint configuration does not recognize Jest environment directive as sufficient global declaration
-- File-local fallback `/* eslint-disable no-undef */` required as last resort to satisfy linter
-
-**Fallback Scope Verification:** ✅ ALL CONFIRMED
-- ✅ Applied ONLY to `src/tests/mga/gate6k-analytics-dashboard-expansion.test.js`
-- ✅ Disables ONLY `no-undef` (no other rules disabled)
-- ✅ NOT added to backend service files (mgaAnalyticsService.js, analyticsPermissions.js, etc.)
-- ✅ NOT added to frontend runtime component files (MGAAnalyticsDashboard.jsx, etc.)
-- ✅ Does NOT disable React hook lint rules
-- ✅ Does NOT disable import lint rules
-- ✅ Does NOT disable security lint rules
-- ✅ Does NOT disable test-integrity checks
-
-**Hidden Defect Verification:** ✅ NO UNDEFINED-VARIABLE DEFECTS HIDDEN
-- ✅ All Jest globals (describe, test, expect) are properly recognized
-- ✅ All non-Jest identifiers (flag, role, permissions, etc.) are declared locally
-- ✅ All constants are declared or imported
-- ✅ All mock objects (cache, delivery, distribution, etc.) are declared locally
-- ✅ All helper functions (reduce, filter, includes, etc.) are native JS APIs
-- ✅ All feature flag references (featureFlag variable) are declared locally
-- ✅ All permission references (permissions array) are declared locally
-- ✅ All service/action references (action, actions arrays) are declared locally
-- ✅ No typos or accidental undefined references
-- ✅ Fallback workaround masks ONLY legitimate Jest globals, not real defects
+**Cleanup Confirmation:**
+- ✅ `/* eslint-disable no-undef */` removed
+- ✅ `/* eslint-env jest */` removed
+- ✅ `/* global describe, test, expect */` never present
+- ✅ Explicit imports in place
+- ✅ No file-local lint suppressions remain
 
 ### Final Lint & Test Result
 
 | Element | Status | Evidence |
 |---------|--------|----------|
 | Active test file | ✅ CONFIRMED | `src/tests/mga/gate6k-analytics-dashboard-expansion.test.js` |
-| Test file lint | ✅ PASS | 0 violations with fallback workaround applied |
+| Test file lint | ✅ PASS | 0 violations (no file-local suppressions needed) |
 | Dashboard component lint | ✅ PASS | 0 violations; React hooks safe |
 | Test count | ✅ PASS | 56/56 PASS (no degradation) |
+| Tests skipped | ✅ ZERO | All tests active |
+| Tests removed | ✅ ZERO | No test removal |
+| Tests weakened | ✅ ZERO | No test weakening |
 | Auto-fix re-trigger | ✅ NO | Final state is stable; no subsequent changes required |
 | Feature flag | ✅ PASS | MGA_ANALYTICS_DASHBOARD_ENABLED = false |
 | Runtime status | ✅ PASS | INACTIVE (no activation occurred) |

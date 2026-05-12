@@ -473,10 +473,12 @@ Gate 6K requires explicit operator approval before:
 - ✅ Fully rollback-ready
 - ✅ All guardrails intact
 - ✅ Implementation complete and reconciled
-- ✅ Final fallback-state validation PASSING
+- ✅ Proper lint configuration repair applied (explicit Jest imports)
+- ✅ No file-local lint suppressions remain
+- ✅ Final validation PASSING
 
 **Decision Rationale:**
-Gate 6K is implemented, validated, reconciled to final fallback-state validation, and intentionally held inactive pending future activation approval.
+Gate 6K is implemented, validated, properly repaired with explicit Jest imports, and intentionally held inactive pending future activation approval.
 
 **Posture:**
 - Gate 6K status: IMPLEMENTED_ACTIVATION_PENDING
@@ -485,6 +487,7 @@ Gate 6K is implemented, validated, reconciled to final fallback-state validation
 - Analytics tab: NOT exposed
 - Backend calls: NOT permitted (returns 403 when disabled)
 - Activation: NOT performed
+- Lint configuration: Proper (explicit Jest imports, no file-local suppressions)
 
 **Operator Options (for future):**
 If activation is desired in the future, operator may initiate APPROVE ACTIVATION workflow:

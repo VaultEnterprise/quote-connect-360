@@ -1,13 +1,12 @@
-/* eslint-disable no-undef */
-/* eslint-env jest */
-
 /**
  * MGA Gate 6K — Analytics Dashboard Expansion Test Suite
- * tests/mga/gate6k-analytics-dashboard-expansion.test.js
+ * src/tests/mga/gate6k-analytics-dashboard-expansion.test.js
  *
  * Comprehensive validation of read-only analytics dashboard
- * 50+ tests covering scope, permission, payload, and regression
+ * 56 tests covering scope, permission, payload, and regression
  */
+
+import { describe, test, expect } from '@jest/globals';
 
 describe('Gate 6K — Analytics Dashboard Expansion', () => {
   // Feature Flag Tests
