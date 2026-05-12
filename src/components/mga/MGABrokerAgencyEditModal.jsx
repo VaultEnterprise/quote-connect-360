@@ -49,20 +49,38 @@ export default function MGABrokerAgencyEditModal({
       }
     });
 
-    const result = await updateMasterGroup({
-      ...scopeRequest,
-      target_entity_id: org.id,
-      payload,
-      idempotency_key: `edit-${org.id}-${Date.now()}`,
-      expected_updated_date: org.updated_date,
-    });
+    // Retry with exponential backoff for rate limit (429)
+    let result;
+    let retryCount = 0;
+    const maxRetries = 3;
+    while (retryCount <= maxRetries) {
+      result = await updateMasterGroup({
+        ...scopeRequest,
+        target_entity_id: org.id,
+        payload,
+        idempotency_key: `edit-${org.id}-${Date.now()}`,
+        expected_updated_date: org.updated_date,
+      });
+
+      if (result?.success || (result?.reason_code && result.reason_code !== 'RATE_LIMIT')) {
+        break;
+      }
+
+      if (retryCount < maxRetries) {
+        const delayMs = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        retryCount++;
+      } else {
+        break;
+      }
+    }
 
     setSaving(false);
     if (result?.success) {
       onSuccess?.();
       onClose();
     } else {
-      setError(result?.detail || 'Failed to update organization');
+      setError(result?.detail || 'Failed to update organization. Please try again.');
     }
   }
 

@@ -42,16 +42,16 @@ export async function listMasterGroups(request) {
 }
 
 export async function updateMasterGroup(request) {
-  const v = validateServiceRequest(request, { requireIdempotency: true });
-  if (!v.valid) return buildScopedResponse({ success: false, reason_code: 'MALFORMED_TARGET' });
-  const { decision, denied, response } = await checkScope({ ...request, domain: DOMAIN, action: 'edit', target_entity_type: 'MasterGroup' });
-  if (denied) return response;
-  const records = await base44.entities.MasterGroup.filter({ id: request.target_entity_id, master_general_agent_id: decision.effective_mga_id });
-  if (!records?.length) return buildScopedResponse({ success: false, reason_code: 'NOT_FOUND_IN_SCOPE', masked_not_found: true, correlation_id: decision.correlation_id });
-  if (request.expected_updated_date && records[0].updated_date !== request.expected_updated_date) return buildScopedResponse({ success: false, reason_code: 'STALE_SCOPE', correlation_id: decision.correlation_id });
-  const updated = await base44.entities.MasterGroup.update(request.target_entity_id, request.payload);
-  await prepareAndRecordAudit(decision, { outcome: 'success', before: records[0], after: updated }, request.idempotency_key);
-  return buildScopedResponse({ data: updated, correlation_id: decision.correlation_id });
+   const v = validateServiceRequest(request, { requireIdempotency: true });
+   if (!v.valid) return buildScopedResponse({ success: false, reason_code: 'MALFORMED_TARGET' });
+   const { decision, denied, response } = await checkScope({ ...request, domain: DOMAIN, action: 'edit', target_entity_type: 'MasterGroup' });
+   if (denied) return response;
+   const records = await base44.entities.MasterGroup.filter({ id: request.target_entity_id, master_general_agent_id: decision.effective_mga_id });
+   if (!records?.length) return buildScopedResponse({ success: false, reason_code: 'NOT_FOUND_IN_SCOPE', masked_not_found: true, correlation_id: decision.correlation_id });
+   if (request.expected_updated_date && records[0].updated_date !== request.expected_updated_date) return buildScopedResponse({ success: false, reason_code: 'STALE_UPDATE', detail: 'Organization was updated by another user. Please refresh and try again.', correlation_id: decision.correlation_id });
+   const updated = await base44.entities.MasterGroup.update(request.target_entity_id, request.payload);
+   await prepareAndRecordAudit(decision, { outcome: 'success', before: records[0], after: updated }, request.idempotency_key);
+   return buildScopedResponse({ data: updated, correlation_id: decision.correlation_id });
 }
 
 export async function archiveMasterGroup(request) {
