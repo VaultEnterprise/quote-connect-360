@@ -205,6 +205,23 @@ export async function resolveScope(context) {
     };
   }
 
+  // LIST OPERATION SENTINEL — skip per-record lookup; scope is resolved from actor membership alone
+  if (context.target_entity_id === 'list_operation') {
+    return {
+      ...baseDecision,
+      allowed: true,
+      reason_code: 'SCOPE_RESOLVED',
+      actor_type: actorType,
+      actor_role: actorRole,
+      effective_mga_id: effectiveMgaId,
+      allowed_master_group_ids: allowedMasterGroupIds,
+      target_mga_id: effectiveMgaId,
+      audit_required: isPlatformSuperAdmin,
+      security_event: false,
+      correlation_id: correlationId,
+    };
+  }
+
   let targetRecord = null;
   try {
     const records = await base44.entities[context.target_entity_type].filter({
