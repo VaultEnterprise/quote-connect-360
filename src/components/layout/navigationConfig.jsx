@@ -26,7 +26,7 @@ import {
 export const primaryWorkflowItems = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard, description: "Start here" },
   { path: "/mga/command", label: "MGA Command", icon: Building2, description: "Master General Agent operations", roles: ['mga_admin','mga_manager','mga_user','mga_read_only','platform_super_admin','admin'] },
-  { path: "/employers", label: "Master Groups", icon: Building2, description: "Manage employer accounts" },
+  { path: "/employers", label: "Broker / Agency", icon: Building2, description: "Manage employer accounts" },
   { path: "/cases", label: "Cases", icon: Briefcase, description: "Run end-to-end workflows" },
   { path: "/census", label: "Census & Employees", icon: Users, description: "Upload and validate employee data" },
   { path: "/quotes", label: "Quotes", icon: FileText, description: "Build scenarios and pricing" },
