@@ -168,7 +168,7 @@
         "Operator approval (⏳ PENDING)"
       ],
       "notes": "Implementation complete 2026-05-11. All 11 steps executed. Feature flag disabled by default. Zero Gate 6B/6A regression. Awaiting operator activation approval."
-    }
+    },
     {
       "gateId": "GATE-6D",
       "gateName": "Export Delivery History & Tracking",
@@ -209,7 +209,18 @@
       "gate6cRegression": "PASS",
       "gate6bRegression": "PASS",
       "gate6aRegression": "PASS",
-      "notes": "Implementation complete 2026-05-12. All 11 steps executed. Feature flag disabled by default. Zero Gate 6A/6B/6C regression. Awaiting operator activation approval."
+      "postImplementationValidation": {
+        "status": "COMPLETE",
+        "validationDate": "2026-05-12",
+        "issueDetected": "GATE6D-STRUCT-01 — duplicate Tabs close / TabsContent outside Tabs boundary",
+        "fixApplied": "TabsContent moved inside Tabs boundary; duplicate closing tag removed",
+        "fixDate": "2026-05-12",
+        "allChecksPass": true,
+        "checksTotal": 13,
+        "checksPassed": 13,
+        "amendmentDoc": "docs/MGA_GATE_6D_IMPLEMENTATION_CLOSEOUT_REPORT.md#post-implementation-validation-amendment"
+      },
+      "notes": "Implementation complete 2026-05-12. Post-implementation validation complete 2026-05-12. Structural fix applied (GATE6D-STRUCT-01). All 13 validation checks PASS. All 33 tests PASS. Feature flag disabled by default. Zero Gate 6A/6B/6C regression. Awaiting operator activation approval."
     }
   ],
   "validationSummary": {
