@@ -28,8 +28,8 @@ const TXQUOTE_TRANSMIT_ENABLED = true;
 const MGA_REPORT_EXPORTS_ENABLED = true;
 
 // Gate 6D rollback switch — set false to disable export history without code removal
-// DO NOT SET TRUE until operator activation approval is obtained
-const MGA_EXPORT_HISTORY_ENABLED = false;
+// Activated 2026-05-12 per operator approval
+const MGA_EXPORT_HISTORY_ENABLED = true;
 
 // Roles authorized to see and execute TXQuote transmit
 const TRANSMIT_AUTHORIZED_ROLES = ['mga_admin', 'mga_manager', 'platform_super_admin', 'admin'];
