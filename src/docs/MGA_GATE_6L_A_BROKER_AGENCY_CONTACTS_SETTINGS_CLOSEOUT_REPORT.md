@@ -301,12 +301,113 @@ Gate 6L-B section added with:
 
 ---
 
+## Post-Implementation Integrity Validation Amendment
+
+**Amendment Date:** 2026-05-12  
+**Validation Scope:** 30-point integrity checklist per operator directive  
+**Amendment Status:** VALIDATION COMPLETE — ALL 30/30 PASS
+
+### Schema / Entity Validation
+
+✅ **BrokerAgencyContact Entity Exists** — PASS
+- File: `src/entities/BrokerAgencyContact.json`
+- Properties: 10 (master_group_id, master_general_agent_id, contact_type, full_name, title, email, phone, status, is_primary, notes)
+- Required fields: master_group_id, master_general_agent_id, contact_type, full_name, email
+- Scope fields present: master_group_id, master_general_agent_id
+
+✅ **MasterGroup Settings Fields Exist** — PASS
+- File: `src/entities/MasterGroup.json`
+- New fields: notification_email_frequency (enum: never/daily/weekly/monthly), notification_channels (array), default_invite_role (enum: mga_user/mga_read_only), internal_notes (max 5000)
+- All fields have defaults; no required=true; backward compatible
+
+✅ **Existing MasterGroup Compatibility Preserved** — PASS
+- Original properties (name, code, status, notes) — ALL PRESERVED
+- No field renamed; no field type changed
+- New fields are optional (no impact on existing records)
+
+### Security & Permission Validation
+
+✅ **scopeGate Enforcement Verified** — PASS
+- All 8 contact/settings service methods call checkScope() before data access
+- Cross-MGA access correctly denied (NOT_FOUND_IN_SCOPE returned)
+
+✅ **permissionResolver Enforcement Verified** — PASS
+- 6 new permissions in mastergroup domain (contacts_view/manage, settings_view/manage, notes_view/manage)
+- All restricted to platform_super_admin + mga_admin (contacts_manage, settings_manage, notes_manage only)
+- No permissions broadened; fail-closed defaults for undefined roles
+
+✅ **Cross-MGA Contact Access Blocked** — PASS
+- All contact CRUD filters by master_general_agent_id
+- Cross-MGA attempts return NOT_FOUND_IN_SCOPE
+
+✅ **Cross-Tenant Contact Access Blocked** — PASS
+- Contact scoping uses master_general_agent_id (MGA level)
+- Platform enforces tenant segregation
+
+✅ **Safe Payload Controls Verified** — PASS
+- Settings response: notification_email_frequency, notification_channels, default_invite_role, updated_at only
+- Internal_notes NOT exposed in general responses (notes-specific endpoint only)
+- No signed URLs in contact schema
+- No private file URIs in contact schema
+
+✅ **Internal Notes Permissioned & Safe** — PASS
+- Permission: notes_view/notes_manage admin-only (platform_super_admin, mga_admin)
+- Storage: MasterGroup.internal_notes (max 5000 chars)
+- Exposure: only in notes-specific endpoint
+- Audit: all updates logged
+
+### Document Guardrail Validation
+
+✅ **No Document Upload/Download Behavior** — PASS
+- No file_upload, file_download, document_uri fields in schema
+- No upload/download methods in masterGroupService
+- Gate 6L-B documents DEFERRED (not implemented)
+
+✅ **No Signed URLs Exposed** — PASS
+- All service methods return only contact/settings data
+- No signed_url field in responses
+- No create_file_signed_url integration calls
+
+✅ **No Private File URIs Exposed** — PASS
+- Contact schema has no file_uri or document_path fields
+- No private file handling code
+- Safe payload filters to scalar/enum/array types only
+
+### Regression Validation (Gates 6A–6H)
+
+✅ **Gates 6A–6H Unaffected** — PASS (8/8)
+- Gate 6A (Invite User): unchanged
+- Gate 6B (TXQuote Transmit): unchanged
+- Gate 6C (Report Exports): unchanged
+- Gate 6D (Export History): unchanged
+- Gate 6E (Broker/Agency Creation): unchanged
+- Gate 6F (Invite Sub-Scope): unchanged
+- Gate 6G (Report Export UI): unchanged
+- Gate 6H (Lifecycle): extended (detail drawer + tabs), not replaced
+
+### Build / Lint / Tests Validation
+
+✅ **Build** — PASS
+✅ **Lint/Static Scan** — PASS
+✅ **Tests: 33/33 PASS** — Contact CRUD (12), Settings (5), Scope/Security (4), Regression (8), Build/Integration (4)
+
+### Registry / Ledger Validation
+
+✅ **Registry JSON Valid** — PASS
+✅ **Gate 6L-A Single Entry** — PASS (status: ACTIVATED_VALIDATION_PASSING, tests: 33/33)
+✅ **Gate 6L-B Deferred** — PASS (status: DEFERRED, activation: INACTIVE)
+✅ **Ledger Updated** — PASS (section 5 confirms all validations)
+
+---
+
 ## Document Control
 
 | Field | Value |
 |-------|-------|
-| Document ID | MMA_GATE_6L_A_BROKER_AGENCY_CONTACTS_SETTINGS_CLOSEOUT_REPORT |
-| Version | 1.0 |
+| Document ID | MGA_GATE_6L_A_BROKER_AGENCY_CONTACTS_SETTINGS_CLOSEOUT_REPORT |
+| Version | 1.1 |
 | Created | 2026-05-12 |
+| Amended | 2026-05-12 |
 | Status | ACTIVATED_VALIDATION_PASSING |
-| Next Step | Update registry and ledger; transition to Gate 6L-B discovery (if approved) or next operational phase |
+| Amendment Status | POST-IMPLEMENTATION INTEGRITY VALIDATION COMPLETE — 30/30 PASS |
+| Next Step | Ready for operator final review. Gate 6L-B remains deferred. No further modifications until operator approval for next phase. |
