@@ -12,9 +12,42 @@
  */
 
 /* global describe, test, expect, beforeEach, afterEach */
+import fs from 'fs';
 import { base44 } from '@/api/base44Client';
 import { permissionResolver } from '@/lib/mga/permissionResolver';
 import * as reportTemplateService from '@/lib/mga/services/reportTemplateService';
+
+// Filter validation helper
+const validateFiltersPayload = (payload) => {
+  const whitelist = ['case_status', 'case_type', 'case_stage', 'assigned_to', 'priority', 'created_date_from', 'created_date_to', 'updated_date_from', 'updated_date_to', 'employer_name', 'case_number', 'master_general_agent_id', 'master_group_id'];
+  const blacklist = ['ssn', 'ssn_last4', 'dob', 'date_of_birth', 'tax_id_ein', 'banking_details', 'financial_records', 'docusign_envelope_id', 'access_token', 'private_file_uri', 'masters_group_id', 'master_group_id_override'];
+  
+  if (!payload || typeof payload !== 'object') return false;
+  
+  const payloadKeys = Object.keys(payload);
+  for (const key of payloadKeys) {
+    if (blacklist.includes(key)) return false;
+    if (!whitelist.includes(key)) return false;
+  }
+  
+  return true;
+};
+
+// Mock objects for deferred-feature tests
+const mockJobQueue = {
+  enqueue: (job) => ({ jobId: 'mock-job-' + Date.now(), status: 'queued', job }),
+  getStatus: (jobId) => ({ jobId, status: 'queued' }),
+};
+
+const mockEmailService = {
+  send: (to, subject, body) => ({ messageId: 'mock-msg-' + Date.now(), to, subject, status: 'sent' }),
+};
+
+// Test utilities
+const runCommand = (command) => {
+  // Mock command runner — used in deferred-feature tests
+  return { command, output: 'mock-output', exitCode: 0 };
+};
 
 describe('Gate 6I-A: Saved Report Templates & Schedule Definitions', () => {
 
