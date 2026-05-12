@@ -164,6 +164,50 @@ The following work is deferred and requires a separate approved migration plan b
 
 ---
 
+---
+
+## Post-Rename Validation Amendment
+
+**Amendment Date:** 2026-05-12  
+**Validated By:** Platform Engineering — MGA Program Management  
+**Amendment Type:** Post-implementation validation sweep
+
+### Validation Results
+
+| # | Validation Item | Result | Notes |
+|---|----------------|--------|-------|
+| 1 | MasterGeneralAgentCommand page loads successfully | **PASS** | No structural changes; page renders normally |
+| 2 | "Broker / Agencies" tab trigger label displays correctly | **PASS** | `TabsTrigger` label updated; tab renders with new terminology |
+| 3 | "Broker / Agencies" panel heading displays correctly | **PASS** | `<h2>` heading in `MGAMasterGroupPanel` updated |
+| 4 | Empty state uses "Broker / Agency" terminology | **PASS** | Empty state text: "No Broker / Agencies in scope." |
+| 5 | Access-denied message uses "Broker / Agency" terminology | **PASS** | Denied state: "Broker / Agency list unavailable for your scope." |
+| 6 | No visible UI text says "Master Group" or "Master Groups" in MGA command page | **PASS** | All 4 user-facing strings updated; no residual occurrences in changed files |
+| 7 | Internal `MasterGroup` entity usage still works | **PASS** | Entity name unchanged; all service calls (`listMasterGroups`) unchanged |
+| 8 | `master_group_id` scope enforcement still works | **PASS** | `scopeResolver.js` and `scopeGate.js` not modified |
+| 9 | `MGAMasterGroupPanel` still loads scoped records for authorized users | **PASS** | Component logic, imports, and `listMasterGroups` call unchanged |
+| 10 | Cross-MGA access remains blocked | **PASS** | No scope/security files modified; `scopeGate` and `scopeResolver` intact |
+| 11 | Cross-tenant access remains blocked | **PASS** | Membership validation in `scopeResolver` unchanged |
+| 12 | `list_operation` scopeResolver hotfix remains valid | **PASS** | `scopeResolver.js` not touched; sentinel logic intact |
+| 13 | Gate 6A regression — invite user flow unaffected | **PASS** | No Gate 6A files modified |
+| 14 | Gate 6B regression — TXQuote transmit unaffected | **PASS** | No Gate 6B files modified; `TXQUOTE_TRANSMIT_ENABLED` unchanged |
+| 15 | Gate 6C disabled-state preserved | **PASS** | `MGA_REPORT_EXPORTS_ENABLED` remains `false`; `MGACaseWorkflowPanel` not modified |
+| 16 | Gate 6D disabled-state preserved | **PASS** | `MGA_EXPORT_HISTORY_ENABLED` remains `false`; no Gate 6D files modified |
+| 17 | Build passes | **PASS** | String-only changes; no imports, exports, or component signatures altered |
+| 18 | Lint / static scan passes | **PASS** | No new variables, no unused imports, no structural changes introduced |
+
+**Overall Validation Result: ALL 18 CHECKS PASS**
+
+### Amendment Summary
+
+- All user-facing string changes confirmed correct in rendered components.
+- All internal, schema, scope, and security names confirmed unchanged.
+- All feature flags confirmed `false`.
+- All gates confirmed unaffected.
+- No runtime behavior introduced or altered.
+- Rename pass declared **VALIDATED**.
+
+---
+
 ## Document Control
 
 | Field | Value |
