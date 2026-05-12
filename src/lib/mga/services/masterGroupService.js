@@ -82,4 +82,30 @@ export async function listMasterGroupActivity(request) {
   return buildScopedResponse({ data: records, correlation_id: decision.correlation_id });
 }
 
-export default { createMasterGroup, getMasterGroupDetail, listMasterGroups, updateMasterGroup, archiveMasterGroup, getMasterGroupSummary, listMasterGroupActivity };
+export async function deactivateBrokerAgency(request) {
+  const v = validateServiceRequest(request, { requireIdempotency: true });
+  if (!v.valid) return buildScopedResponse({ success: false, reason_code: 'MALFORMED_TARGET' });
+  const { decision, denied, response } = await checkScope({ ...request, domain: DOMAIN, action: 'deactivate', target_entity_type: 'MasterGroup' });
+  if (denied) return response;
+  const records = await base44.entities.MasterGroup.filter({ id: request.target_entity_id, master_general_agent_id: decision.effective_mga_id });
+  if (!records?.length) return buildScopedResponse({ success: false, reason_code: 'NOT_FOUND_IN_SCOPE', masked_not_found: true, correlation_id: decision.correlation_id });
+  if (records[0].status !== 'active') return buildScopedResponse({ success: false, reason_code: 'INVALID_STATE', detail: 'Organization is already inactive', correlation_id: decision.correlation_id });
+  const updated = await base44.entities.MasterGroup.update(request.target_entity_id, { status: 'inactive' });
+  await prepareAndRecordAudit(decision, { outcome: 'success', before: records[0], after: updated, detail: `Deactivated Broker / Agency '${updated.name}'` }, request.idempotency_key);
+  return buildScopedResponse({ data: updated, correlation_id: decision.correlation_id });
+}
+
+export async function reactivateBrokerAgency(request) {
+  const v = validateServiceRequest(request, { requireIdempotency: true });
+  if (!v.valid) return buildScopedResponse({ success: false, reason_code: 'MALFORMED_TARGET' });
+  const { decision, denied, response } = await checkScope({ ...request, domain: DOMAIN, action: 'reactivate', target_entity_type: 'MasterGroup' });
+  if (denied) return response;
+  const records = await base44.entities.MasterGroup.filter({ id: request.target_entity_id, master_general_agent_id: decision.effective_mga_id });
+  if (!records?.length) return buildScopedResponse({ success: false, reason_code: 'NOT_FOUND_IN_SCOPE', masked_not_found: true, correlation_id: decision.correlation_id });
+  if (records[0].status !== 'inactive') return buildScopedResponse({ success: false, reason_code: 'INVALID_STATE', detail: 'Organization is already active', correlation_id: decision.correlation_id });
+  const updated = await base44.entities.MasterGroup.update(request.target_entity_id, { status: 'active' });
+  await prepareAndRecordAudit(decision, { outcome: 'success', before: records[0], after: updated, detail: `Reactivated Broker / Agency '${updated.name}'` }, request.idempotency_key);
+  return buildScopedResponse({ data: updated, correlation_id: decision.correlation_id });
+}
+
+export default { createMasterGroup, getMasterGroupDetail, listMasterGroups, updateMasterGroup, archiveMasterGroup, getMasterGroupSummary, listMasterGroupActivity, deactivateBrokerAgency, reactivateBrokerAgency };

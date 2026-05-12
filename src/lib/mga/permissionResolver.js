@@ -65,6 +65,8 @@ const MATRIX = {
     view_financials:    { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
     view_audit:         { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
     administer_quarantine: { platform_super_admin: A, mga_admin: D, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    deactivate:         { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    reactivate:         { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
   },
 
   cases: {
