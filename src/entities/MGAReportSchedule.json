@@ -1,0 +1,85 @@
+{
+  "name": "MGAReportSchedule",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope — required for all schedules"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "Broker/Agency scope — optional; null for MGA-level schedules"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope — optional for multi-tenant isolation"
+    },
+    "template_id": {
+      "type": "string",
+      "description": "Foreign key to MGAReportTemplate"
+    },
+    "schedule_name": {
+      "type": "string",
+      "description": "User-friendly schedule name (max 255 chars)",
+      "maxLength": 255
+    },
+    "schedule_type": {
+      "type": "string",
+      "enum": ["one_time"],
+      "description": "Schedule type (one_time for Gate 6I-A; recurring reserved for 6I-B)"
+    },
+    "frequency": {
+      "type": "string",
+      "description": "Reserved for Gate 6I-B (recurring patterns); null for Gate 6I-A one_time"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone (e.g., America/Los_Angeles); default UTC"
+    },
+    "scheduled_date_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the report should run (one_time) or first run (recurring)"
+    },
+    "recurrence_end_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "For recurring schedules; null = no end date. Null for one_time (Gate 6I-A)"
+    },
+    "next_run_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Calculated next run timestamp (same as scheduled_date_time for one_time)"
+    },
+    "last_run_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last execution (null until first run)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "paused", "cancelled"],
+      "default": "draft",
+      "description": "Schedule status (draft/active/paused/cancelled)"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Email of schedule creator (audit trail)"
+    },
+    "owner_user_id": {
+      "type": "string",
+      "description": "Optional user ID of owner; null = shared by MGA admin"
+    },
+    "mga_migration_batch_id": {
+      "type": "string",
+      "description": "Phase 4 migration tracking"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": ["not_migrated", "migrated", "validated", "anomaly", "quarantined"],
+      "default": "not_migrated",
+      "description": "Phase 4 migration status"
+    }
+  },
+  "required": ["master_general_agent_id", "template_id", "schedule_name", "schedule_type", "scheduled_date_time", "status"]
+}

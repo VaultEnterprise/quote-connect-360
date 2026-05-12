@@ -1,0 +1,73 @@
+{
+  "name": "MGAReportTemplate",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope — required for all templates"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "Broker/Agency scope — optional; null for MGA-level templates"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope — optional for multi-tenant isolation"
+    },
+    "template_name": {
+      "type": "string",
+      "description": "User-friendly template name (max 255 chars)",
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional template purpose/notes (max 1000 chars)",
+      "maxLength": 1000
+    },
+    "report_type": {
+      "type": "string",
+      "enum": ["cases", "quotes", "census", "enrollment", "renewals", "proposals"],
+      "description": "Type of report this template generates"
+    },
+    "export_format": {
+      "type": "string",
+      "enum": ["pdf", "csv", "xlsx"],
+      "default": "pdf",
+      "description": "Default export format for this template"
+    },
+    "filters_json": {
+      "type": "object",
+      "description": "Saved filter payload from Gate 6C (must pass safe payload validation)"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, visible to all users in same MGA/Broker/Agency scope"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "archived"],
+      "default": "active",
+      "description": "Template status (active/inactive/archived)"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Email of template creator (audit trail)"
+    },
+    "owner_user_id": {
+      "type": "string",
+      "description": "Optional user ID of owner; null = shared by MGA admin"
+    },
+    "mga_migration_batch_id": {
+      "type": "string",
+      "description": "Phase 4 migration tracking"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": ["not_migrated", "migrated", "validated", "anomaly", "quarantined"],
+      "default": "not_migrated",
+      "description": "Phase 4 migration status"
+    }
+  },
+  "required": ["master_general_agent_id", "template_name", "report_type", "export_format"]
+}
