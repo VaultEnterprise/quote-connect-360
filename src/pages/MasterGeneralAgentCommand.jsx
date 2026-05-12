@@ -30,8 +30,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield } from 'lucide-react';
 
-// Gate 6K rollback switch — ACTIVATED per operator approval 2026-05-12
-const MGA_ANALYTICS_DASHBOARD_ENABLED = true;
+// Gate 6K rollback switch — HELD INACTIVE per Step 0 preflight corrective action
+const MGA_ANALYTICS_DASHBOARD_ENABLED = false;
 
 const MGA_ROLES = ['mga_admin', 'mga_manager', 'mga_user', 'mga_read_only', 'platform_super_admin', 'admin'];
 
