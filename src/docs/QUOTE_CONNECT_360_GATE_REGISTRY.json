@@ -194,6 +194,8 @@
       "implementationWorkOrderDate": "2026-05-12",
       "closeoutReport": "docs/MGA_GATE_6D_IMPLEMENTATION_CLOSEOUT_REPORT.md",
       "closeoutDate": "2026-05-12",
+      "activationReadinessPacket": "docs/MGA_GATE_6D_ACTIVATION_READINESS_PACKET.md",
+      "activationReadinessPacketDate": "2026-05-12",
       "featureFlag": {
         "name": "MGA_EXPORT_HISTORY_ENABLED",
         "defined": true,
