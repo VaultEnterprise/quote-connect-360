@@ -255,22 +255,34 @@
       "notes": "Gate 6L-A ACTIVATED_VALIDATION_PASSING 2026-05-12. Broker / Agency Contacts and Settings Management LIVE. 33/33 tests PASS. All Gates 6A–6H regression tests PASS. MasterGroup/master_group_id preserved. Documents deferred to Gate 6L-B. Rollback ready via feature flag."
     },
     {
-      "gateId": "GATE-6I",
-      "gateName": "Report Scheduling and Saved Report Templates",
+      "gateId": "GATE-6I-A",
+      "gateName": "Saved Report Templates and Schedule Definitions",
       "phase": "6",
-      "status": "DISCOVERY_PREFLIGHT",
+      "status": "DESIGN_SPEC_COMPLETE",
       "activation": "INACTIVE",
       "implementation": "NOT_STARTED",
-      "capability": "User and MGA-level saved report templates with one-time and recurring schedule definitions",
+      "capability": "Saved report templates (reusable filter sets and format defaults) and one-time schedule definitions; manual execution via Run Now button",
+      "parentGate": "GATE-6I",
       "internalEntities": ["MGAReportTemplate", "MGAReportSchedule"],
       "userFacingLabel": "Report Templates & Schedules",
       "dependsOn": ["GATE-6C", "GATE-6D", "GATE-6G"],
-      "recommendedSplit": "Gate 6I-A: Saved Templates + Manual Scheduled Run (READY FOR DESIGN); Gate 6I-B: Recurring Scheduler Execution (DEFERRED pending scheduler safety design)",
-      "discoveryPreflight": "docs/MGA_GATE_6I_REPORT_SCHEDULING_SAVED_TEMPLATES_DISCOVERY_PREFLIGHT.md",
+      "designSpec": "docs/MGA_GATE_6I_A_SAVED_REPORT_TEMPLATES_SCHEDULE_DEFINITIONS_DESIGN_SPECIFICATION.md",
       "testCount": 0,
       "testsPassed": 0,
       "buildStatus": "NOT_APPLICABLE",
-      "notes": "Discovery phase. Template entity design complete. Schedule definition design complete. Manual execution flow designed. Recurring execution explicitly deferred to Gate 6I-B pending separate scheduler safety design. No runtime changes yet. No recurring jobs. No delivery mechanisms. Gate 6L-B remains deferred."
+      "notes": "Design specification complete. 13/13 sections documented. MGAReportTemplate and MGAReportSchedule entities designed. Backend service (reportTemplateService.js) specified. Frontend components specified (5 components). Permission model (restrictive by default). Scope/security boundaries enforced. Filter safety policy documented. Audit events defined. Validation plan includes ~79 unit + regression tests. Rollback strategy (3 phases) documented. Ready for implementation work order. No runtime changes yet."
+    },
+    {
+      "gateId": "GATE-6I-B",
+      "gateName": "Recurring Scheduler Execution",
+      "phase": "6",
+      "status": "DEFERRED",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "parentGate": "GATE-6I",
+      "capability": "Automated recurring report execution, job retry logic, email/webhook delivery integration",
+      "deferReason": "Scheduler execution, permission/scope recheck at run time, failure recovery, and delivery mechanism design require separate security review and operator approval",
+      "notes": "Deferred until Gate 6I-A is ACTIVATED_VALIDATION_PASSING and separate scheduler safety design is reviewed and approved by operator."
     },
     {
       "gateId": "GATE-6L-B",
