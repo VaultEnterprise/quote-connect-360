@@ -169,12 +169,28 @@
       ],
       "notes": "Implementation complete 2026-05-11. All 11 steps executed. Feature flag disabled by default. Zero Gate 6B/6A regression. Awaiting operator activation approval."
     }
+    {
+      "gateId": "GATE-6D",
+      "gateName": "Export Delivery History & Tracking",
+      "phase": "6",
+      "status": "DISCOVERY_PREFLIGHT",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "blockedBy": ["GATE-6C"],
+      "description": "Track, retrieve, and audit historical report exports with visibility into who exported what data, when, and for what purpose",
+      "discoveryDate": "2026-05-11",
+      "discoveryReport": "docs/MGA_GATE_6D_DISCOVERY_PREFLIGHT.md",
+      "estimatedImplementationLines": 1500,
+      "estimatedTestCount": 45,
+      "notes": "Natural progression from Gate 6C; low implementation risk; high operational value; deferred until Gate 6C is activated"
+    }
   ],
   "validationSummary": {
-    "totalGates": 3,
+    "totalGates": 4,
     "closedGates": 2,
     "activeGates": 2,
     "pendingGates": 1,
+    "discoveryGates": 1,
     "approvedGates": 2,
     "totalTests": 15,
     "passedTests": 15,
