@@ -191,6 +191,57 @@
 | Scope list_operation Hotfix Report | `docs/MGA_SCOPE_LIST_OPERATION_HOTFIX_REPORT.md` | VALIDATED — COMPLETE |
 | Gate Status Ledger (this document) | `docs/MGA_GATE_STATUS_LEDGER.md` | CURRENT |
 
+### Broker / Agency Terminology Update
+
+| Document | Path | Status |
+|----------|------|--------|
+| Rename Inventory | `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_INVENTORY.md` | FINAL — VALIDATED |
+| Rename Completion Report | `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_REPORT.md` | FINAL — VALIDATED |
+
+---
+
+## Section 4B — Broker / Agency Terminology Update
+
+**Status:** COMPLETE — VALIDATED  
+**Date:** 2026-05-12  
+**Scope:** User-facing terminology only — no runtime behavior changed
+
+### Rename Applied
+
+| Before | After |
+|--------|-------|
+| Master Group | Broker / Agency |
+| Master Groups | Broker / Agencies |
+
+### Validation
+
+- **18 / 18 checks PASS** — full validation sweep documented in rename report
+
+### Internal Compatibility Preserved
+
+| Item | Status |
+|------|--------|
+| `MasterGroup` entity | Preserved — not renamed |
+| `master_group_id` field | Preserved — not renamed |
+| `masterGroupService` | Preserved — not renamed |
+| `MGAMasterGroupPanel` file/component name | Preserved — not renamed |
+| `scopeGate` semantics | Preserved — not modified |
+| `scopeResolver` semantics | Preserved — not modified |
+| `permissionResolver` domain keys | Preserved — not modified |
+
+### Runtime Impact
+
+- No feature flags changed
+- No gate statuses changed
+- No runtime behavior changed
+- Gate 6C remains inactive (`MGA_REPORT_EXPORTS_ENABLED = false`)
+- Gate 6D remains inactive (`MGA_EXPORT_HISTORY_ENABLED = false`)
+
+### Reference Documents
+
+- `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_INVENTORY.md`
+- `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_REPORT.md`
+
 ---
 
 ## Section 5 — Protected Runtime Areas
