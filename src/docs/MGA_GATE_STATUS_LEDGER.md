@@ -306,6 +306,24 @@
 
 ---
 
+## Section 5 — Gate 6H — Broker / Agency Lifecycle Management
+
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ ACTIVATED_VALIDATION_PASSING |
+| **Live** | ✅ YES |
+| **Tests** | 23 / 23 PASS |
+| **Rollback** | ✅ VERIFIED |
+| **Capability** | Edit, deactivate, reactivate Broker / Agency; full lifecycle + audit |
+| **Internal Entity** | MasterGroup (preserved) |
+| **Internal Field** | master_group_id (preserved) |
+| **Activation Date** | 2026-05-12 |
+| **Operator Approval** | ✅ YES |
+| **Build Status** | ✅ PASS |
+| **Security** | ✅ ScopeGate + Permissions + Audit VERIFIED |
+
+---
+
 ## Section 5 — Protected Runtime Areas
 
 The following runtime areas are protected from modification until the conditions specified are met.
