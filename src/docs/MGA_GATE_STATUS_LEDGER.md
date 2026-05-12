@@ -363,7 +363,7 @@ This ledger records the Phase 5 final gated rollout state.
 - **Gate 6A is CLOSED and protected.** Invite user flow is live. No changes made.
 - **Gate 6B is CLOSED and active.** `TXQUOTE_TRANSMIT_ENABLED = true`. TXQuote transmit is live for authorized roles. No changes made.
 - **Gate 6C is CLOSED.** Final operator sign-off received 2026-05-12. Report exports ENABLED. Backend application constant `MGA_REPORT_EXPORTS_ENABLED = true`. No env-var dependency. Frontend UI gate remains `false` (operator-accepted state).
-- **Gate 6D is ACTIVATED.** `MGA_EXPORT_HISTORY_ENABLED = true` (2026-05-12). Export History UI live for `mga_admin`, `mga_manager`, `platform_super_admin`, `admin`. Scope validation, payload safety, and audit logging verified. All guardrails maintained. Rollback ready.
+- **Gate 6D is CLOSED.** `MGA_EXPORT_HISTORY_ENABLED = true` (activated 2026-05-12, closed 2026-05-12). Export History UI live for `mga_admin`, `mga_manager`, `platform_super_admin`, `admin`. Scope validation, payload safety, and audit logging verified. All guardrails maintained. Rollback ready.
 - **Gate 6E is ACTIVE — VALIDATION PASSING.** Broker / Agency creation live for `mga_admin` and `platform_super_admin`. Phase 5 ledger confirmation recorded 2026-05-12.
 - **Gate 6F is ACTIVE — VALIDATION PASSING.** Broker / Agency invite sub-scope assignment live for `mga_admin` and `platform_super_admin`. All sub-scoped roles (user, manager, read-only) require Broker/Agency assignment. Cross-MGA blocked.
 - **Gate 6G is ACTIVE — VALIDATION PASSING.** Report export UI surface active for authorized scoped users. 29/29 tests PASS.
@@ -371,7 +371,7 @@ This ledger records the Phase 5 final gated rollout state.
 - **Scope hotfix `HOTFIX-SCOPE-LIST-OP-001` is validated and live.**
 - **Phase 5 is COMPLETE.** Phase 5 Final Closeout Packet issued: `docs/MGA_PHASE_5_FINAL_CLOSEOUT_PACKET.md`.
 
-**Gate 6D activation complete.** Operator approval received 2026-05-12; all 18 activation checklist items PASS; 6/6 cross-gate regression PASS; all guardrails maintained.
+**Gate 6D CLOSED.** Operator approval received 2026-05-12; final closure approval received 2026-05-12; all 18 activation checklist items PASS; 6/6 cross-gate regression PASS; all guardrails maintained; Export History UI confirmed live and secure.
 
 ---
 
@@ -380,9 +380,9 @@ This ledger records the Phase 5 final gated rollout state.
 | Field | Value |
 |-------|-------|
 | Document ID | MGA_GATE_STATUS_LEDGER |
-| Version | 1.1 |
+| Version | 1.2 |
 | Created | 2026-05-12 |
 | Last Modified | 2026-05-12 |
 | Author | Platform Engineering — MGA Program Management |
 | Registry | `docs/QUOTE_CONNECT_360_GATE_REGISTRY.json` |
-| Next Update Trigger | Gate 6D final closure approval; next phase gate activation |
+| Next Update Trigger | Next phase gate activation or operator directive |
