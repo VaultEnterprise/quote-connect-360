@@ -32,7 +32,8 @@ const MGA_REPORT_EXPORTS_ENABLED = true;
 const MGA_EXPORT_HISTORY_ENABLED = true;
 
 // Gate 6K rollback switch — set false to disable analytics dashboard without code removal
-const MGA_ANALYTICS_DASHBOARD_ENABLED = true;
+// Held INACTIVE per operator decision 2026-05-12
+const MGA_ANALYTICS_DASHBOARD_ENABLED = false;
 
 // Roles authorized to see and execute TXQuote transmit
 const TRANSMIT_AUTHORIZED_ROLES = ['mga_admin', 'mga_manager', 'platform_super_admin', 'admin'];
