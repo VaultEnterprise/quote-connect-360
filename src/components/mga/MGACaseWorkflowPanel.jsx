@@ -15,13 +15,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Briefcase, Users, FileText, Send } from 'lucide-react';
+import { Briefcase, Users, FileText, Send, History } from 'lucide-react';
+import MGAExportHistoryPanel from '@/components/mga/MGAExportHistoryPanel';
+import { hasHistoryPermission, HISTORY_PERMISSIONS } from '@/lib/mga/reportExportHistoryPermissions';
 
 // Gate 6B rollback switch — set false to disable transmit feature without code removal
 const TXQUOTE_TRANSMIT_ENABLED = true;
 
 // Gate 6C rollback switch — set false to disable report exports without code removal
 const MGA_REPORT_EXPORTS_ENABLED = false;
+
+// Gate 6D rollback switch — set false to disable export history without code removal
+// DO NOT SET TRUE until operator activation approval is obtained
+const MGA_EXPORT_HISTORY_ENABLED = false;
 
 // Roles authorized to see and execute TXQuote transmit
 const TRANSMIT_AUTHORIZED_ROLES = ['mga_admin', 'mga_manager', 'platform_super_admin', 'admin'];
@@ -58,6 +64,9 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, ac
   // RBAC: transmit visible only to authorized roles when feature is enabled
   const canTransmit = TXQUOTE_TRANSMIT_ENABLED && TRANSMIT_AUTHORIZED_ROLES.includes(userRole);
 
+  // Gate 6D: history tab visible only when flag true AND user has history.view permission
+  const canViewHistory = MGA_EXPORT_HISTORY_ENABLED && hasHistoryPermission(userRole, HISTORY_PERMISSIONS.VIEW);
+
   useEffect(() => {
     if (!mgaId) return;
     load();
@@ -90,6 +99,12 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, ac
         <TabsTrigger value="quotes" className="gap-1.5">
           <FileText className="w-3.5 h-3.5" /> Quotes {!loading && <span className="text-xs">({quotes.length})</span>}
         </TabsTrigger>
+        {/* Gate 6D: Export History tab — hidden while MGA_EXPORT_HISTORY_ENABLED = false */}
+        {canViewHistory && (
+          <TabsTrigger value="history" className="gap-1.5">
+            <History className="w-3.5 h-3.5" /> Export History
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="cases">
@@ -206,6 +221,17 @@ export default function MGACaseWorkflowPanel({ mgaId, scopeRequest, userRole, ac
           )}
         </div>
       </TabsContent>
+
+      {/* Gate 6D: Export History tab content — hidden while MGA_EXPORT_HISTORY_ENABLED = false */}
+      {canViewHistory && (
+        <TabsContent value="history">
+          <MGAExportHistoryPanel
+            mgaId={mgaId}
+            userRole={userRole}
+            scopeRequest={scopeRequest}
+          />
+        </TabsContent>
+      )}
     </Tabs>
 
     {/* Gate 6B: TXQuote Transmit Modal */}
