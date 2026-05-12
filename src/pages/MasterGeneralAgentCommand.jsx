@@ -159,14 +159,14 @@ export default function MasterGeneralAgentCommandPage() {
         {/* Sections 3–7 — Tabbed panels */}
         <Tabs defaultValue="mastergroups" className="w-full">
           <TabsList className="flex-wrap h-auto gap-1 mb-2">
-            <TabsTrigger value="mastergroups">Master Groups</TabsTrigger>
+            <TabsTrigger value="mastergroups">Broker / Agencies</TabsTrigger>
             <TabsTrigger value="workflows">Cases & Workflows</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             {isManager && <TabsTrigger value="users">Users & Roles</TabsTrigger>}
             {isManager && <TabsTrigger value="audit">Audit Log</TabsTrigger>}
           </TabsList>
 
-          {/* Section 3 — MasterGroup Management */}
+          {/* Section 3 — Broker / Agency Management (internal entity: MasterGroup) */}
           <TabsContent value="mastergroups">
             <MGAScopeErrorBoundary>
               <MGAMasterGroupPanel

@@ -45,7 +45,8 @@ export default function MGAMasterGroupPanel({ mgaId, scopeRequest }) {
   }
 
   if (denied) {
-    return <p className="text-sm text-muted-foreground p-4">Access restricted — MasterGroup list unavailable for your scope.</p>;
+    // Internal entity remains MasterGroup for backward compatibility. User-facing label is Broker / Agency.
+    return <p className="text-sm text-muted-foreground p-4">Access restricted — Broker / Agency list unavailable for your scope.</p>;
   }
 
   return (
@@ -53,7 +54,7 @@ export default function MGAMasterGroupPanel({ mgaId, scopeRequest }) {
       <div className="flex items-center justify-between px-5 py-4 border-b">
         <div className="flex items-center gap-2">
           <Building2 className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-medium text-sm">Master Groups</h2>
+          <h2 className="font-medium text-sm">Broker / Agencies</h2>
           {!loading && <span className="text-xs text-muted-foreground">({groups.length})</span>}
         </div>
         {/* Create MasterGroup: INACTIVE — Phase 5 sub-feature activation pending */}
@@ -64,7 +65,7 @@ export default function MGAMasterGroupPanel({ mgaId, scopeRequest }) {
           {[1, 2, 3].map(i => <div key={i} className="h-12 bg-muted rounded animate-pulse" />)}
         </div>
       ) : groups.length === 0 ? (
-        <div className="p-8 text-center text-sm text-muted-foreground">No master groups in scope.</div>
+        <div className="p-8 text-center text-sm text-muted-foreground">No Broker / Agencies in scope.</div>
       ) : (
         <div className="divide-y">
           {groups.map(g => (
