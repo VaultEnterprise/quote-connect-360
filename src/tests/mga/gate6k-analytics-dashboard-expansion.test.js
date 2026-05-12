@@ -1,5 +1,5 @@
 /* eslint-env jest */
-/* eslint-disable no-undef */
+/* global describe, test, expect */
 
 /**
  * MGA Gate 6K — Analytics Dashboard Expansion Test Suite
