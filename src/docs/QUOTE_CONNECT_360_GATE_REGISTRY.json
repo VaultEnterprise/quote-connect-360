@@ -209,6 +209,22 @@
       "notes": "Gate 6H ACTIVATED 2026-05-12. Broker / Agency lifecycle management LIVE. 23/23 tests PASS. All Gates 6A–6G regression tests PASS. MasterGroup/master_group_id preserved. Rollback ready via feature flags."
     },
     {
+      "gateId": "GATE-6L",
+      "gateName": "Broker / Agency Contacts, Documents, and Settings Management",
+      "phase": "6",
+      "status": "DISCOVERY_PREFLIGHT",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "internalEntity": "MasterGroup",
+      "internalScopeField": "master_group_id",
+      "capability": "Manage Broker / Agency contacts (primary, billing, operational, compliance), documents (license, agreements, tax, insurance), and settings (notifications, defaults, notes)",
+      "approved": false,
+      "live": false,
+      "validated": false,
+      "discoveryPreflight": "docs/MGA_GATE_6L_BROKER_AGENCY_CONTACTS_DOCUMENTS_SETTINGS_DISCOVERY_PREFLIGHT.md",
+      "notes": "Gate 6L DISCOVERY_PREFLIGHT 2026-05-12. Operator approval received for discovery/preflight phase. Awaiting design specification. No runtime changes. MasterGroup/master_group_id preservation confirmed in discovery. Recommended structure: unified gate with Phase 1 (view-only) and Phase 2 (CRUD)."
+    },
+    {
       "gateId": "GATE-6G",
       "gateName": "Report Export UI Surface Activation",
       "phase": "post-5",
