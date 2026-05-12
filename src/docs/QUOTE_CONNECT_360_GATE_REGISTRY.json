@@ -318,6 +318,20 @@
       "notes": "Gate 6L-B DEFERRED 2026-05-12. Document upload/download and private file handling deferred pending separate security design approval. No implementation until explicitly authorized."
     },
     {
+      "gateId": "GATE-6J",
+      "gateName": "Export Delivery Enhancements",
+      "phase": "6",
+      "status": "DISCOVERY_PREFLIGHT",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "capability": "Delivery status tracking, retry/cancel governance, manual resend controls for scheduled and on-demand exports",
+      "proposedSplit": "6J-A Delivery Status + Retry/Cancel (IN SCOPE); 6J-B Email Delivery (DEFERRED); 6J-C Webhook Delivery (DEFERRED)",
+      "dependsOn": ["GATE-6C", "GATE-6D", "GATE-6G", "GATE-6I-A"],
+      "deferredDependency": "GATE-6I-B",
+      "discoveryDocument": "docs/MGA_GATE_6J_EXPORT_DELIVERY_ENHANCEMENTS_DISCOVERY_PREFLIGHT.md",
+      "notes": "Discovery/preflight 2026-05-12. Gate 6J-A (delivery status + retry/cancel) recommended for design/implementation. Gates 6J-B (email) and 6J-C (webhook) deferred pending separate security design and operator approval. Prerequisite for Gate 6I-B recurring execution design."
+    },
+    {
       "gateId": "GATE-6G",
       "gateName": "Report Export UI Surface Activation",
       "phase": "post-5",
