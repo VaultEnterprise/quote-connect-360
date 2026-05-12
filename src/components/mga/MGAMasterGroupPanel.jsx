@@ -6,7 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { listMasterGroups } from '@/lib/mga/services/masterGroupService';
 import { Badge } from '@/components/ui/badge';
-import { Building2, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, ChevronRight, Plus } from 'lucide-react';
+import MGACreateBrokerAgencyModal from '@/components/mga/MGACreateBrokerAgencyModal';
 import { format } from 'date-fns';
 
 const STATUS_COLORS = {
@@ -23,10 +25,17 @@ const OWNERSHIP_COLORS = {
   quarantined: 'bg-yellow-100 text-yellow-700',
 };
 
-export default function MGAMasterGroupPanel({ mgaId, scopeRequest }) {
+// Gate 6E: Roles authorized to create a Broker / Agency organization
+const CREATE_AUTHORIZED_ROLES = ['mga_admin', 'platform_super_admin'];
+
+export default function MGAMasterGroupPanel({ mgaId, scopeRequest, userRole }) {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Gate 6E: RBAC visibility gate — UI convenience only; auth enforced in service layer
+  const canCreate = CREATE_AUTHORIZED_ROLES.includes(userRole);
 
   useEffect(() => {
     if (!mgaId) return;
@@ -57,7 +66,17 @@ export default function MGAMasterGroupPanel({ mgaId, scopeRequest }) {
           <h2 className="font-medium text-sm">Broker / Agencies</h2>
           {!loading && <span className="text-xs text-muted-foreground">({groups.length})</span>}
         </div>
-        {/* Create MasterGroup: INACTIVE — Phase 5 sub-feature activation pending */}
+        {/* Gate 6E: Create Broker / Agency — active for mga_admin and platform_super_admin */}
+        {canCreate && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="ml-auto gap-1.5 text-xs h-7"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <Plus className="w-3.5 h-3.5" /> Add Broker / Agency
+          </Button>
+        )}
       </div>
 
       {loading ? (
@@ -95,6 +114,16 @@ export default function MGAMasterGroupPanel({ mgaId, scopeRequest }) {
             </div>
           ))}
         </div>
+      )}
+      {/* Gate 6E: Create Broker / Agency modal */}
+      {canCreate && (
+        <MGACreateBrokerAgencyModal
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          mgaId={mgaId}
+          scopeRequest={scopeRequest}
+          onSuccess={load}
+        />
       )}
     </div>
   );
