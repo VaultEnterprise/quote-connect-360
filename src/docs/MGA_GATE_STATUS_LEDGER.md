@@ -324,6 +324,27 @@
 
 ---
 
+## Section 5B — Gate 6J-A — Export Delivery Governance
+
+| Field | Value |
+|-------|-------|
+| **Status** | ✅ ACTIVATED_VALIDATION_PASSING |
+| **Live** | ✅ YES |
+| **Tests** | 38 / 38 PASS |
+| **Rollback** | ✅ VERIFIED (3 phases) |
+| **Capability** | Export delivery status tracking, retry/cancel/resend governance, audit trail |
+| **Activation Date** | 2026-05-12 |
+| **Implementation Date** | 2026-05-12 |
+| **Operator Approval** | ✅ YES |
+| **Build Status** | ✅ PASS |
+| **Security** | ✅ ScopeGate + Permissions + Safe Payload VERIFIED |
+| **Parent Gate** | GATE-6J |
+| **Deferred Gates** | GATE-6J-B (Email), GATE-6J-C (Webhook) |
+| **Dependencies** | Gates 6C, 6D, 6G, 6I-A (all ✅ VERIFIED) |
+| **Runtime Notes** | Delivery governance LIVE for authorized scoped users. No email delivery, webhook delivery, background jobs, or recurring execution. Safe payload policy (metadata-only, no PII). 4 frontend components. 7 backend governance functions. 5 granular permissions. Rollback ready via feature flag. |
+
+---
+
 ## Section 5 — Protected Runtime Areas
 
 The following runtime areas are protected from modification until the conditions specified are met.
