@@ -1,7 +1,7 @@
 /* eslint-env jest */
 /**
  * Gate 6J-A — Export Delivery Governance Test Suite
- * tests/mga/gate6j-a-export-delivery-governance.test.js
+ * src/tests/mga/gate6j-a-export-delivery-governance.test.js
  * 
  * Test coverage: Authorization, scoping, state machine, safe payload, and regression
  */
