@@ -395,14 +395,21 @@
       "designSpec": "docs/MGA_GATE_6K_ANALYTICS_DASHBOARD_EXPANSION_DESIGN_SPECIFICATION.md",
       "discoveryPreflight": "docs/MGA_GATE_6K_ANALYTICS_DASHBOARD_EXPANSION_DISCOVERY_PREFLIGHT.md",
       "implementationModel": "HYBRID_SERVICE_COMPONENT",
-      "likelyFutureFiles": [
+      "authorizedNewFiles": [
         "lib/mga/services/mgaAnalyticsService.js",
+        "lib/mga/analyticsPermissions.js",
+        "lib/mga/analyticsPayloadPolicy.js",
         "components/mga/MGAAnalyticsDashboard.jsx",
         "components/mga/MGAAnalyticsMetricCard.jsx",
         "components/mga/MGAAnalyticsTrendPanel.jsx",
         "components/mga/MGAAnalyticsFilterBar.jsx",
+        "components/mga/MGAAnalyticsErrorBoundary.jsx",
         "tests/mga/gate6k-analytics-dashboard-expansion.test.js"
       ],
+      "featureFlag": "MGA_ANALYTICS_DASHBOARD_ENABLED",
+      "featureFlagDefault": false,
+      "featureFlagBehavior": "FAIL_CLOSED",
+      "testCount": "40-50",
       "readOnly": true,
       "noMutations": true,
       "noDocumentAccess": true,
@@ -412,7 +419,11 @@
       "noEmailOrWebhooks": true,
       "noRecurringExecution": true,
       "noSchemaMigration": true,
-      "notes": "Gate 6K DESIGN_SPEC_COMPLETE 2026-05-12. Analytics dashboard approved for design. Hybrid service + component model. 9 metric categories. All guardrails maintained. Ready for implementation work order."
+      "rollbackReady": true,
+      "workOrderDate": "2026-05-12",
+      "operatorApprovalStatus": "PENDING",
+      "runtimeCodeChanges": "NONE",
+      "notes": "Gate 6K IMPLEMENTATION_WORK_ORDER_COMPLETE 2026-05-12. Work order defines 9 metrics, service contract (9 functions), permission model, safe-payload rules, UI plan, widget visibility, feature flag, 40-50 tests, rollback strategy. NO RUNTIME CODE IMPLEMENTED. Feature flag disabled (fail-closed). AWAITING OPERATOR APPROVAL."
     },
     {
       "gateId": "GATE-6G",
