@@ -332,6 +332,46 @@
       "notes": "Discovery/preflight 2026-05-12. Gate 6J-A (delivery status + retry/cancel) recommended for design/implementation. Gates 6J-B (email) and 6J-C (webhook) deferred pending separate security design and operator approval. Prerequisite for Gate 6I-B recurring execution design."
     },
     {
+      "gateId": "GATE-6J-A",
+      "gateName": "Export Delivery Status and Retry/Cancel Governance",
+      "phase": "6",
+      "status": "DESIGN_SPEC_COMPLETE",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "capability": "Delivery status tracking, retry/cancel/resend governance, delivery audit trail",
+      "parentGate": "GATE-6J",
+      "deferredDeliveryGates": ["GATE-6J-B", "GATE-6J-C"],
+      "dependsOn": ["GATE-6C", "GATE-6D", "GATE-6G", "GATE-6I-A"],
+      "deferredDependency": "GATE-6I-B",
+      "designSpec": "docs/MGA_GATE_6J_A_EXPORT_DELIVERY_GOVERNANCE_DESIGN_SPECIFICATION.md",
+      "testCount": 35,
+      "notes": "Design spec 2026-05-12. Gate 6J-A ready for implementation work order. Gates 6J-B and 6J-C deferred pending separate security design approval. Prerequisite for Gate 6I-B recurring execution design."
+    },
+    {
+      "gateId": "GATE-6J-B",
+      "gateName": "Email Export Delivery",
+      "phase": "6",
+      "status": "DEFERRED",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "parentGate": "GATE-6J",
+      "capability": "Email transport integration, bounce handling, unsubscribe governance",
+      "deferReason": "Requires separate SMTP integration, recipient management, GDPR compliance design and security review",
+      "notes": "Deferred 2026-05-12. Pending operator approval for separate security design phase."
+    },
+    {
+      "gateId": "GATE-6J-C",
+      "gateName": "Webhook Export Delivery",
+      "phase": "6",
+      "status": "DEFERRED",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "parentGate": "GATE-6J",
+      "capability": "Webhook endpoint integration, signature validation, retry storm protection",
+      "deferReason": "Requires separate endpoint security, distributed backoff, payload encryption design and security review",
+      "notes": "Deferred 2026-05-12. Pending operator approval for separate security design phase."
+    },
+    {
       "gateId": "GATE-6G",
       "gateName": "Report Export UI Surface Activation",
       "phase": "post-5",
