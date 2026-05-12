@@ -173,7 +173,7 @@
       "gateId": "GATE-6D",
       "gateName": "Export Delivery History & Tracking",
       "phase": "6",
-      "status": "DESIGN_SPEC_COMPLETE",
+      "status": "IMPLEMENTATION_WORK_ORDER_COMPLETE",
       "activation": "INACTIVE",
       "implementation": "NOT_STARTED",
       "capability": "Export Delivery History & Tracking",
@@ -189,7 +189,9 @@
       "estimatedImplementationLines": 1500,
       "estimatedTestCount": 45,
       "gate6cDependency": "ACTIVE_APPROVAL_REQUIRED_BEFORE_GATE_6D_ACTIVATION",
-      "notes": "Design spec and static inventory complete 2026-05-12. No implementation started. No feature flags created or enabled. Gate 6C operator approval required before Gate 6D implementation may begin."
+      "implementationWorkOrder": "docs/MGA_GATE_6D_IMPLEMENTATION_WORK_ORDER.md",
+      "implementationWorkOrderDate": "2026-05-12",
+      "notes": "Implementation work order complete 2026-05-12. No implementation started. No feature flags created or enabled. Gate 6C operator approval required before Gate 6D implementation may begin."
     }
   ],
   "validationSummary": {
