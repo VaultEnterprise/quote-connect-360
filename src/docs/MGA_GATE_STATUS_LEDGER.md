@@ -54,6 +54,31 @@
 
 ---
 
+### Gate 6F — Broker / Agency User Invite Sub-Scope Assignment
+
+| Field | Value |
+|-------|-------|
+| Gate ID | GATE-6F |
+| Capability | MGA admins can assign a Broker / Agency (`master_group_id`) to an invited user at invite time |
+| Current Status | **ACTIVATED_VALIDATION_PASSING** |
+| Activation Status | **LIVE — ACTIVE** |
+| Feature Flag | None |
+| Internal Entity | `MasterGroup` (preserved) |
+| Internal Scope Field | `master_group_id` (preserved) |
+| User-Facing Label | Broker / Agency |
+| Sub-Scope Required Roles | `mga_manager`, `mga_user`, `mga_read_only` |
+| Sub-Scope Optional Roles | `mga_admin` |
+| Cross-MGA Assignment | BLOCKED — `CROSS_MGA_SCOPE_VIOLATION` returned |
+| Implementation Status | COMPLETE |
+| Testing Status | 19 / 19 PASS |
+| Rollback Status | **READY** — three-file revert; no data migration required |
+| Operator Decision Status | APPROVED — activated 2026-05-12 |
+| New Permission | `users.invite_sub_scope` — ALLOW for `mga_admin`, `platform_super_admin` |
+| Primary Docs | `docs/MGA_GATE_6F_BROKER_AGENCY_INVITE_SUBSCOPE_CLOSEOUT_REPORT.md` |
+| Runtime Notes | Closes Gate 6A gap. Invite modal now includes Broker / Agency selector. Selector scoped to current MGA only. Required for sub-scoped roles; optional for mga_admin. Gate 6D confirmed inactive. |
+
+---
+
 ### Gate 6C — Report Exports / MGA Dashboard Reporting
 
 | Field | Value |
@@ -140,6 +165,7 @@
 | Item | Final Known State |
 |------|------------------|
 | **Gate 6A** | CLOSED / Implemented / Protected / No regression reported |
+| **Gate 6F** | ACTIVATED_VALIDATION_PASSING / Broker / Agency invite sub-scope active / 19/19 PASS / `master_group_id` preserved |
 | **Gate 6B** | CLOSED / TXQuote transmit active (`TXQUOTE_TRANSMIT_ENABLED = true`) / Rollback verified |
 | **Gate 6C** | **CLOSED** / Report exports ENABLED / Final closure approved 2026-05-12 / `MGA_REPORT_EXPORTS_ENABLED = true` (backend application constant) |
 | **Gate 6D** | IMPLEMENTED_ACTIVATION_PENDING / OPERATOR_REVIEW_PENDING / INACTIVE / DISABLED (`MGA_EXPORT_HISTORY_ENABLED = false`) |

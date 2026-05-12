@@ -12,10 +12,36 @@ export async function inviteMGAUser(request) {
   if (!v.valid) return buildScopedResponse({ success: false, reason_code: 'MALFORMED_TARGET' });
   const { decision, denied, response } = await checkScope({ ...request, domain: 'users', action: 'create', target_entity_type: 'MasterGeneralAgentUser' });
   if (denied) return response;
-  const existing = await base44.entities.MasterGeneralAgentUser.filter({ user_email: request.payload.email, master_general_agent_id: decision.effective_mga_id });
+
+  // Gate 6F: Validate master_group_id sub-scope if provided
+  // Ensures selected Broker / Agency belongs to the same MGA (cross-MGA assignment blocked)
+  const masterGroupId = request.payload?.master_group_id || null;
+  if (masterGroupId) {
+    const mgCheck = await base44.entities.MasterGroup.filter({ id: masterGroupId, master_general_agent_id: decision.effective_mga_id });
+    if (!mgCheck?.length) {
+      return buildScopedResponse({ success: false, reason_code: 'CROSS_MGA_SCOPE_VIOLATION', correlation_id: decision.correlation_id });
+    }
+  }
+
+  const existing = await base44.entities.MasterGeneralAgentUser.filter({ user_email: request.payload.user_email, master_general_agent_id: decision.effective_mga_id });
   if (existing?.length) return buildScopedResponse({ data: existing[0], idempotency_result: 'already_processed', correlation_id: decision.correlation_id });
-  const created = await base44.entities.MasterGeneralAgentUser.create({ ...request.payload, master_general_agent_id: decision.effective_mga_id, status: 'invited' });
-  await prepareAndRecordAudit(decision, { outcome: 'success', after: created }, request.idempotency_key);
+
+  // Gate 6F: Persist master_group_id sub-scope on the created user record
+  const created = await base44.entities.MasterGeneralAgentUser.create({
+    ...request.payload,
+    master_general_agent_id: decision.effective_mga_id,
+    // master_group_id preserved as-is — not renamed (internal compatibility)
+    ...(masterGroupId ? { master_group_id: masterGroupId } : {}),
+    status: 'invited',
+  });
+
+  // Gate 6F: Audit includes Broker / Agency binding
+  await prepareAndRecordAudit(decision, {
+    outcome: 'success',
+    after: created,
+    detail: masterGroupId ? `Invited user assigned to master_group_id: ${masterGroupId}` : 'Invited user — MGA-wide scope (no Broker / Agency sub-scope)',
+  }, request.idempotency_key);
+
   return buildScopedResponse({ data: created, idempotency_result: 'created', correlation_id: decision.correlation_id });
 }
 

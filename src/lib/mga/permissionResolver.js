@@ -254,6 +254,9 @@ const MATRIX = {
     manage_users:       { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
     view_audit:         { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: A },
     administer_quarantine: { platform_super_admin: A, mga_admin: D, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    // Gate 6F: invite_sub_scope — allows assigning a master_group_id to an invited user
+    // Only mga_admin and platform_super_admin may assign sub-scope at invite time
+    invite_sub_scope:   { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
   },
 
   settings: {
