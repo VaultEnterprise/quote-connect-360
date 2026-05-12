@@ -271,7 +271,8 @@
     "scopeHotfixReport": "docs/MGA_SCOPE_LIST_OPERATION_HOTFIX_REPORT.md",
     "gateStatusLedger": "docs/MGA_GATE_STATUS_LEDGER.md",
     "preActivationChecklist": "docs/MGA_GATES_6C_6D_PRE_ACTIVATION_EVIDENCE_CHECKLIST.md",
-    "evidenceGapClosurePlan": "docs/MGA_GATES_6C_6D_EVIDENCE_GAP_CLOSURE_PLAN.md"
+    "evidenceGapClosurePlan": "docs/MGA_GATES_6C_6D_EVIDENCE_GAP_CLOSURE_PLAN.md",
+    "gate6cOperatorApprovalPacket": "docs/MGA_GATE_6C_OPERATOR_APPROVAL_PACKET.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
