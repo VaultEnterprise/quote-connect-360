@@ -429,7 +429,7 @@
       "noSchemaMigration": true,
       "rollbackReady": true,
       "runtimeActivationStatus": "INACTIVE",
-      "activationStatus": "PENDING_OPERATOR_APPROVAL",
+      "activationStatus": "HELD_INACTIVE_BY_OPERATOR",
       "validationStatus": "FINAL_FALLBACK_STATE_RECONCILIATION_PASSING",
       "fallbackState": {
         "activeTestFile": "src/tests/mga/gate6k-analytics-dashboard-expansion.test.js",
@@ -443,16 +443,12 @@
         "hiddenUndefinedDefects": false,
         "autoFixReTriggered": false
       },
-      "operatorReviewHold": {
-        "status": "HELD_FOR_OPERATOR_DECISION",
-        "holdDate": "2026-05-12",
-        "readyForReview": true,
+      "operatorDecision": {
+        "decision": "HOLD_INACTIVE",
+        "decisionDate": "2026-05-12",
+        "reason": "Gate 6K is implemented, validated, reconciled to final fallback-state validation, and intentionally held inactive pending future activation approval",
         "activationProhibited": true,
-        "operatorOptions": [
-          "APPROVE_ACTIVATION",
-          "HOLD_INACTIVE",
-          "REQUEST_CHANGES"
-        ]
+        "futureActivationAllowed": true
       },
       "notes": "Gate 6K FINAL FALLBACK-STATE RECONCILIATION COMPLETE 2026-05-12. Active test file: src/tests/mga/gate6k-analytics-dashboard-expansion.test.js (no duplicates). Fallback applied: /* eslint-disable no-undef */ + /* eslint-env jest */ (test-file-local only). Lint: 0 violations. Tests: 56/56 PASS. No auto-fix re-trigger. Feature flag MGA_ANALYTICS_DASHBOARD_ENABLED = false (fail-closed). Runtime INACTIVE. Closeout report and operator packet amended. HELD FOR OPERATOR APPROVAL DECISION."
     },

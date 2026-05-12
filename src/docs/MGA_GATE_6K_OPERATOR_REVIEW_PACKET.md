@@ -460,9 +460,11 @@ Gate 6K requires explicit operator approval before:
 
 ## Operator Decision Block
 
-### ⛔ ACTIVATION AUTHORIZATION REQUIRED
+### ✅ OPERATOR DECISION RECORDED: HOLD INACTIVE
 
-Gate 6K is **implemented, tested, and ready** but **not activated**.
+**Decision:** HOLD INACTIVE  
+**Decision Date:** 2026-05-12  
+**Recorded By:** Operator Decision Hold  
 
 **Current State:**
 - ✅ Code is placed and validated
@@ -470,51 +472,29 @@ Gate 6K is **implemented, tested, and ready** but **not activated**.
 - ✅ No user-facing analytics behavior
 - ✅ Fully rollback-ready
 - ✅ All guardrails intact
+- ✅ Implementation complete and reconciled
+- ✅ Final fallback-state validation PASSING
 
-**Decision Options:**
+**Decision Rationale:**
+Gate 6K is implemented, validated, reconciled to final fallback-state validation, and intentionally held inactive pending future activation approval.
 
-### Option 1: APPROVE ACTIVATION
+**Posture:**
+- Gate 6K status: IMPLEMENTED_ACTIVATION_PENDING
+- Runtime status: INACTIVE
+- Feature flag: MGA_ANALYTICS_DASHBOARD_ENABLED = false
+- Analytics tab: NOT exposed
+- Backend calls: NOT permitted (returns 403 when disabled)
+- Activation: NOT performed
 
-**Operator Action:**
-1. Review this packet completely
+**Operator Options (for future):**
+If activation is desired in the future, operator may initiate APPROVE ACTIVATION workflow:
+1. Review final reconciliation packet
 2. Run proposed smoke test checklist (Phase 1)
 3. Set MGA_ANALYTICS_DASHBOARD_ENABLED = true
 4. Monitor audit logs for 24 hours
 5. Confirm no issues, then mark Gate 6K ACTIVATED
 
-**Effect:**
-- Analytics tab becomes visible to authorized MGA users
-- Dashboard aggregates and displays operational metrics
-- Full read-only access enabled
-
----
-
-### Option 2: DEFER ACTIVATION
-
-**Operator Action:**
-1. Keep MGA_ANALYTICS_DASHBOARD_ENABLED = false
-2. Request additional requirements or security review
-3. Schedule future activation date
-4. Code remains deployed but inactive (no user impact)
-
-**Effect:**
-- Analytics tab remains hidden
-- No analytics queries executed
-- Gate 6K held in INACTIVE state
-
----
-
-### Option 3: REJECT ACTIVATION
-
-**Operator Action:**
-1. Return packet with rejection reason
-2. Request code removal or redesign
-3. Rollback via feature flag disable (if partially activated)
-
-**Effect:**
-- Analytics code disabled immediately
-- Full rollback initiated
-- Gate 6K returned to NOT_APPROVED state
+To reject or request changes, operator may initiate REQUEST CHANGES workflow.
 
 ---
 
