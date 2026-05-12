@@ -255,6 +255,24 @@
       "notes": "Gate 6L-A ACTIVATED_VALIDATION_PASSING 2026-05-12. Broker / Agency Contacts and Settings Management LIVE. 33/33 tests PASS. All Gates 6A–6H regression tests PASS. MasterGroup/master_group_id preserved. Documents deferred to Gate 6L-B. Rollback ready via feature flag."
     },
     {
+      "gateId": "GATE-6I",
+      "gateName": "Report Scheduling and Saved Report Templates",
+      "phase": "6",
+      "status": "DISCOVERY_PREFLIGHT",
+      "activation": "INACTIVE",
+      "implementation": "NOT_STARTED",
+      "capability": "User and MGA-level saved report templates with one-time and recurring schedule definitions",
+      "internalEntities": ["MGAReportTemplate", "MGAReportSchedule"],
+      "userFacingLabel": "Report Templates & Schedules",
+      "dependsOn": ["GATE-6C", "GATE-6D", "GATE-6G"],
+      "recommendedSplit": "Gate 6I-A: Saved Templates + Manual Scheduled Run (READY FOR DESIGN); Gate 6I-B: Recurring Scheduler Execution (DEFERRED pending scheduler safety design)",
+      "discoveryPreflight": "docs/MGA_GATE_6I_REPORT_SCHEDULING_SAVED_TEMPLATES_DISCOVERY_PREFLIGHT.md",
+      "testCount": 0,
+      "testsPassed": 0,
+      "buildStatus": "NOT_APPLICABLE",
+      "notes": "Discovery phase. Template entity design complete. Schedule definition design complete. Manual execution flow designed. Recurring execution explicitly deferred to Gate 6I-B pending separate scheduler safety design. No runtime changes yet. No recurring jobs. No delivery mechanisms. Gate 6L-B remains deferred."
+    },
+    {
       "gateId": "GATE-6L-B",
       "gateName": "Broker / Agency Documents Management",
       "phase": "6",
