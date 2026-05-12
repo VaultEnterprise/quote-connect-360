@@ -258,19 +258,21 @@
       "gateId": "GATE-6I-A",
       "gateName": "Saved Report Templates and Schedule Definitions",
       "phase": "6",
-      "status": "DESIGN_SPEC_COMPLETE",
+      "status": "IMPLEMENTATION_WORK_ORDER_COMPLETE",
       "activation": "INACTIVE",
       "implementation": "NOT_STARTED",
       "capability": "Saved report templates (reusable filter sets and format defaults) and one-time schedule definitions; manual execution via Run Now button",
       "parentGate": "GATE-6I",
+      "deferredExecutionGate": "GATE-6I-B",
       "internalEntities": ["MGAReportTemplate", "MGAReportSchedule"],
       "userFacingLabel": "Report Templates & Schedules",
       "dependsOn": ["GATE-6C", "GATE-6D", "GATE-6G"],
       "designSpec": "docs/MGA_GATE_6I_A_SAVED_REPORT_TEMPLATES_SCHEDULE_DEFINITIONS_DESIGN_SPECIFICATION.md",
+      "implementationWorkOrder": "docs/MGA_GATE_6I_A_SAVED_REPORT_TEMPLATES_SCHEDULE_DEFINITIONS_IMPLEMENTATION_WORK_ORDER.md",
       "testCount": 0,
       "testsPassed": 0,
       "buildStatus": "NOT_APPLICABLE",
-      "notes": "Design specification complete. 13/13 sections documented. MGAReportTemplate and MGAReportSchedule entities designed. Backend service (reportTemplateService.js) specified. Frontend components specified (5 components). Permission model (restrictive by default). Scope/security boundaries enforced. Filter safety policy documented. Audit events defined. Validation plan includes ~79 unit + regression tests. Rollback strategy (3 phases) documented. Ready for implementation work order. No runtime changes yet."
+      "notes": "Implementation work order complete. 16-section plan documented. 2 entities specified (MGAReportTemplate, MGAReportSchedule). 12 backend service methods specified. 5 frontend components specified. 7 granular permissions. ~79 unit + regression tests planned. Filter safety policy (whitelist/blacklist). Scope enforcement (MGA/Broker/Agency/tenant). Audit trail (12 event types). Rollback strategy (3 phases, reversible). Ready for operator approval before implementation. No runtime changes yet. Gate 6I-B deferred."
     },
     {
       "gateId": "GATE-6I-B",
