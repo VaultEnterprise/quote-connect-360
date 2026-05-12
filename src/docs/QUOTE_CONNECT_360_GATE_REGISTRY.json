@@ -173,7 +173,7 @@
       "gateId": "GATE-6D",
       "gateName": "Export Delivery History & Tracking",
       "phase": "6",
-      "status": "PLANNING_PACKET_COMPLETE",
+      "status": "DESIGN_SPEC_COMPLETE",
       "activation": "INACTIVE",
       "implementation": "NOT_STARTED",
       "capability": "Export Delivery History & Tracking",
@@ -181,12 +181,15 @@
       "description": "Track, retrieve, and audit historical report exports with visibility into who exported what data, when, and for what purpose",
       "discoveryDate": "2026-05-11",
       "planningDate": "2026-05-12",
+      "designSpecDate": "2026-05-12",
       "discoveryReport": "docs/MGA_GATE_6D_DISCOVERY_PREFLIGHT.md",
       "planningPacket": "docs/MGA_GATE_6D_PLANNING_PACKET.md",
+      "staticInventory": "docs/MGA_GATE_6D_STATIC_INVENTORY.md",
+      "designSpecification": "docs/MGA_GATE_6D_DESIGN_SPECIFICATION.md",
       "estimatedImplementationLines": 1500,
       "estimatedTestCount": 45,
       "gate6cDependency": "ACTIVE_APPROVAL_REQUIRED_BEFORE_GATE_6D_ACTIVATION",
-      "notes": "Planning packet complete 2026-05-12. No implementation started. No feature flags created. Gate 6C operator approval required before Gate 6D implementation may begin."
+      "notes": "Design spec and static inventory complete 2026-05-12. No implementation started. No feature flags created or enabled. Gate 6C operator approval required before Gate 6D implementation may begin."
     }
   ],
   "validationSummary": {
