@@ -173,6 +173,7 @@ All gates have reached their final Phase 5 posture. Gate 6C is closed. Gate 6E i
 | `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_REPORT.md` | Rename completion report |
 | `docs/MGA_SCOPE_LIST_OPERATION_HOTFIX_REPORT.md` | Scope hotfix report |
 | `docs/MGA_GATES_6C_6D_OPERATOR_DECISION_MEMO.md` | Operator decision memo |
+| `docs/MGA_PHASE_5_DEFERRED_PROCESS_INVENTORY.md` | Phase 5 deferred process inventory (full catalog) |
 
 ---
 
@@ -361,6 +362,92 @@ Gate 6D (Export Delivery History & Tracking) is **implemented but inactive**.
 
 ---
 
+## Section 17A — Operator-Facing Deferred Work Record (Canonical)
+
+The following three items are the complete canonical deferred work record for Phase 5. Each requires a separate operator decision before any action is taken. None are Phase 5 blockers.
+
+---
+
+### Deferred Item 1 — Gate 6D: Export Delivery History & Tracking
+
+**Current State:**
+
+| Field | Value |
+|-------|-------|
+| Status | `IMPLEMENTED_ACTIVATION_PENDING` / `INACTIVE` |
+| Feature Flag | `MGA_EXPORT_HISTORY_ENABLED = false` |
+| Flag Location | `components/mga/MGACaseWorkflowPanel` |
+| Gate 6C Prerequisite | ✅ MET — Gate 6C is CLOSED |
+| Remaining Blocker | Separate operator activation approval required |
+
+**Required future actions — only if operator approves:**
+
+1. Set `MGA_EXPORT_HISTORY_ENABLED = true` in `MGACaseWorkflowPanel`
+2. Execute controlled Gate 6D activation
+3. Run Gate 6D smoke validation (export event → history record → history UI display)
+4. Document activation result in Gate 6D closure packet
+5. Update registry and ledger
+
+**Guardrail: Do not activate Gate 6D without explicit operator authorization.**
+
+---
+
+### Deferred Item 2 — Gate 6C Frontend UI Surface
+
+**Current State:**
+
+| Field | Value |
+|-------|-------|
+| Backend | ACTIVE — `MGA_REPORT_EXPORTS_ENABLED = true` in `functions/mgaReportExport.js` |
+| Frontend UI Gate | INACTIVE — `MGA_REPORT_EXPORTS_ENABLED = false` in `components/mga/MGACaseWorkflowPanel` |
+| Current Posture | Operator-accepted — report export modal is not surfaced in UI |
+
+**Required future actions — only if operator separately approves:**
+
+1. Operator approves surfacing Gate 6C report export UI
+2. Set `MGA_REPORT_EXPORTS_ENABLED = true` in `MGACaseWorkflowPanel`
+3. Validate authorized users can see the export UI
+4. Validate unauthorized users cannot see the export UI
+5. Validate scopeGate, permissionResolver, field policy, audit, and rollback
+6. Update registry / ledger if applicable
+
+**Guardrail: Do not expose the report export modal without a separate operator decision.**
+
+---
+
+### Deferred Item 3 — Backend Rename: MasterGroup → BrokerAgency
+
+**Current State:**
+
+| Field | Value |
+|-------|-------|
+| Status | NOT INITIATED |
+| Reason | Not requested; user-facing rename complete; internal compatibility preserved |
+| Internal entity | `MasterGroup` — preserved |
+| Internal field | `master_group_id` — preserved |
+| Internal service | `masterGroupService.js` — preserved |
+
+**Scope of future work — only if separately approved:**
+
+This would require a separate migration plan covering: `MasterGroup.json`, `master_group_id` on 15+ entities, `masterGroupService.js`, scopeGate domain keys (`mastergroup`), permissionResolver domain keys (`mastergroup`), audit payloads, tests, historical records, registry references, and all codebase references.
+
+**Required future actions — only if operator approves:**
+
+1. Create backend rename feasibility study (Gate 6J)
+2. Create migration plan
+3. Create regression plan
+4. Create data migration strategy
+5. Obtain operator authorization for each phase
+6. Execute in a separate controlled gate (minimum three distinct approvals)
+
+**Guardrail: Do not rename `MasterGroup` or `master_group_id` without a separate approved migration plan and operator authorization.**
+
+---
+
+**Full deferred work catalog:** `docs/MGA_PHASE_5_DEFERRED_PROCESS_INVENTORY.md`
+
+---
+
 ## Section 18 — Final Phase 5 Readiness Statement
 
 ```
@@ -472,11 +559,13 @@ PHASE 5 IS CLOSED.
 | Field | Value |
 |-------|-------|
 | Document ID | MGA_PHASE_5_FINAL_CLOSEOUT_PACKET |
-| Version | 1.0 |
+| Version | 1.1 |
 | Created | 2026-05-12 |
 | Last Modified | 2026-05-12 |
+| Amendment | Section 17A added — Operator-Facing Deferred Work Record (canonical three-item record); Section 7 documentation table updated with deferred process inventory reference |
 | Author | Platform Engineering — MGA Program Management |
 | Authorized By | Operator — Phase 5 Complete Closeout Directive 2026-05-12 |
 | Registry | `docs/QUOTE_CONNECT_360_GATE_REGISTRY.json` |
 | Ledger | `docs/MGA_GATE_STATUS_LEDGER.md` |
+| Deferred Inventory | `docs/MGA_PHASE_5_DEFERRED_PROCESS_INVENTORY.md` |
 | Runtime Changes | NONE — documentation and status only |
