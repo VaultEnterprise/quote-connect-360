@@ -1,7 +1,14 @@
-# Phase 1 Broker Signup — Automation Implementation Complete
+# Phase 1 Broker Signup — Implementation Updated for QA Harness
 
 **Date:** 2026-05-12  
-**Status:** ✅ AUTOMATED QA HARNESS READY (Pending Execution & Sign-Off)
+**Status:** ⏳ QA HARNESS READY (NOT CERTIFIED — Pending Human Execution, Automated Checks & Sign-Off)
+
+⚠️ **IMPORTANT:** Phase 1 implementation is complete and the QA harness has been updated. However, Phase 1 is NOT certified until:
+1. Automated QA checks execute successfully
+2. All 6 manual checks are completed by human tester
+3. Real database IDs and audit events are recorded
+4. QA lead reviews and signs off
+5. Operator explicitly authorizes Phase 2
 
 ---
 
@@ -184,16 +191,16 @@ These require human browser/auth interaction and cannot be fully automated:
 
 ---
 
-## Phase 1 Success Criteria
+## Phase 1 Certification Criteria
 
-### ✅ Automated Smoke Test
+### Automated Smoke Test (Status: PENDING EXECUTION)
 - [ ] Overall status: PASS
 - [ ] All 8 steps: PASS (0 FAIL, 0 BLOCKED)
 - [ ] Duplicate blocked: ✅ VERIFIED
 - [ ] Idempotency verified: ✅ VERIFIED
 - [ ] BrokerAgencyUser count: 0 ✅
 
-### ✅ Manual Checks
+### Manual Checks (Status: PENDING HUMAN EXECUTION)
 - [ ] M.1 Hard refresh /broker-signup: PASS
 - [ ] M.2 Hard refresh /command-center/broker-agencies: PASS
 - [ ] M.3 Non-admin access denied: PASS
@@ -201,12 +208,12 @@ These require human browser/auth interaction and cannot be fully automated:
 - [ ] M.5 Test brokers display correctly: PASS
 - [ ] M.6 QA harness UI renders: PASS
 
-### ✅ Documentation
+### Documentation (Status: UPDATED, NOT YET FINAL)
 - [ ] Run log: Complete with all data
 - [ ] QA lead: Reviewed and signed off
 - [ ] Operator: Approved Phase 2
 
-### ✅ Cleanup
+### Cleanup (Status: READY AFTER TEST EXECUTION)
 - [ ] Test data safely deleted
 - [ ] No non-smoke-test records affected
 - [ ] Database clean
@@ -320,9 +327,10 @@ These require human browser/auth interaction and cannot be fully automated:
 
 ---
 
-**Phase 1 Implementation Status:** ✅ COMPLETE  
-**Phase 1 QA Status:** ⏳ AWAITING EXECUTION  
-**Phase 2 Status:** 🚫 BLOCKED (until Phase 1 PASS + sign-off)
+**Phase 1 Implementation Status:** ✅ COMPLETE (QA harness updated)  
+**Phase 1 QA Status:** ⏳ AWAITING AUTOMATED & MANUAL EXECUTION  
+**Phase 1 Certification Status:** ❌ NOT CERTIFIED (no run log, no QA lead sign-off yet)  
+**Phase 2 Status:** 🚫 BLOCKED (until Phase 1 PASS + human evidence + QA lead approval)
 
 ---
 
