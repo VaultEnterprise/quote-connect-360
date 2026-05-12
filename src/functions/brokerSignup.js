@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       employer_size_max: employer_size_max || null,
       license_states,
       license_expiration_date,
-      onboarding_status: 'pending_approval',
+      onboarding_status: 'pending_profile_completion',
       relationship_status: 'draft',
       compliance_status: 'pending_review',
       portal_access_enabled: false,

@@ -37,19 +37,23 @@ Deno.serve(async (req) => {
       notes: notes || null
     });
 
-    // Get and update platform relationship
+    // Get and update platform relationship (idempotent check)
     const relationships = await base44.asServiceRole.entities.BrokerPlatformRelationship.filter({
       broker_agency_id
     });
 
     if (relationships?.length > 0) {
-      await base44.asServiceRole.entities.BrokerPlatformRelationship.update(relationships[0].id, {
-        status: 'active',
-        approval_status: 'approved',
-        activated_at: new Date().toISOString(),
-        approved_by_user_email: approver_email,
-        approved_at: new Date().toISOString()
-      });
+      const rel = relationships[0];
+      // Only update if not already approved (idempotent)
+      if (rel.approval_status !== 'approved') {
+        await base44.asServiceRole.entities.BrokerPlatformRelationship.update(rel.id, {
+          status: 'active',
+          approval_status: 'approved',
+          activated_at: new Date().toISOString(),
+          approved_by_user_email: approver_email,
+          approved_at: new Date().toISOString()
+        });
+      }
     }
 
     console.log(`[AUDIT] BROKER_AGENCY_APPROVED: ${broker_agency_id} by ${approver_email}`);

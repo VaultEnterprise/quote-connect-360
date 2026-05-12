@@ -10,6 +10,7 @@ export const brokerAgencyContract = {
   /**
    * Creates a new standalone broker agency profile
    * Validates tenant scope, stamps platform relationship, enforces approval workflow
+   * NOTE: Contract layer is advisory. Backend functions are the source of truth.
    */
   async createStandaloneBrokerProfile(payload) {
     const { tenant_id, legal_name, dba_name, code, primary_contact_email, primary_contact_name, primary_phone, actor_user_email } = payload;
@@ -19,8 +20,8 @@ export const brokerAgencyContract = {
       throw new Error('Missing required fields: tenant_id, legal_name, primary_contact_email');
     }
 
-    // Create broker agency profile in draft status
-    const brokerProfile = await base44.entities.BrokerAgencyProfile.create({
+    // Create broker agency profile in pending_profile_completion status
+    const brokerProfile = await base44.asServiceRole.entities.BrokerAgencyProfile.create({
       tenant_id,
       legal_name,
       dba_name,
@@ -28,7 +29,7 @@ export const brokerAgencyContract = {
       primary_contact_email,
       primary_contact_name,
       primary_phone,
-      onboarding_status: 'draft',
+      onboarding_status: 'pending_profile_completion',
       relationship_status: 'draft',
       compliance_status: 'pending_review',
       portal_access_enabled: false,
@@ -36,11 +37,11 @@ export const brokerAgencyContract = {
       created_by_user_email: actor_user_email
     });
 
-    // Create platform relationship (draft status)
-    const platformRel = await base44.entities.BrokerPlatformRelationship.create({
+    // Create platform relationship
+    const platformRel = await base44.asServiceRole.entities.BrokerPlatformRelationship.create({
       tenant_id,
       broker_agency_id: brokerProfile.id,
-      status: 'draft',
+      status: 'invited',
       approval_status: 'pending',
       relationship_type: 'direct_platform',
       requested_at: new Date().toISOString(),
@@ -54,13 +55,13 @@ export const brokerAgencyContract = {
       event_type: 'BROKER_AGENCY_CREATED',
       actor_email: actor_user_email,
       broker_agency_id: brokerProfile.id,
-      detail: `Broker agency ${legal_name} created in draft status`
+      detail: `Broker agency ${legal_name} created, pending profile completion`
     });
 
     return {
       broker_agency_id: brokerProfile.id,
       platform_relationship_id: platformRel.id,
-      status: 'draft'
+      status: 'pending_profile_completion'
     };
   },
 
@@ -104,6 +105,7 @@ export const brokerAgencyContract = {
   /**
    * Approves broker profile and activates platform relationship
    * Admin/platform only
+   * NOTE: Backend function is authoritative. Contract is advisory only.
    */
   async approveBrokerProfile(payload) {
     const { tenant_id, broker_agency_id, approver_email, approver_role, notes } = payload;
@@ -114,7 +116,7 @@ export const brokerAgencyContract = {
     }
 
     // Update profile
-    const profile = await base44.entities.BrokerAgencyProfile.update(broker_agency_id, {
+    const profile = await base44.asServiceRole.entities.BrokerAgencyProfile.update(broker_agency_id, {
       onboarding_status: 'active',
       relationship_status: 'active',
       compliance_status: 'compliant',
@@ -124,17 +126,17 @@ export const brokerAgencyContract = {
       notes
     });
 
-    // Activate platform relationship
-    await base44.entities.BrokerPlatformRelationship.update(
-      (await base44.entities.BrokerPlatformRelationship.filter({ broker_agency_id }))[0].id,
-      {
+    // Activate platform relationship (idempotent)
+    const relationships = await base44.asServiceRole.entities.BrokerPlatformRelationship.filter({ broker_agency_id });
+    if (relationships?.length > 0 && relationships[0].approval_status !== 'approved') {
+      await base44.asServiceRole.entities.BrokerPlatformRelationship.update(relationships[0].id, {
         status: 'active',
         approval_status: 'approved',
         activated_at: new Date().toISOString(),
         approved_by_user_email: approver_email,
         approved_at: new Date().toISOString()
-      }
-    );
+      });
+    }
 
     // Log audit event
     await logAuditEvent({

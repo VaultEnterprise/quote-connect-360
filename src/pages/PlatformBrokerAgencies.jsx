@@ -64,7 +64,7 @@ export default function PlatformBrokerAgencies() {
   });
 
   const statusCounts = {
-    pending: brokers.filter(b => b.onboarding_status === 'draft' || b.onboarding_status === 'pending_approval').length,
+    pending: brokers.filter(b => b.onboarding_status === 'draft' || b.onboarding_status === 'pending_profile_completion').length,
     active: brokers.filter(b => b.onboarding_status === 'active').length,
     suspended: brokers.filter(b => b.relationship_status === 'suspended').length,
     total: brokers.length
@@ -163,7 +163,7 @@ export default function PlatformBrokerAgencies() {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending_approval">Pending Approval</SelectItem>
+                <SelectItem value="pending_profile_completion">Pending Review</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="suspended">Suspended</SelectItem>
               </SelectContent>
@@ -205,7 +205,7 @@ export default function PlatformBrokerAgencies() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {broker.onboarding_status === 'pending_approval' && (
+                      {(broker.onboarding_status === 'draft' || broker.onboarding_status === 'pending_profile_completion') && (
                         <Button
                           size="sm"
                           variant="outline"

@@ -118,7 +118,7 @@ export default function BrokerDetailDrawer({ broker, open, onOpenChange, onAppro
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            {broker.onboarding_status === 'pending_approval' && (
+            {(broker.onboarding_status === 'draft' || broker.onboarding_status === 'pending_profile_completion') && (
               <Button onClick={() => onApprove(broker)} className="flex-1">
                 Review & Approve
               </Button>
