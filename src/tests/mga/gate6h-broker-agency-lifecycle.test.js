@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /**
  * Gate 6H — Broker / Agency Lifecycle Management
  * Validation Test Suite — 23 Tests
