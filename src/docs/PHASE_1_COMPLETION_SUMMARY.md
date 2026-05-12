@@ -328,9 +328,34 @@ These require human browser/auth interaction and cannot be fully automated:
 ---
 
 **Phase 1 Implementation Status:** ✅ COMPLETE (QA harness updated)  
-**Phase 1 QA Status:** ⏳ AWAITING AUTOMATED & MANUAL EXECUTION  
-**Phase 1 Certification Status:** ❌ NOT CERTIFIED (no run log, no QA lead sign-off yet)  
-**Phase 2 Status:** 🚫 BLOCKED (until Phase 1 PASS + human evidence + QA lead approval)
+**Phase 1 QA Status:** ⏳ AWAITING AUTOMATED E2E EXECUTION  
+**Phase 1 Certification Status:** ❌ NOT CERTIFIED (pending E2E test run and QA lead sign-off)  
+**Phase 2 Status:** 🚫 BLOCKED (until Phase 1 PASS + operator approval)
+
+---
+
+## Phase 1 Automated E2E Certification Suite
+
+The manual 6-check process has been replaced with an **automated Playwright E2E test suite** that:
+
+- ✅ Performs real browser automation (not mocked)
+- ✅ Submits actual signup forms
+- ✅ Validates database entities (BrokerAgencyProfile, BrokerPlatformRelationship)
+- ✅ Tests access control (pending denial, approved access, MGA isolation)
+- ✅ Verifies audit events
+- ✅ Generates screenshots and run logs
+- ✅ Requires no manual human browser clicks
+
+**To execute Phase 1 certification:**
+
+```bash
+npm run qa:phase1
+```
+
+**Results will be written to:**
+- `docs/PHASE_1_AUTOMATED_QA_RUN_LOG.md` (evidence + sign-off blocks)
+- `docs/PHASE_1_AUTOMATED_QA_CERTIFICATION_REPORT.md` (results summary)
+- `docs/qa-evidence/phase-1/<run_id>/screenshots/` (all screenshots)
 
 ---
 
