@@ -345,8 +345,8 @@
       "deferredDependency": "GATE-6I-B",
       "designSpec": "docs/MGA_GATE_6J_A_EXPORT_DELIVERY_GOVERNANCE_DESIGN_SPECIFICATION.md",
       "implementationWorkOrder": "docs/MGA_GATE_6J_A_EXPORT_DELIVERY_GOVERNANCE_IMPLEMENTATION_WORK_ORDER.md",
-      "testCount": 35,
-      "notes": "Work order 2026-05-12. Ready for implementation phase. Gates 6J-B and 6J-C remain deferred. Prerequisite for Gate 6I-B recurring execution design."
+      "testCount": 32,
+      "notes": "Implementation work order 2026-05-12. Gate 6J-A ready for implementation upon operator approval. 32 tests planned (unit, integration, regression). Gates 6J-B and 6J-C deferred pending separate security design approval. Prerequisite for Gate 6I-B recurring execution design."
     },
     {
       "gateId": "GATE-6J-B",
