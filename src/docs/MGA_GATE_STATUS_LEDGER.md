@@ -226,6 +226,13 @@
 | Rename Inventory | `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_INVENTORY.md` | FINAL — VALIDATED |
 | Rename Completion Report | `docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_REPORT.md` | FINAL — VALIDATED |
 
+### Phase 5 Final Documents
+
+| Document | Path | Status |
+|----------|------|--------|
+| Phase 5 Final Closeout Packet | `docs/MGA_PHASE_5_FINAL_CLOSEOUT_PACKET.md` | FINAL — 2026-05-12 |
+| Phase 5 Deferred Process Inventory | `docs/MGA_PHASE_5_DEFERRED_PROCESS_INVENTORY.md` | FINAL — 2026-05-12 |
+
 ---
 
 ## Section 4B — Broker / Agency Terminology Update

@@ -349,7 +349,8 @@
     "gate6cActivationRunbook": "docs/MGA_GATE_6C_ACTIVATION_RUNBOOK.md",
     "gate6dOperatorApprovalPacket": "docs/MGA_GATE_6D_OPERATOR_APPROVAL_PACKET.md",
     "masterGroupToBrokerAgencyRenameInventory": "docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_INVENTORY.md",
-    "masterGroupToBrokerAgencyRenameReport": "docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_REPORT.md"
+    "masterGroupToBrokerAgencyRenameReport": "docs/MGA_MASTER_GROUP_TO_BROKER_AGENCY_RENAME_REPORT.md",
+    "phase5DeferredProcessInventory": "docs/MGA_PHASE_5_DEFERRED_PROCESS_INVENTORY.md"
   },
   "metadata": {
     "createdDate": "2026-05-11",
