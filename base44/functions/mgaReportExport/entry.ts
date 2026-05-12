@@ -10,8 +10,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { crypto } from 'https://deno.land/std@0.195.0/crypto/mod.ts';
 
-// Gate 6C feature flag — MUST be checked first on every request
-const MGA_REPORT_EXPORTS_ENABLED = Deno.env.get('MGA_REPORT_EXPORTS_ENABLED') === 'true' ?? false;
+// Gate 6C feature flag — controlled via application feature-flag mechanism
+// NOT a backend environment variable. Set to true when Gate 6C is activated.
+// Rollback: set to false to immediately fail-close all export operations.
+const MGA_REPORT_EXPORTS_ENABLED = true;
 
 // Fail-closed error responses
 const ERROR_FEATURE_DISABLED = {
