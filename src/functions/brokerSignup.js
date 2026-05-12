@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       success: true,
       broker_agency_id: brokerProfile.id,
       platform_relationship_id: platformRel.id,
-      status: 'pending_approval',
+      status: 'pending_profile_completion',
       message: 'Broker profile submitted for review'
     }, { status: 201 });
   } catch (error) {
