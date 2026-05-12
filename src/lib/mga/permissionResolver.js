@@ -67,6 +67,12 @@ const MATRIX = {
     administer_quarantine: { platform_super_admin: A, mga_admin: D, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
     deactivate:         { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
     reactivate:         { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    contacts_view:      { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    contacts_manage:    { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    settings_view:      { platform_super_admin: A, mga_admin: A, mga_manager: A, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    settings_manage:    { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    notes_view:         { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
+    notes_manage:       { platform_super_admin: A, mga_admin: A, mga_manager: D, mga_user: D, mga_read_only: D, support_impersonation_read_only: D },
   },
 
   cases: {

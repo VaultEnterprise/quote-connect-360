@@ -1,0 +1,57 @@
+{
+  "name": "BrokerAgencyContact",
+  "type": "object",
+  "properties": {
+    "master_group_id": {
+      "type": "string",
+      "description": "Parent Broker / Agency ID"
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope for access control"
+    },
+    "contact_type": {
+      "type": "string",
+      "enum": ["primary", "billing", "operations", "compliance", "technical", "other"],
+      "default": "other",
+      "description": "Contact role/classification"
+    },
+    "full_name": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Contact full name"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Contact job title"
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Contact email address"
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Contact phone number"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive"],
+      "default": "active",
+      "description": "Contact status"
+    },
+    "is_primary": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is the primary contact"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Internal contact notes"
+    }
+  },
+  "required": ["master_group_id", "master_general_agent_id", "contact_type", "full_name", "email"]
+}

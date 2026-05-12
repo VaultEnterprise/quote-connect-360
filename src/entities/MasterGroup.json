@@ -17,6 +17,29 @@
     },
     "notes": {
       "type": "string"
+    },
+    "notification_email_frequency": {
+      "type": "string",
+      "enum": ["never", "daily", "weekly", "monthly"],
+      "default": "weekly",
+      "description": "Email notification frequency preference"
+    },
+    "notification_channels": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["email"],
+      "description": "Notification delivery channels"
+    },
+    "default_invite_role": {
+      "type": "string",
+      "enum": ["mga_user", "mga_read_only"],
+      "default": "mga_user",
+      "description": "Default role for newly invited users"
+    },
+    "internal_notes": {
+      "type": "string",
+      "maxLength": 5000,
+      "description": "Admin-only internal notes (permissioned)"
     }
   },
   "required": ["name", "code"]

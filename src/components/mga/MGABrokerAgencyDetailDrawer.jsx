@@ -1,13 +1,16 @@
 /**
- * MGABrokerAgencyDetailDrawer — Gate 6H
- * Read-only detail view with audit trail and lifecycle actions
+ * MGABrokerAgencyDetailDrawer — Gate 6H + Gate 6L-A
+ * Detail view with lifecycle actions and contacts/settings management
  */
 import React, { useState, useEffect } from 'react';
 import { getMasterGroupDetail, listMasterGroupActivity } from '@/lib/mga/services/masterGroupService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { X } from 'lucide-react';
+import MGABrokerAgencyContactsPanel from './MGABrokerAgencyContactsPanel';
+import MGABrokerAgencySettingsPanel from './MGABrokerAgencySettingsPanel';
 import { format } from 'date-fns';
 
 const STATUS_COLORS = {
@@ -135,22 +138,52 @@ export default function MGABrokerAgencyDetailDrawer({
               </div>
             )}
 
-            {/* Audit Trail */}
-            {activity.length > 0 && (
-              <div>
-                <p className="font-medium text-muted-foreground text-sm mb-3">Recent Activity</p>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {activity.slice(0, 10).map((log, i) => (
-                    <div key={i} className="text-xs border-l-2 border-muted pl-2 py-1">
-                      <p className="font-medium">{log.action}</p>
-                      <p className="text-muted-foreground">
-                        {log.actor_name} • {format(new Date(log.created_date || new Date()), 'MMM d, HH:mm')}
-                      </p>
+            {/* Tabs for Gate 6L-A */}
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="contacts">Contacts</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="details" className="space-y-4">
+                {/* Audit Trail */}
+                {activity.length > 0 && (
+                  <div>
+                    <p className="font-medium text-muted-foreground text-sm mb-3">Recent Activity</p>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {activity.slice(0, 10).map((log, i) => (
+                        <div key={i} className="text-xs border-l-2 border-muted pl-2 py-1">
+                          <p className="font-medium">{log.action}</p>
+                          <p className="text-muted-foreground">
+                            {log.actor_name} • {format(new Date(log.created_date || new Date()), 'MMM d, HH:mm')}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="contacts">
+                <MGABrokerAgencyContactsPanel
+                  masterGroupId={org.id}
+                  mgaId={org.master_general_agent_id}
+                  scopeRequest={scopeRequest}
+                  userRole={userRole}
+                  onContactChange={(contactId, action) => { load(); }}
+                />
+              </TabsContent>
+
+              <TabsContent value="settings">
+                <MGABrokerAgencySettingsPanel
+                  masterGroupId={org.id}
+                  mgaId={org.master_general_agent_id}
+                  scopeRequest={scopeRequest}
+                  userRole={userRole}
+                />
+              </TabsContent>
+            </Tabs>
 
             {/* Actions */}
             <div className="flex gap-2 pt-4 border-t">
