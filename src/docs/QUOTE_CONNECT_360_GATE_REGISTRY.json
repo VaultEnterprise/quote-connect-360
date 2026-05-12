@@ -258,7 +258,7 @@
       "activatedBy": "Platform Engineering — Gate 6F controlled activation",
       "planDocument": "docs/MGA_GATE_6F_BROKER_AGENCY_INVITE_SUBSCOPE_PLAN.md",
       "closeoutReport": "docs/MGA_GATE_6F_BROKER_AGENCY_INVITE_SUBSCOPE_CLOSEOUT_REPORT.md",
-      "notes": "Activated 2026-05-12. Closes Gate 6A gap. Broker / Agency selector in invite modal. Cross-MGA assignment blocked at service layer. master_group_id / MasterGroup preserved internally. 19/19 tests PASS."
+      "notes": "Activated 2026-05-12. Closes Gate 6A gap. Broker / Agency selector in invite modal. Cross-MGA assignment blocked at service layer. master_group_id / MasterGroup preserved internally. 19/19 tests PASS. Post-fix validation complete 2026-05-12: lint issue (GATE6F-LINT-01) resolved; 19/19 re-validation checks PASS. Status remains ACTIVATED_VALIDATION_PASSING."
     },
     {
       "gateId": "GATE-6D",

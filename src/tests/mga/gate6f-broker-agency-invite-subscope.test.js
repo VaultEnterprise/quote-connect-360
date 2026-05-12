@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* global describe, test, expect */
 /**
  * Gate 6F — Broker / Agency User Invite Sub-Scope Assignment
  * Test Suite: gate6f-broker-agency-invite-subscope.test.js

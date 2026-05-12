@@ -183,14 +183,87 @@ No feature flag was used for Gate 6F. Rollback steps:
 
 ---
 
+---
+
+## Section 11 — Post-Fix Validation Amendment
+
+**Amendment Date:** 2026-05-12  
+**Amendment Type:** Post-implementation lint correction + full re-validation  
+**Amendment Status:** ALL CHECKS PASS
+
+### Issue Detected
+
+| ID | Issue | Severity |
+|----|-------|----------|
+| GATE6F-LINT-01 | `describe`, `test`, and `expect` globals not declared in `tests/mga/gate6f-broker-agency-invite-subscope.test.js` — ESLint `no-undef` failures for all 19 test cases | Low — test file only; no runtime impact |
+
+### Fix Applied
+
+**File:** `tests/mga/gate6f-broker-agency-invite-subscope.test.js`  
+**Change:** Added `/* eslint-env jest */` directive at top of file to declare Jest globals (`describe`, `test`, `expect`) for the ESLint environment.  
+**Runtime impact:** None — test file only; no production code modified.  
+**Flag changes:** None.  
+**Schema changes:** None.
+
+**Secondary fix (same session):** `MGAInviteUserModal` — `SelectItem value={null}` corrected to `value=""` to eliminate React prop-type warning on disabled/empty items. No logic change.
+
+### Post-Fix Validation Results
+
+| # | Check | Result |
+|---|-------|--------|
+| 1 | Build validation | ✅ PASS |
+| 2 | Lint / static scan (`/* eslint-env jest */` present) | ✅ PASS |
+| 3 | Gate 6F test suite — 19 / 19 PASS | ✅ PASS |
+| 4 | Invite modal loads correctly (Email + Role + Broker / Agency fields present) | ✅ PASS |
+| 5 | Broker / Agency selector appears for all invite roles | ✅ PASS |
+| 6 | Broker / Agency selector required for sub-scoped roles (`mga_manager`, `mga_user`, `mga_read_only`) | ✅ PASS |
+| 7 | Broker / Agency selector optional for `mga_admin` (labelled as optional; value="" accepted) | ✅ PASS |
+| 8 | `master_group_id` persisted on invited user record when selected | ✅ PASS |
+| 9 | Cross-MGA Broker / Agency assignment blocked — `CROSS_MGA_SCOPE_VIOLATION` returned | ✅ PASS |
+| 10 | Cross-tenant assignment blocked — `effective_mga_id` server-resolved; cross-tenant lookup returns empty | ✅ PASS |
+| 11 | Duplicate invite idempotency-protected — `already_processed` returned on second call | ✅ PASS |
+| 12 | Invite audit includes Broker / Agency binding when `master_group_id` set | ✅ PASS |
+| 13 | Gate 6A invite flow functional — `inviteMGAUser` without `master_group_id` works as before | ✅ PASS |
+| 14 | Gate 6B unaffected — `TXQUOTE_TRANSMIT_ENABLED = true`; no regression | ✅ PASS |
+| 15 | Gate 6C unaffected — `MGA_REPORT_EXPORTS_ENABLED` values unchanged | ✅ PASS |
+| 16 | Gate 6D remains inactive — `MGA_EXPORT_HISTORY_ENABLED = false`; history tab absent | ✅ PASS |
+| 17 | Gate 6E Broker / Agency creation unaffected — `MGACreateBrokerAgencyModal` and `MGAMasterGroupPanel` unchanged | ✅ PASS |
+| 18 | Registry JSON valid — GATE-6F entry present; `status: ACTIVATED_VALIDATION_PASSING`; counts updated (231/231) | ✅ PASS |
+| 19 | Ledger current — Gate 6F section present; status confirmed | ✅ PASS |
+
+**Total: 19 / 19 PASS**
+
+### Post-Fix Final Status
+
+| Field | Value |
+|-------|-------|
+| **Gate ID** | GATE-6F |
+| **Status** | **ACTIVATED_VALIDATION_PASSING** |
+| **Activation** | **LIVE — ACTIVE** |
+| **Implementation** | COMPLETE |
+| **Post-Fix Validation** | COMPLETE — 19 / 19 PASS |
+| **Lint Issue** | RESOLVED — `/* eslint-env jest */` added |
+| **Secondary Fix** | `SelectItem value={null}` → `value=""` (no logic change) |
+| **Gate 6D** | CONFIRMED INACTIVE — `MGA_EXPORT_HISTORY_ENABLED = false` |
+| **MasterGroup / master_group_id** | PRESERVED — not renamed |
+| **Permissions** | No broadening beyond `invite_sub_scope` |
+| **scopeGate** | NOT bypassed |
+| **permissionResolver** | NOT weakened |
+| **Cross-MGA / Cross-tenant controls** | NOT weakened |
+| **Next Gate** | Gate 6G — awaiting operator authorization |
+
+---
+
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Document ID | MGA_GATE_6F_BROKER_AGENCY_INVITE_SUBSCOPE_CLOSEOUT_REPORT |
-| Version | 1.0 |
+| Version | 1.1 |
 | Created | 2026-05-12 |
+| Last Modified | 2026-05-12 |
+| Amendment | Section 11 added — Post-Fix Validation Amendment (lint fix + 19-check re-validation; all PASS) |
 | Author | Platform Engineering — MGA Program Management |
-| Runtime Changes | Gate 6F scope only — invite modal + service + permissionResolver |
+| Runtime Changes | Gate 6F scope only — invite modal + service + permissionResolver; SelectItem null→"" fix |
 | Flag Changes | NONE |
 | Schema Changes | NONE |
