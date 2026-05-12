@@ -22,12 +22,16 @@ import MGADocumentsPanel from '@/components/mga/MGADocumentsPanel';
 import MGAUsersPanel from '@/components/mga/MGAUsersPanel';
 import MGAAuditPanel from '@/components/mga/MGAAuditPanel';
 import MGAScopeErrorBoundary from '@/components/mga/MGAScopeErrorBoundary';
+import MGAAnalyticsDashboard from '@/components/mga/MGAAnalyticsDashboard';
 import { base44 } from '@/api/base44Client';
 
 import { listMGAs } from '@/lib/mga/services/mgaService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Shield } from 'lucide-react';
+
+// Gate 6K rollback switch
+const MGA_ANALYTICS_DASHBOARD_ENABLED = true;
 
 const MGA_ROLES = ['mga_admin', 'mga_manager', 'mga_user', 'mga_read_only', 'platform_super_admin', 'admin'];
 
@@ -157,14 +161,15 @@ export default function MasterGeneralAgentCommandPage() {
         <MGAKPIBar mgaId={mgaRecord.id} scopeRequest={scopeRequest} />
 
         {/* Sections 3–7 — Tabbed panels */}
-        <Tabs defaultValue="mastergroups" className="w-full">
-          <TabsList className="flex-wrap h-auto gap-1 mb-2">
-            <TabsTrigger value="mastergroups">Broker / Agencies</TabsTrigger>
-            <TabsTrigger value="workflows">Cases & Workflows</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            {isManager && <TabsTrigger value="users">Users & Roles</TabsTrigger>}
-            {isManager && <TabsTrigger value="audit">Audit Log</TabsTrigger>}
-          </TabsList>
+         <Tabs defaultValue="mastergroups" className="w-full">
+           <TabsList className="flex-wrap h-auto gap-1 mb-2">
+             <TabsTrigger value="mastergroups">Broker / Agencies</TabsTrigger>
+             <TabsTrigger value="workflows">Cases & Workflows</TabsTrigger>
+             <TabsTrigger value="documents">Documents</TabsTrigger>
+             {isManager && <TabsTrigger value="users">Users & Roles</TabsTrigger>}
+             {isManager && <TabsTrigger value="audit">Audit Log</TabsTrigger>}
+             {isManager && MGA_ANALYTICS_DASHBOARD_ENABLED && <TabsTrigger value="analytics">Analytics</TabsTrigger>}
+           </TabsList>
 
           {/* Section 3 — Broker / Agency Management (internal entity: MasterGroup) */}
           <TabsContent value="mastergroups">
@@ -229,7 +234,20 @@ export default function MasterGeneralAgentCommandPage() {
               </MGAScopeErrorBoundary>
             </TabsContent>
           )}
-        </Tabs>
+
+          {/* Section 8 — Analytics Dashboard (manager+ only, Gate 6K) */}
+          {isManager && MGA_ANALYTICS_DASHBOARD_ENABLED && (
+            <TabsContent value="analytics">
+              <MGAScopeErrorBoundary>
+                <MGAAnalyticsDashboard
+                  featureFlag={MGA_ANALYTICS_DASHBOARD_ENABLED}
+                  userRole={user.role}
+                  mgaId={mgaRecord.id}
+                />
+              </MGAScopeErrorBoundary>
+            </TabsContent>
+          )}
+          </Tabs>
       </div>
     </MGAScopeErrorBoundary>
   );
