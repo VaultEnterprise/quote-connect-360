@@ -1,5 +1,7 @@
 /* eslint-env jest */
 
+/* eslint-env jest */
+
 /**
  * MGA Gate 6K — Analytics Dashboard Expansion Test Suite
  * tests/mga/gate6k-analytics-dashboard-expansion.test.js
