@@ -6,7 +6,7 @@
 **Gate Name:** Broker / Agency Organization Creation  
 **Date:** 2026-05-12  
 **Prepared By:** Platform Engineering  
-**Status:** ACTIVATED — VALIDATION PASSING
+**Status:** ACTIVATED — VALIDATION PASSING — PHASE 5 FINAL LEDGER CONFIRMED 2026-05-12
 
 ---
 
@@ -223,12 +223,39 @@ To roll back Gate 6E:
 
 ---
 
+## Section 14 — Phase 5 Final Ledger Confirmation Amendment
+
+**Amendment Date:** 2026-05-12  
+**Amendment Type:** Phase 5 Final Closeout Ledger Confirmation
+
+This amendment confirms Gate 6E is fully recorded in the Phase 5 final evidence artifacts.
+
+| Confirmation Item | Status |
+|------------------|--------|
+| Gate 6E entry in `QUOTE_CONNECT_360_GATE_REGISTRY.json` | CONFIRMED — `ACTIVATED_VALIDATION_PASSING` |
+| Gate 6E entry in `MGA_GATE_STATUS_LEDGER.md` | CONFIRMED — added in Phase 5 final ledger update |
+| 19 / 19 validation checks | ✅ PASS |
+| Gate 6A unaffected | ✅ CONFIRMED |
+| Gate 6B unaffected | ✅ CONFIRMED |
+| Gate 6C unaffected (now CLOSED) | ✅ CONFIRMED |
+| Gate 6D inactive | ✅ CONFIRMED — `MGA_EXPORT_HISTORY_ENABLED = false` |
+| `MasterGroup` entity preserved | ✅ CONFIRMED — not renamed |
+| `master_group_id` field preserved | ✅ CONFIRMED — not renamed |
+| `masterGroupService` preserved | ✅ CONFIRMED — not renamed |
+| Phase 5 Final Closeout Packet | CREATED — `docs/MGA_PHASE_5_FINAL_CLOSEOUT_PACKET.md` |
+
+**No runtime changes were made by this amendment.**
+
+---
+
 ## Document Control
 
 | Field | Value |
 |-------|-------|
 | Document ID | MGA_GATE_6E_BROKER_AGENCY_CREATION_CLOSEOUT_REPORT |
-| Version | 1.0 |
+| Version | 1.1 |
 | Date | 2026-05-12 |
+| Last Modified | 2026-05-12 |
+| Amendment | Section 14 — Phase 5 Final Ledger Confirmation added |
 | Author | Platform Engineering |
 | Registry | `docs/QUOTE_CONNECT_360_GATE_REGISTRY.json` — GATE-6E |

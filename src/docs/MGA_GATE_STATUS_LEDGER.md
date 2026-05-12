@@ -60,16 +60,19 @@
 |-------|-------|
 | Gate ID | GATE-6C-COMPLETE |
 | Capability | Export case data, activity logs, and performance metrics in PDF/CSV/XLSX formats |
-| Current Status | **IMPLEMENTED_ACTIVATION_PENDING** |
-| Activation Status | **INACTIVE — DISABLED** |
+| Current Status | **CLOSED** |
+| Final Closure Decision | **APPROVED** |
+| Final Closure Date | **2026-05-12** |
+| Activation Status | **LIVE — ACTIVE** |
 | Feature Flag | `MGA_REPORT_EXPORTS_ENABLED` |
-| Feature Flag Value | `false` |
+| Feature Flag Value | `true` (backend: application constant) |
 | Implementation Status | COMPLETE — 2026-05-11 |
-| Testing Status | 59 / 59 PASS |
-| Rollback Status | **VERIFIED** — flag already `false`; no rollback action needed |
-| Operator Decision Status | **OPERATOR_REVIEW_PENDING** — no approval received |
-| Primary Docs | `docs/MGA_GATE_6C_IMPLEMENTATION_CLOSEOUT_REPORT.md` |
-| Runtime Notes | Export modal not rendered; backend function fail-closed; no UI exposure; zero Gate 6A/6B regression |
+| Testing Status | 59 / 59 PASS; 21 / 21 smoke PASS; 21 / 21 end-to-end PASS |
+| Rollback Status | **VERIFIED** — set `const MGA_REPORT_EXPORTS_ENABLED = false` in `mgaReportExport.js` |
+| Backend Env Var Required | `false` — activation via application constant only |
+| Operator Decision Status | **APPROVED** — final sign-off received 2026-05-12 (Phase 5 Closeout Directive) |
+| Primary Docs | `docs/MGA_GATE_6C_FINAL_CLOSURE_PACKET.md`, `docs/MGA_GATE_6C_IMPLEMENTATION_CLOSEOUT_REPORT.md` |
+| Runtime Notes | Report exports ENABLED; export modal active for `mga_admin`, `mga_manager`, `platform_super_admin`, `admin`; audit logging active; field policy enforced; Gate 6D remains inactive |
 
 ---
 
@@ -89,6 +92,28 @@
 | Operator Decision Status | **OPERATOR_REVIEW_PENDING** — Activation Readiness Packet accepted 2026-05-12; formal activation not authorized |
 | Primary Docs | `docs/MGA_GATE_6D_ACTIVATION_READINESS_PACKET.md`, `docs/MGA_GATE_6D_IMPLEMENTATION_CLOSEOUT_REPORT.md` |
 | Runtime Notes | History tab not rendered; backend contract fail-closed; blockedBy Gate 6C; no UI exposure; zero Gate 6A/6B/6C regression |
+
+---
+
+### Gate 6E — Broker / Agency Organization Creation
+
+| Field | Value |
+|-------|-------|
+| Gate ID | GATE-6E |
+| Capability | Authorized MGA users can create Broker / Agency organizations under the MGA environment |
+| Current Status | **ACTIVATED_VALIDATION_PASSING** |
+| Activation Status | **LIVE — ACTIVE** |
+| Feature Flag | None |
+| Implementation | UI_ACTIVE_SERVICE_COMPLETE |
+| User-Facing Label | Broker / Agency |
+| Internal Entity | `MasterGroup` |
+| Internal Scope Field | `master_group_id` |
+| Authorized Roles | `mga_admin`, `platform_super_admin` |
+| Testing Status | 19 / 19 PASS |
+| Rollback Status | **VERIFIED** — remove button/modal from `MGAMasterGroupPanel`; service layer requires no change |
+| Operator Decision Status | **APPROVED** — activated 2026-05-12; Phase 5 Final Ledger Confirmed 2026-05-12 |
+| Primary Docs | `docs/MGA_GATE_6E_BROKER_AGENCY_CREATION_CLOSEOUT_REPORT.md`, `docs/MGA_GATE_6E_BROKER_AGENCY_CREATION_ACTIVATION_PLAN.md` |
+| Runtime Notes | Create modal active; RBAC gate enforced in UI; full auth enforced server-side via `scopeGate` + `permissionResolver`; `MasterGroup`/`master_group_id` preserved; Gates 6A/6B/6C unaffected; Gate 6D confirmed inactive |
 
 ---
 
@@ -116,9 +141,12 @@
 |------|------------------|
 | **Gate 6A** | CLOSED / Implemented / Protected / No regression reported |
 | **Gate 6B** | CLOSED / TXQuote transmit active (`TXQUOTE_TRANSMIT_ENABLED = true`) / Rollback verified |
-| **Gate 6C** | IMPLEMENTED_ACTIVATION_PENDING / OPERATOR_REVIEW_PENDING / INACTIVE / DISABLED (`MGA_REPORT_EXPORTS_ENABLED = false`) |
+| **Gate 6C** | **CLOSED** / Report exports ENABLED / Final closure approved 2026-05-12 / `MGA_REPORT_EXPORTS_ENABLED = true` (backend application constant) |
 | **Gate 6D** | IMPLEMENTED_ACTIVATION_PENDING / OPERATOR_REVIEW_PENDING / INACTIVE / DISABLED (`MGA_EXPORT_HISTORY_ENABLED = false`) |
+| **Gate 6E** | ACTIVATED_VALIDATION_PASSING / ACTIVE / 19/19 PASS / Phase 5 Final Ledger Confirmed 2026-05-12 |
 | **Scope Hotfix** | VALIDATED / 13 of 13 validation checks PASS / 18 of 18 regression checks PASS |
+| **Broker / Agency Rename** | COMPLETE / VALIDATED / User-facing label only; `MasterGroup`/`master_group_id` preserved |
+| **Phase 5 Status** | **COMPLETE** — all gates at final posture; Phase 5 Final Closeout Packet issued 2026-05-12 |
 
 ---
 
@@ -127,19 +155,19 @@
 | Flag | Location | Current Value | Gate | Controlled By |
 |------|----------|--------------|------|---------------|
 | `TXQUOTE_TRANSMIT_ENABLED` | `components/mga/MGACaseWorkflowPanel.jsx` | **`true`** | Gate 6B | Gate 6B — CLOSED / operator approved |
-| `MGA_REPORT_EXPORTS_ENABLED` | `components/mga/MGACaseWorkflowPanel.jsx` | **`false`** | Gate 6C | Operator approval required before change |
+| `MGA_REPORT_EXPORTS_ENABLED` | `functions/mgaReportExport.js` (backend application constant) | **`true`** | Gate 6C | Gate 6C — CLOSED / operator approved 2026-05-12 |
+| `MGA_REPORT_EXPORTS_ENABLED` | `components/mga/MGACaseWorkflowPanel.jsx` (frontend UI gate) | **`false`** | Gate 6C | Operator decision: UI surface gated separately from API |
 | `MGA_EXPORT_HISTORY_ENABLED` | `components/mga/MGACaseWorkflowPanel.jsx` | **`false`** | Gate 6D | Operator approval required before change |
 
 ### Activation Constraints
 
-> **Gate 6C (`MGA_REPORT_EXPORTS_ENABLED`) must remain `false` until explicit operator approval is received.**  
-> Setting this flag to `true` without operator authorization is a governance violation.
+> **Gate 6C is CLOSED.** Backend `MGA_REPORT_EXPORTS_ENABLED = true` (application constant). Frontend UI surface remains gated at `false` — this is the current operator-accepted state.
 
 > **Gate 6D (`MGA_EXPORT_HISTORY_ENABLED`) must remain `false` until explicit operator approval is received.**  
 > Setting this flag to `true` without operator authorization is a governance violation.
 
-> **Gate 6D must not be activated before Gate 6C is activated and independently validated in production.**  
-> Gate 6D reads audit events produced by Gate 6C export operations. Activating Gate 6D before Gate 6C is operational produces no usable history data and creates ambiguous smoke test results.
+> **Gate 6D must not be activated before a separate operator activation approval is received.**  
+> Gate 6C is now CLOSED, satisfying the Gate 6C prerequisite. Gate 6D activation still requires its own independent operator approval.
 
 ---
 
@@ -264,28 +292,24 @@ The following runtime areas are protected from modification until the conditions
 
 ## Section 6 — Next Operator Decisions Required
 
-The following decisions are pending. No platform engineering action is required until one of these decisions is received.
-
 | # | Decision | Gate | Prerequisites | Current State |
 |---|----------|------|--------------|---------------|
-| **Decision 1** | Approve or defer Gate 6C activation | Gate 6C | Implementation validated (✅ MET); operator review only pending | ⏳ PENDING |
-| **Decision 2** | If Gate 6C approved: run controlled activation and post-activation smoke validation | Gate 6C | Decision 1 approval received | ⏳ BLOCKED on Decision 1 |
-| **Decision 3** | After Gate 6C validation is confirmed: approve or defer Gate 6D activation | Gate 6D | Decision 2 smoke test complete and documented | ⏳ BLOCKED on Decision 2 |
-| **Decision 4** | If Gate 6D approved: run controlled activation and post-activation smoke validation | Gate 6D | Decision 3 approval received | ⏳ BLOCKED on Decision 3 |
+| **Decision 1** | ~~Approve or defer Gate 6C activation~~ | Gate 6C | ✅ COMPLETE — Gate 6C CLOSED 2026-05-12 | ✅ DONE |
+| **Decision 2** | ~~Gate 6C activation and smoke validation~~ | Gate 6C | ✅ COMPLETE — 21/21 PASS | ✅ DONE |
+| **Decision 3** | Approve or defer Gate 6D activation | Gate 6D | Gate 6C CLOSED (✅ MET); separate approval required | ⏳ PENDING — operator decision required |
+| **Decision 4** | If Gate 6D approved: run controlled activation + smoke test | Gate 6D | Decision 3 approval received | ⏳ BLOCKED on Decision 3 |
 
-### Activation Sequence Summary
+### Current Sequence State
 
 ```
-Decision 1: Operator approves Gate 6C
-    ↓
-Decision 2: Gate 6C activated (MGA_REPORT_EXPORTS_ENABLED = true) + smoke test PASS
-    ↓
-Decision 3: Operator approves Gate 6D (only after Decision 2 is complete)
-    ↓
-Decision 4: Gate 6D activated (MGA_EXPORT_HISTORY_ENABLED = true) + smoke test PASS
+✅ Gate 6C: CLOSED — approved 2026-05-12
+                  ↓
+⏳ Decision 3: Operator approves Gate 6D (requires separate activation decision)
+                  ↓
+⏳ Decision 4: Gate 6D activated (MGA_EXPORT_HISTORY_ENABLED = true) + smoke test PASS
 ```
 
-Do not collapse or reorder this sequence. Do not activate Gate 6C and Gate 6D simultaneously.
+**Gate 6D activation requires its own independent operator approval. Do not activate without explicit authorization.**
 
 ---
 
@@ -293,22 +317,25 @@ Do not collapse or reorder this sequence. Do not activate Gate 6C and Gate 6D si
 
 ---
 
-### MGA Gate Status Ledger Certification
+### MGA Gate Status Ledger Certification — Phase 5 Final
 
 **Certification Date:** 2026-05-12  
-**Certified By:** Platform Engineering — MGA Program Management
+**Certified By:** Platform Engineering — MGA Program Management  
+**Certification Type:** Phase 5 Final Closeout Certification
 
-This ledger records the current gated rollout state only.
+This ledger records the Phase 5 final gated rollout state.
 
-- **No runtime behavior was changed by this document.**
-- **Gate 6C remains inactive.** `MGA_REPORT_EXPORTS_ENABLED = false`. No export UI is rendered. No export backend is reachable.
-- **Gate 6D remains inactive.** `MGA_EXPORT_HISTORY_ENABLED = false`. No history UI is rendered. No history backend is reachable.
-- **Both feature flags remain `false`.** Neither flag was set to `true` by any action taken during the preparation of this document.
-- **Gate 6B remains closed and active.** `TXQUOTE_TRANSMIT_ENABLED = true`. TXQuote transmit is live for authorized roles. No change was made to Gate 6B.
-- **Gate 6A remains protected.** Invite user flow is live and protected. No change was made to Gate 6A.
-- **The scope hotfix (`HOTFIX-SCOPE-LIST-OP-001`) is validated and complete.** The fix corrects a false-negative denial in the `list_operation` sentinel path only. It does not broaden permissions, bypass the scopeGate, or weaken record-level protections for any other action type.
+- **No unauthorized runtime behavior was changed by this document.**
+- **Gate 6A is CLOSED and protected.** Invite user flow is live. No changes made.
+- **Gate 6B is CLOSED and active.** `TXQUOTE_TRANSMIT_ENABLED = true`. TXQuote transmit is live for authorized roles. No changes made.
+- **Gate 6C is CLOSED.** Final operator sign-off received 2026-05-12. Report exports ENABLED. Backend application constant `MGA_REPORT_EXPORTS_ENABLED = true`. No env-var dependency. Frontend UI gate remains `false` (operator-accepted state).
+- **Gate 6D remains inactive.** `MGA_EXPORT_HISTORY_ENABLED = false`. No history UI is rendered. No history backend is reachable. Awaiting separate operator activation decision.
+- **Gate 6E is ACTIVE — VALIDATION PASSING.** Broker / Agency creation live for `mga_admin` and `platform_super_admin`. Phase 5 ledger confirmation recorded 2026-05-12.
+- **Broker / Agency terminology update is COMPLETE.** User-facing rename validated. `MasterGroup`/`master_group_id` preserved internally.
+- **Scope hotfix `HOTFIX-SCOPE-LIST-OP-001` is validated and live.**
+- **Phase 5 is COMPLETE.** Phase 5 Final Closeout Packet issued: `docs/MGA_PHASE_5_FINAL_CLOSEOUT_PACKET.md`.
 
-No activation is authorized. No flag may be changed without explicit operator approval documented outside this ledger.
+**Gate 6D activation is not authorized.** `MGA_EXPORT_HISTORY_ENABLED` must remain `false` until explicit separate operator approval is received and documented.
 
 ---
 

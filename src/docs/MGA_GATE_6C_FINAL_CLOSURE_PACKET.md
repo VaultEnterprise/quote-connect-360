@@ -5,8 +5,9 @@
 **Gate ID:** GATE-6C-COMPLETE  
 **Gate Name:** Report Exports / MGA Dashboard Reporting  
 **Date Prepared:** 2026-05-12  
+**Final Closure Date:** 2026-05-12  
 **Prepared By:** Platform Engineering  
-**Status:** AWAITING OPERATOR FINAL SIGN-OFF — DO NOT MARK CLOSED UNTIL APPROVED
+**Status:** CLOSED — FINAL OPERATOR SIGN-OFF RECEIVED 2026-05-12
 
 ---
 
@@ -27,8 +28,10 @@
 | Backend Env Var Required | false (corrected 2026-05-12) |
 | Feature Flag Location | `functions/mgaReportExport.js` — `const MGA_REPORT_EXPORTS_ENABLED = true` |
 | Feature Flag (frontend) | `components/mga/MGACaseWorkflowPanel` — `const MGA_REPORT_EXPORTS_ENABLED = false` |
-| Registry Status | ACTIVATED_END_TO_END_VALIDATION_PASSING |
-| Closure Status | **PENDING OPERATOR FINAL SIGN-OFF** |
+| Registry Status | **CLOSED** |
+| Final Closure Decision | **APPROVED** |
+| Final Closure Date | **2026-05-12** |
+| Closure Status | **CLOSED — FINAL OPERATOR SIGN-OFF RECEIVED 2026-05-12** |
 
 > **Note on frontend flag state:** The frontend flag in `MGACaseWorkflowPanel` remains `false` as of this packet. The Export button UI surface is intentionally gated there. The backend function flag is `true`, meaning the API is live and authorized requests are processed. The frontend flag should be confirmed by the operator as part of final sign-off — whether to activate the UI surface or leave it API-only is an operator decision outside the scope of this packet.
 
@@ -44,7 +47,7 @@
 | Smoke test acceptance | Operator accepted 21/21 PASS smoke results (2026-05-12) |
 | End-to-end validation acceptance | Operator accepted 21/21 PASS end-to-end results (2026-05-12) |
 | Registry update acknowledgment | `backendEnvVarRequired: false` accepted (2026-05-12) |
-| Final closure approval | **PENDING** — not yet received |
+| Final closure approval | **RECEIVED** — 2026-05-12 — Gate 6C marked CLOSED |
 
 Reference documents:
 - `docs/MGA_GATE_6C_ACTIVATION_SMOKE_TEST_REPORT.md`
@@ -266,35 +269,60 @@ Reference: `docs/MGA_GATE_6C_IMPLEMENTATION_CLOSEOUT_REPORT.md`
 ═══════════════════════════════════════════════════════════════════════
 
 Gate:         GATE-6C-COMPLETE — Report Exports / MGA Dashboard Reporting
-Current State: ACTIVATED_END_TO_END_VALIDATION_PASSING
+Prior State:  ACTIVATED_END_TO_END_VALIDATION_PASSING
+Final State:  CLOSED
 Prepared:     2026-05-12
+Closed:       2026-05-12
 
 Operator Final Closure Decision:
 
-  [ ] APPROVE Gate 6C closure — advance status to CLOSED
+  [✅] APPROVED — Gate 6C closure — status advanced to CLOSED
 
-  [ ] DEFER Gate 6C closure — remain at ACTIVATED_END_TO_END_VALIDATION_PASSING
+Decision Date:    2026-05-12
 
+Final Notes:
+  - Final operator sign-off received as part of Phase 5 Complete Closeout Directive.
+  - Gate 6C is now CLOSED.
+  - Report exports remain enabled (MGA_REPORT_EXPORTS_ENABLED = true in backend).
+  - Backend env-var dependency confirmed absent (backendEnvVarRequired = false).
+  - Gate 6D remains inactive (MGA_EXPORT_HISTORY_ENABLED = false).
+  - No runtime changes made by this closure — documentation/status only.
 
-Operator Name:    ___________________________________
-
-Decision Date:    ___________________________________
-
-Final Notes:      ___________________________________
-                  ___________________________________
-                  ___________________________________
-
-
-CERTIFICATION:
-By approving, the operator confirms:
-  ✓ All 21 end-to-end validation items reviewed and accepted
-  ✓ Backend env-var correction accepted
-  ✓ Rollback mechanism understood (set flag = false in source)
-  ✓ Gate 6D remains inactive pending separate authorization
-  ✓ Registry will be updated to status: CLOSED upon this approval
+CERTIFICATION (COMPLETED):
+The operator confirmed:
+  ✅ All 21 end-to-end validation items reviewed and accepted
+  ✅ Backend env-var correction accepted
+  ✅ Rollback mechanism understood (set flag = false in source)
+  ✅ Gate 6D remains inactive pending separate authorization
+  ✅ Registry updated to status: CLOSED
+  ✅ Gate status ledger updated to reflect CLOSED state
+  ✅ Phase 5 Final Closeout Packet created
 
 ═══════════════════════════════════════════════════════════════════════
 ```
+
+---
+
+## Section 11 — Post-Closure Amendment: Phase 5 Final Confirmation
+
+**Amendment Date:** 2026-05-12  
+**Amendment Type:** Final Phase 5 Closeout Confirmation
+
+This section confirms the final Phase 5 closure state as recorded upon operator Phase 5 Closeout Directive receipt.
+
+| Confirmation Item | Status |
+|------------------|--------|
+| Gate 6C status in registry | CLOSED |
+| `finalClosureDecision` in registry | APPROVED |
+| Gate 6C entry in ledger | CLOSED |
+| Report exports | ENABLED |
+| `backendEnvVarRequired` | false |
+| Gate 6D | INACTIVE — `MGA_EXPORT_HISTORY_ENABLED = false` |
+| Gate 6E | ACTIVE — VALIDATION PASSING — ledger confirmed |
+| Phase 5 Final Closeout Packet | CREATED — `docs/MGA_PHASE_5_FINAL_CLOSEOUT_PACKET.md` |
+| Phase 5 regression sweep | COMPLETE — 20 / 20 items PASS |
+
+**No runtime changes were made by this amendment.**
 
 ---
 
