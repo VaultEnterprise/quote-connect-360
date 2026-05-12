@@ -269,7 +269,7 @@
       "dependsOn": ["GATE-6C", "GATE-6D", "GATE-6G"],
       "designSpec": "docs/MGA_GATE_6I_A_SAVED_REPORT_TEMPLATES_SCHEDULE_DEFINITIONS_DESIGN_SPECIFICATION.md",
       "implementationWorkOrder": "docs/MGA_GATE_6I_A_SAVED_REPORT_TEMPLATES_SCHEDULE_DEFINITIONS_IMPLEMENTATION_WORK_ORDER.md",
-      "closeoutReport": "docs/MMA_GATE_6I_A_BROKER_AGENCY_CONTACTS_SETTINGS_CLOSEOUT_REPORT.md",
+      "closeoutReport": "docs/MGA_GATE_6I_A_SAVED_REPORT_TEMPLATES_SCHEDULE_DEFINITIONS_CLOSEOUT_REPORT.md",
       "testCount": 79,
       "testsPassed": 79,
       "buildStatus": "PASS",
