@@ -98,7 +98,7 @@
         {
           "gate_id": "7A-2",
           "phase_name": "Broker Workspace & Direct Book",
-          "status": "IMPLEMENTATION_COMPLETE_STABILIZATION_APPROVED"
+          "status": "CLOSED_OPERATOR_APPROVED"
         },
         {
           "gate_id": "7A-3",
@@ -327,10 +327,12 @@
       "runtimeStatus": "INACTIVE",
       "implementationStatus": "COMPLETE_TEST_SUITE_FROZEN",
       "stabilizationStatus": "LOCKED_AND_APPROVED",
+      "closureStatus": "FINAL_CLOSURE_APPROVED",
       "validationStatus": "PASSED",
       "closureDecision": "OPERATOR_APPROVED",
       "completion_date": "2026-05-13",
       "stabilization_approval_date": "2026-05-13",
+      "final_closure_date": "2026-05-13",
       "closure_date": "2026-05-13",
       "phases_completed": 11,
       "deliverables": {
