@@ -1,354 +1,333 @@
 /**
- * Centralized Permission Resolver
+ * Enhanced Permission Resolver with Relationship Context
  * 
- * Enforces all Gate 7A-0 permission namespaces and rules.
- * All permissions default to false (fail-closed) and are gated behind feature flags.
- * Permissions are checked AFTER scope validation (scope failure = masked 404, permission failure = 403).
+ * Evaluates user permissions based on:
+ * - User role and organization scope
+ * - Broker Agency ownership
+ * - MGA affiliation status
+ * - BrokerMGARelationship lifecycle status
+ * - Relationship-scoped operation authorization
+ * - Record classification (direct_broker_owned vs mga_affiliated)
  * 
- * Permission Namespaces:
- * - platform_broker.* — Platform oversight of broker signups and relationships
- * - broker_agency.* — Broker agency self-management
- * - broker_direct.* — Broker direct business book operations
- * - broker_mga.* — Broker MGA-affiliated operations (requires active relationship)
- * - quote_delegation.* — Quote delegation operations (disabled during Gate 7A-0)
- * - benefits_admin.* — Benefits admin operations (disabled during Gate 7A-0)
- * 
- * All permissions inactive and fail-closed during Gate 7A-0.
+ * Gate 7A-3 Phase 7A-3.3
+ * Backward-compatible with Gate 7A-0 permission model
  */
 
-/**
- * Permission Namespace Registry
- * All permissions default to false (inactive/fail-closed).
- */
-export const PERMISSIONS = {
-  // Platform Broker Management
-  platform_broker: {
-    view: false,
-    create: false,
-    approve: false,
-    reject: false,
-    request_more_info: false,
-    suspend: false,
-    reactivate: false,
-    view_book: false,
-    manage_compliance: false,
-    view_audit: false
-  },
+import { base44 } from '@/api/base44Client';
+import relationshipScopeResolver from '@/lib/scopeResolvers/relationshipScopeResolver.js';
 
-  // Broker Agency Self-Management
-  broker_agency: {
-    view: false,
-    update: false,
-    invite_user: false,
-    manage_users: false,
-    manage_permissions: false,
-    manage_compliance: false,
-    view_audit: false,
-    view_as: false
-  },
+// Permission Actions
+export const PERMISSION_ACTIONS = {
+  // Read operations
+  READ_CASE: 'read_case',
+  READ_CENSUS: 'read_census',
+  READ_QUOTE: 'read_quote',
+  READ_PROPOSAL: 'read_proposal',
+  READ_DOCUMENT: 'read_document',
+  READ_TASK: 'read_task',
+  READ_EMPLOYER: 'read_employer',
 
-  // Broker Direct Business Book
-  broker_direct: {
-    employer: {
-      create: false,
-      view: false
-    },
-    case: {
-      create: false,
-      manage: false
-    },
-    census: {
-      upload: false
-    },
-    quote: {
-      create: false,
-      manage: false
-    },
-    proposal: {
-      create: false,
-      manage: false
-    },
-    benefits_setup: {
-      start: false
-    },
-    renewal: {
-      manage: false
-    },
-    report: {
-      view: false
-    }
-  },
+  // Create operations
+  CREATE_CASE: 'create_case',
+  CREATE_CENSUS: 'create_census',
+  CREATE_QUOTE: 'create_quote',
+  CREATE_PROPOSAL: 'create_proposal',
+  CREATE_DOCUMENT: 'create_document',
+  CREATE_TASK: 'create_task',
 
-  // Broker MGA-Affiliated Operations
-  broker_mga: {
-    employer: {
-      view: false
-    },
-    case: {
-      create: false,
-      manage: false
-    },
-    quote: {
-      create: false,
-      submit_to_mga: false
-    },
-    proposal: {
-      create: false
-    },
-    benefits_setup: {
-      request: false
-    },
-    renewal: {
-      manage: false
-    }
-  },
+  // Update operations
+  UPDATE_CASE: 'update_case',
+  UPDATE_CENSUS: 'update_census',
+  UPDATE_QUOTE: 'update_quote',
+  UPDATE_PROPOSAL: 'update_proposal',
+  UPDATE_DOCUMENT: 'update_document',
+  UPDATE_TASK: 'update_task',
 
-  // Quote Delegation (Disabled during Gate 7A-0)
-  quote_delegation: {
-    view: false,
-    create: false,
-    assign: false,
-    reassign: false,
-    cancel: false,
-    archive: false,
-    accept: false,
-    decline: false,
-    complete: false,
-    take_over: false,
-    request_review: false,
-    submit_to_mga: false,
-    submit_to_platform: false,
-    approve: false,
-    view_audit: false,
-    override_assignment_blocker: false
-  },
+  // Delete operations
+  DELETE_CASE: 'delete_case',
+  DELETE_CENSUS: 'delete_census',
+  DELETE_QUOTE: 'delete_quote',
+  DELETE_PROPOSAL: 'delete_proposal',
+  DELETE_DOCUMENT: 'delete_document',
+  DELETE_TASK: 'delete_task',
 
-  // Benefits Admin (Disabled during Gate 7A-0)
-  benefits_admin: {
-    view: false,
-    create_case: false,
-    start_setup_from_quote: false,
-    view_quote_package: false,
-    validate_quote_package: false,
-    manage_setup: false,
-    approve_go_live: false,
-    view_audit: false
-  }
+  // Admin operations
+  ADMIN_OVERRIDE: 'admin_override',
+  MANAGE_RELATIONSHIP: 'manage_relationship'
 };
 
-/**
- * Check if user has a specific permission.
- * Resolves permission from namespace hierarchy.
- * Returns false if permission doesn't exist or is inactive.
- * 
- * @param {string} permissionPath - Dot-path to permission (e.g., 'platform_broker.view', 'broker_direct.case.create')
- * @param {Object} scopeProfile - Actor's scope profile (from scopeResolver)
- * @param {string} userRole - User's role (for role-based permission evaluation)
- * @returns {boolean} Whether user has permission
- */
-export const hasPermission = (permissionPath, scopeProfile, userRole) => {
-  const parts = permissionPath.split('.');
-  let current = PERMISSIONS;
+// Role-based default permissions
+const ROLE_PERMISSIONS = {
+  // Platform admin: all permissions
+  platform_admin: Object.values(PERMISSION_ACTIONS),
+  platform_super_admin: Object.values(PERMISSION_ACTIONS),
 
-  // Navigate to permission in namespace
-  for (const part of parts) {
-    if (!current.hasOwnProperty(part)) {
-      return false; // Permission doesn't exist
-    }
-    current = current[part];
-  }
+  // MGA admin: all MGA-scoped operations
+  mga_admin: [
+    PERMISSION_ACTIONS.READ_CASE,
+    PERMISSION_ACTIONS.READ_CENSUS,
+    PERMISSION_ACTIONS.READ_QUOTE,
+    PERMISSION_ACTIONS.READ_PROPOSAL,
+    PERMISSION_ACTIONS.READ_DOCUMENT,
+    PERMISSION_ACTIONS.READ_TASK,
+    PERMISSION_ACTIONS.READ_EMPLOYER,
+    PERMISSION_ACTIONS.CREATE_CASE,
+    PERMISSION_ACTIONS.CREATE_CENSUS,
+    PERMISSION_ACTIONS.CREATE_QUOTE,
+    PERMISSION_ACTIONS.CREATE_PROPOSAL,
+    PERMISSION_ACTIONS.CREATE_DOCUMENT,
+    PERMISSION_ACTIONS.CREATE_TASK,
+    PERMISSION_ACTIONS.UPDATE_CASE,
+    PERMISSION_ACTIONS.UPDATE_CENSUS,
+    PERMISSION_ACTIONS.UPDATE_QUOTE,
+    PERMISSION_ACTIONS.UPDATE_PROPOSAL,
+    PERMISSION_ACTIONS.UPDATE_DOCUMENT,
+    PERMISSION_ACTIONS.UPDATE_TASK,
+    PERMISSION_ACTIONS.MANAGE_RELATIONSHIP
+  ],
 
-  // Permission value is boolean; all false during Gate 7A-0
-  const permissionValue = current;
+  // MGA user: read + create/update for affiliated records only
+  mga_user: [
+    PERMISSION_ACTIONS.READ_CASE,
+    PERMISSION_ACTIONS.READ_CENSUS,
+    PERMISSION_ACTIONS.READ_QUOTE,
+    PERMISSION_ACTIONS.READ_PROPOSAL,
+    PERMISSION_ACTIONS.READ_DOCUMENT,
+    PERMISSION_ACTIONS.READ_TASK,
+    PERMISSION_ACTIONS.READ_EMPLOYER,
+    PERMISSION_ACTIONS.CREATE_CASE,
+    PERMISSION_ACTIONS.CREATE_CENSUS,
+    PERMISSION_ACTIONS.CREATE_QUOTE,
+    PERMISSION_ACTIONS.CREATE_PROPOSAL,
+    PERMISSION_ACTIONS.CREATE_DOCUMENT,
+    PERMISSION_ACTIONS.CREATE_TASK,
+    PERMISSION_ACTIONS.UPDATE_CASE,
+    PERMISSION_ACTIONS.UPDATE_CENSUS,
+    PERMISSION_ACTIONS.UPDATE_QUOTE,
+    PERMISSION_ACTIONS.UPDATE_PROPOSAL,
+    PERMISSION_ACTIONS.UPDATE_DOCUMENT,
+    PERMISSION_ACTIONS.UPDATE_TASK
+  ],
 
-  if (permissionValue !== true) {
-    return false; // Permission is inactive
-  }
+  mga_read_only: [
+    PERMISSION_ACTIONS.READ_CASE,
+    PERMISSION_ACTIONS.READ_CENSUS,
+    PERMISSION_ACTIONS.READ_QUOTE,
+    PERMISSION_ACTIONS.READ_PROPOSAL,
+    PERMISSION_ACTIONS.READ_DOCUMENT,
+    PERMISSION_ACTIONS.READ_TASK,
+    PERMISSION_ACTIONS.READ_EMPLOYER
+  ],
 
-  // Enforce role-based restrictions (even if permission is true in future)
-  return evaluateRolePermission(permissionPath, userRole, scopeProfile);
+  // Broker admin: all broker-scoped operations (direct book only)
+  broker_admin: [
+    PERMISSION_ACTIONS.READ_CASE,
+    PERMISSION_ACTIONS.READ_CENSUS,
+    PERMISSION_ACTIONS.READ_QUOTE,
+    PERMISSION_ACTIONS.READ_PROPOSAL,
+    PERMISSION_ACTIONS.READ_DOCUMENT,
+    PERMISSION_ACTIONS.READ_TASK,
+    PERMISSION_ACTIONS.READ_EMPLOYER,
+    PERMISSION_ACTIONS.CREATE_CASE,
+    PERMISSION_ACTIONS.CREATE_CENSUS,
+    PERMISSION_ACTIONS.CREATE_QUOTE,
+    PERMISSION_ACTIONS.CREATE_PROPOSAL,
+    PERMISSION_ACTIONS.CREATE_DOCUMENT,
+    PERMISSION_ACTIONS.CREATE_TASK,
+    PERMISSION_ACTIONS.UPDATE_CASE,
+    PERMISSION_ACTIONS.UPDATE_CENSUS,
+    PERMISSION_ACTIONS.UPDATE_QUOTE,
+    PERMISSION_ACTIONS.UPDATE_PROPOSAL,
+    PERMISSION_ACTIONS.UPDATE_DOCUMENT,
+    PERMISSION_ACTIONS.UPDATE_TASK
+  ],
+
+  // Broker user: read + create/update for own direct records only
+  broker_user: [
+    PERMISSION_ACTIONS.READ_CASE,
+    PERMISSION_ACTIONS.READ_CENSUS,
+    PERMISSION_ACTIONS.READ_QUOTE,
+    PERMISSION_ACTIONS.READ_PROPOSAL,
+    PERMISSION_ACTIONS.READ_DOCUMENT,
+    PERMISSION_ACTIONS.READ_TASK,
+    PERMISSION_ACTIONS.READ_EMPLOYER,
+    PERMISSION_ACTIONS.CREATE_CASE,
+    PERMISSION_ACTIONS.CREATE_CENSUS,
+    PERMISSION_ACTIONS.CREATE_QUOTE,
+    PERMISSION_ACTIONS.CREATE_PROPOSAL,
+    PERMISSION_ACTIONS.CREATE_DOCUMENT,
+    PERMISSION_ACTIONS.CREATE_TASK,
+    PERMISSION_ACTIONS.UPDATE_CASE,
+    PERMISSION_ACTIONS.UPDATE_CENSUS,
+    PERMISSION_ACTIONS.UPDATE_QUOTE,
+    PERMISSION_ACTIONS.UPDATE_PROPOSAL,
+    PERMISSION_ACTIONS.UPDATE_DOCUMENT,
+    PERMISSION_ACTIONS.UPDATE_TASK
+  ],
+
+  broker_read_only: [
+    PERMISSION_ACTIONS.READ_CASE,
+    PERMISSION_ACTIONS.READ_CENSUS,
+    PERMISSION_ACTIONS.READ_QUOTE,
+    PERMISSION_ACTIONS.READ_PROPOSAL,
+    PERMISSION_ACTIONS.READ_DOCUMENT,
+    PERMISSION_ACTIONS.READ_TASK,
+    PERMISSION_ACTIONS.READ_EMPLOYER
+  ]
 };
 
-/**
- * Evaluate whether role has permission to perform action.
- * Enforces role-to-permission mapping (broker, MGA, admin, etc.).
- * Called only if permission is active (during Gate 7A-0, all return false).
- * 
- * @param {string} permissionPath - Permission path
- * @param {string} userRole - User role
- * @param {Object} scopeProfile - Actor's scope profile
- * @returns {boolean} Whether role has permission
- */
-export const evaluateRolePermission = (permissionPath, userRole, scopeProfile) => {
-  // Platform admins have all permissions
-  if (userRole === 'admin' || userRole === 'platform_super_admin') {
-    return true;
-  }
-
-  // Broker admins have broker_agency and broker_direct permissions
-  if (userRole === 'broker_admin' || userRole === 'broker_manager') {
-    if (permissionPath.startsWith('broker_agency.') || permissionPath.startsWith('broker_direct.')) {
-      return true;
+class PermissionResolver {
+  /**
+   * Resolve user permissions for an action on a record
+   * Evaluates: role permission + relationship scope (if MGA)
+   * 
+   * @param {object} user — { email, role, broker_agency_id?, mga_id? }
+   * @param {string} action — PERMISSION_ACTIONS.* constant
+   * @param {object} record — { id, broker_agency_id, relationship_id }
+   * @returns {object} { allowed: boolean, reason: string, reason_detail?: string }
+   */
+  async resolvePermission(user, action, record) {
+    // Step 1: Validate user has role-based permission for action
+    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+    if (!rolePermissions.includes(action)) {
+      return {
+        allowed: false,
+        reason: 'DENY_ROLE_LACKS_PERMISSION',
+        reason_detail: `Role '${user.role}' cannot perform '${action}'`
+      };
     }
-  }
 
-  // MGA admins have broker_mga permissions
-  if (userRole === 'mga_admin' || userRole === 'mga_manager') {
-    if (permissionPath.startsWith('broker_mga.')) {
-      return true;
+    // Step 2: Platform admin override — allow all
+    if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
+      return {
+        allowed: true,
+        reason: 'ALLOW_PLATFORM_ADMIN_OVERRIDE'
+      };
     }
-  }
 
-  // Default: no permission
-  return false;
-};
+    // Step 3: MGA user — check relationship scope
+    if (['mga_user', 'mga_admin', 'mga_read_only'].includes(user.role)) {
+      const scopeDecision = await relationshipScopeResolver.canMGAAccessRecord(
+        user.email,
+        user.mga_id,
+        record,
+        action
+      );
 
-/**
- * Assert that actor has permission to perform action.
- * Called AFTER scope check (scope already valid at this point).
- * Returns { permitted: boolean, error?: string, status?: number }
- * - permitted=true, status=200: Permission granted
- * - permitted=false, error='Forbidden', status=403: Permission denied
- * 
- * @param {string} permissionPath - Permission path (e.g., 'broker_direct.case.create')
- * @param {Object} scopeProfile - Actor's scope profile
- * @param {string} userRole - User's role
- * @returns {Object} { permitted: boolean, error?: string, status?: number }
- */
-export const assertPermission = (permissionPath, scopeProfile, userRole) => {
-  const permitted = hasPermission(permissionPath, scopeProfile, userRole);
-
-  if (permitted) {
-    return { permitted: true, status: 200 };
-  }
-
-  // Permission denied (within valid scope, so return 403, not 404)
-  return { permitted: false, error: 'Forbidden', status: 403 };
-};
-
-/**
- * Get all active permissions for a user.
- * Used for permission serialization in auth response.
- * During Gate 7A-0, returns empty array (all permissions inactive).
- * 
- * @param {Object} scopeProfile - Actor's scope profile
- * @param {string} userRole - User's role
- * @returns {Array<string>} List of active permission paths
- */
-export const getActivePermissions = (scopeProfile, userRole) => {
-  const active = [];
-
-  // Recursively find all active permissions
-  const findActivePermissions = (obj, prefix = '') => {
-    for (const [key, value] of Object.entries(obj)) {
-      const path = prefix ? `${prefix}.${key}` : key;
-
-      if (value === true) {
-        // Permission is true; check role
-        if (evaluateRolePermission(path, userRole, scopeProfile)) {
-          active.push(path);
-        }
-      } else if (typeof value === 'object' && value !== null) {
-        // Nested namespace; recurse
-        findActivePermissions(value, path);
+      if (!scopeDecision.allowed) {
+        return {
+          allowed: false,
+          reason: `DENY_RELATIONSHIP_SCOPE_${scopeDecision.reason}`,
+          reason_detail: scopeDecision.detail,
+          scope_failure: true
+        };
       }
+
+      return {
+        allowed: true,
+        reason: 'ALLOW_MGA_ROLE_AND_RELATIONSHIP_SCOPE',
+        relationship_id: record.relationship_id
+      };
     }
-  };
 
-  findActivePermissions(PERMISSIONS);
-  return active;
-};
+    // Step 4: Broker user — check direct ownership
+    if (['broker_user', 'broker_admin', 'broker_read_only'].includes(user.role)) {
+      const scopeDecision = await relationshipScopeResolver.canBrokerAccessRecord(
+        user.email,
+        user.broker_agency_id,
+        record
+      );
 
-/**
- * Get all permissions in a namespace (for display/audit).
- * Returns full list including inactive permissions.
- * Used for permission matrix documentation and testing.
- * 
- * @param {string} namespacePath - Namespace path (e.g., 'platform_broker', 'broker_direct.case')
- * @returns {Array<Object>} List of permissions with their status
- */
-export const getNamespacePermissions = (namespacePath = null) => {
-  const result = [];
-
-  const flattenPermissions = (obj, prefix = '') => {
-    for (const [key, value] of Object.entries(obj)) {
-      const path = prefix ? `${prefix}.${key}` : key;
-
-      if (typeof value === 'boolean') {
-        result.push({
-          path,
-          active: value
-        });
-      } else if (typeof value === 'object' && value !== null) {
-        flattenPermissions(value, path);
+      if (!scopeDecision.allowed) {
+        return {
+          allowed: false,
+          reason: `DENY_BROKER_SCOPE_${scopeDecision.reason}`,
+          reason_detail: scopeDecision.detail,
+          scope_failure: true
+        };
       }
-    }
-  };
 
-  if (namespacePath) {
-    // Get specific namespace
-    const parts = namespacePath.split('.');
-    let current = PERMISSIONS;
-    for (const part of parts) {
-      if (current.hasOwnProperty(part)) {
-        current = current[part];
+      return {
+        allowed: true,
+        reason: 'ALLOW_BROKER_ROLE_AND_DIRECT_OWNERSHIP'
+      };
+    }
+
+    // Step 5: Other roles not supported
+    return {
+      allowed: false,
+      reason: 'DENY_INVALID_ROLE',
+      reason_detail: `Role '${user.role}' not recognized`
+    };
+  }
+
+  /**
+   * Batch resolve permissions for multiple records
+   * @param {object} user
+   * @param {string} action
+   * @param {array} records
+   * @returns {object} { allowed: [], denied: [], details: [] }
+   */
+  async resolveBatchPermissions(user, action, records) {
+    const allowed = [];
+    const denied = [];
+    const details = [];
+
+    for (const record of records) {
+      const decision = await this.resolvePermission(user, action, record);
+
+      if (decision.allowed) {
+        allowed.push(record.id);
       } else {
-        return []; // Namespace not found
+        denied.push(record.id);
+        details.push({
+          record_id: record.id,
+          reason: decision.reason,
+          reason_detail: decision.reason_detail
+        });
       }
     }
-    flattenPermissions(current, namespacePath);
-  } else {
-    // Get all permissions
-    flattenPermissions(PERMISSIONS);
+
+    return { allowed, denied, details };
   }
 
-  return result;
-};
-
-/**
- * Check if permission is feature-flag gated.
- * Used to determine whether permission should be evaluated or skipped.
- * During Gate 7A-0, all permissions are gated behind disabled flags.
- * 
- * @param {string} permissionPath - Permission path
- * @returns {Object} { gated: boolean, requiredFlags: Array<string> }
- */
-export const getPermissionGating = (permissionPath) => {
-  // Map permissions to their required feature flags
-  const gatingMap = {
-    'platform_broker.': ['BROKER_PLATFORM_RELATIONSHIP_ENABLED'],
-    'broker_agency.': ['FIRST_CLASS_BROKER_MODEL_ENABLED'],
-    'broker_direct.': ['FIRST_CLASS_BROKER_MODEL_ENABLED'],
-    'broker_mga.': ['FIRST_CLASS_BROKER_MODEL_ENABLED', 'BROKER_MGA_RELATIONSHIP_ENABLED'],
-    'quote_delegation.': ['QUOTE_CHANNEL_WRAPPER_ENABLED', 'QUOTE_DELEGATION_ENABLED'],
-    'benefits_admin.': ['BENEFITS_ADMIN_CHANNEL_BRIDGE_ENABLED']
-  };
-
-  for (const [prefix, flags] of Object.entries(gatingMap)) {
-    if (permissionPath.startsWith(prefix)) {
-      return { gated: true, requiredFlags: flags };
-    }
+  /**
+   * Check if user can perform admin override (platform admin only)
+   * All overrides are audited
+   * @param {object} user
+   * @param {string} action
+   * @returns {boolean}
+   */
+  canPerformAdminOverride(user) {
+    return ['platform_admin', 'platform_super_admin'].includes(user.role);
   }
 
-  return { gated: false, requiredFlags: [] };
-};
-
-/**
- * Validate permission against feature flags.
- * Returns false if any required flag is not enabled.
- * Used by assertPermission to gate permission evaluation.
- * 
- * @param {string} permissionPath - Permission path
- * @param {Object} featureFlags - Current feature flag state
- * @returns {boolean} Whether permission's required flags are all enabled
- */
-export const isPermissionGateOpen = (permissionPath, featureFlags) => {
-  const gating = getPermissionGating(permissionPath);
-
-  if (!gating.gated) {
-    return true; // No gating required
+  /**
+   * Get user's allowed actions based on role
+   * @param {string} role
+   * @returns {array}
+   */
+  getActionsByRole(role) {
+    return ROLE_PERMISSIONS[role] || [];
   }
 
-  // All required flags must be true
-  return gating.requiredFlags.every((flag) => featureFlags[flag] === true);
-};
+  /**
+   * Check if relationship scope is required for this action
+   * @param {string} role
+   * @returns {boolean}
+   */
+  requiresRelationshipScope(role) {
+    return ['mga_user', 'mga_admin', 'mga_read_only'].includes(role);
+  }
+
+  /**
+   * Check if direct ownership is required for this action
+   * @param {string} role
+   * @returns {boolean}
+   */
+  requiresDirectOwnership(role) {
+    return ['broker_user', 'broker_admin', 'broker_read_only'].includes(role);
+  }
+}
+
+export default new PermissionResolver();
