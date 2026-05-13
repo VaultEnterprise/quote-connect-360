@@ -77,7 +77,7 @@
       "status": "PROGRAM_ACTIVE",
       "runtimeStatus": "INACTIVE",
       "implementationStatus": "PHASED_IMPLEMENTATION",
-      "currentPhase": "7A-0",
+      "currentPhase": "7A-2",
       "phaseCount": 7,
       "start_date": "2026-05-13",
       "target_completion": "2026-12-31",
@@ -93,12 +93,12 @@
         {
           "gate_id": "7A-1",
           "phase_name": "Broker Signup & Onboarding Foundation",
-          "status": "PENDING_APPROVAL"
+          "status": "CLOSED"
         },
         {
           "gate_id": "7A-2",
           "phase_name": "Broker Workspace & Direct Book",
-          "status": "NOT_STARTED"
+          "status": "PLANNING_AUTHORIZED_ONLY"
         },
         {
           "gate_id": "7A-3",
@@ -316,7 +316,7 @@
         "production_backfill_executed": false,
         "destructive_migration_occurred": false
       },
-      "notes": "Gate 7A-0 implementation COMPLETE. All 12 feature flags remain false. Runtime remains INACTIVE. No UI/routes/runtime features activated. No production backfill executed. No destructive migration. Gate 7A NOT marked complete; awaiting Gate 7A-1 through 7A-6. Approval status: IMPLEMENTED_VALIDATION_PENDING (awaiting Phase 7A-0.10 checkpoint and operator approval for next phase)."
+      "notes": "Gate 7A-0 CLOSED. Gate 7A-1 CLOSED. All 20 feature flags remain false (10 from 7A-0, 10 from 7A-1). Runtime remains INACTIVE. Gate 7A parent PROGRAM_ACTIVE. Gate 7A-2 PLANNING_AUTHORIZED_ONLY (no implementation authorized). Next phase planning document created."
     }
   ],
   "validation_checksums": {
