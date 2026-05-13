@@ -221,6 +221,66 @@
     "notes": {
       "type": "string",
       "description": "Internal admin notes"
+    },
+    "distribution_channel_context_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "FK to DistributionChannelContext (nullable for Phase 1 standalone brokers)"
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "NOT required, NOT identifying; nullable for standalone brokers; optional for legacy MGA-affiliated brokers"
+    },
+    "owner_org_type": {
+      "type": "string",
+      "enum": ["platform", "broker", "mga", "employer"],
+      "nullable": true,
+      "description": "Denormalized owner org type for query optimization"
+    },
+    "owner_org_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "Denormalized owner org ID"
+    },
+    "servicing_org_type": {
+      "type": "string",
+      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "nullable": true
+    },
+    "servicing_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "supervising_org_type": {
+      "type": "string",
+      "enum": ["mga", "platform"],
+      "nullable": true
+    },
+    "supervising_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "User ID (validated existing: created_by_user_email; adding user_id for consistency)"
+    },
+    "created_by_role": {
+      "type": "string",
+      "nullable": true,
+      "description": "User's role at creation time for audit"
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["owner_only", "owner_and_servicing", "owner_and_supervising", "owner_and_all_affiliates", "platform_wide"],
+      "nullable": true,
+      "description": "Denormalized visibility scope for query optimization"
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "Correlation ID for multi-step audit trails"
     }
   },
   "required": [
