@@ -5,10 +5,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Download, CheckCircle2 } from "lucide-react";
+import { Upload, Download, CheckCircle2, AlertCircle } from "lucide-react";
 import { generateCensusTemplate } from "@/utils/censusHelpers";
+import CensusColumnMapper from "./CensusColumnMapper";
+import CensusMappingPreview from "./CensusMappingPreview";
+import { censusImportClient } from "./CensusImportClient";
 
-const STEPS = ["upload", "processing", "done"];
+const STEPS = ["upload", "analyze", "mapping", "preview", "processing", "done"];
 
 export default function CensusUploadModal({ caseId, open, onClose }) {
   const queryClient = useQueryClient();
@@ -18,6 +21,12 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
   const [importing, setImporting] = useState(false);
   const [entityReady, setEntityReady] = useState(true);
   const [entityError, setEntityError] = useState("");
+  const [headers, setHeaders] = useState([]);
+  const [headerRowIndex, setHeaderRowIndex] = useState(0);
+  const [mapping, setMapping] = useState({});
+  const [preview, setPreview] = useState([]);
+  const [mappingError, setMappingError] = useState("");
+  const [fileUrl, setFileUrl] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -36,55 +45,87 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
     setFile(selectedFile);
   };
 
-  const handleImport = async () => {
+  const handleFileSelect = async () => {
     if (!file || !entityReady) return;
+    setStep("analyze");
+
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setFileUrl(file_url);
+
+    const analysisRes = await censusImportClient.analyzeWorkbook(file_url);
+    setHeaders(analysisRes.data.headers);
+    setHeaderRowIndex(analysisRes.data.header_row_index);
+    
+    // Auto-suggest mapping
+    const suggestedMapping = {};
+    analysisRes.data.headers.forEach((h, idx) => {
+      const normalized = h.normalized;
+      if (normalized.includes("relationship") || normalized.includes("relation")) suggestedMapping[idx] = "relationship";
+      else if (normalized.includes("first") && normalized.includes("name")) suggestedMapping[idx] = "first_name";
+      else if (normalized.includes("last") && normalized.includes("name")) suggestedMapping[idx] = "last_name";
+      else if (normalized.includes("dob") || normalized.includes("birth")) suggestedMapping[idx] = "dob";
+      else if (normalized.includes("address")) suggestedMapping[idx] = "address";
+      else if (normalized.includes("city")) suggestedMapping[idx] = "city";
+      else if (normalized.includes("state")) suggestedMapping[idx] = "state";
+      else if (normalized.includes("zip")) suggestedMapping[idx] = "zip";
+      else if (normalized.includes("gender") || normalized.includes("sex")) suggestedMapping[idx] = "gender";
+    });
+
+    setMapping(suggestedMapping);
+    setStep("mapping");
+  };
+
+  const handleMappingChange = async (newMapping) => {
+    setMapping(newMapping);
+    
+    const validationRes = await censusImportClient.validateMapping(newMapping);
+    if (!validationRes.data.valid) {
+      setMappingError(`Missing required: ${validationRes.data.missing_required.join(", ")}`);
+    } else {
+      setMappingError("");
+    }
+  };
+
+  const handlePreview = async () => {
+    const previewRes = await censusImportClient.previewMapping(fileUrl, mapping, headerRowIndex);
+    setPreview(previewRes.data.preview);
+    setStep("preview");
+  };
+
+  const handleImport = async () => {
+    if (!fileUrl || !entityReady || mappingError) return;
     setImporting(true);
     setStep("processing");
 
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
     const census_import_id = crypto.randomUUID();
 
-    const me = await base44.auth.me();
-    const job = await base44.entities.CensusImportJob.create({
-      case_id: caseId,
-      census_import_id,
-      status: "uploaded",
-      source_template: "vault_census",
-      source_file_name: file.name,
-      source_file_url: file_url,
-      created_by_email: me?.email || "",
-    });
+    try {
+      await censusImportClient.executeImport(
+        caseId,
+        census_import_id,
+        fileUrl,
+        file.name,
+        mapping,
+        headerRowIndex
+      );
 
-    await base44.entities.CensusImportAuditEvent.create({
-      case_id: caseId,
-      census_import_id,
-      census_import_job_id: job.id,
-      event_type: "upload",
-      actor_id: me?.email || "",
-      payload: { notes, source_file_name: file.name },
-    });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["case", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["census-all"] }),
+        queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["census-members"] }),
+        queryClient.invalidateQueries({ queryKey: ["census-members-page", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["census-import-job", caseId] }),
+        queryClient.invalidateQueries({ queryKey: ["census-validation-results", caseId] }),
+      ]);
 
-    await base44.functions.invoke("processCensusImportJob", {
-      caseId,
-      census_import_id,
-      source_file_url: file_url,
-      source_file_name: file.name,
-      censusImportJobId: job.id,
-      notes,
-    });
-
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["case", caseId] }),
-      queryClient.invalidateQueries({ queryKey: ["census-all"] }),
-      queryClient.invalidateQueries({ queryKey: ["census-versions", caseId] }),
-      queryClient.invalidateQueries({ queryKey: ["census-members"] }),
-      queryClient.invalidateQueries({ queryKey: ["census-members-page", caseId] }),
-      queryClient.invalidateQueries({ queryKey: ["census-import-job", caseId] }),
-      queryClient.invalidateQueries({ queryKey: ["census-validation-results", caseId] }),
-    ]);
-
-    setImporting(false);
-    setStep("done");
+      setImporting(false);
+      setStep("done");
+    } catch (error) {
+      setMappingError(error.message);
+      setStep("preview");
+      setImporting(false);
+    }
   };
 
   const downloadTemplate = () => {
@@ -103,29 +144,34 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
     setFile(null);
     setNotes("");
     setImporting(false);
+    setHeaders([]);
+    setMapping({});
+    setPreview([]);
+    setMappingError("");
+    setFileUrl(null);
     onClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Upload Census Snapshot</DialogTitle>
-          <div className="flex items-center gap-2 pt-2">
-            {["Upload", "Processing", "Done"].map((label, i) => {
-              const stepKey = STEPS[i];
+          <DialogTitle>Import Census with Column Mapping</DialogTitle>
+          <div className="flex items-center gap-1 pt-2 overflow-x-auto pb-2">
+            {STEPS.map((stepKey, i) => {
               const active = step === stepKey;
               const done = STEPS.indexOf(step) > i;
+              const label = ["Upload", "Analyze", "Map", "Preview", "Import", "Done"][i];
               return (
-                <React.Fragment key={stepKey}>
+                <div key={stepKey} className="flex items-center gap-1 flex-shrink-0">
                   <div className={`flex items-center gap-1.5 text-xs font-medium ${active ? "text-primary" : done ? "text-green-600" : "text-muted-foreground"}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${active ? "bg-primary text-white" : done ? "bg-green-500 text-white" : "bg-muted"}`}>
                       {done ? "✓" : i + 1}
                     </div>
-                    {label}
+                    <span className="hidden sm:inline">{label}</span>
                   </div>
-                  {i < 2 && <div className="flex-1 h-px bg-border" />}
-                </React.Fragment>
+                  {i < STEPS.length - 1 && <div className="w-6 h-px bg-border flex-shrink-0" />}
+                </div>
               );
             })}
           </div>
@@ -170,12 +216,51 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
           </div>
         )}
 
+        {step === "analyze" && (
+          <div className="py-10 flex flex-col items-center gap-3">
+            <Upload className="w-14 h-14 text-primary animate-pulse" />
+            <p className="text-lg font-semibold">Analyzing File</p>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              Reading file structure and detecting column headers...
+            </p>
+          </div>
+        )}
+
+        {step === "mapping" && (
+          <div className="space-y-4 py-4">
+            <CensusColumnMapper
+              headers={headers}
+              mapping={mapping}
+              onMappingChange={handleMappingChange}
+              validationErrors={mappingError ? [mappingError] : []}
+            />
+            {mappingError && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 flex gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive">{mappingError}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === "preview" && (
+          <div className="space-y-4 py-4">
+            <CensusMappingPreview preview={preview} mapping={mapping} />
+            {mappingError && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 flex gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive">{mappingError}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {step === "processing" && (
           <div className="py-10 flex flex-col items-center gap-3">
             <Upload className="w-14 h-14 text-primary animate-pulse" />
-            <p className="text-lg font-semibold">Processing Census Import</p>
+            <p className="text-lg font-semibold">Importing Census</p>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              Your file is being processed on the server with template-aware parsing, normalization, validation, persistence, and audit logging.
+              Processing your mapped data, validating records, and persisting to the system...
             </p>
           </div>
         )}
@@ -183,16 +268,28 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
         {step === "done" && (
           <div className="py-10 flex flex-col items-center gap-3">
             <CheckCircle2 className="w-14 h-14 text-green-500" />
-            <p className="text-lg font-semibold">Census Import Submitted</p>
-            <p className="text-sm text-muted-foreground">The server processed your file and updated the case import history.</p>
+            <p className="text-lg font-semibold">Census Import Complete</p>
+            <p className="text-sm text-muted-foreground">Your census data has been successfully imported and validated.</p>
           </div>
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>{step === "done" ? "Close" : "Cancel"}</Button>
+          <Button variant="outline" onClick={handleClose}>
+            {step === "done" ? "Close" : "Cancel"}
+          </Button>
           {step === "upload" && (
-            <Button onClick={handleImport} disabled={!file || importing}>
-              {importing ? "Submitting..." : "Submit Server Import"}
+            <Button onClick={handleFileSelect} disabled={!file || !entityReady || importing}>
+              Next: Analyze File
+            </Button>
+          )}
+          {step === "mapping" && (
+            <Button onClick={handlePreview} disabled={!!mappingError || importing}>
+              Next: Preview
+            </Button>
+          )}
+          {step === "preview" && (
+            <Button onClick={handleImport} disabled={!!mappingError || importing}>
+              {importing ? "Importing..." : "Complete Import"}
             </Button>
           )}
         </DialogFooter>

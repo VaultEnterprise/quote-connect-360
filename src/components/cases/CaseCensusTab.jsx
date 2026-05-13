@@ -142,7 +142,6 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
       {showUpload && (
         <CensusUploadModal
           caseId={caseId}
-          currentVersionCount={censusVersions.length}
           open={showUpload}
           onClose={() => setShowUpload(false)}
         />
