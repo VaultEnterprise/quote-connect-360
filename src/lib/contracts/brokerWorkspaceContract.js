@@ -26,16 +26,47 @@ import { base44 } from '@/api/base44Client';
  * getBrokerWorkspaceAccessState
  * 
  * Evaluate broker workspace access eligibility using Gate 7A-1 portal access rules.
- * Returns access state without activating workspace (feature flag control).
+ * Returns one of 12 access states without activating workspace (feature flag control).
+ * 
+ * Access States:
+ * 1. NOT_STARTED - No onboarding initiated
+ * 2. PENDING_EMAIL_VERIFICATION - Email verification pending
+ * 3. PROFILE_INCOMPLETE - Onboarding profile incomplete
+ * 4. PENDING_COMPLIANCE - Awaiting compliance document submission
+ * 5. PENDING_PLATFORM_REVIEW - Submitted for platform review
+ * 6. PENDING_MORE_INFORMATION - Platform review requested more info
+ * 7. COMPLIANCE_HOLD - Compliance hold active, portal access blocked
+ * 8. REJECTED - Application rejected
+ * 9. SUSPENDED - Account suspended
+ * 10. APPROVED_BUT_WORKSPACE_DISABLED - Approved but workspace flag false
+ * 11. ELIGIBLE_PENDING_WORKSPACE_ACTIVATION - Eligible pending feature flag activation
+ * 12. ACTIVE - Workspace activated (reserved for later activation only)
  */
 export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
   try {
     const user = await base44.auth.me();
+    
+    // Audit event: access evaluation started
+    if (user) {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_EVALUATED',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'initiated',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+    }
+
     if (!user) {
       return {
         eligible: false,
         reason: 'NOT_AUTHENTICATED',
-        access_state: 'NOT_AUTHENTICATED',
+        access_state: 'NOT_STARTED',
+        workspace_activated: false,
+        status: 401,
       };
     }
 
@@ -46,11 +77,23 @@ export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
     });
 
     if (!brokerUsers || brokerUsers.length === 0) {
-      // Cross-tenant or invalid scope
+      // Cross-tenant or invalid scope - masked 404
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_INVALID_ROLE',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Invalid BrokerAgencyUser role',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         eligible: false,
         reason: 'INVALID_BROKER_AGENCY_USER',
         access_state: 'INVALID_USER_ROLE',
+        workspace_activated: false,
         status: 404, // masked 404
       };
     }
@@ -61,22 +104,190 @@ export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
     });
 
     if (!brokerProfiles || brokerProfiles.length === 0) {
+      // Invalid scope - masked 404
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_SCOPE',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Broker agency profile not found',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         eligible: false,
         reason: 'BROKER_AGENCY_NOT_FOUND',
         access_state: 'INVALID_SCOPE',
+        workspace_activated: false,
         status: 404, // masked 404
       };
     }
 
     const brokerProfile = brokerProfiles[0];
 
-    // Evaluate Gate 7A-1 portal access rules
-    if (brokerProfile.onboarding_status !== 'active') {
+    // State 1: NOT_STARTED or PENDING_EMAIL_VERIFICATION
+    if (brokerProfile.onboarding_status === 'not_started') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_PENDING_REVIEW',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Onboarding not started',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: false,
+        reason: 'ONBOARDING_NOT_STARTED',
+        access_state: 'NOT_STARTED',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // State 3: PROFILE_INCOMPLETE
+    if (brokerProfile.onboarding_status === 'in_progress') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_PENDING_REVIEW',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Onboarding profile incomplete',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         eligible: false,
         reason: 'ONBOARDING_NOT_COMPLETE',
-        access_state: 'PENDING_PROFILE_COMPLETION',
+        access_state: 'PROFILE_INCOMPLETE',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // State 4: PENDING_COMPLIANCE
+    if (brokerProfile.onboarding_status === 'pending_compliance') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_PENDING_REVIEW',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Awaiting compliance documents',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: false,
+        reason: 'AWAITING_COMPLIANCE',
+        access_state: 'PENDING_COMPLIANCE',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // State 5: PENDING_PLATFORM_REVIEW
+    if (brokerProfile.onboarding_status === 'pending_review') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_PENDING_REVIEW',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Pending platform review',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: false,
+        reason: 'PENDING_PLATFORM_REVIEW',
+        access_state: 'PENDING_PLATFORM_REVIEW',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // State 6: PENDING_MORE_INFORMATION
+    if (brokerProfile.onboarding_status === 'pending_more_information') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_PENDING_REVIEW',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Pending additional information from applicant',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: false,
+        reason: 'AWAITING_MORE_INFORMATION',
+        access_state: 'PENDING_MORE_INFORMATION',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // State 8: REJECTED
+    if (brokerProfile.onboarding_status === 'rejected') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_PENDING_REVIEW',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Application rejected',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: false,
+        reason: 'APPLICATION_REJECTED',
+        access_state: 'REJECTED',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // State 9: SUSPENDED
+    if (brokerProfile.onboarding_status === 'suspended') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_SUSPENDED',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Account suspended',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: false,
+        reason: 'ACCOUNT_SUSPENDED',
+        access_state: 'SUSPENDED',
+        workspace_activated: false,
+        status: 403,
+      };
+    }
+
+    // If we reach here, onboarding_status should be 'active'
+    if (brokerProfile.onboarding_status !== 'active') {
+      return {
+        eligible: false,
+        reason: 'UNKNOWN_ONBOARDING_STATUS',
+        access_state: 'INVALID_SCOPE',
+        workspace_activated: false,
         status: 403,
       };
     }
@@ -91,6 +302,7 @@ export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
         eligible: false,
         reason: 'NO_PLATFORM_RELATIONSHIP',
         access_state: 'INVALID_SCOPE',
+        workspace_activated: false,
         status: 403,
       };
     }
@@ -102,6 +314,7 @@ export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
         eligible: false,
         reason: 'RELATIONSHIP_NOT_ACTIVE',
         access_state: 'INVALID_SCOPE',
+        workspace_activated: false,
         status: 403,
       };
     }
@@ -111,32 +324,100 @@ export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
         eligible: false,
         reason: 'PORTAL_ACCESS_DISABLED',
         access_state: 'PORTAL_ACCESS_DISABLED',
+        workspace_activated: false,
         status: 403,
       };
     }
 
+    // State 7: COMPLIANCE_HOLD
     if (brokerProfile.compliance_status === 'compliance_hold') {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_COMPLIANCE_HOLD',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+          detail: 'Active compliance hold',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         eligible: false,
         reason: 'COMPLIANCE_HOLD_ACTIVE',
         access_state: 'COMPLIANCE_HOLD',
+        workspace_activated: false,
         status: 403,
       };
     }
 
-    // Portal access eligible but workspace may not be activated yet (feature flag control)
+    // State 10/11: APPROVED but workspace disabled or pending activation
+    const workspaceActivated = brokerProfile.workspace_activated || false;
+
+    if (!workspaceActivated) {
+      // State 10: APPROVED_BUT_WORKSPACE_DISABLED (when flag is false)
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_ELIGIBLE_PENDING_ACTIVATION',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'eligible_but_disabled',
+          detail: 'Approved but workspace flag disabled',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
+      return {
+        eligible: true,
+        portal_access_eligible: true,
+        reason: 'PORTAL_ACCESS_ELIGIBLE',
+        access_state: 'APPROVED_BUT_WORKSPACE_DISABLED',
+        workspace_activated: false,
+        status: 200,
+      };
+    }
+
+    // State 12: ACTIVE (only reachable after workspace activation approval)
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_WORKSPACE_ACCESS_ELIGIBLE_PENDING_ACTIVATION',
+        actor_email: user.email,
+        broker_agency_id: brokerAgencyId,
+        outcome: 'eligible_active',
+        detail: 'Workspace activated and eligible',
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
     return {
       eligible: true,
-      reason: 'PORTAL_ACCESS_ELIGIBLE',
-      access_state: 'APPROVED_AWAITING_WORKSPACE_ACTIVATION',
-      workspace_activated: brokerProfile.workspace_activated || false,
+      portal_access_eligible: true,
+      workspace_activated: true,
+      reason: 'WORKSPACE_ACTIVATED',
+      access_state: 'ACTIVE',
       status: 200,
     };
   } catch (error) {
+    try {
+      const user = await base44.auth.me();
+      if (user) {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_WORKSPACE_ACCESS_DENIED_SCOPE',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'error',
+          detail: `Evaluation error: ${error.message}`,
+        });
+      }
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
     return {
       eligible: false,
       reason: 'EVALUATION_ERROR',
       error: error.message,
+      access_state: 'INVALID_SCOPE',
+      workspace_activated: false,
       status: 500,
     };
   }
