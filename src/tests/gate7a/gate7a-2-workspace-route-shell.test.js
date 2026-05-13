@@ -1,3 +1,5 @@
+/* global describe, test, expect */
+
 /**
  * Gate 7A-2 Workspace Route / Shell Tests — Phase 7A-2.10
  * 
