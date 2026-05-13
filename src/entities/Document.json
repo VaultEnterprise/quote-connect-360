@@ -1,0 +1,103 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "broker_agency_id": {
+      "type": "string",
+      "description": "Broker agency that owns or is affiliated with this document"
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope — nullable during migration staging; required after Phase 4 validation"
+    },
+    "master_group_id": {
+      "type": "string",
+      "description": "MasterGroup scope — nullable during migration staging"
+    },
+    "case_id": {
+      "type": "string",
+      "description": "Associated case ID"
+    },
+    "employer_group_id": {
+      "type": "string",
+      "description": "Associated employer group ID"
+    },
+    "mga_relationship_id": {
+      "type": "string",
+      "description": "BrokerMGARelationship ID if document is mga_affiliated"
+    },
+    "distribution_channel_context_id": {
+      "type": "string",
+      "description": "Distribution channel context (if applicable)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Document display name"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": ["census", "proposal", "sbc", "application", "contract", "correspondence", "enrollment_form", "other"],
+      "default": "other",
+      "description": "Document type classification"
+    },
+    "document_classification": {
+      "type": "string",
+      "enum": ["direct_broker_owned", "mga_affiliated", "platform_admin", "system_internal"],
+      "default": "direct_broker_owned",
+      "description": "Ownership classification for access control"
+    },
+    "file_uri": {
+      "type": "string",
+      "description": "Private file URI (not public URL)"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original filename"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "file_mime_type": {
+      "type": "string",
+      "description": "MIME type of file"
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["broker_only", "relationship_bound"],
+      "default": "broker_only",
+      "description": "Who can access this document"
+    },
+    "visibility_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether document is visible to MGA users (if mga_affiliated)"
+    },
+    "relationship_status": {
+      "type": "string",
+      "enum": ["PROPOSED", "ACTIVE", "SUSPENDED", "TERMINATED"],
+      "description": "Status of associated relationship (if mga_affiliated)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Document notes/description"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "description": "Email of user who uploaded"
+    },
+    "employer_name": {
+      "type": "string",
+      "description": "Denormalized employer name for display"
+    },
+    "mga_migration_batch_id": {
+      "type": "string"
+    },
+    "mga_migration_status": {
+      "type": "string",
+      "enum": ["not_migrated", "migrated", "validated", "anomaly", "quarantined"],
+      "default": "not_migrated"
+    }
+  },
+  "required": ["name"]
+}

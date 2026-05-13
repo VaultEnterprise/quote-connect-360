@@ -1,10 +1,13 @@
 /**
- * Document Access Service
+ * Document Access Service (Gate 6L-B.2)
  * 
- * Enforces role permission + broker ownership/relationship scope for document access.
- * All denials audited. Safe payloads only.
+ * Enforces role permission + document classification + relationship scope for document access.
+ * All denials audited. Safe payloads only. Platform admin override with mandatory audit reason.
  * 
- * Gate 7A-3 Phase 7A-3.4
+ * Three-layer enforcement:
+ * 1. Permission layer (permissionResolver)
+ * 2. Scope layer (relationship scope validation)
+ * 3. Contract layer (access service with safe payload)
  */
 
 import { base44 } from '@/api/base44Client';
@@ -13,18 +16,14 @@ import { auditWriter } from '@/lib/auditWriter.js';
 
 class DocumentAccessService {
   /**
-   * Get document with access control
-   * @param {object} user
-   * @param {string} documentId
-   * @param {object} options — { override_reason?: string }
-   * @returns {object} { document: {...safe_fields}, allowed: boolean, reason?: string }
+   * Get single document with access control
    */
   async getDocument(user, documentId, options = {}) {
     const actionName = 'read_document';
 
-    let documentRecord;
+    let document;
     try {
-      documentRecord = await base44.entities.Document.get(documentId);
+      document = await base44.entities.Document.get(documentId);
     } catch (e) {
       return {
         allowed: false,
@@ -36,14 +35,14 @@ class DocumentAccessService {
     const permissionDecision = await permissionResolver.resolvePermission(
       user,
       actionName,
-      documentRecord
+      document
     );
 
     if (!permissionDecision.allowed) {
       if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
         const overrideReason = options.override_reason?.trim();
         if (!overrideReason) {
-          await this._auditDenial(user, actionName, documentRecord, 'DENY_OVERRIDE_MISSING_REASON');
+          await this._auditDenial(user, actionName, document, 'DENY_OVERRIDE_MISSING_REASON');
           return {
             allowed: false,
             reason: 'DENY_OVERRIDE_MISSING_REASON',
@@ -51,15 +50,15 @@ class DocumentAccessService {
           };
         }
 
-        await this._auditOverride(user, actionName, documentRecord, overrideReason);
+        await this._auditOverride(user, actionName, document, overrideReason);
         return {
           allowed: true,
-          document: this._safeDocumentPayload(documentRecord),
+          document: this._safeDocumentPayload(document),
           override_applied: true
         };
       }
 
-      await this._auditDenial(user, actionName, documentRecord, permissionDecision.reason);
+      await this._auditDenial(user, actionName, document, permissionDecision.reason);
       return {
         allowed: false,
         reason: permissionDecision.reason,
@@ -67,18 +66,39 @@ class DocumentAccessService {
       };
     }
 
+    // Additional scope check for MGA users
+    if (user.role.startsWith('mga_')) {
+      const scopeDecision = await this._validateMGAScope(user, document);
+      if (!scopeDecision.allowed) {
+        await this._auditDenial(user, actionName, document, scopeDecision.reason);
+        return {
+          allowed: false,
+          reason: scopeDecision.reason,
+          document: null
+        };
+      }
+    }
+
+    // Direct broker documents are never visible to MGA
+    if (user.role.startsWith('mga_') && document.document_classification === 'direct_broker_owned') {
+      await this._auditDenial(user, actionName, document, 'DENY_RELATIONSHIP_SCOPE_DENY_MGA_DIRECT');
+      return {
+        allowed: false,
+        reason: 'DENY_RELATIONSHIP_SCOPE_DENY_MGA_DIRECT',
+        document: null
+      };
+    }
+
     return {
       allowed: true,
-      document: this._safeDocumentPayload(documentRecord)
+      document: this._safeDocumentPayload(document)
     };
   }
 
   /**
    * List documents with access control
-   * @param {object} user
-   * @returns {object} { documents: [], allowed: number, denied: number }
    */
-  async listDocuments(user) {
+  async listDocuments(user, filters = {}) {
     let allDocuments;
     try {
       allDocuments = await base44.entities.Document.list();
@@ -94,18 +114,12 @@ class DocumentAccessService {
     const allowed = [];
     const denied = [];
 
-    for (const documentRecord of allDocuments) {
-      const permissionDecision = await permissionResolver.resolvePermission(
-        user,
-        'read_document',
-        documentRecord
-      );
-
-      if (permissionDecision.allowed) {
-        allowed.push(this._safeDocumentPayload(documentRecord));
+    for (const doc of allDocuments) {
+      const decision = await this.getDocument(user, doc.id);
+      if (decision.allowed) {
+        allowed.push(decision.document);
       } else {
-        denied.push(documentRecord.id);
-        await this._auditDenial(user, 'read_document', documentRecord, permissionDecision.reason);
+        denied.push(doc.id);
       }
     }
 
@@ -117,82 +131,133 @@ class DocumentAccessService {
   }
 
   /**
-   * Create document with access control
-   * @param {object} user
-   * @param {object} documentData
-   * @returns {object} { document: {...}, allowed: boolean, reason?: string }
+   * Validate document upload authorization
    */
-  async createDocument(user, documentData) {
-    const actionName = 'create_document';
+  async validateUpload(user, metadata = {}) {
+    const actionName = 'upload_document';
 
-    const rolePerms = permissionResolver.getActionsByRole(user.role) || [];
-    if (!rolePerms.includes(actionName)) {
-      await this._auditDenial(user, actionName, null, 'DENY_ROLE_LACKS_PERMISSION');
-      return {
-        allowed: false,
-        reason: 'DENY_ROLE_LACKS_PERMISSION',
-        document: null
-      };
+    const permissionDecision = await permissionResolver.resolvePermission(
+      user,
+      actionName,
+      metadata
+    );
+
+    if (!permissionDecision.allowed) {
+      return { allowed: false, reason: permissionDecision.reason };
     }
 
-    if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
-      const newDocument = await base44.entities.Document.create(documentData);
-      return {
-        allowed: true,
-        document: this._safeDocumentPayload(newDocument)
-      };
+    // MGA users cannot upload documents
+    if (user.role.startsWith('mga_')) {
+      return { allowed: false, reason: 'DENY_MGA_CANNOT_UPLOAD' };
     }
 
-    if (['broker_user', 'broker_admin'].includes(user.role)) {
-      if (documentData.broker_agency_id !== user.broker_agency_id) {
-        await this._auditDenial(user, actionName, documentData, 'DENY_NOT_BROKER_OWNER');
-        return {
-          allowed: false,
-          reason: 'DENY_NOT_BROKER_OWNER',
-          document: null
-        };
-      }
+    return { allowed: true };
+  }
 
-      const newDocument = await base44.entities.Document.create(documentData);
-      return {
-        allowed: true,
-        document: this._safeDocumentPayload(newDocument)
-      };
-    }
-
-    if (['mga_user', 'mga_admin'].includes(user.role)) {
-      if (!documentData.relationship_id) {
-        await this._auditDenial(user, actionName, documentData, 'DENY_MISSING_RELATIONSHIP');
-        return {
-          allowed: false,
-          reason: 'DENY_MISSING_RELATIONSHIP',
-          document: null
-        };
-      }
-
-      const newDocument = await base44.entities.Document.create(documentData);
-      return {
-        allowed: true,
-        document: this._safeDocumentPayload(newDocument)
-      };
-    }
-
+  /**
+   * Validate document download authorization
+   */
+  async validateDownload(user, documentId) {
+    const decision = await this.getDocument(user, documentId);
     return {
-      allowed: false,
-      reason: 'DENY_INVALID_ROLE',
-      document: null
+      allowed: decision.allowed,
+      reason: decision.reason
     };
+  }
+
+  /**
+   * Validate document delete authorization
+   */
+  async validateDelete(user, documentId) {
+    const actionName = 'delete_document';
+
+    let document;
+    try {
+      document = await base44.entities.Document.get(documentId);
+    } catch (e) {
+      return { allowed: false, reason: 'DOCUMENT_NOT_FOUND' };
+    }
+
+    const permissionDecision = await permissionResolver.resolvePermission(
+      user,
+      actionName,
+      document
+    );
+
+    if (!permissionDecision.allowed) {
+      return { allowed: false, reason: permissionDecision.reason };
+    }
+
+    // MGA users cannot delete
+    if (user.role.startsWith('mga_')) {
+      return { allowed: false, reason: 'DENY_MGA_CANNOT_DELETE' };
+    }
+
+    // Broker can only delete own
+    if (user.role.startsWith('broker_')) {
+      if (document.broker_agency_id !== user.broker_agency_id) {
+        return { allowed: false, reason: 'DENY_NOT_BROKER_OWNER' };
+      }
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * MGA scope validation (relationship must be ACTIVE)
+   * @private
+   */
+  async _validateMGAScope(user, document) {
+    // Direct broker documents denied to MGA
+    if (document.document_classification === 'direct_broker_owned') {
+      return { allowed: false, reason: 'DENY_RELATIONSHIP_SCOPE_DENY_MGA_DIRECT' };
+    }
+
+    // MGA-affiliated documents require active relationship
+    if (document.document_classification === 'mga_affiliated') {
+      if (!document.mga_relationship_id) {
+        return { allowed: false, reason: 'DENY_MISSING_RELATIONSHIP' };
+      }
+
+      let relationship;
+      try {
+        relationship = await base44.entities.BrokerMGARelationship.get(document.mga_relationship_id);
+      } catch (e) {
+        return { allowed: false, reason: 'DENY_RELATIONSHIP_NOT_FOUND' };
+      }
+
+      if (!relationship) {
+        return { allowed: false, reason: 'DENY_RELATIONSHIP_NOT_FOUND' };
+      }
+
+      // Check relationship is ACTIVE
+      if (relationship.relationship_status !== 'ACTIVE') {
+        return { allowed: false, reason: 'DENY_RELATIONSHIP_NOT_ACTIVE' };
+      }
+
+      // Check visibility is active
+      if (!relationship.visibility_active) {
+        return { allowed: false, reason: 'DENY_RELATIONSHIP_VISIBILITY_INACTIVE' };
+      }
+
+      // Verify MGA owns relationship
+      if (relationship.master_general_agent_id !== user.master_general_agent_id) {
+        return { allowed: false, reason: 'DENY_RELATIONSHIP_NOT_OWNED' };
+      }
+    }
+
+    return { allowed: true };
   }
 
   /**
    * Audit denied access
    * @private
    */
-  async _auditDenial(user, action, record, reason) {
+  async _auditDenial(user, action, doc, reason) {
     try {
       await auditWriter.recordEvent({
         event_type: 'document_access_denied',
-        entity_id: record?.id || 'NEW_RECORD',
+        entity_id: doc?.id || 'UNKNOWN',
         actor_email: user.email,
         actor_role: user.role,
         action,
@@ -210,11 +275,11 @@ class DocumentAccessService {
    * Audit platform admin override
    * @private
    */
-  async _auditOverride(user, action, record, overrideReason) {
+  async _auditOverride(user, action, doc, overrideReason) {
     try {
       await auditWriter.recordEvent({
         event_type: 'document_access_override',
-        entity_id: record?.id || 'NEW_RECORD',
+        entity_id: doc?.id || 'UNKNOWN',
         actor_email: user.email,
         actor_role: user.role,
         action,
@@ -230,22 +295,21 @@ class DocumentAccessService {
   }
 
   /**
-   * Return safe document payload (no internals)
+   * Return safe document payload (no private metadata)
    * @private
    */
-  _safeDocumentPayload(documentRecord) {
+  _safeDocumentPayload(doc) {
     return {
-      id: documentRecord.id,
-      case_id: documentRecord.case_id,
-      employer_group_id: documentRecord.employer_group_id,
-      name: documentRecord.name,
-      document_type: documentRecord.document_type,
-      file_name: documentRecord.file_name,
-      file_size: documentRecord.file_size,
-      uploaded_by: documentRecord.uploaded_by,
-      employer_name: documentRecord.employer_name,
-      broker_agency_id: documentRecord.broker_agency_id,
-      relationship_id: documentRecord.relationship_id || undefined
+      id: doc.id,
+      name: doc.name,
+      document_type: doc.document_type,
+      document_classification: doc.document_classification,
+      uploaded_by: doc.uploaded_by,
+      uploaded_date: doc.created_date,
+      notes: doc.notes,
+      relationship_id: doc.mga_relationship_id || undefined,
+      relationship_status: doc.relationship_status || undefined,
+      visibility_scope: doc.visibility_scope
     };
   }
 }
