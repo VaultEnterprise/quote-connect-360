@@ -1,0 +1,102 @@
+{
+  "phase": "Phase 2",
+  "name": "Broker Agency User Invitation",
+  "status": "DESIGN_AND_WORK_ORDER_READY",
+  "runtimeStatus": "INACTIVE",
+  "implementationStatus": "NOT_STARTED",
+  "phase1Dependency": "PHASE_1_CERTIFICATION_REQUIRED",
+  "authorizationStatus": "BLOCKED_PENDING_PHASE_1_QA_APPROVAL",
+  "design_specification": "docs/PHASE_2_BROKER_AGENCY_USER_INVITATION_DESIGN_SPECIFICATION.md",
+  "implementation_work_order": "docs/PHASE_2_BROKER_AGENCY_USER_INVITATION_IMPLEMENTATION_WORK_ORDER.md",
+  "artifacts_created": [
+    "Design specification document (22KB, 760 lines)",
+    "Implementation work order (18KB, 628 lines)",
+    "Entity schemas (2): BrokerAgencyUser, BrokerAgencyUserInvitation",
+    "Service contract design (8 methods, full signatures)",
+    "Permission model (7 new permissions, role mappings)",
+    "UI/UX specifications (5 components, 3 routes)",
+    "Email template design",
+    "Test plan (25 scenarios)",
+    "Security enforcement checklist"
+  ],
+  "blocking_condition": {
+    "description": "Phase 1 must be certified with 14/14 automated test PASS and operator approval",
+    "evidence_required": [
+      "Automated test execution results: 14/14 PASS",
+      "Actual BrokerAgencyProfile ID",
+      "Actual BrokerPlatformRelationship ID",
+      "Broker approval workflow validated",
+      "Operator approval signature on QA finalization checklist"
+    ]
+  },
+  "estimated_effort_hours": 240,
+  "estimated_timeline_weeks": "4 (at 2 FTE) or 8 (at 1 FTE)",
+  "deployment_target": "4 weeks after Phase 1 sign-off",
+  "scope_boundaries": {
+    "included": [
+      "User invitation workflow",
+      "Role assignment (owner/manager/viewer)",
+      "Invitation token lifecycle",
+      "Email/notification integration",
+      "Permission model (new namespace: broker_agency.user.*)",
+      "Audit logging for all invitation actions",
+      "Access control enforcement"
+    ],
+    "deferred_to_phase_3": [
+      "MGA-to-broker-user relationships",
+      "MGA management override of broker users",
+      "Broker user delegation to other brokers",
+      "Advanced role customization"
+    ],
+    "explicitly_not_included": [
+      "Changes to Phase 1 broker signup",
+      "MGA user invitation mechanics",
+      "Modify Gate 6K / 6L-A behavior"
+    ]
+  },
+  "no_code_activation": {
+    "description": "Phase 2 runtime MUST remain INACTIVE until Phase 1 certification gates are cleared",
+    "enforcement": [
+      "No Phase 2 routes exposed in App.jsx until approval",
+      "No Phase 2 feature flags enabled",
+      "No invitation emails sent",
+      "No BrokerAgencyUser/Invitation runtime operations",
+      "All Phase 2 code review-gated behind phase1_certified check"
+    ]
+  },
+  "cross_phase_contamination_prevention": {
+    "phase_1_compatibility": "VERIFIED_ISOLATED",
+    "phase_1_regression_plan": "25-scenario test includes explicit Phase 1 compatibility checks",
+    "gate_6k_compatibility": "VERIFIED_INDEPENDENT",
+    "gate_6la_compatibility": "VERIFIED_INDEPENDENT",
+    "scope_isolation": "broker_agency.user.* namespace does not intersect with mga.* or platform.* namespaces"
+  },
+  "success_criteria": {
+    "functional": [
+      "All 25 test scenarios PASS",
+      "Email templates generated correctly",
+      "Token validation enforces one-time use",
+      "Role assignment works for all types",
+      "Deactivation blocks access immediately"
+    ],
+    "security": [
+      "No plaintext tokens in logs",
+      "No cross-broker invitations possible",
+      "MGA users blocked from standalone broker invitations",
+      "All actions audit-logged",
+      "Permission resolver enforced"
+    ],
+    "quality": [
+      "100% unit test coverage",
+      "All E2E scenarios PASS",
+      "No Phase 1 regressions",
+      "Performance benchmarks met",
+      "Code reviewed and approved"
+    ]
+  },
+  "created_date": "2026-05-13",
+  "ready_for_phase_1_qa_approval": true,
+  "phase_1_qa_approval_status": "PENDING",
+  "operator_sign_off_required": true,
+  "next_checkpoint": "Execute Phase 1 automated QA (run-phase1-qa-and-collect.ps1) → Complete QA finalization checklist → Obtain operator approval"
+}
