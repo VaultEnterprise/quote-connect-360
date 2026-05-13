@@ -1,9 +1,10 @@
 /**
- * Broker Workspace Route Shell — Phase 7A-2.3
+ * Broker Workspace Route Shell — Phase 7A-2.5
  * 
  * Fail-closed route shell. Hidden while BROKER_WORKSPACE_ENABLED=false.
  * Enforces Gate 7A-1 portal access prerequisites.
  * Returns appropriate status codes based on access state.
+ * Integrates BrokerDashboard component.
  * 
  * Backend: brokerWorkspaceAccessContract.getBrokerWorkspaceAccessState()
  * Feature Flag: BROKER_WORKSPACE_ENABLED (false)
@@ -13,6 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { getBrokerWorkspaceAccessState } from '@/lib/contracts/brokerWorkspaceContract';
+import BrokerDashboard from '@/components/broker/BrokerDashboard';
 
 export default function BrokerWorkspaceShell() {
   const [searchParams] = useSearchParams();
@@ -178,13 +180,5 @@ export default function BrokerWorkspaceShell() {
   }
 
   // Workspace activated and eligible
-  return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-foreground mb-6">Broker Workspace</h1>
-        {/* Workspace dashboard and components would render here when workspace is activated */}
-        <p className="text-muted-foreground">Broker workspace shell (active)</p>
-      </div>
-    </div>
-  );
+  return <BrokerDashboard />;
 }
