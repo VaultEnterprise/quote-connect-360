@@ -86,10 +86,10 @@ export default function Settings() {
   const { data: userList = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
-    enabled: user?.role === "admin",
+    enabled: user?.role === "admin" || user?.role === "platform_super_admin",
   });
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "platform_super_admin";
 
   return (
     <div className="space-y-6">
