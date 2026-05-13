@@ -39,6 +39,10 @@ import {
   testErrorHandling,
 } from './helpers/carrierAnalyzeWorkflowHarness';
 
+// Import mocked modules (mocks are hoisted by Vitest before module load)
+import { base44 } from '@/api/base44Client';
+import { censusImportClient } from '@/components/census/CensusImportClient';
+
 // ============================================================================
 // MOCK SETUP
 // ============================================================================
@@ -111,16 +115,13 @@ describe('P0 Repair 2/4 Carrier Analyze Workflow Harness', () => {
   let mockAnalyzeWorkbook;
   let mockUploadFile;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
 
-    // Get mocked modules
-    const base44Module = await import('@/api/base44Client');
-    const censusModule = await import('@/components/census/CensusImportClient');
-
-    mockUploadFile = base44Module.base44.integrations.Core.UploadFile;
-    mockAnalyzeWorkbook = censusModule.censusImportClient.analyzeWorkbook;
+    // Access hoisted mocked modules via static imports
+    mockUploadFile = base44.integrations.Core.UploadFile;
+    mockAnalyzeWorkbook = censusImportClient.analyzeWorkbook;
 
     // Default successful responses
     mockUploadFile.mockResolvedValue({
