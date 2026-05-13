@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Settings,
   Scale,
+  Shield,
 } from "lucide-react";
 
 export const primaryWorkflowItems = [
@@ -58,8 +59,14 @@ export const supportItems = [
   { path: "/settings", label: "Settings", icon: Settings, description: "Platform setup" },
 ];
 
+export const platformItems = [
+  { path: "/command-center/broker-agencies", label: "Broker Agencies", icon: Building2, description: "Manage broker accounts", roles: ['platform_super_admin', 'admin'] },
+  { path: "/command-center/broker-agencies/pending", label: "Pending Brokers", icon: AlertCircle, description: "Review pending signups", roles: ['platform_super_admin', 'admin'] },
+];
+
 export const navGroups = [
   { label: "Workflow", items: primaryWorkflowItems },
   { label: "Reference & Operations", items: referenceItems },
   { label: "Portals & People", items: portalItems },
+  { label: "Platform", items: platformItems },
 ];
