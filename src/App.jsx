@@ -46,6 +46,7 @@ import BrokerOnboardingShell from '@/pages/BrokerOnboardingShell';
 import PlatformBrokerAgencies from '@/pages/PlatformBrokerAgencies';
 import PlatformBrokerReviewShell from '@/pages/PlatformBrokerReviewShell';
 import Phase1BrokerSmokeTest from '@/pages/Phase1BrokerSmokeTest';
+import BrokerWorkspaceShell from '@/pages/BrokerWorkspaceShell';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -117,6 +118,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/broker-signup" element={<BrokerSignupShell />} />
       <Route path="/broker-onboarding" element={<BrokerOnboardingShell />} />
+      <Route path="/broker" element={<BrokerWorkspaceShell />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
