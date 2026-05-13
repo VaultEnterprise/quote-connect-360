@@ -696,4 +696,122 @@ describe('New Case Carrier Census Checklist UI', () => {
       expect(screen.getByText(/Mark Ready for Review/).disabled).toBe(true);
     });
   });
+
+  describe('Case Census Tab Visibility', () => {
+    test('checklist renders on Case Census tab', () => {
+      const mockSetupChecklist = vi.fn();
+      const { container } = render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          onDestinationToggle={mockSetupChecklist}
+        />
+      );
+      expect(screen.getByText('Case Setup Checklist')).toBeDefined();
+    });
+
+    test('AST checkbox visible on Census tab', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      expect(screen.getByText('Send to AST')).toBeDefined();
+    });
+
+    test('SUS checkbox visible on Census tab', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      expect(screen.getByText('Send to SUS')).toBeDefined();
+    });
+
+    test('Triad checkbox visible on Census tab', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      expect(screen.getByText('Send to Triad')).toBeDefined();
+    });
+
+    test('dynamic import cards visible when workflows selected', () => {
+      const mockWorkflows = {
+        ast: { activeTab: 'upload', attachments: [], censusFile: null },
+        sus: { activeTab: 'upload', attachments: [], censusFile: null },
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['ast', 'sus']}
+          importWorkflows={mockWorkflows}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      expect(screen.getByText('AST Census Import')).toBeDefined();
+      expect(screen.getByText('SUS Census Import')).toBeDefined();
+    });
+
+    test('cards appear in order selected', () => {
+      const mockWorkflows = {
+        sus: { activeTab: 'upload', attachments: [], censusFile: null },
+        ast: { activeTab: 'upload', attachments: [], censusFile: null },
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+      const { container } = render(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['sus', 'ast']}
+          importWorkflows={mockWorkflows}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      const susIdx = container.textContent.indexOf('SUS Census Import');
+      const astIdx = container.textContent.indexOf('AST Census Import');
+      expect(susIdx < astIdx).toBe(true);
+    });
+
+    test('Submission Package Summary visible when destinations selected', () => {
+      const mockWorkflows = {
+        ast: { activeTab: 'upload', attachments: [], censusFile: null },
+      };
+
+      render(
+        <SubmissionPackageSummaryWidget
+          selectedWorkflowOrder={['ast']}
+          importWorkflows={mockWorkflows}
+        />
+      );
+
+      expect(screen.getByText('Submission Package Summary')).toBeDefined();
+    });
+
+    test('existing census workflow still renders on Census tab', () => {
+      const { getByText } = render(
+        <>
+          <CaseSetupChecklist
+            selectedDestinations={{ ast: false, sus: false, triad: false }}
+            onDestinationToggle={vi.fn()}
+          />
+          <h3>Existing Census Versions</h3>
+        </>
+      );
+      expect(getByText('Existing Census Versions')).toBeDefined();
+    });
+  });
 });

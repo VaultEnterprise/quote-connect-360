@@ -247,6 +247,25 @@ export function isRelationshipCode(value) {
   return ['EMP', 'SPS', 'DEP'].includes(normalized);
 }
 
+export function normalizeCoverageType(value) {
+  const raw = normalizeCell(value).toUpperCase().trim();
+  const mapping = {
+    'EE': 'EE',
+    'EMPLOYEE ONLY': 'EE',
+    'ES': 'ES',
+    'EMPLOYEE + SPOUSE': 'ES',
+    'EMPLOYEE+SPOUSE': 'ES',
+    'EC': 'EC',
+    'EMPLOYEE + CHILD(REN)': 'EC',
+    'EMPLOYEE+CHILD': 'EC',
+    'EF': 'EF',
+    'FAMILY': 'EF',
+    'W': 'W',
+    'WAIVING COVERAGE': 'W',
+  };
+  return mapping[raw] || raw;
+}
+
 export function normalizeDateValue(value) {
   if (typeof value === 'number') return excelSerialToIso(value);
   const raw = normalizeCell(value);
