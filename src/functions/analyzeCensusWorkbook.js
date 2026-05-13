@@ -1,6 +1,6 @@
 /* global Deno */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { extractRowsFromCsv, normalizeHeaderLabel } from '../lib/census/importPipeline.js';
+import { extractRowsFromCsv, extractRowsFromXls, normalizeHeaderLabel, detectFileType } from '../lib/census/importPipeline.js';
 
 Deno.serve(async (req) => {
   try {
@@ -9,16 +9,27 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await req.json();
-    const { source_file_url } = payload || {};
+    const { source_file_url, source_file_name } = payload || {};
     if (!source_file_url) return Response.json({ error: 'source_file_url is required' }, { status: 400 });
 
     const fileResponse = await fetch(source_file_url);
     if (!fileResponse.ok) return Response.json({ error: 'Could not fetch file' }, { status: 400 });
 
-    const csvText = await fileResponse.text();
-    const rawRows = extractRowsFromCsv(csvText);
+    // Detect file type from name or content-type
+    const contentType = fileResponse.headers.get('content-type') || '';
+    const fileType = detectFileType({ source_file_name: source_file_name || '', content_type: contentType });
+
+    // Parse based on file type
+    let rawRows = [];
+    if (fileType === 'xls') {
+      const buffer = await fileResponse.arrayBuffer();
+      rawRows = extractRowsFromXls(buffer);
+    } else {
+      const csvText = await fileResponse.text();
+      rawRows = extractRowsFromCsv(csvText);
+    }
     
-    if (rawRows.length === 0) return Response.json({ error: 'File is empty' }, { status: 400 });
+    if (rawRows.length === 0) return Response.json({ error: 'File is empty or unsupported format' }, { status: 400 });
 
     // For now, support first sheet (CSV) or first sheet of XLSX
     // Detect header row: look for common census headers
@@ -38,6 +49,7 @@ Deno.serve(async (req) => {
     const dataRows = rawRows.slice(headerRowIndex + 1).filter(row => row.some(cell => cell && cell.trim()));
 
     return Response.json({
+      file_type: fileType,
       headers: headers.map((h, i) => ({ index: i, name: h, normalized: normalizeHeaderLabel(h) })),
       preview_rows: dataRows.slice(0, 5),
       total_rows: dataRows.length,

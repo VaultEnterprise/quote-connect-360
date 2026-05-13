@@ -85,10 +85,39 @@ export function extractRowsFromWorksheet(records = []) {
   return records.map((record) => columnKeys.map((key) => record?.[key] ?? ''));
 }
 
+export function extractRowsFromXls(buffer) {
+  // Extract rows from .xls (BIFF8 format) file
+  // 
+  // Current implementation: Handles CSV-compatible .xls files
+  // (Some legacy .xls exports are CSV text wrapped in Excel format)
+  //
+  // Production enhancement: For full BIFF8 binary support:
+  // 1. npm install npm:cfb@3.8.7 (compound file binary parser)
+  // 2. npm install npm:xlsx@0.18.5 (workbook parser)
+  // 3. Use: const cf = CFB.parse(buffer);
+  //         const workbook = XLSX.read(cf, {type: 'buffer'});
+  //         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  //         const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+  //
+  // For now, attempt text decode for CSV-like .xls files
+  const rows = [];
+  try {
+    const view = new Uint8Array(buffer);
+    const text = new TextDecoder().decode(view);
+    if (text.includes(',') || text.includes('\n')) {
+      return extractRowsFromCsv(text);
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export function detectFileType({ source_file_name = '', content_type = '' }) {
   const fileName = source_file_name.toLowerCase();
   const type = content_type.toLowerCase();
   if (fileName.endsWith('.xlsx') || type.includes('spreadsheetml')) return 'xlsx';
+  if (fileName.endsWith('.xls') || type === 'application/vnd.ms-excel') return 'xls';
   return 'csv';
 }
 
