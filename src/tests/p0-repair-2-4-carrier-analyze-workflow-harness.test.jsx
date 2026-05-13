@@ -111,16 +111,16 @@ describe('P0 Repair 2/4 Carrier Analyze Workflow Harness', () => {
   let mockAnalyzeWorkbook;
   let mockUploadFile;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks
     vi.clearAllMocks();
 
-    // Setup mocks
-    const { base44 } = require('@/api/base44Client');
-    const { censusImportClient } = require('@/components/census/CensusImportClient');
+    // Get mocked modules
+    const base44Module = await import('@/api/base44Client');
+    const censusModule = await import('@/components/census/CensusImportClient');
 
-    mockUploadFile = base44.integrations.Core.UploadFile;
-    mockAnalyzeWorkbook = censusImportClient.analyzeWorkbook;
+    mockUploadFile = base44Module.base44.integrations.Core.UploadFile;
+    mockAnalyzeWorkbook = censusModule.censusImportClient.analyzeWorkbook;
 
     // Default successful responses
     mockUploadFile.mockResolvedValue({
