@@ -1,6 +1,6 @@
 /* global Deno */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { extractRowsFromCsv, normalizeCell, normalizeDateValue, normalizeHeaderLabel, buildAuditEvent, buildValidationIssues, summarizeValidation } from '../lib/census/importPipeline.js';
+import { extractRowsFromCsv, normalizeCell, normalizeDateValue, normalizeHeaderLabel, buildAuditEvent, buildValidationIssues, summarizeValidation, normalizeRelationship, normalizeCoverageType } from '../lib/census/importPipeline.js';
 
 Deno.serve(async (req) => {
   try {
@@ -72,7 +72,11 @@ Deno.serve(async (req) => {
             if (field === 'dob' || field === 'hire_date' || field === 'termination_date') {
               mapped[field] = normalizeDateValue(value);
             } else if (field === 'relationship') {
-              mapped[field] = normalizeCell(value).toUpperCase();
+              mapped[field] = normalizeRelationship(value);
+            } else if (field === 'coverage_type') {
+              mapped[field] = normalizeCoverageType(value);
+            } else if (field === 'zip') {
+              mapped[field] = normalizeCell(value);
             } else {
               mapped[field] = normalizeCell(value);
             }
@@ -102,7 +106,7 @@ Deno.serve(async (req) => {
         address: mapped.address || '',
         city: mapped.city || '',
         state: mapped.state || '',
-        zip: (mapped.zip || '').replace(/[^0-9-]/g, ''),
+        zip: mapped.zip || '',
         gender: mapped.gender || '',
         hire_date: mapped.hire_date || '',
         termination_date: mapped.termination_date || '',

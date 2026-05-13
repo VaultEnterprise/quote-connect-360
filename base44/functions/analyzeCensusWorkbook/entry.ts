@@ -158,6 +158,45 @@ Deno.serve(async (req) => {
     const headers = rawRows[headerRowIndex] || [];
     const dataRows = rawRows.slice(headerRowIndex + 1).filter(row => row.some(cell => cell && cell.trim()));
 
+    // Extract VAULT group metadata
+    let groupMetadata = null;
+    if (isVaultLayout) {
+      const fieldMap = {
+        'legal group name': 'legal_group_name',
+        'tax id': 'tax_id',
+        'sic code': 'sic_code',
+        'address': 'address',
+        'city': 'city',
+        'state': 'state',
+        'zip': 'zip',
+        'eligible employees': 'total_eligible_employees',
+        'employees on current plan': 'total_employees_current_plan',
+        'current carrier': 'current_carrier',
+        'desired effective date': 'desired_effective_date',
+        'years with carrier': 'years_with_carrier',
+      };
+      groupMetadata = {};
+      const groupInfoStart = rawRows.findIndex((r) => normalizeCell(r[0] || '').includes('GROUP') || normalizeCell(r[1] || '').includes('GROUP'));
+      if (groupInfoStart >= 0) {
+        const endIdx = vaultMarkerIndex;
+        for (let i = groupInfoStart + 1; i < endIdx; i++) {
+          const row = rawRows[i] || [];
+          for (let j = 1; j < row.length - 1; j += 2) {
+            const key = normalizeCell(row[j] || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+            const value = normalizeCell(row[j + 1] || '');
+            if (key && value) {
+              for (const [matchKey, fieldName] of Object.entries(fieldMap)) {
+                if (key.includes(matchKey)) {
+                  groupMetadata[fieldName] = value;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     return Response.json({
       file_type: fileType,
       layout: isVaultLayout ? 'vault' : 'standard',
@@ -166,6 +205,7 @@ Deno.serve(async (req) => {
       total_rows: dataRows.length,
       header_row_index: headerRowIndex,
       vault_marker_index: vaultMarkerIndex,
+      group_metadata: groupMetadata,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
