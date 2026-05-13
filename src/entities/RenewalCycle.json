@@ -1,0 +1,119 @@
+{
+  "name": "RenewalCycle",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "distribution_channel_context_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "MGA scope (non-identifying)"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "owner_org_type": {
+      "type": "string",
+      "enum": ["platform", "broker", "mga", "employer"],
+      "nullable": true
+    },
+    "owner_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "servicing_org_type": {
+      "type": "string",
+      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "nullable": true
+    },
+    "servicing_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "supervising_org_type": {
+      "type": "string",
+      "enum": ["mga", "platform"],
+      "nullable": true
+    },
+    "supervising_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_role": {
+      "type": "string",
+      "nullable": true
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["owner_only", "owner_and_servicing", "owner_and_supervising", "owner_and_all_affiliates", "platform_wide"],
+      "nullable": true
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "employer_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "renewal_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pre_renewal", "marketed", "options_prepared", "employer_review", "decision_made", "install_renewal", "active_renewal", "completed"],
+      "default": "pre_renewal"
+    },
+    "current_premium": {
+      "type": "number",
+      "nullable": true
+    },
+    "renewal_premium": {
+      "type": "number",
+      "nullable": true
+    },
+    "rate_change_percent": {
+      "type": "number",
+      "nullable": true
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["renew_as_is", "renew_with_changes", "market", "terminate"],
+      "nullable": true
+    },
+    "decision": {
+      "type": "string",
+      "nullable": true
+    },
+    "notes": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "case_id", "renewal_date"]
+}

@@ -1,0 +1,73 @@
+{
+  "name": "AuditEvent",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope"
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "Correlation ID linking multi-step operations"
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "User who performed the action"
+    },
+    "actor_email": {
+      "type": "string",
+      "nullable": true
+    },
+    "actor_role": {
+      "type": "string",
+      "nullable": true,
+      "description": "Effective role at time of action"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Type of event (SCOPE_RESOLVED, PERMISSION_CHECKED, BROKER_PLATFORM_RELATIONSHIP_CREATED, etc.)"
+    },
+    "event_detail": {
+      "type": "string",
+      "nullable": true,
+      "description": "Human-readable description"
+    },
+    "target_entity_type": {
+      "type": "string",
+      "nullable": true,
+      "description": "Entity type affected"
+    },
+    "target_entity_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "Entity ID affected"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["success", "failed", "blocked"],
+      "nullable": true,
+      "description": "Result of the action"
+    },
+    "reason": {
+      "type": "string",
+      "nullable": true,
+      "description": "Reason code (not sensitive data)"
+    },
+    "changes": {
+      "type": "object",
+      "nullable": true,
+      "description": "Old and new values if applicable"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server-set timestamp (never user-provided)"
+    }
+  },
+  "required": ["tenant_id", "actor_id", "event_type", "created_at"]
+}

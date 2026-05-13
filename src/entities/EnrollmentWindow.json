@@ -1,0 +1,119 @@
+{
+  "name": "EnrollmentWindow",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "distribution_channel_context_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "MGA scope (non-identifying)"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "owner_org_type": {
+      "type": "string",
+      "enum": ["platform", "broker", "mga", "employer"],
+      "nullable": true
+    },
+    "owner_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "servicing_org_type": {
+      "type": "string",
+      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "nullable": true
+    },
+    "servicing_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "supervising_org_type": {
+      "type": "string",
+      "enum": ["mga", "platform"],
+      "nullable": true
+    },
+    "supervising_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_role": {
+      "type": "string",
+      "nullable": true
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["owner_only", "owner_and_servicing", "owner_and_supervising", "owner_and_all_affiliates", "platform_wide"],
+      "nullable": true
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["scheduled", "open", "closing_soon", "closed", "finalized"],
+      "default": "scheduled"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "nullable": true
+    },
+    "total_eligible": {
+      "type": "number",
+      "nullable": true
+    },
+    "invited_count": {
+      "type": "number",
+      "default": 0
+    },
+    "enrolled_count": {
+      "type": "number",
+      "default": 0
+    },
+    "waived_count": {
+      "type": "number",
+      "default": 0
+    },
+    "pending_count": {
+      "type": "number",
+      "default": 0
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "case_id", "start_date", "end_date"]
+}

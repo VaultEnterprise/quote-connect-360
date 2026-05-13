@@ -1,0 +1,134 @@
+{
+  "name": "Employer",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope"
+    },
+    "distribution_channel_context_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "FK to DistributionChannelContext (canonical ownership/visibility)"
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "MGA scope (non-identifying)"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "Broker agency scope"
+    },
+    "owner_org_type": {
+      "type": "string",
+      "enum": ["platform", "broker", "mga", "employer"],
+      "nullable": true,
+      "description": "Denormalized owner type"
+    },
+    "owner_org_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "Denormalized owner PK"
+    },
+    "servicing_org_type": {
+      "type": "string",
+      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "nullable": true
+    },
+    "servicing_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "supervising_org_type": {
+      "type": "string",
+      "enum": ["mga", "platform"],
+      "nullable": true
+    },
+    "supervising_org_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_by_role": {
+      "type": "string",
+      "nullable": true
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["owner_only", "owner_and_servicing", "owner_and_supervising", "owner_and_all_affiliates", "platform_wide"],
+      "nullable": true
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "nullable": true
+    },
+    "name": {
+      "type": "string",
+      "description": "Employer/company name"
+    },
+    "dba_name": {
+      "type": "string",
+      "nullable": true
+    },
+    "ein": {
+      "type": "string",
+      "nullable": true,
+      "description": "Employer Identification Number"
+    },
+    "industry": {
+      "type": "string",
+      "nullable": true
+    },
+    "employee_count": {
+      "type": "number",
+      "nullable": true
+    },
+    "status": {
+      "type": "string",
+      "enum": ["prospect", "active", "inactive", "terminated"],
+      "default": "prospect"
+    },
+    "primary_contact_name": {
+      "type": "string",
+      "nullable": true
+    },
+    "primary_contact_email": {
+      "type": "string",
+      "nullable": true
+    },
+    "address": {
+      "type": "string",
+      "nullable": true
+    },
+    "city": {
+      "type": "string",
+      "nullable": true
+    },
+    "state": {
+      "type": "string",
+      "nullable": true
+    },
+    "zip": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "name"]
+}
