@@ -110,27 +110,42 @@
       ],
       "enabled": false,
       "status": "INACTIVE"
+    },
+    {
+      "flag_id": "broker_token_security_enabled",
+      "flag_name": "BROKER_TOKEN_SECURITY_ENABLED",
+      "phase": "7A-1.5",
+      "module": "brokerTokenSecurityContract.js",
+      "file_path": "src/lib/contracts/brokerTokenSecurityContract.js",
+      "default_value": false,
+      "type": "boolean",
+      "description": "Enable/disable hardened token lifecycle (validation, resend, cancellation, supersession)",
+      "fail_closed_behavior": "If false, validateBrokerSignupToken, resendBrokerOnboardingInvitation, cancelBrokerSignup, updateOnboardingStatus throw 403 NOT_AUTHORIZED_FOR_GATE_7A_1",
+      "dependencies": [],
+      "enabled": false,
+      "status": "INACTIVE"
     }
   ],
   "summary": {
-    "total_flags": 7,
+    "total_flags": 8,
     "enabled_count": 0,
-    "inactive_count": 7,
+    "inactive_count": 8,
     "phases_covered": [
       "7A-1.2",
       "7A-1.3",
-      "7A-1.4"
+      "7A-1.4",
+      "7A-1.5"
     ],
     "all_fail_closed": true,
     "activation_status": "ALL_FALSE_FAIL_CLOSED"
   },
   "validation": {
-    "total_flags": 7,
-    "unique_flag_names": 7,
+    "total_flags": 8,
+    "unique_flag_names": 8,
     "duplicate_names": 0,
     "validation_status": "PASSED"
   },
   "last_updated": "2026-05-13",
-  "last_updated_by": "Phase 7A-1.4 Implementation",
-  "registry_notes": "All 7 feature flags default to false (fail-closed). No flags are enabled. Each flag is registered in its source module with identical default values. Dependency rules prevent partial activation (e.g., cannot enable ONBOARDING without SIGNUP). No runtime behavior is activated while flags are false."
+  "last_updated_by": "Phase 7A-1.5 Completion & Clarification",
+  "registry_notes": "All 8 feature flags default to false (fail-closed). No flags are enabled. Each flag is registered in its source module with identical default values. Dependency rules prevent partial activation (e.g., cannot enable ONBOARDING without SIGNUP). No runtime behavior is activated while flags are false. Phase 7A-1.5 adds BROKER_TOKEN_SECURITY_ENABLED."
 }

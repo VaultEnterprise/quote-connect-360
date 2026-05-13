@@ -209,7 +209,35 @@
     },
     "assigned_approver": {
       "type": "string",
-      "description": "Email of platform admin assigned to review"
+      "description": "Email of platform admin assigned to review (Phase 7A-1.6)"
+    },
+    "compliance_hold_released_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When compliance hold was released (Phase 7A-1.6)"
+    },
+    "compliance_override_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether compliance override has been approved (Phase 7A-1.6)"
+    },
+    "compliance_override_reason": {
+      "type": "string",
+      "description": "Reason for compliance override approval (Phase 7A-1.6)"
+    },
+    "compliance_override_approved_by": {
+      "type": "string",
+      "description": "Email of user who approved override (Phase 7A-1.6)"
+    },
+    "compliance_override_approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When override was approved (Phase 7A-1.6)"
+    },
+    "rejected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When application was rejected (Phase 7A-1.6)"
     },
     "notes": {
       "type": "string",
