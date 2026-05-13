@@ -1,3 +1,5 @@
+/* global describe, test, expect */
+
 /**
  * Gate 7A-2 Feature Flag Tests — Phase 7A-2.10
  * 

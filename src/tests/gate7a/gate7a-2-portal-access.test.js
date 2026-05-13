@@ -1,3 +1,5 @@
+/* global describe, test, expect */
+
 /**
  * Gate 7A-2 Portal Access Enforcement Tests — Phase 7A-2.10
  * 
