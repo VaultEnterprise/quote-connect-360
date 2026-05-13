@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Paperclip } from "lucide-react";
 import DaltonRulesToggle from "./DaltonRulesToggle";
 import CarrierUploadCensusTab from "./CarrierUploadCensusTab";
 import CarrierColumnMappingTab from "./CarrierColumnMappingTab";
@@ -77,6 +77,16 @@ export default function CarrierCensusImportCard({
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge()}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => setActiveTab("documents")}
+            >
+              <Paperclip className="w-3.5 h-3.5 mr-1" />
+              Attach
+            </Button>
             <Button
               type="button"
               variant="ghost"
