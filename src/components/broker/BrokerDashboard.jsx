@@ -1,15 +1,15 @@
 /**
- * Broker Workspace Dashboard — Phase 7A-2.5
+ * Broker Workspace Dashboard — Phase 7A-2.6
  * 
  * Main dashboard component.
  * Integrates dashboard cards and contract payloads.
+ * Uses centralized useBrokerWorkspace hook for state management.
  * Workspace-disabled while BROKER_WORKSPACE_ENABLED=false.
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
-import { getBrokerDashboard } from '@/lib/contracts/brokerWorkspaceContract';
+import { useBrokerWorkspace } from '@/lib/hooks/useBrokerWorkspace';
 import BrokerDashboardShell from './BrokerDashboardShell';
 import BrokerBookOfBusinessCard from './BrokerBookOfBusinessCard';
 import BrokerCasesQuotesCard from './BrokerCasesQuotesCard';
@@ -21,43 +21,18 @@ export default function BrokerDashboard() {
   const [searchParams] = useSearchParams();
   const brokerAgencyId = searchParams.get('broker_agency_id');
 
-  const [loading, setLoading] = useState(true);
-  const [dashboard, setDashboard] = useState(null);
-  const [workspaceEnabled, setWorkspaceEnabled] = useState(false);
-
-  useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        // Feature flag check: fail-closed
-        const flagEnabled = false; // Hardcoded: BROKER_WORKSPACE_ENABLED = false
-        setWorkspaceEnabled(flagEnabled);
-
-        if (!flagEnabled || !brokerAgencyId) {
-          setLoading(false);
-          return;
-        }
-
-        // Would load dashboard data from contract if enabled
-        const data = await getBrokerDashboard(brokerAgencyId);
-        if (data.success) {
-          setDashboard(data.dashboard);
-        }
-      } catch (error) {
-        console.error('Dashboard load error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboard();
-  }, [brokerAgencyId]);
+  const {
+    isLoading,
+    workspaceEnabled,
+    dashboard,
+  } = useBrokerWorkspace(brokerAgencyId);
 
   // Show shell wrapper when workspace is disabled
   if (!workspaceEnabled) {
     return <BrokerDashboardShell brokerAgencyId={brokerAgencyId} />;
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">

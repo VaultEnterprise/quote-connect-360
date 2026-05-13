@@ -1,54 +1,23 @@
 /**
- * Broker Workspace Dashboard Shell — Phase 7A-2.5
+ * Broker Workspace Dashboard Shell — Phase 7A-2.6
  * 
  * Fail-closed dashboard wrapper.
  * Shows workspace-disabled or pending-activation state while BROKER_WORKSPACE_ENABLED=false.
- * Integrates with getBrokerWorkspaceAccessState for access control.
+ * Uses centralized useBrokerWorkspace hook for access evaluation.
  */
 
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { getBrokerWorkspaceAccessState } from '@/lib/contracts/brokerWorkspaceContract';
+import React from 'react';
+import { useBrokerWorkspace } from '@/lib/hooks/useBrokerWorkspace';
 
 export default function BrokerDashboardShell({ brokerAgencyId }) {
-  const [loading, setLoading] = useState(true);
-  const [accessState, setAccessState] = useState(null);
-  const [workspaceEnabled, setWorkspaceEnabled] = useState(false);
+  const {
+    loadingAccess,
+    workspaceEnabled,
+    isAccessEligible,
+    accessState,
+  } = useBrokerWorkspace(brokerAgencyId);
 
-  useEffect(() => {
-    const evaluateAccess = async () => {
-      try {
-        // Feature flag check: fail-closed
-        const flagEnabled = false; // Hardcoded: BROKER_WORKSPACE_ENABLED = false
-        setWorkspaceEnabled(flagEnabled);
-
-        if (!flagEnabled) {
-          // Get access state to show appropriate message
-          const state = await getBrokerWorkspaceAccessState(brokerAgencyId);
-          setAccessState(state);
-          setLoading(false);
-          return;
-        }
-
-        // If flag were enabled, would evaluate full access here
-        const state = await getBrokerWorkspaceAccessState(brokerAgencyId);
-        setAccessState(state);
-      } catch (error) {
-        console.error('Dashboard access evaluation error:', error);
-        setAccessState({
-          eligible: false,
-          reason: 'EVALUATION_ERROR',
-          access_state: 'INVALID_SCOPE',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    evaluateAccess();
-  }, [brokerAgencyId]);
-
-  if (loading) {
+  if (loadingAccess) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
