@@ -52,27 +52,32 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setFileUrl(file_url);
 
-    const analysisRes = await censusImportClient.analyzeWorkbook(file_url);
-    setHeaders(analysisRes.data.headers);
-    setHeaderRowIndex(analysisRes.data.header_row_index);
-    
-    // Auto-suggest mapping
-    const suggestedMapping = {};
-    analysisRes.data.headers.forEach((h, idx) => {
-      const normalized = h.normalized;
-      if (normalized.includes("relationship") || normalized.includes("relation")) suggestedMapping[idx] = "relationship";
-      else if (normalized.includes("first") && normalized.includes("name")) suggestedMapping[idx] = "first_name";
-      else if (normalized.includes("last") && normalized.includes("name")) suggestedMapping[idx] = "last_name";
-      else if (normalized.includes("dob") || normalized.includes("birth")) suggestedMapping[idx] = "dob";
-      else if (normalized.includes("address")) suggestedMapping[idx] = "address";
-      else if (normalized.includes("city")) suggestedMapping[idx] = "city";
-      else if (normalized.includes("state")) suggestedMapping[idx] = "state";
-      else if (normalized.includes("zip")) suggestedMapping[idx] = "zip";
-      else if (normalized.includes("gender") || normalized.includes("sex")) suggestedMapping[idx] = "gender";
-    });
+    try {
+      const analysisRes = await censusImportClient.analyzeWorkbook(file_url);
+      setHeaders(analysisRes.data.headers);
+      setHeaderRowIndex(analysisRes.data.header_row_index);
 
-    setMapping(suggestedMapping);
-    setStep("mapping");
+      // Auto-suggest mapping
+      const suggestedMapping = {};
+      analysisRes.data.headers.forEach((h, idx) => {
+        const normalized = h.normalized;
+        if (normalized.includes("relationship") || normalized.includes("relation")) suggestedMapping[idx] = "relationship";
+        else if (normalized.includes("first") && normalized.includes("name")) suggestedMapping[idx] = "first_name";
+        else if (normalized.includes("last") && normalized.includes("name")) suggestedMapping[idx] = "last_name";
+        else if (normalized.includes("dob") || normalized.includes("birth")) suggestedMapping[idx] = "dob";
+        else if (normalized.includes("address")) suggestedMapping[idx] = "address";
+        else if (normalized.includes("city")) suggestedMapping[idx] = "city";
+        else if (normalized.includes("state")) suggestedMapping[idx] = "state";
+        else if (normalized.includes("zip")) suggestedMapping[idx] = "zip";
+        else if (normalized.includes("gender") || normalized.includes("sex")) suggestedMapping[idx] = "gender";
+      });
+
+      setMapping(suggestedMapping);
+      setStep("mapping");
+      } catch (error) {
+      setMappingError(`Analysis failed: ${error.message}`);
+      setStep("upload");
+      }
   };
 
   const handleMappingChange = async (newMapping) => {
