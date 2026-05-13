@@ -41,7 +41,10 @@ import HelpManualManager from '@/pages/HelpManualManager';
 import ACALibrary from '@/pages/ACALibrary';
 import MasterGeneralAgentCommand from '@/pages/MasterGeneralAgentCommand';
 import BrokerSignup from '@/pages/BrokerSignup';
+import BrokerSignupShell from '@/pages/BrokerSignupShell';
+import BrokerOnboardingShell from '@/pages/BrokerOnboardingShell';
 import PlatformBrokerAgencies from '@/pages/PlatformBrokerAgencies';
+import PlatformBrokerReviewShell from '@/pages/PlatformBrokerReviewShell';
 import Phase1BrokerSmokeTest from '@/pages/Phase1BrokerSmokeTest';
 
 const AuthenticatedApp = () => {
@@ -105,11 +108,15 @@ const AuthenticatedApp = () => {
         <Route path="/command-center/broker-agencies" element={
           user?.role === 'admin' || user?.role === 'platform_super_admin' ? <PlatformBrokerAgencies /> : <PageNotFound />
         } />
+        <Route path="/command-center/broker-agencies/pending" element={
+          user?.role === 'admin' || user?.role === 'platform_super_admin' ? <PlatformBrokerReviewShell /> : <PageNotFound />
+        } />
         <Route path="/command-center/qa/phase-1-broker-smoke-test" element={
           user?.role === 'admin' || user?.role === 'platform_super_admin' ? <Phase1BrokerSmokeTest /> : <PageNotFound />
         } />
       </Route>
-      <Route path="/broker-signup" element={<BrokerSignup />} />
+      <Route path="/broker-signup" element={<BrokerSignupShell />} />
+      <Route path="/broker-onboarding" element={<BrokerOnboardingShell />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
