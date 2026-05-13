@@ -125,10 +125,12 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString()
     });
 
+    // Return safe payload (no file_uri, storage internals, or sensitive metadata)
     return Response.json({
       document_id: documentRecord.id,
-      file_uri: file_uri,
-      classification
+      name: documentRecord.name,
+      classification,
+      visibility_scope: visibilityScope
     });
   } catch (error) {
     console.error('Upload error:', error.message);
