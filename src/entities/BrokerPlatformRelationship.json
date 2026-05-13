@@ -2,129 +2,59 @@
   "name": "BrokerPlatformRelationship",
   "type": "object",
   "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
     "tenant_id": {
       "type": "string",
       "description": "Tenant scope"
     },
     "broker_agency_id": {
       "type": "string",
-      "description": "FK to BrokerAgencyProfile"
+      "description": "FK to BrokerAgencyProfile (unique per broker)"
     },
     "status": {
       "type": "string",
-      "enum": [
-        "draft",
-        "invited",
-        "pending_approval",
-        "active",
-        "suspended",
-        "inactive",
-        "terminated"
-      ],
-      "default": "draft"
+      "enum": ["pending_approval", "approved", "suspended", "inactive"],
+      "default": "pending_approval"
     },
     "approval_status": {
       "type": "string",
-      "enum": [
-        "pending",
-        "approved",
-        "rejected"
-      ],
-      "default": "pending"
+      "enum": ["none", "pending", "approved", "rejected"],
+      "default": "none"
     },
-    "relationship_type": {
+    "approval_requested_by_user_email": {
       "type": "string",
-      "enum": [
-        "direct_platform",
-        "marketplace",
-        "referral"
-      ],
-      "default": "direct_platform"
+      "nullable": true
     },
-    "requested_at": {
+    "approval_requested_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "nullable": true
     },
-    "requested_by_user_email": {
-      "type": "string"
+    "approved_by_user_email": {
+      "type": "string",
+      "nullable": true
     },
     "approved_at": {
       "type": "string",
-      "format": "date-time"
-    },
-    "approved_by_user_email": {
-      "type": "string"
-    },
-    "activated_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "can_create_employers": {
-      "type": "boolean",
-      "default": true
-    },
-    "can_create_cases": {
-      "type": "boolean",
-      "default": true
-    },
-    "can_create_quotes": {
-      "type": "boolean",
-      "default": true
-    },
-    "can_create_proposals": {
-      "type": "boolean",
-      "default": true
-    },
-    "can_request_benefits_setup": {
-      "type": "boolean",
-      "default": true
-    },
-    "can_view_analytics": {
-      "type": "boolean",
-      "default": true
-    },
-    "can_export_data": {
-      "type": "boolean",
-      "default": false
-    },
-    "direct_employer_count": {
-      "type": "number",
-      "default": 0
-    },
-    "direct_case_count": {
-      "type": "number",
-      "default": 0
-    },
-    "direct_quote_count": {
-      "type": "number",
-      "default": 0
-    },
-    "direct_premium_ytd": {
-      "type": "number"
+      "format": "date-time",
+      "nullable": true
     },
     "compliance_status": {
       "type": "string",
-      "enum": [
-        "pending_review",
-        "compliant",
-        "issues_found",
-        "suspended"
-      ],
+      "enum": ["pending_review", "compliant", "issues_found", "suspended"],
       "default": "pending_review"
     },
-    "last_compliance_review_at": {
+    "created_at": {
       "type": "string",
       "format": "date-time"
     },
-    "last_compliance_review_by": {
-      "type": "string"
-    },
-    "notes": {
-      "type": "string"
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
-  "required": [
-    "tenant_id",
-    "broker_agency_id"
-  ]
+  "required": ["tenant_id", "broker_agency_id"]
 }

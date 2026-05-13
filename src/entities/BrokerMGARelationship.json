@@ -1,0 +1,49 @@
+{
+  "name": "BrokerMGARelationship",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyProfile"
+    },
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "FK to MasterGeneralAgent"
+    },
+    "relationship_type": {
+      "type": "string",
+      "enum": ["affiliated", "delegated", "hybrid"],
+      "default": "affiliated"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "suspended", "terminated"],
+      "default": "draft"
+    },
+    "established_at": {
+      "type": "string",
+      "format": "date-time",
+      "nullable": true
+    },
+    "established_by_user_email": {
+      "type": "string",
+      "nullable": true
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "broker_agency_id", "master_general_agent_id"]
+}

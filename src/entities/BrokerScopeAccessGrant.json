@@ -1,0 +1,48 @@
+{
+  "name": "BrokerScopeAccessGrant",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyProfile (grantee)"
+    },
+    "target_entity_type": {
+      "type": "string",
+      "enum": ["MGA", "DistributionChannelContext", "BenefitCase"],
+      "description": "Type of resource being granted"
+    },
+    "target_entity_id": {
+      "type": "string",
+      "description": "PK of target resource"
+    },
+    "granted_by_user_id": {
+      "type": "string"
+    },
+    "granted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "nullable": true,
+      "description": "null = permanent; past date = expired"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "broker_agency_id", "target_entity_type", "target_entity_id"]
+}

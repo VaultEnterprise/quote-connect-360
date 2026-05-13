@@ -2,18 +2,24 @@
   "name": "BrokerAgencyUser",
   "type": "object",
   "properties": {
+    "id": {
+      "type": "string"
+    },
     "tenant_id": {
-      "type": "string",
-      "description": "Tenant scope"
+      "type": "string"
     },
     "broker_agency_id": {
       "type": "string",
-      "description": "FK to BrokerAgencyProfile"
+      "description": "FK to BrokerAgencyProfile (scoping field)"
     },
-    "user_email": {
+    "user_id": {
       "type": "string",
-      "format": "email",
-      "description": "Email of the user (FK to User)"
+      "nullable": true,
+      "description": "Base44 User ID (null during invitation, set after acceptance)"
+    },
+    "email": {
+      "type": "string",
+      "description": "User email (primary key for invite matching)"
     },
     "first_name": {
       "type": "string"
@@ -23,47 +29,36 @@
     },
     "role": {
       "type": "string",
-      "enum": [
-        "broker_agency_admin",
-        "broker_producer",
-        "broker_account_manager",
-        "broker_benefits_admin",
-        "broker_quote_user",
-        "broker_read_only"
-      ],
-      "default": "broker_producer"
+      "enum": ["owner", "manager", "viewer"],
+      "description": "Broker-level role"
     },
     "status": {
       "type": "string",
-      "enum": [
-        "invited",
-        "active",
-        "inactive",
-        "suspended"
-      ],
+      "enum": ["invited", "active", "suspended", "deactivated"],
       "default": "invited"
+    },
+    "invited_by_user_id": {
+      "type": "string",
+      "nullable": true
     },
     "invited_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "nullable": true
     },
     "accepted_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "nullable": true
     },
-    "last_login_at": {
+    "created_at": {
       "type": "string",
       "format": "date-time"
     },
-    "notes": {
-      "type": "string"
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
-  "required": [
-    "tenant_id",
-    "broker_agency_id",
-    "user_email",
-    "first_name",
-    "last_name"
-  ]
+  "required": ["tenant_id", "broker_agency_id", "email", "first_name", "last_name", "role"]
 }

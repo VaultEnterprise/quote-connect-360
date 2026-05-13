@@ -1,0 +1,82 @@
+{
+  "name": "DistributionChannelContext",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope (mandatory)"
+    },
+    "channel_type": {
+      "type": "string",
+      "enum": [
+        "platform_direct",
+        "standalone_broker",
+        "mga_direct",
+        "mga_affiliated_broker",
+        "hybrid_broker_direct",
+        "hybrid_broker_mga",
+        "employer_direct"
+      ],
+      "description": "Channel classification (immutable after creation)"
+    },
+    "owner_org_type": {
+      "type": "string",
+      "enum": ["platform", "broker", "mga", "employer"],
+      "description": "Primary owner type (identifies which org controls records in this context)"
+    },
+    "owner_org_id": {
+      "type": "string",
+      "description": "PK of owner org (MGA ID, Broker Agency ID, Employer ID, or null for platform)"
+    },
+    "servicing_org_type": {
+      "type": "string",
+      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "nullable": true,
+      "description": "Optional servicing org (e.g., broker servicing an MGA-owned employer)"
+    },
+    "servicing_org_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "PK of servicing org"
+    },
+    "supervising_org_type": {
+      "type": "string",
+      "enum": ["mga", "platform"],
+      "nullable": true,
+      "description": "Optional supervising org (e.g., MGA supervising a broker)"
+    },
+    "supervising_org_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "PK of supervising org"
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["owner_only", "owner_and_servicing", "owner_and_supervising", "owner_and_all_affiliates", "platform_wide"],
+      "default": "owner_only",
+      "description": "Which orgs can see records in this context"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "suspended", "archived"],
+      "default": "draft"
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "description": "User who created this context"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "channel_type", "owner_org_type", "owner_org_id"]
+}
