@@ -6,6 +6,7 @@
  */
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { decode } from 'https://deno.land/std@0.208.0/encoding/base64.ts';
 
 // @ts-ignore - Deno globals
 const { Deno } = globalThis;
@@ -79,7 +80,7 @@ Deno.serve(async (req) => {
     }
 
     // Upload to private storage
-    const file = new Uint8Array(Buffer.from(file_base64, 'base64'));
+    const file = decode(file_base64);
     const uploadResult = await base44.integrations.Core.UploadPrivateFile({ file });
     const file_uri = uploadResult.file_uri;
 
