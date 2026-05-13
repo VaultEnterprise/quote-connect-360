@@ -16,6 +16,7 @@
 
 import crypto from 'crypto';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { runDuplicateBrokerDetection } from './brokerDuplicateDetectionContract.js';
 
 // ============================================================================
 // CONSTANTS & CONFIGURATION
@@ -217,8 +218,32 @@ export async function submitStandaloneBrokerSignup(base44, payload) {
       compliance_documents_submitted: false,
       compliance_hold: false,
       compliance_hold_reason: 'none',
+      duplicate_risk_level: 'unknown', // Will be set by duplicate detection
       audit_trace_id: auditTraceId,
     });
+
+    // 3.5. Run duplicate broker detection (advisory, non-blocking)
+    let duplicateRiskLevel = 'NO_MATCH';
+    try {
+      const dupResult = await runDuplicateBrokerDetection(base44, {
+        tenant_id,
+        applicant_email,
+        legal_name,
+        dba_name,
+        npn: npn_if_available,
+        // Additional fields could be added here if available in signup
+      });
+      duplicateRiskLevel = dupResult.duplicate_risk_level;
+
+      // Update onboarding case with duplicate risk
+      await base44.asServiceRole.entities.BrokerAgencyOnboardingCase.update(
+        onboardingCase.id,
+        { duplicate_risk_level: duplicateRiskLevel }
+      );
+    } catch (dupError) {
+      // Log but don't block signup on duplicate detection failure
+      console.error('Duplicate detection error:', dupError);
+    }
 
     // 4. Generate token (plaintext, one-time) and hash for storage
     const plaintext_token = generateToken();
