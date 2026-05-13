@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext";
+import CaseSetupChecklist from "@/components/cases/new-case/CaseSetupChecklist";
+import CensusImportWorkspace from "@/components/cases/new-case/CensusImportWorkspace";
+import SubmissionPackageSummaryWidget from "@/components/cases/new-case/SubmissionPackageSummaryWidget";
 
 const PRODUCT_OPTIONS = [
   { value: "medical",   label: "Medical" },
@@ -43,6 +46,54 @@ export default function CaseNew() {
     products_requested: ["medical"],
   });
 
+  const [selectedDestinations, setSelectedDestinations] = useState({
+    ast: false,
+    sus: false,
+    triad: false,
+  });
+
+  const [selectedWorkflowOrder, setSelectedWorkflowOrder] = useState([]);
+
+  const [importWorkflows, setImportWorkflows] = useState({
+    ast: {
+      label: "AST Census Import",
+      selected: false,
+      activeTab: "upload",
+      censusFile: null,
+      mapping: {},
+      validationStatus: "not_validated",
+      daltonRules: false,
+      attachments: [],
+      requiredForms: {},
+    },
+    sus: {
+      label: "SUS Census Import",
+      selected: false,
+      activeTab: "upload",
+      censusFile: null,
+      mapping: {},
+      validationStatus: "not_validated",
+      daltonRules: false,
+      attachments: [],
+      requiredForms: {
+        saraForm: { selected: false, file: null, notes: "" },
+        employeeQuestionnaire: { selected: false, file: null, notes: "" },
+        saraChecklist: { selected: false, file: null, notes: "" },
+      },
+    },
+    triad: {
+      label: "Triad Census Import",
+      selected: false,
+      activeTab: "upload",
+      censusFile: null,
+      mapping: {},
+      validationStatus: "not_validated",
+      daltonRules: false,
+      attachments: [],
+      requiredForms: {},
+    },
+  });
+
   const toggleProduct = (val) => {
     setForm(prev => ({
       ...prev,
@@ -50,6 +101,37 @@ export default function CaseNew() {
         ? prev.products_requested.filter(p => p !== val)
         : [...prev.products_requested, val],
     }));
+  };
+
+  const handleDestinationChange = (carrierId) => {
+    const newDestinations = {
+      ...selectedDestinations,
+      [carrierId]: !selectedDestinations[carrierId],
+    };
+    setSelectedDestinations(newDestinations);
+
+    if (newDestinations[carrierId]) {
+      // Add to workflow order
+      setSelectedWorkflowOrder([...selectedWorkflowOrder, carrierId]);
+    } else {
+      // Remove from workflow order
+      setSelectedWorkflowOrder(selectedWorkflowOrder.filter(id => id !== carrierId));
+    }
+  };
+
+  const handleUpdateWorkflow = (carrierId, updates) => {
+    setImportWorkflows(prev => ({
+      ...prev,
+      [carrierId]: { ...prev[carrierId], ...updates },
+    }));
+  };
+
+  const handleRemoveWorkflow = (carrierId) => {
+    setSelectedDestinations(prev => ({
+      ...prev,
+      [carrierId]: false,
+    }));
+    setSelectedWorkflowOrder(selectedWorkflowOrder.filter(id => id !== carrierId));
   };
 
   const createCase = useMutation({
@@ -245,6 +327,26 @@ export default function CaseNew() {
             />
           </CardContent>
         </Card>
+
+        {/* Case Setup Checklist */}
+        <CaseSetupChecklist
+          selectedDestinations={selectedDestinations}
+          onDestinationChange={handleDestinationChange}
+        />
+
+        {/* Submission Package Summary Widget */}
+        <SubmissionPackageSummaryWidget
+          selectedWorkflowOrder={selectedWorkflowOrder}
+          importWorkflows={importWorkflows}
+        />
+
+        {/* Dynamic Census Import Workspace */}
+        <CensusImportWorkspace
+          selectedWorkflowOrder={selectedWorkflowOrder}
+          importWorkflows={importWorkflows}
+          onUpdateWorkflow={handleUpdateWorkflow}
+          onRemoveWorkflow={handleRemoveWorkflow}
+        />
 
         <div className="flex justify-end gap-3">
           <Link to="/cases">

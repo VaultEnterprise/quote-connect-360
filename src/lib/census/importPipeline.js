@@ -128,69 +128,7 @@ export function detectFileType({ source_file_name = '', content_type = '' }) {
   return 'csv';
 }
 
-export function normalizeRelationship(value) {
-  const raw = normalizeCell(value).toUpperCase();
-  const mapping = { EMP: 'EMP', SPS: 'SPS', DEP: 'DEP', EMPLOYEE: 'EMP', SPOUSE: 'SPS', DEPENDENT: 'DEP' };
-  return mapping[raw] || raw;
-}
 
-export function normalizeCoverageType(value) {
-  const raw = normalizeCell(value).toUpperCase().trim();
-  const mapping = {
-    'EE': 'EE',
-    'EMPLOYEE ONLY': 'EE',
-    'ES': 'ES',
-    'EMPLOYEE + SPOUSE': 'ES',
-    'EMPLOYEE+SPOUSE': 'ES',
-    'EC': 'EC',
-    'EMPLOYEE + CHILD(REN)': 'EC',
-    'EMPLOYEE+CHILD': 'EC',
-    'EF': 'EF',
-    'FAMILY': 'EF',
-    'W': 'W',
-    'WAIVING COVERAGE': 'W',
-  };
-  return mapping[raw] || raw;
-}
-
-export function extractVaultGroupMetadata(rows = [], vaultMarkerIdx = -1) {
-  const metadata = {};
-  const groupInfoStart = rows.findIndex((r) => normalizeCell(r[0] || '').includes('GROUP INFORMATION') || normalizeCell(r[1] || '').includes('GROUP INFORMATION'));
-  if (groupInfoStart < 0) return metadata;
-
-  const endIdx = vaultMarkerIdx >= 0 ? vaultMarkerIdx : rows.length;
-  const fieldMap = {
-    'legal group name': 'legal_group_name',
-    'tax id': 'tax_id',
-    'sic code': 'sic_code',
-    'address': 'address',
-    'city': 'city',
-    'state': 'state',
-    'zip': 'zip',
-    'eligible employees': 'total_eligible_employees',
-    'employees on current plan': 'total_employees_current_plan',
-    'current carrier': 'current_carrier',
-    'desired effective date': 'desired_effective_date',
-    'years with carrier': 'years_with_carrier',
-  };
-
-  for (let i = groupInfoStart + 1; i < endIdx; i++) {
-    const row = rows[i] || [];
-    for (let j = 1; j < row.length - 1; j += 2) {
-      const key = normalizeCell(row[j] || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
-      const value = normalizeCell(row[j + 1] || '');
-      if (key && value) {
-        for (const [matchKey, fieldName] of Object.entries(fieldMap)) {
-          if (key.includes(matchKey)) {
-            metadata[fieldName] = value;
-            break;
-          }
-        }
-      }
-    }
-  }
-  return metadata;
-}
 
 export function locateVaultCensusMarker(rows = []) {
   for (let i = 0; i < rows.length; i += 1) {
@@ -294,38 +232,19 @@ export function normalizeCensusHeaders(headerRow = []) {
   });
 }
 
-export function normalizeRelationship(value) {
+export function normalizeRelationshipCode(value) {
   const raw = normalizeCell(value).toUpperCase();
   const mapping = { EMP: 'EMP', SPS: 'SPS', DEP: 'DEP', EMPLOYEE: 'EMP', SPOUSE: 'SPS', DEPENDENT: 'DEP' };
   return mapping[raw] || raw;
 }
 
-export function normalizeRelationshipCode(value) {
-  return normalizeRelationship(value);
+export function normalizeRelationship(value) {
+  return normalizeRelationshipCode(value);
 }
 
 export function isRelationshipCode(value) {
   const normalized = normalizeRelationshipCode(value);
   return ['EMP', 'SPS', 'DEP'].includes(normalized);
-}
-
-export function normalizeCoverageType(value) {
-  const raw = normalizeCell(value).toUpperCase().trim();
-  const mapping = {
-    'EE': 'EE',
-    'EMPLOYEE ONLY': 'EE',
-    'ES': 'ES',
-    'EMPLOYEE + SPOUSE': 'ES',
-    'EMPLOYEE+SPOUSE': 'ES',
-    'EC': 'EC',
-    'EMPLOYEE + CHILD(REN)': 'EC',
-    'EMPLOYEE+CHILD': 'EC',
-    'EF': 'EF',
-    'FAMILY': 'EF',
-    'W': 'W',
-    'WAIVING COVERAGE': 'W',
-  };
-  return mapping[raw] || raw;
 }
 
 export function normalizeDateValue(value) {
