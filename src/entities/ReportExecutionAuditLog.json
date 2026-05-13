@@ -1,0 +1,77 @@
+{
+  "name": "ReportExecutionAuditLog",
+  "type": "object",
+  "properties": {
+    "master_general_agent_id": {
+      "type": "string",
+      "description": "MGA scope — required for all audit events"
+    },
+    "schedule_id": {
+      "type": "string",
+      "description": "Foreign key to MGAReportSchedule"
+    },
+    "execution_id": {
+      "type": "string",
+      "description": "Unique execution identifier (uuid)"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "schedule_created",
+        "schedule_updated",
+        "schedule_activated",
+        "schedule_paused",
+        "schedule_cancelled",
+        "execution_started",
+        "execution_completed",
+        "execution_failed",
+        "execution_retried",
+        "report_downloaded",
+        "report_deleted"
+      ],
+      "description": "Type of audit event"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "User email (null for system-triggered events)"
+    },
+    "actor_role": {
+      "type": "string",
+      "description": "User role at time of event (MGA_ADMIN, BROKER_ADMIN, etc.)"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["success", "failed", "skipped"],
+      "description": "Result of the event"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable description of the event"
+    },
+    "error_code": {
+      "type": "string",
+      "description": "Error code if outcome=failed (null otherwise)"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message if outcome=failed (null otherwise)"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Event-specific metadata (retry_count, file_size, format, etc.)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the event occurred (UTC)"
+    }
+  },
+  "required": [
+    "master_general_agent_id",
+    "schedule_id",
+    "execution_id",
+    "event_type",
+    "outcome",
+    "timestamp"
+  ]
+}

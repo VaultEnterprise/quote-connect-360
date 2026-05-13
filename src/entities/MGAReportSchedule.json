@@ -25,12 +25,31 @@
     },
     "schedule_type": {
       "type": "string",
-      "enum": ["one_time"],
-      "description": "Schedule type (one_time for Gate 6I-A; recurring reserved for 6I-B)"
+      "enum": ["one_time", "recurring"],
+      "default": "one_time",
+      "description": "Schedule type (one_time for Gate 6I-A; recurring for Gate 6I-B)"
     },
     "frequency": {
       "type": "string",
-      "description": "Reserved for Gate 6I-B (recurring patterns); null for Gate 6I-A one_time"
+      "enum": ["hourly", "daily", "weekly", "monthly", "custom"],
+      "description": "Recurrence frequency (null for one_time)"
+    },
+    "frequency_interval": {
+      "type": "integer",
+      "description": "Repeat every N intervals (minimum 1 hour for hourly)"
+    },
+    "frequency_days_of_week": {
+      "type": "array",
+      "items": {"type": "integer"},
+      "description": "Days 0-6 (Sun-Sat) for weekly schedules"
+    },
+    "frequency_day_of_month": {
+      "type": "integer",
+      "description": "Day 1-31 for monthly schedules"
+    },
+    "frequency_cron": {
+      "type": "string",
+      "description": "Custom cron expression for 'custom' frequency"
     },
     "timezone": {
       "type": "string",
@@ -55,6 +74,55 @@
       "type": "string",
       "format": "date-time",
       "description": "Timestamp of last execution (null until first run)"
+    },
+    "execution_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Total successful executions"
+    },
+    "failure_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Total failed executions"
+    },
+    "last_execution_status": {
+      "type": "string",
+      "enum": ["success", "failed", "skipped"],
+      "description": "Status of last execution (null if never run)"
+    },
+    "last_execution_error": {
+      "type": "string",
+      "description": "Error message from last failure (null if last was success)"
+    },
+    "retry_on_failure": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable automatic retry on failure"
+    },
+    "max_retries": {
+      "type": "integer",
+      "default": 3,
+      "description": "Maximum retry attempts (if retry_on_failure=true)"
+    },
+    "retry_delay_minutes": {
+      "type": "integer",
+      "default": 60,
+      "description": "Minutes to wait between retry attempts"
+    },
+    "current_retry_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Current retry attempt (0 = first execution)"
+    },
+    "auto_delete_on_end": {
+      "type": "boolean",
+      "default": false,
+      "description": "Delete schedule when recurrence_end_date reached"
+    },
+    "keep_last_n_reports": {
+      "type": "integer",
+      "default": 12,
+      "description": "Retention limit (older reports auto-deleted)"
     },
     "status": {
       "type": "string",
