@@ -59,7 +59,7 @@
     },
     "owner_org_type": {
       "type": "string",
-      "enum": ["platform", "broker", "mga", "employer"],
+      "enum": ["platform", "broker_agency", "mga", "employer"],
       "nullable": true,
       "description": "Owner org type (added)"
     },
@@ -70,7 +70,7 @@
     },
     "servicing_org_type": {
       "type": "string",
-      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "enum": ["broker_agency", "mga", "employer", "benefits_admin"],
       "nullable": true,
       "description": "Servicing org type (added)"
     },

@@ -38,7 +38,7 @@
     },
     "servicing_org_type": {
       "type": "string",
-      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "enum": ["broker_agency", "mga", "employer", "benefits_admin"],
       "nullable": true
     },
     "servicing_org_id": {

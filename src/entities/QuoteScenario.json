@@ -23,7 +23,7 @@
     },
     "owner_org_type": {
       "type": "string",
-      "enum": ["platform", "broker", "mga", "employer"],
+      "enum": ["platform", "broker_agency", "mga", "employer"],
       "nullable": true
     },
     "owner_org_id": {
@@ -32,7 +32,7 @@
     },
     "servicing_org_type": {
       "type": "string",
-      "enum": ["broker", "mga", "employer", "benefits_admin"],
+      "enum": ["broker_agency", "mga", "employer", "benefits_admin"],
       "nullable": true
     },
     "servicing_org_id": {

@@ -67,17 +67,7 @@
     },
     "created_by_user_id": {
       "type": "string",
-      "description": "User who created this context (validated existing)"
-    },
-    "created_by_role": {
-      "type": "string",
-      "nullable": true,
-      "description": "User's role at creation time"
-    },
-    "audit_trace_id": {
-      "type": "string",
-      "nullable": true,
-      "description": "Correlation ID for audit trail (added)"
+      "description": "User who created this context (existing — NOT stamped field, canonical parent record field)"
     },
     "created_at": {
       "type": "string",
