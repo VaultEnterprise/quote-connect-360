@@ -1,4 +1,6 @@
 export const VAULT_TARGET_SHEET = 'GROUP INFO & CENSUS';
+export const VAULT_CENSUS_MARKER = 'CENSUS:';
+export const VAULT_GROUP_INFO_MARKER = 'GROUP INFORMATION:';
 
 export function excelSerialToIso(value) {
   if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) return '';
@@ -126,7 +128,28 @@ export function detectFileType({ source_file_name = '', content_type = '' }) {
   return 'csv';
 }
 
+export function locateVaultCensusMarker(rows = []) {
+  for (let i = 0; i < rows.length; i += 1) {
+    const firstCell = normalizeCell(rows[i][0]);
+    if (firstCell === VAULT_CENSUS_MARKER) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 export function locateCensusSection(rows = []) {
+  // Try VAULT layout first
+  const vaultMarkerIdx = locateVaultCensusMarker(rows);
+  if (vaultMarkerIdx >= 0) {
+    // Header should be immediately after CENSUS: marker
+    const headerIdx = vaultMarkerIdx + 1;
+    if (headerIdx < rows.length) {
+      return { headerIndex: headerIdx, isVaultLayout: true, vaultMarkerIndex: vaultMarkerIdx };
+    }
+  }
+
+  // Fall back to standard census header detection
   let headerIndex = -1;
   for (let i = 0; i < rows.length; i += 1) {
     const labels = rows[i].map(normalizeHeaderLabel);
@@ -157,6 +180,28 @@ export function extractGroupMetadata(rows = []) {
   return metadata;
 }
 
+export function extractVaultGroupMetadata(rows = [], vaultMarkerIdx = -1) {
+  const metadata = {};
+  // Scan rows before VAULT CENSUS: marker for GROUP INFORMATION section
+  const groupInfoStart = rows.findIndex((r) => normalizeCell(r[0]) === VAULT_GROUP_INFO_MARKER || normalizeHeaderLabel(normalizeCell(r[1])).includes('group information'));
+  if (groupInfoStart < 0) return metadata;
+
+  // Extract metadata from rows between GROUP INFORMATION and CENSUS marker
+  const endIdx = vaultMarkerIdx >= 0 ? vaultMarkerIdx : rows.length;
+  for (let i = groupInfoStart + 1; i < endIdx; i += 1) {
+    const row = rows[i];
+    for (let j = 1; j < row.length - 1; j += 2) {
+      const key = normalizeCell(row[j]);
+      const value = normalizeCell(row[j + 1]);
+      if (key && key.endsWith(':') && value) {
+        const normalizedKey = key.slice(0, -1).toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        metadata[normalizedKey] = value;
+      }
+    }
+  }
+  return metadata;
+}
+
 export function normalizeCensusHeaders(headerRow = []) {
   const aliases = {
     relationship: 'relationship',
@@ -183,10 +228,12 @@ export function normalizeCensusHeaders(headerRow = []) {
     coverage_type: 'coverage_type',
     coverage: 'coverage_type',
     elected_coverage: 'coverage_type',
+    definitions: 'ignore',
   };
   return headerRow.map((cell, index) => {
     const normalized = normalizeHeaderLabel(cell)
       .replace('coverage type ee es ec ef w', 'coverage_type')
+      .replace('coverage type', 'coverage_type')
       .replace('first name', 'first_name')
       .replace('last name', 'last_name');
     const compact = normalized.replace(/\s+/g, '_');
@@ -198,9 +245,32 @@ export function normalizeCensusHeaders(headerRow = []) {
   });
 }
 
-export function isRelationshipCode(value) {
+export function normalizeRelationshipCode(value) {
   const raw = normalizeCell(value).toUpperCase();
-  return ['EMP', 'SPS', 'DEP'].includes(raw);
+  const mapping = { EMP: 'EMP', SPS: 'SPS', DEP: 'DEP', EMPLOYEE: 'EMP', SPOUSE: 'SPS', DEPENDENT: 'DEP' };
+  return mapping[raw] || raw;
+}
+
+export function isRelationshipCode(value) {
+  const normalized = normalizeRelationshipCode(value);
+  return ['EMP', 'SPS', 'DEP'].includes(normalized);
+}
+
+export function normalizeCoverageType(value) {
+  const raw = normalizeCell(value).toUpperCase().trim();
+  const mapping = {
+    'EE': 'EE',
+    'EMPLOYEE ONLY': 'EE',
+    'ES': 'ES',
+    'EMPLOYEE + SPOUSE': 'ES',
+    'EC': 'EC',
+    'EMPLOYEE + CHILD(REN)': 'EC',
+    'EF': 'EF',
+    'FAMILY': 'EF',
+    'W': 'W',
+    'WAIVING COVERAGE': 'W',
+  };
+  return mapping[raw] || raw;
 }
 
 export function normalizeDateValue(value) {
@@ -212,7 +282,7 @@ export function normalizeDateValue(value) {
   if (parts.length === 3) {
     if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
     let [mm, dd, yyyy] = parts;
-    if (yyyy.length === 2) yyyy = `19${yyyy}`;
+    if (yyyy.length === 2) yyyy = parseInt(yyyy, 10) > 30 ? `19${yyyy}` : `20${yyyy}`;
     return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
   return raw;
@@ -238,7 +308,7 @@ export function parseHouseholds(rows = [], headerMap = [], headerIndex = 0) {
   rows.forEach((row, rowOffset) => {
     const rowNumber = headerIndex + rowOffset + 2;
     if (isEffectivelyBlankRow(row)) return;
-    const relationship = normalizeCell(row[relationshipIndex]).toUpperCase();
+    const relationship = normalizeRelationshipCode(row[relationshipIndex]);
     if (!isRelationshipCode(relationship)) return;
     const record = {
       relationship_code: relationship,
@@ -250,7 +320,7 @@ export function parseHouseholds(rows = [], headerMap = [], headerIndex = 0) {
       zip: normalizeCell(row[zipIndex]).replace(/[^0-9-]/g, ''),
       gender: normalizeCell(row[genderIndex]),
       dob: normalizeDateValue(row[dobIndex]),
-      coverage_type: normalizeCell(row[coverageIndex]).toUpperCase(),
+      coverage_type: normalizeCoverageType(row[coverageIndex]),
       source_row_number: rowNumber,
       source_payload: Object.fromEntries(headerMap.map((item) => [item.source || `col_${item.index}`, row[item.index] ?? ''])),
     };
@@ -286,7 +356,8 @@ export function buildValidationIssues(record, context = {}) {
   if (!['EMP', 'SPS', 'DEP'].includes(record.relationship_code || '')) issues.push({ field: 'relationship_code', severity: 'critical', code: 'INVALID_RELATIONSHIP', message: 'Relationship must be EMP, SPS, or DEP', recommended_fix: 'Use EMP, SPS, or DEP in the relationship column.' });
   if (record.relationship_code === 'DEP' && !context.hasActiveEmployee) issues.push({ field: 'relationship_code', severity: 'critical', code: 'DEPENDENT_BEFORE_EMPLOYEE', message: 'Dependent row appears before a valid employee row', recommended_fix: 'Place employee rows before related dependent rows.' });
   if (record.relationship_code === 'SPS' && !context.hasActiveEmployee) issues.push({ field: 'relationship_code', severity: 'critical', code: 'SPOUSE_BEFORE_EMPLOYEE', message: 'Spouse row appears before a valid employee row', recommended_fix: 'Place employee rows before spouse rows.' });
-  if (!['EE', 'ES', 'EC', 'EF', 'W', ''].includes(record.coverage_type || '')) issues.push({ field: 'coverage_type', severity: 'warning', code: 'UNKNOWN_COVERAGE_CODE', message: 'Coverage code is not recognized', recommended_fix: 'Use EE, ES, EC, EF, or W.' });
+  const normalizedCoverage = normalizeCoverageType(record.coverage_type || '');
+  if (!['EE', 'ES', 'EC', 'EF', 'W', ''].includes(normalizedCoverage)) issues.push({ field: 'coverage_type', severity: 'warning', code: 'UNKNOWN_COVERAGE_CODE', message: 'Coverage code is not recognized', recommended_fix: 'Use EE, ES, EC, EF, or W.' });
   if (context.isDuplicateMember) issues.push({ field: 'household_key', severity: 'critical', code: 'DUPLICATE_MEMBER', message: 'Duplicate member record detected', recommended_fix: 'Remove duplicate member rows for the same household/person combination.' });
   if (record.coverage_type === 'W') issues.push({ field: 'coverage_type', severity: 'informational', code: 'WAIVED_COVERAGE', message: 'Coverage is waived', recommended_fix: 'No action needed if waiver is intentional.' });
   return issues;
