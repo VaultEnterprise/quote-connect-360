@@ -9,6 +9,8 @@
  */
 
 import { base44 } from '@/api/base44Client';
+import { validateSafePayload, maskSensitiveIdentifiers } from '@/lib/security/brokerSafePayloadSanitizer';
+import { auditFeatureDisabledAttempt, auditScopeDeniedAttempt, auditPermissionDeniedAttempt } from '@/lib/security/brokerAuditLogger';
 
 // Feature flag defaults (all false during Phase 7A-2.7)
 const FEATURE_FLAGS = {
