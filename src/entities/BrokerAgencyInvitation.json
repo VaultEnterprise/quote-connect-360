@@ -1,0 +1,81 @@
+{
+  "name": "BrokerAgencyInvitation",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Required tenant scoping key"
+    },
+    "onboarding_case_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyOnboardingCase"
+    },
+    "invited_email": {
+      "type": "string",
+      "description": "Email address of invited user"
+    },
+    "invited_name": {
+      "type": "string",
+      "description": "Name of invited user"
+    },
+    "invited_role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "manager",
+        "admin"
+      ],
+      "default": "owner",
+      "description": "Role for invited user"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "accepted",
+        "pending_verification",
+        "active"
+      ],
+      "default": "invited",
+      "description": "Invitation lifecycle status"
+    },
+    "token_hash": {
+      "type": "string",
+      "description": "HASH ONLY — HMAC-SHA256 or JWT signature; never plaintext token"
+    },
+    "invitation_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When invitation email was sent"
+    },
+    "invitation_accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When user accepted and verified token"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Invitation expires after 7 days (configurable)"
+    },
+    "single_use_consumed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When token was consumed (single-use enforcement)"
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "description": "Correlation ID for invitation lifecycle"
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "description": "User ID who created this invitation"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "onboarding_case_id",
+    "invited_email",
+    "token_hash"
+  ]
+}

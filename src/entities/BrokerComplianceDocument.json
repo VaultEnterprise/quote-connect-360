@@ -1,0 +1,92 @@
+{
+  "name": "BrokerComplianceDocument",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Required tenant scoping key"
+    },
+    "onboarding_case_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyOnboardingCase"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyProfile (denormalized for query efficiency)"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "tax_id_verification",
+        "license_copy",
+        "business_address_proof",
+        "bank_account_verification",
+        "insurance_requirements",
+        "e_o_insurance",
+        "w9_form",
+        "broker_agreement",
+        "carrier_appointment",
+        "other"
+      ],
+      "description": "Type of compliance document"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to uploaded document (secure, time-limited signed URL)"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original filename"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "upload_status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "approved",
+        "rejected",
+        "requires_reupload"
+      ],
+      "default": "pending_review",
+      "description": "Admin review status"
+    },
+    "review_notes": {
+      "type": "string",
+      "description": "Admin comments on document"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Email of admin who reviewed"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When document expires (for time-sensitive docs like licenses)"
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "description": "Correlation ID for document lifecycle"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "description": "User ID who uploaded document"
+    },
+    "uploaded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "onboarding_case_id",
+    "document_type",
+    "file_url"
+  ]
+}

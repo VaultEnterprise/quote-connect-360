@@ -1,0 +1,130 @@
+{
+  "name": "BrokerAgencyOnboardingCase",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Required tenant scoping key"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyProfile; assigned after signup validation"
+    },
+    "signup_application_id": {
+      "type": "string",
+      "description": "FK to BrokerSignupApplication that initiated this case"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending_email_verification",
+        "pending_profile_completion",
+        "pending_platform_review",
+        "pending_more_information",
+        "active",
+        "suspended",
+        "terminated",
+        "rejected"
+      ],
+      "default": "draft",
+      "description": "Onboarding workflow status"
+    },
+    "npn_validated": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether NPN has been validated"
+    },
+    "licenses_validated": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of validated state licenses"
+    },
+    "compliance_documents_submitted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether all required compliance documents uploaded"
+    },
+    "compliance_hold": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether approval is blocked by compliance hold"
+    },
+    "compliance_hold_reason": {
+      "type": "string",
+      "enum": [
+        "pending_tax_id_verification",
+        "pending_license_verification",
+        "pending_bank_account_setup",
+        "pending_insurance_requirements",
+        "pending_background_check",
+        "manual_review_required",
+        "none"
+      ],
+      "default": "none"
+    },
+    "compliance_hold_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When hold expires if not resolved"
+    },
+    "approval_workflow_id": {
+      "type": "string",
+      "description": "FK to BrokerApprovalWorkflow tracking review state"
+    },
+    "assigned_approver": {
+      "type": "string",
+      "description": "Email of platform admin assigned to review"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal admin notes"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "onboarding_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "documents_submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "awaiting_approval_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rejected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tenant_id_scope": {
+      "type": "string",
+      "description": "Denormalized tenant_id for scope enforcement (required)"
+    },
+    "audit_trace_id": {
+      "type": "string",
+      "description": "Correlation ID for multi-step operations"
+    },
+    "created_by_user_id": {
+      "type": "string",
+      "description": "User ID who created this record"
+    },
+    "created_by_role": {
+      "type": "string",
+      "description": "Role of creator at creation time"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "signup_application_id"
+  ]
+}
