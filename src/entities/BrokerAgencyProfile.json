@@ -195,7 +195,27 @@
     },
     "portal_access_enabled": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "Whether portal access flag is set after approval (Phase 7A-1.8)"
+    },
+    "portal_access_state": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "pending_email_verification",
+        "profile_incomplete",
+        "pending_compliance",
+        "pending_platform_review",
+        "pending_more_information",
+        "compliance_hold",
+        "rejected",
+        "suspended",
+        "approved_but_workspace_disabled",
+        "eligible_pending_workspace_activation",
+        "active"
+      ],
+      "default": "not_started",
+      "description": "Current portal access state (Phase 7A-1.8)"
     },
     "approved_by_user_email": {
       "type": "string"
