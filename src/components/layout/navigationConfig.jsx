@@ -62,6 +62,8 @@ export const supportItems = [
 export const platformItems = [
   { path: "/command-center/broker-agencies", label: "Broker Agencies", icon: Building2, description: "Manage broker accounts", roles: ['platform_super_admin', 'admin'] },
   { path: "/command-center/broker-agencies/pending", label: "Pending Brokers", icon: AlertCircle, description: "Review pending signups", roles: ['platform_super_admin', 'admin'] },
+  { path: "/broker-signup", label: "Broker Signup", icon: UserCog, description: "Broker registration form", roles: ['platform_super_admin', 'admin'] },
+  { path: "/broker-onboarding", label: "Broker Onboarding", icon: Shield, description: "Broker onboarding workflow", roles: ['platform_super_admin', 'admin'] },
 ];
 
 export const navGroups = [
