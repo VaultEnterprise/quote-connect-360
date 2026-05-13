@@ -1,3 +1,5 @@
+/* global describe, test, expect */
+
 /**
  * Gate 7A-2 Business Action Contract Tests — Phase 7A-2.10
  * 
