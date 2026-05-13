@@ -14,6 +14,7 @@ const TAB_LIST = [
   { id: "upload", label: "Upload Census" },
   { id: "mapping", label: "Map Columns" },
   { id: "validation", label: "Validate Census" },
+  { id: "dalton", label: "Dalton Rules" },
   { id: "documents", label: "Required Documents" },
   { id: "review", label: "Review & Submit" },
 ];
@@ -162,6 +163,22 @@ export default function CarrierCensusImportCard({
               validationStatus={workflow.validationStatus}
               onValidate={() => handleUpdateWorkflow("validationStatus", "validated")}
             />
+          )}
+
+          {activeTab === "dalton" && (
+            <div className="space-y-4">
+              <DaltonRulesToggle
+                checked={workflow.daltonRules || false}
+                onChange={(checked) => handleUpdateWorkflow("daltonRules", checked)}
+              />
+              {workflow.daltonRules && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
+                  <p>
+                    <strong>Dalton Rules selected.</strong> Rule definitions will be configured in a later phase and applied after census validation.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {activeTab === "documents" && (
