@@ -3,8 +3,9 @@
  * 
  * Detects potential duplicate brokers based on matching signals.
  * Advisory/review-based (no auto-merge, no auto-reject).
+ * Feature-flag gated (BROKER_DUPLICATE_DETECTION_ENABLED must be true to execute).
  * Applicant-facing responses are generic (non-leaking).
- * Platform reviewers see duplicate candidate details.
+ * Platform reviewers see duplicate candidate details (permission-gated).
  * Tenant-scoped, cross-tenant isolation enforced.
  * 
  * Matching signals:
@@ -33,6 +34,10 @@ import crypto from 'crypto';
 // ============================================================================
 // CONFIGURATION & CONSTANTS
 // ============================================================================
+
+const FEATURE_FLAGS = {
+  BROKER_DUPLICATE_DETECTION_ENABLED: false,
+};
 
 const CONFIDENCE_THRESHOLDS = {
   NO_MATCH: 40,
@@ -317,16 +322,17 @@ function calculateMatchScore(applicant, existing) {
 // ============================================================================
 
 /**
- * Run duplicate broker detection (tenant-scoped, advisory-based).
+ * Run duplicate broker detection (tenant-scoped, advisory-based, feature-flag gated).
  * 
- * Searches for potential duplicates within same tenant.
+ * Searches for potential duplicates within same tenant (if feature flag enabled).
  * Does NOT auto-merge or auto-reject.
  * Routes probable/confirmed duplicates to platform review.
  * Returns generic applicant-facing response (non-leaking).
+ * Returns NOT_EXECUTED_FEATURE_DISABLED if feature flag is false.
  * 
  * @param {object} base44 - SDK client
  * @param {object} payload - { tenant_id, applicant_email, legal_name, dba_name, npn, phone, business_address, mailing_address, ein_token_reference }
- * @returns {object} { duplicate_risk_level: 'NO_MATCH' | 'POSSIBLE_DUPLICATE' | 'PROBABLE_DUPLICATE' | 'CONFIRMED_DUPLICATE_CANDIDATE' | 'NEEDS_PLATFORM_REVIEW' }
+ * @returns {object} { status: 'NOT_EXECUTED_FEATURE_DISABLED' } OR { duplicate_risk_level_internal, applicant_message }
  * @throws {Error} Validation error
  */
 export async function runDuplicateBrokerDetection(base44, payload) {
@@ -334,6 +340,16 @@ export async function runDuplicateBrokerDetection(base44, payload) {
   const auditTraceId = crypto.randomUUID();
 
   try {
+    // 0. Feature flag check: fail-closed
+    if (!FEATURE_FLAGS.BROKER_DUPLICATE_DETECTION_ENABLED) {
+      // Return inert status (no live lookup, no result exposure)
+      return {
+        status: 'NOT_EXECUTED_FEATURE_DISABLED',
+        duplicate_risk_level_internal: 'NO_MATCH', // Safe internal default
+        applicant_message: 'Your application is being processed. Thank you for your patience.',
+      };
+    }
+
     // 1. Query existing brokers in same tenant
     const existingBrokers = await base44.asServiceRole.entities.BrokerAgencyProfile.filter(
       { tenant_id }
@@ -391,34 +407,34 @@ export async function runDuplicateBrokerDetection(base44, payload) {
       }
     }
 
-    // 5. Audit: BROKER_DUPLICATE_CHECK_RUN
+    // 5. Audit: BROKER_DUPLICATE_CHECK_RUN (safe internal audit only)
     await createAuditEvent(base44, {
       tenant_id,
       actor_user_id: 'system',
       actor_role: 'system',
       action: 'BROKER_DUPLICATE_CHECK_RUN',
-      detail: `Duplicate check completed: ${riskLevel} (${candidates.length} potential matches)`,
+      detail: `Duplicate check completed: ${riskLevel} (${candidates.length} potential matches found)`,
       outcome: 'success',
       audit_trace_id: auditTraceId,
     });
 
-    // 6. Audit: BROKER_DUPLICATE_CANDIDATE_FOUND (if candidates exist)
+    // 6. Audit: BROKER_DUPLICATE_CANDIDATE_FOUND (if candidates exist; redacted for safety)
     if (candidates.length > 0) {
       await createAuditEvent(base44, {
         tenant_id,
         actor_user_id: 'system',
         actor_role: 'system',
         action: 'BROKER_DUPLICATE_CANDIDATE_FOUND',
-        detail: `Top candidate: ${candidates[0].broker_legal_name} (score: ${candidates[0].match_score})`,
+        detail: `Duplicate candidate detected: risk level ${riskLevel}, top score ${Math.round(candidates[0].match_score)}`,
         outcome: 'success',
         audit_trace_id: auditTraceId,
       });
     }
 
-    // 7. Return generic applicant response (non-leaking)
+    // 7. Return generic applicant response (non-leaking; no risk level exposed)
     return {
-      duplicate_risk_level: riskLevel,
-      message: 'Your application is being processed. Thank you for your patience.',
+      duplicate_risk_level_internal: riskLevel, // Stored internally only, not returned to applicant
+      applicant_message: 'Your application is being processed. Thank you for your patience.',
       // Platform reviewers will see candidate details separately (not returned here)
     };
   } catch (error) {
@@ -427,19 +443,29 @@ export async function runDuplicateBrokerDetection(base44, payload) {
 }
 
 /**
- * Get duplicate detection candidates (platform reviewer only).
+ * Get duplicate detection candidates (platform reviewer only, feature-flag gated).
  * 
  * Returns detailed duplicate candidate information.
- * Platform reviewer permission-gated.
+ * Platform reviewer permission-gated (platform_broker.duplicate_review).
  * Tenant-scoped (no cross-tenant leakage).
+ * Feature flag must be enabled for access.
  * 
  * @param {object} base44 - SDK client
  * @param {object} context - Authenticated context { tenant_id, user_id, role }
  * @param {object} payload - { broker_agency_id }
  * @returns {object} { candidates: [...], top_candidate: {...} }
- * @throws {Error} Permission/scope error
+ * @throws {Error} Permission/scope error or feature disabled
  */
 export async function getDuplicateDetectionCandidates(base44, context, payload) {
+  // Feature flag check
+  if (!FEATURE_FLAGS.BROKER_DUPLICATE_DETECTION_ENABLED) {
+    throw {
+      status: 403,
+      code: 'NOT_AUTHORIZED_FOR_GATE_7A_1',
+      message: 'Duplicate detection review is not yet authorized for this phase',
+    };
+  }
+
   // Permission check: fail-closed
   assertPermission(context, 'platform_broker.duplicate_review');
 
@@ -523,19 +549,29 @@ export async function getDuplicateDetectionCandidates(base44, context, payload) 
 }
 
 /**
- * Record duplicate detection resolution decision (platform reviewer).
+ * Record duplicate detection resolution decision (platform reviewer, feature-flag gated).
  * 
  * Allows platform reviewer to document duplicate resolution.
- * Permission-gated.
+ * Permission-gated (platform_broker.duplicate_review).
  * Audit logged.
+ * Feature flag must be enabled.
  * 
  * @param {object} base44 - SDK client
  * @param {object} context - Authenticated context { tenant_id, user_id, role }
  * @param {object} payload - { broker_agency_id, duplicate_candidate_id, decision: 'proceed' | 'hold_for_merge' | 'reject', audit_reason }
  * @returns {object} { success: true }
- * @throws {Error} Permission/scope error
+ * @throws {Error} Permission/scope error or feature disabled
  */
 export async function recordDuplicateResolution(base44, context, payload) {
+  // Feature flag check
+  if (!FEATURE_FLAGS.BROKER_DUPLICATE_DETECTION_ENABLED) {
+    throw {
+      status: 403,
+      code: 'NOT_AUTHORIZED_FOR_GATE_7A_1',
+      message: 'Duplicate detection review is not yet authorized for this phase',
+    };
+  }
+
   // Permission check: fail-closed
   assertPermission(context, 'platform_broker.duplicate_review');
 

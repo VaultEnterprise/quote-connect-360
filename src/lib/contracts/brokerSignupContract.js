@@ -222,8 +222,9 @@ export async function submitStandaloneBrokerSignup(base44, payload) {
       audit_trace_id: auditTraceId,
     });
 
-    // 3.5. Run duplicate broker detection (advisory, non-blocking)
-    let duplicateRiskLevel = 'NO_MATCH';
+    // 3.5. Run duplicate broker detection (feature-gated, advisory, non-blocking)
+    let duplicateRiskLevelInternal = 'NO_MATCH';
+    let duplicateExecutionStatus = 'NOT_EXECUTED_FEATURE_DISABLED';
     try {
       const dupResult = await runDuplicateBrokerDetection(base44, {
         tenant_id,
@@ -233,16 +234,29 @@ export async function submitStandaloneBrokerSignup(base44, payload) {
         npn: npn_if_available,
         // Additional fields could be added here if available in signup
       });
-      duplicateRiskLevel = dupResult.duplicate_risk_level;
 
-      // Update onboarding case with duplicate risk
+      // Handle feature-disabled response
+      if (dupResult.status === 'NOT_EXECUTED_FEATURE_DISABLED') {
+        duplicateExecutionStatus = 'NOT_EXECUTED_FEATURE_DISABLED';
+        duplicateRiskLevelInternal = 'NO_MATCH'; // Safe internal default
+      } else {
+        // Feature enabled: use actual detection result
+        duplicateExecutionStatus = 'EXECUTED';
+        duplicateRiskLevelInternal = dupResult.duplicate_risk_level_internal;
+      }
+
+      // Update onboarding case with duplicate risk (internal storage only)
       await base44.asServiceRole.entities.BrokerAgencyOnboardingCase.update(
         onboardingCase.id,
-        { duplicate_risk_level: duplicateRiskLevel }
+        {
+          duplicate_risk_level: duplicateRiskLevelInternal,
+          duplicate_detection_status: duplicateExecutionStatus,
+        }
       );
     } catch (dupError) {
       // Log but don't block signup on duplicate detection failure
       console.error('Duplicate detection error:', dupError);
+      duplicateExecutionStatus = 'ERROR';
     }
 
     // 4. Generate token (plaintext, one-time) and hash for storage
