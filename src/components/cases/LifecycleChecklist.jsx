@@ -25,13 +25,13 @@ export default function LifecycleChecklist({ caseData, censusCount, scenarioCoun
     { label: "Employer group linked", done: !!caseData.employer_group_id },
     { label: "Census uploaded", done: censusCount > 0 || caseData.census_status === "validated" },
     { label: "Census validated", done: caseData.census_status === "validated" || stageIdx >= 3 },
+    { label: "TxQuote submission", done: !!txQuoteComplete },
     { label: "Quote scenario created", done: scenarioCount > 0 || stageIdx >= 4 },
     { label: "Proposal built", done: stageIdx >= 5 },
     { label: "Employer review done", done: stageIdx >= 7 },
     { label: "Enrollment opened", done: stageIdx >= 8 },
     { label: "Enrollment complete", done: stageIdx >= 10 },
     { label: "Case installed / active", done: stageIdx >= 11 },
-    { label: "TxQuote submission", done: !!txQuoteComplete },
   ];
 
   const doneCount = checks.filter(c => c.done).length;
