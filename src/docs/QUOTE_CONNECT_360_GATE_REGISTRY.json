@@ -128,10 +128,13 @@
       "gate_name": "First-Class Broker Agency Core Model",
       "gate_type": "data_architecture_phase",
       "parent_gate": "7A",
-      "status": "IMPLEMENTED_VALIDATION_PENDING",
+      "status": "CLOSED",
       "runtimeStatus": "INACTIVE",
-      "implementationStatus": "IMPLEMENTED",
+      "implementationStatus": "IMPLEMENTED_VALIDATED_CLOSED",
+      "validationStatus": "PASSED",
+      "closureDecision": "OPERATOR_APPROVED",
       "completion_date": "2026-05-13",
+      "closure_date": "2026-05-13",
       "phases_completed": 10,
       "phase_breakdown": {
         "7A-0.1": {
