@@ -53,7 +53,7 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
     setFileUrl(file_url);
 
     try {
-      const analysisRes = await censusImportClient.analyzeWorkbook(file_url);
+      const analysisRes = await censusImportClient.analyzeWorkbook(file_url, file.name, file.type);
       setHeaders(analysisRes.data.headers);
       setHeaderRowIndex(analysisRes.data.header_row_index);
 
@@ -92,7 +92,7 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
   };
 
   const handlePreview = async () => {
-    const previewRes = await censusImportClient.previewMapping(fileUrl, mapping, headerRowIndex);
+    const previewRes = await censusImportClient.previewMapping(fileUrl, mapping, headerRowIndex, file.name, file.type);
     setPreview(previewRes.data.preview);
     setStep("preview");
   };
@@ -111,7 +111,9 @@ export default function CensusUploadModal({ caseId, open, onClose }) {
         fileUrl,
         file.name,
         mapping,
-        headerRowIndex
+        headerRowIndex,
+        undefined,
+        file.type
       );
 
       await Promise.all([

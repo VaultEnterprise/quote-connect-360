@@ -12,11 +12,28 @@ function normalizeHeaderLabel(value) {
   return normalizeCell(value).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-function detectFileType({ source_file_name = '', content_type = '' }) {
+function detectFileType({ source_file_name = '', content_type = '', file_type = '', magic_bytes = null }) {
   const fileName = source_file_name.toLowerCase();
   const type = content_type.toLowerCase();
-  if (fileName.endsWith('.xlsx') || type.includes('spreadsheetml')) return 'xlsx';
-  if (fileName.endsWith('.xls') || type === 'application/vnd.ms-excel') return 'xls';
+  const clientType = file_type.toLowerCase();
+  
+  // Check magic bytes first (highest confidence)
+  if (magic_bytes && magic_bytes.length >= 2) {
+    const pk = magic_bytes[0] === 0x50 && magic_bytes[1] === 0x4B;
+    if (pk) return 'xlsx'; // ZIP magic = XLSX
+  }
+  
+  // Check by extension
+  if (fileName.endsWith('.xlsx')) return 'xlsx';
+  if (fileName.endsWith('.xls')) return 'xls';
+  if (fileName.endsWith('.csv')) return 'csv';
+  
+  // Check by MIME type
+  if (type.includes('spreadsheetml')) return 'xlsx';
+  if (type === 'application/vnd.ms-excel') return 'xls';
+  if (clientType.includes('spreadsheetml')) return 'xlsx';
+  if (clientType === 'application/vnd.ms-excel') return 'xls';
+  
   return 'csv';
 }
 
@@ -98,24 +115,34 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await req.json();
-    const { source_file_url, source_file_name } = payload || {};
+    const { source_file_url, source_file_name = '', file_type = '' } = payload || {};
     if (!source_file_url) return Response.json({ error: 'source_file_url is required' }, { status: 400 });
 
     const fileResponse = await fetch(source_file_url);
     if (!fileResponse.ok) return Response.json({ error: 'Could not fetch file' }, { status: 400 });
 
-    // Detect file type from name or content-type
+    // Read as buffer first to detect magic bytes
+    const buffer = await fileResponse.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
+    const magicBytes = uint8.slice(0, 4);
+    
+    // Detect file type from extension, MIME, and magic bytes
     const contentType = fileResponse.headers.get('content-type') || '';
-    const fileType = detectFileType({ source_file_name: source_file_name || '', content_type: contentType });
+    const detectedType = detectFileType({ 
+      source_file_name: source_file_name || '', 
+      content_type: contentType,
+      file_type: file_type || '',
+      magic_bytes: Array.from(magicBytes)
+    });
 
     // Parse based on file type
     let rawRows = [];
-    if (fileType === 'xls') {
-      const buffer = await fileResponse.arrayBuffer();
+    if (detectedType === 'xls' || detectedType === 'xlsx') {
       rawRows = await extractRowsFromXls(buffer);
     } else {
-      const csvText = await fileResponse.text();
-      rawRows = extractRowsFromCsv(csvText);
+      // For CSV, decode buffer as text
+      const text = new TextDecoder().decode(uint8);
+      rawRows = extractRowsFromCsv(text);
     }
     
     // Normalize all cells

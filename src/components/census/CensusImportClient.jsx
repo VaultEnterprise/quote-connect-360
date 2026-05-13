@@ -1,20 +1,22 @@
 import { base44 } from "@/api/base44Client";
 
 export const censusImportClient = {
-  analyzeWorkbook: (source_file_url) =>
-    base44.functions.invoke("analyzeCensusWorkbook", { source_file_url }),
+  analyzeWorkbook: (source_file_url, source_file_name = '', file_type = '') =>
+    base44.functions.invoke("analyzeCensusWorkbook", { source_file_url, source_file_name, file_type }),
 
-  previewMapping: (source_file_url, mapping, header_row_index) =>
+  previewMapping: (source_file_url, mapping, header_row_index, source_file_name = '', file_type = '') =>
     base44.functions.invoke("previewCensusMapping", {
       source_file_url,
       mapping,
       header_row_index,
+      source_file_name,
+      file_type,
     }),
 
   validateMapping: (mapping) =>
     base44.functions.invoke("validateCensusMapping", { mapping }),
 
-  executeImport: (caseId, census_import_id, source_file_url, source_file_name, mapping, header_row_index, mapping_profile_id) =>
+  executeImport: (caseId, census_import_id, source_file_url, source_file_name, mapping, header_row_index, mapping_profile_id, file_type) =>
     base44.functions.invoke("executeCensusImportWithMapping", {
       caseId,
       census_import_id,
@@ -23,6 +25,7 @@ export const censusImportClient = {
       mapping,
       header_row_index,
       mapping_profile_id,
+      file_type,
     }),
 
   saveMappingProfile: (name, mapping, description) =>
