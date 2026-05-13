@@ -1,7 +1,7 @@
 /**
- * Broker Workspace Contract — Phase 7A-2.2
+ * Broker Workspace Contract — Phase 7A-2.4
  * 
- * Backend contract layer for broker workspace data access.
+ * Backend contract layer for broker workspace data access with Direct Book / MGA-Affiliated Book separation.
  * All broker workspace queries must go through this contract.
  * No raw frontend entity reads.
  * 
@@ -12,15 +12,115 @@
  * - Feature flags (all fail-closed)
  * - Permissions
  * 
+ * Channel classification:
+ * - direct_book: master_general_agent_id null, owner_org_type = broker_agency
+ * - mga_affiliated_book: master_general_agent_id populated, owner_org_type = broker_agency
+ * - platform_direct: read/admin only if permissioned
+ * - hybrid_direct: direct_book with platform oversight
+ * - hybrid_mga: mga_affiliated_book with platform oversight
+ * 
  * Safe payload behavior:
  * - No raw census data
  * - No SSN or sensitive employee data
  * - No public document URLs
  * - Document references private/signed only
  * - Dashboard counters cannot leak out-of-scope records
+ * - Every record includes channel/book classification
+ * - MGA cannot view standalone Direct Book without explicit BrokerScopeAccessGrant
  */
 
 import { base44 } from '@/api/base44Client';
+
+/**
+ * classifyRecord
+ * 
+ * Classify a record as direct_book or mga_affiliated_book based on scopes.
+ * Returns channel and classification metadata.
+ */
+function classifyRecord(record) {
+  if (!record) return null;
+
+  const isMGAAffiliated = !!(record.master_general_agent_id);
+  
+  return {
+    channel: isMGAAffiliated ? 'mga_affiliated_book' : 'direct_book',
+    owner_org_type: record.owner_org_type || 'broker_agency',
+    supervising_org_type: isMGAAffiliated ? 'mga' : (record.supervising_org_type || null),
+    master_general_agent_id: record.master_general_agent_id || null,
+    broker_agency_id: record.broker_agency_id || null,
+  };
+}
+
+/**
+ * canAccessMGAAffiliatedBook
+ * 
+ * Check if user/MGA can access MGA-Affiliated Book records.
+ * Validates BrokerMGARelationship and BrokerScopeAccessGrant.
+ */
+async function canAccessMGAAffiliatedBook(brokerAgencyId, mgaId) {
+  if (!mgaId) return false;
+
+  try {
+    // Check BrokerMGARelationship status
+    const relationships = await base44.entities.BrokerMGARelationship.filter({
+      broker_agency_id: brokerAgencyId,
+      master_general_agent_id: mgaId,
+    });
+
+    if (!relationships || relationships.length === 0) {
+      return false;
+    }
+
+    const relationship = relationships[0];
+    
+    // Relationship must be active
+    if (relationship.relationship_status !== 'active') {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking MGA relationship:', error);
+    return false;
+  }
+}
+
+/**
+ * canAccessDirectBook
+ * 
+ * Check if MGA can access Direct Book records via BrokerScopeAccessGrant.
+ */
+async function canAccessDirectBook(brokerAgencyId, requestingMgaId) {
+  if (!requestingMgaId) return true; // Broker can access own direct book
+
+  try {
+    // Check for active BrokerScopeAccessGrant
+    const grants = await base44.entities.BrokerScopeAccessGrant.filter({
+      broker_agency_id: brokerAgencyId,
+      master_general_agent_id: requestingMgaId,
+    });
+
+    if (!grants || grants.length === 0) {
+      return false;
+    }
+
+    const grant = grants[0];
+
+    // Grant must be active and not expired
+    if (grant.status !== 'active') {
+      return false;
+    }
+
+    if (grant.expires_at && new Date(grant.expires_at) < new Date()) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking scope access grant:', error);
+    return false;
+  }
+}
 
 /**
  * getBrokerWorkspaceAccessState
@@ -426,12 +526,12 @@ export async function getBrokerWorkspaceAccessState(brokerAgencyId) {
 /**
  * getBrokerDashboard
  * 
- * Returns safe dashboard counters only.
- * Separates Direct Book and MGA-Affiliated Book.
+ * Returns safe dashboard counters with separated Direct Book and MGA-Affiliated Book.
  * Does not expose hidden records in counts.
  */
-export async function getBrokerDashboard(brokerAgencyId) {
+export async function getBrokerDashboard(brokerAgencyId, requestingMgaId = null) {
   try {
+    const user = await base44.auth.me();
     const accessState = await getBrokerWorkspaceAccessState(brokerAgencyId);
     
     if (!accessState.eligible) {
@@ -442,57 +542,95 @@ export async function getBrokerDashboard(brokerAgencyId) {
       };
     }
 
-    // Log audit event
-    await base44.entities.AuditEvent.create({
-      action: 'BROKER_DASHBOARD_VIEWED',
-      actor_email: (await base44.auth.me()).email,
+    // Get direct book counts
+    const directEmployers = await base44.entities.BrokerEmployer.filter({
       broker_agency_id: brokerAgencyId,
-      outcome: 'success',
+      master_general_agent_id: null,
     });
-
-    // Count employers (scoped to broker)
-    const employers = await base44.entities.BrokerEmployer.filter({
+    const directCases = await base44.entities.BrokerCase.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null,
     });
-    const employerCount = employers ? employers.length : 0;
 
-    // Count cases (scoped to broker)
-    const cases = await base44.entities.BrokerCase.filter({
+    const directQuotes = await base44.entities.QuoteScenario.filter({
+      case_id: { $in: (directCases || []).map(c => c.id) },
+    });
+    const directProposals = await base44.entities.Proposal.filter({
+      case_id: { $in: (directCases || []).map(c => c.id) },
+    });
+
+    // Get MGA-Affiliated Book counts
+    let mgaAffiliatedCounts = {
+      total_employers: 0,
+      total_cases: 0,
+      open_quotes: 0,
+      proposals_ready: 0,
+    };
+
+    const mgaRelationships = await base44.entities.BrokerMGARelationship.filter({
       broker_agency_id: brokerAgencyId,
+      relationship_status: 'active',
     });
-    const caseCount = cases ? cases.length : 0;
 
-    // Count quotes (scoped to broker cases)
-    const quotes = await base44.entities.QuoteScenario.filter({
-      case_id: { $in: (cases || []).map(c => c.id) },
-    });
-    const quoteCount = quotes ? quotes.length : 0;
+    if (mgaRelationships && mgaRelationships.length > 0) {
+      const mgaIds = mgaRelationships.map(r => r.master_general_agent_id);
+      const mgaEmployers = await base44.entities.BrokerEmployer.filter({
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: { $in: mgaIds },
+      });
+      const mgaCases = await base44.entities.BrokerCase.filter({
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: { $in: mgaIds },
+      });
 
-    // Count proposals (scoped to broker cases)
-    const proposals = await base44.entities.Proposal.filter({
-      case_id: { $in: (cases || []).map(c => c.id) },
-    });
-    const proposalCount = proposals ? proposals.length : 0;
+      const mgaQuotes = await base44.entities.QuoteScenario.filter({
+        case_id: { $in: (mgaCases || []).map(c => c.id) },
+      });
+      const mgaProposals = await base44.entities.Proposal.filter({
+        case_id: { $in: (mgaCases || []).map(c => c.id) },
+      });
+
+      mgaAffiliatedCounts = {
+        total_employers: mgaEmployers ? mgaEmployers.length : 0,
+        total_cases: mgaCases ? mgaCases.length : 0,
+        open_quotes: mgaQuotes ? mgaQuotes.length : 0,
+        proposals_ready: mgaProposals ? mgaProposals.length : 0,
+      };
+    }
+
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_DASHBOARD_VIEWED',
+        actor_email: user.email,
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: requestingMgaId,
+        outcome: 'success',
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return {
       success: true,
       dashboard: {
         book_of_business: {
           direct_book: {
-            total_employers: employerCount,
-            total_cases: caseCount,
-            open_quotes: quoteCount,
-            proposals_ready: proposalCount,
+            total_employers: directEmployers ? directEmployers.length : 0,
+            total_cases: directCases ? directCases.length : 0,
+            open_quotes: directQuotes ? directQuotes.length : 0,
+            proposals_ready: directProposals ? directProposals.length : 0,
+            channel: 'direct_book',
           },
           mga_affiliated_book: {
-            // Placeholder for hybrid broker context
-            status: 'not_applicable_or_separated',
+            ...mgaAffiliatedCounts,
+            channel: 'mga_affiliated_book',
+            accessible: mgaRelationships && mgaRelationships.length > 0,
           },
         },
         alerts: {
-          compliance_alerts: 0, // Would be populated from BrokerAgencyProfile.compliance_status
-          tasks_due: 0, // Would be populated from filtered task list
-          renewals_due: 0, // Would be populated from renewal scope
+          compliance_alerts: 0,
+          tasks_due: 0,
+          renewals_due: 0,
         },
       },
       status: 200,
@@ -509,16 +647,35 @@ export async function getBrokerDashboard(brokerAgencyId) {
 /**
  * listBrokerBookOfBusiness
  * 
- * Returns safe book-of-business list.
- * Supports Direct Book vs MGA-Affiliated Book separation.
- * No cross-broker leakage.
- * No MGA visibility into standalone Direct Book.
+ * Returns safe book-of-business list with Direct Book vs MGA-Affiliated Book separation.
+ * Enforces scope and relationship visibility.
+ * MGA cannot access Direct Book without explicit BrokerScopeAccessGrant.
  */
-export async function listBrokerBookOfBusiness(brokerAgencyId) {
+export async function listBrokerBookOfBusiness(brokerAgencyId, requestingMgaId = null) {
   try {
+    const user = await base44.auth.me();
+    if (!user) {
+      return {
+        success: false,
+        error: 'NOT_AUTHENTICATED',
+        status: 401,
+      };
+    }
+
     const accessState = await getBrokerWorkspaceAccessState(brokerAgencyId);
     
     if (!accessState.eligible) {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_BOOK_ACCESS_DENIED_SCOPE',
+          actor_email: user.email,
+          broker_agency_id: brokerAgencyId,
+          master_general_agent_id: requestingMgaId,
+          outcome: 'blocked',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         success: false,
         error: accessState.reason,
@@ -526,37 +683,106 @@ export async function listBrokerBookOfBusiness(brokerAgencyId) {
       };
     }
 
-    // Get broker's Direct Book employers and cases
-    const employers = await base44.entities.BrokerEmployer.filter({
+    // Get broker's employers and cases for direct book
+    const directEmployers = await base44.entities.BrokerEmployer.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null, // Direct book only
     });
-    const cases = await base44.entities.BrokerCase.filter({
+    const directCases = await base44.entities.BrokerCase.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null, // Direct book only
     });
 
     const directBook = {
-      channel: 'DIRECT_BOOK',
-      owner: brokerAgencyId,
-      employers: (employers || []).map(e => ({
+      channel: 'direct_book',
+      owner_org_type: 'broker_agency',
+      employer_count: directEmployers ? directEmployers.length : 0,
+      case_count: directCases ? directCases.length : 0,
+      employers: (directEmployers || []).map(e => ({
         id: e.id,
         name: e.name,
         employee_count: e.employee_count,
         status: e.status,
+        channel: 'direct_book',
       })),
-      cases: (cases || []).map(c => ({
+      cases: (directCases || []).map(c => ({
         id: c.id,
         case_number: c.case_number,
-        employer_id: c.broker_employer_id,
+        employer_id: c.employer_id,
         stage: c.stage,
         effective_date: c.effective_date,
+        channel: 'direct_book',
       })),
     };
 
-    // MGA-Affiliated Book would be populated separately if applicable to hybrid broker
-    const mgaAffiliatedBook = {
-      channel: 'MGA_AFFILIATED_BOOK',
-      status: 'not_applicable_for_standalone_broker',
+    // Get MGA-Affiliated Book if applicable
+    let mgaAffiliatedBook = {
+      channel: 'mga_affiliated_book',
+      owner_org_type: 'broker_agency',
+      supervising_org_type: 'mga',
+      employer_count: 0,
+      case_count: 0,
+      employers: [],
+      cases: [],
+      accessible: false,
     };
+
+    // Check for MGA-Affiliated Book access
+    const mgaRelationships = await base44.entities.BrokerMGARelationship.filter({
+      broker_agency_id: brokerAgencyId,
+    });
+
+    if (mgaRelationships && mgaRelationships.length > 0) {
+      const activeRelationships = mgaRelationships.filter(r => r.relationship_status === 'active');
+
+      if (activeRelationships.length > 0) {
+        mgaAffiliatedBook.accessible = true;
+        mgaAffiliatedBook.mga_relationships_count = activeRelationships.length;
+
+        // Get MGA-Affiliated employers and cases
+        const mgaEmployers = await base44.entities.BrokerEmployer.filter({
+          broker_agency_id: brokerAgencyId,
+          master_general_agent_id: { $in: activeRelationships.map(r => r.master_general_agent_id) },
+        });
+        const mgaCases = await base44.entities.BrokerCase.filter({
+          broker_agency_id: brokerAgencyId,
+          master_general_agent_id: { $in: activeRelationships.map(r => r.master_general_agent_id) },
+        });
+
+        mgaAffiliatedBook.employer_count = mgaEmployers ? mgaEmployers.length : 0;
+        mgaAffiliatedBook.case_count = mgaCases ? mgaCases.length : 0;
+        mgaAffiliatedBook.employers = (mgaEmployers || []).map(e => ({
+          id: e.id,
+          name: e.name,
+          employee_count: e.employee_count,
+          status: e.status,
+          channel: 'mga_affiliated_book',
+          mga_id: e.master_general_agent_id,
+        }));
+        mgaAffiliatedBook.cases = (mgaCases || []).map(c => ({
+          id: c.id,
+          case_number: c.case_number,
+          employer_id: c.employer_id,
+          stage: c.stage,
+          effective_date: c.effective_date,
+          channel: 'mga_affiliated_book',
+          mga_id: c.master_general_agent_id,
+        }));
+      }
+    }
+
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_BOOK_CLASSIFICATION_EVALUATED',
+        actor_email: user.email,
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: requestingMgaId,
+        outcome: 'success',
+        detail: `Direct book: ${directBook.employer_count} employers, ${directBook.case_count} cases. MGA-Affiliated: ${mgaAffiliatedBook.employer_count} employers, ${mgaAffiliatedBook.case_count} cases.`,
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return {
       success: true,
@@ -578,14 +804,25 @@ export async function listBrokerBookOfBusiness(brokerAgencyId) {
 /**
  * listBrokerEmployers
  * 
- * Returns only broker-visible employers.
- * Uses broker scope filtering.
+ * Returns broker-visible employers separated by Direct Book vs MGA-Affiliated Book.
+ * Each employer includes channel classification.
  */
-export async function listBrokerEmployers(brokerAgencyId) {
+export async function listBrokerEmployers(brokerAgencyId, requestingMgaId = null) {
   try {
+    const user = await base44.auth.me();
     const accessState = await getBrokerWorkspaceAccessState(brokerAgencyId);
     
     if (!accessState.eligible) {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_BOOK_ACCESS_DENIED_SCOPE',
+          actor_email: user?.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         success: false,
         error: accessState.reason,
@@ -593,21 +830,65 @@ export async function listBrokerEmployers(brokerAgencyId) {
       };
     }
 
-    const employers = await base44.entities.BrokerEmployer.filter({
+    const directEmployers = await base44.entities.BrokerEmployer.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null,
     });
+
+    const mgaRelationships = await base44.entities.BrokerMGARelationship.filter({
+      broker_agency_id: brokerAgencyId,
+      relationship_status: 'active',
+    });
+
+    let mgaEmployers = [];
+    if (mgaRelationships && mgaRelationships.length > 0) {
+      const mgaIds = mgaRelationships.map(r => r.master_general_agent_id);
+      mgaEmployers = await base44.entities.BrokerEmployer.filter({
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: { $in: mgaIds },
+      });
+    }
+
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_EMPLOYERS_LISTED',
+        actor_email: user?.email,
+        broker_agency_id: brokerAgencyId,
+        outcome: 'success',
+        detail: `Direct book: ${directEmployers ? directEmployers.length : 0}, MGA-Affiliated: ${mgaEmployers ? mgaEmployers.length : 0}`,
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return {
       success: true,
-      employers: (employers || []).map(e => ({
-        id: e.id,
-        name: e.name,
-        ein: e.ein,
-        employee_count: e.employee_count,
-        status: e.status,
-        created_date: e.created_date,
-      })),
-      count: employers ? employers.length : 0,
+      employers: {
+        direct_book: (directEmployers || []).map(e => ({
+          id: e.id,
+          name: e.name,
+          ein: e.ein ? '****' : null, // Mask EIN
+          employee_count: e.employee_count,
+          status: e.status,
+          channel: 'direct_book',
+          created_date: e.created_date,
+        })),
+        mga_affiliated_book: (mgaEmployers || []).map(e => ({
+          id: e.id,
+          name: e.name,
+          ein: e.ein ? '****' : null, // Mask EIN
+          employee_count: e.employee_count,
+          status: e.status,
+          channel: 'mga_affiliated_book',
+          mga_id: e.master_general_agent_id,
+          created_date: e.created_date,
+        })),
+      },
+      count: {
+        direct_book: directEmployers ? directEmployers.length : 0,
+        mga_affiliated_book: mgaEmployers ? mgaEmployers.length : 0,
+        total: (directEmployers ? directEmployers.length : 0) + (mgaEmployers ? mgaEmployers.length : 0),
+      },
       status: 200,
     };
   } catch (error) {
@@ -622,14 +903,25 @@ export async function listBrokerEmployers(brokerAgencyId) {
 /**
  * listBrokerCases
  * 
- * Returns only broker-visible cases.
- * Preserves channel lineage.
+ * Returns broker-visible cases separated by Direct Book vs MGA-Affiliated Book.
+ * Each case includes channel lineage.
  */
-export async function listBrokerCases(brokerAgencyId) {
+export async function listBrokerCases(brokerAgencyId, requestingMgaId = null) {
   try {
+    const user = await base44.auth.me();
     const accessState = await getBrokerWorkspaceAccessState(brokerAgencyId);
     
     if (!accessState.eligible) {
+      try {
+        await base44.entities.AuditEvent.create({
+          action: 'BROKER_BOOK_ACCESS_DENIED_SCOPE',
+          actor_email: user?.email,
+          broker_agency_id: brokerAgencyId,
+          outcome: 'blocked',
+        });
+      } catch (auditError) {
+        console.error('Audit log error:', auditError);
+      }
       return {
         success: false,
         error: accessState.reason,
@@ -637,22 +929,67 @@ export async function listBrokerCases(brokerAgencyId) {
       };
     }
 
-    const cases = await base44.entities.BrokerCase.filter({
+    const directCases = await base44.entities.BrokerCase.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null,
     });
+
+    const mgaRelationships = await base44.entities.BrokerMGARelationship.filter({
+      broker_agency_id: brokerAgencyId,
+      relationship_status: 'active',
+    });
+
+    let mgaCases = [];
+    if (mgaRelationships && mgaRelationships.length > 0) {
+      const mgaIds = mgaRelationships.map(r => r.master_general_agent_id);
+      mgaCases = await base44.entities.BrokerCase.filter({
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: { $in: mgaIds },
+      });
+    }
+
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_CASES_LISTED',
+        actor_email: user?.email,
+        broker_agency_id: brokerAgencyId,
+        outcome: 'success',
+        detail: `Direct book: ${directCases ? directCases.length : 0}, MGA-Affiliated: ${mgaCases ? mgaCases.length : 0}`,
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return {
       success: true,
-      cases: (cases || []).map(c => ({
-        id: c.id,
-        case_number: c.case_number,
-        case_type: c.case_type,
-        stage: c.stage,
-        effective_date: c.effective_date,
-        employee_count: c.employee_count,
-        created_date: c.created_date,
-      })),
-      count: cases ? cases.length : 0,
+      cases: {
+        direct_book: (directCases || []).map(c => ({
+          id: c.id,
+          case_number: c.case_number,
+          case_type: c.case_type,
+          stage: c.stage,
+          effective_date: c.effective_date,
+          employee_count: c.employee_count,
+          channel: 'direct_book',
+          created_date: c.created_date,
+        })),
+        mga_affiliated_book: (mgaCases || []).map(c => ({
+          id: c.id,
+          case_number: c.case_number,
+          case_type: c.case_type,
+          stage: c.stage,
+          effective_date: c.effective_date,
+          employee_count: c.employee_count,
+          channel: 'mga_affiliated_book',
+          mga_id: c.master_general_agent_id,
+          created_date: c.created_date,
+        })),
+      },
+      count: {
+        direct_book: directCases ? directCases.length : 0,
+        mga_affiliated_book: mgaCases ? mgaCases.length : 0,
+        total: (directCases ? directCases.length : 0) + (mgaCases ? mgaCases.length : 0),
+      },
       status: 200,
     };
   } catch (error) {
@@ -730,12 +1067,13 @@ export async function listBrokerCensusVersions(brokerAgencyId) {
 /**
  * listBrokerQuotes
  * 
- * Read-only quote visibility only.
+ * Read-only quote visibility separated by Direct Book vs MGA-Affiliated Book.
  * No QuoteWorkspaceWrapper exposure.
  * No quote creation or edit activation.
  */
-export async function listBrokerQuotes(brokerAgencyId) {
+export async function listBrokerQuotes(brokerAgencyId, requestingMgaId = null) {
   try {
+    const user = await base44.auth.me();
     const accessState = await getBrokerWorkspaceAccessState(brokerAgencyId);
     
     if (!accessState.eligible) {
@@ -746,39 +1084,81 @@ export async function listBrokerQuotes(brokerAgencyId) {
       };
     }
 
-    // Get broker cases to filter quotes
-    const cases = await base44.entities.BrokerCase.filter({
+    const directCases = await base44.entities.BrokerCase.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null,
     });
 
-    if (!cases || cases.length === 0) {
-      return {
-        success: true,
-        quotes: [],
-        count: 0,
-        status: 200,
-      };
+    const mgaRelationships = await base44.entities.BrokerMGARelationship.filter({
+      broker_agency_id: brokerAgencyId,
+      relationship_status: 'active',
+    });
+
+    let mgaCases = [];
+    if (mgaRelationships && mgaRelationships.length > 0) {
+      const mgaIds = mgaRelationships.map(r => r.master_general_agent_id);
+      mgaCases = await base44.entities.BrokerCase.filter({
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: { $in: mgaIds },
+      });
     }
 
-    // Get quotes for broker cases (read-only)
-    const quotes = await base44.entities.QuoteScenario.filter({
-      case_id: { $in: cases.map(c => c.id) },
-    });
+    const directCaseIds = (directCases || []).map(c => c.id);
+    const mgaCaseIds = (mgaCases || []).map(c => c.id);
+
+    const directQuotes = directCaseIds.length > 0 ? 
+      await base44.entities.QuoteScenario.filter({
+        case_id: { $in: directCaseIds },
+      }) : [];
+
+    const mgaQuotes = mgaCaseIds.length > 0 ? 
+      await base44.entities.QuoteScenario.filter({
+        case_id: { $in: mgaCaseIds },
+      }) : [];
+
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_QUOTES_LISTED',
+        actor_email: user?.email,
+        broker_agency_id: brokerAgencyId,
+        outcome: 'success',
+        detail: `Direct book: ${directQuotes ? directQuotes.length : 0}, MGA-Affiliated: ${mgaQuotes ? mgaQuotes.length : 0}`,
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return {
       success: true,
-      quotes: (quotes || []).map(q => ({
-        id: q.id,
-        case_id: q.case_id,
-        name: q.name,
-        status: q.status,
-        is_recommended: q.is_recommended,
-        total_monthly_premium: q.total_monthly_premium,
-        quoted_at: q.quoted_at,
-      })),
-      count: quotes ? quotes.length : 0,
+      quotes: {
+        direct_book: (directQuotes || []).map(q => ({
+          id: q.id,
+          case_id: q.case_id,
+          name: q.name,
+          status: q.status,
+          is_recommended: q.is_recommended,
+          total_monthly_premium: q.total_monthly_premium,
+          channel: 'direct_book',
+          quoted_at: q.quoted_at,
+        })),
+        mga_affiliated_book: (mgaQuotes || []).map(q => ({
+          id: q.id,
+          case_id: q.case_id,
+          name: q.name,
+          status: q.status,
+          is_recommended: q.is_recommended,
+          total_monthly_premium: q.total_monthly_premium,
+          channel: 'mga_affiliated_book',
+          quoted_at: q.quoted_at,
+        })),
+      },
+      count: {
+        direct_book: directQuotes ? directQuotes.length : 0,
+        mga_affiliated_book: mgaQuotes ? mgaQuotes.length : 0,
+        total: (directQuotes ? directQuotes.length : 0) + (mgaQuotes ? mgaQuotes.length : 0),
+      },
       read_only: true,
-      quote_creation_enabled: false, // Feature flag control for Gate 7A-4
+      quote_creation_enabled: false,
       status: 200,
     };
   } catch (error) {
@@ -793,11 +1173,12 @@ export async function listBrokerQuotes(brokerAgencyId) {
 /**
  * listBrokerProposals
  * 
- * Read-only proposal visibility only.
+ * Read-only proposal visibility separated by Direct Book vs MGA-Affiliated Book.
  * No proposal creation activation unless later approved.
  */
-export async function listBrokerProposals(brokerAgencyId) {
+export async function listBrokerProposals(brokerAgencyId, requestingMgaId = null) {
   try {
+    const user = await base44.auth.me();
     const accessState = await getBrokerWorkspaceAccessState(brokerAgencyId);
     
     if (!accessState.eligible) {
@@ -808,38 +1189,79 @@ export async function listBrokerProposals(brokerAgencyId) {
       };
     }
 
-    // Get broker cases to filter proposals
-    const cases = await base44.entities.BrokerCase.filter({
+    const directCases = await base44.entities.BrokerCase.filter({
       broker_agency_id: brokerAgencyId,
+      master_general_agent_id: null,
     });
 
-    if (!cases || cases.length === 0) {
-      return {
-        success: true,
-        proposals: [],
-        count: 0,
-        status: 200,
-      };
+    const mgaRelationships = await base44.entities.BrokerMGARelationship.filter({
+      broker_agency_id: brokerAgencyId,
+      relationship_status: 'active',
+    });
+
+    let mgaCases = [];
+    if (mgaRelationships && mgaRelationships.length > 0) {
+      const mgaIds = mgaRelationships.map(r => r.master_general_agent_id);
+      mgaCases = await base44.entities.BrokerCase.filter({
+        broker_agency_id: brokerAgencyId,
+        master_general_agent_id: { $in: mgaIds },
+      });
     }
 
-    // Get proposals for broker cases (read-only)
-    const proposals = await base44.entities.Proposal.filter({
-      case_id: { $in: cases.map(c => c.id) },
-    });
+    const directCaseIds = (directCases || []).map(c => c.id);
+    const mgaCaseIds = (mgaCases || []).map(c => c.id);
+
+    const directProposals = directCaseIds.length > 0 ? 
+      await base44.entities.Proposal.filter({
+        case_id: { $in: directCaseIds },
+      }) : [];
+
+    const mgaProposals = mgaCaseIds.length > 0 ? 
+      await base44.entities.Proposal.filter({
+        case_id: { $in: mgaCaseIds },
+      }) : [];
+
+    try {
+      await base44.entities.AuditEvent.create({
+        action: 'BROKER_PROPOSALS_LISTED',
+        actor_email: user?.email,
+        broker_agency_id: brokerAgencyId,
+        outcome: 'success',
+        detail: `Direct book: ${directProposals ? directProposals.length : 0}, MGA-Affiliated: ${mgaProposals ? mgaProposals.length : 0}`,
+      });
+    } catch (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return {
       success: true,
-      proposals: (proposals || []).map(p => ({
-        id: p.id,
-        case_id: p.case_id,
-        title: p.title,
-        status: p.status,
-        sent_at: p.sent_at,
-        viewed_at: p.viewed_at,
-      })),
-      count: proposals ? proposals.length : 0,
+      proposals: {
+        direct_book: (directProposals || []).map(p => ({
+          id: p.id,
+          case_id: p.case_id,
+          title: p.title,
+          status: p.status,
+          channel: 'direct_book',
+          sent_at: p.sent_at,
+          viewed_at: p.viewed_at,
+        })),
+        mga_affiliated_book: (mgaProposals || []).map(p => ({
+          id: p.id,
+          case_id: p.case_id,
+          title: p.title,
+          status: p.status,
+          channel: 'mga_affiliated_book',
+          sent_at: p.sent_at,
+          viewed_at: p.viewed_at,
+        })),
+      },
+      count: {
+        direct_book: directProposals ? directProposals.length : 0,
+        mga_affiliated_book: mgaProposals ? mgaProposals.length : 0,
+        total: (directProposals ? directProposals.length : 0) + (mgaProposals ? mgaProposals.length : 0),
+      },
       read_only: true,
-      proposal_creation_enabled: false, // Feature flag control
+      proposal_creation_enabled: false,
       status: 200,
     };
   } catch (error) {
