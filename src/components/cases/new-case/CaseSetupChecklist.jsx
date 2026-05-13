@@ -31,7 +31,7 @@ const CARRIERS = [
   },
 ];
 
-export default function CaseSetupChecklist({ selectedDestinations, onDestinationChange }) {
+export default function CaseSetupChecklist({ selectedDestinations, onDestinationToggle }) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -55,11 +55,11 @@ export default function CaseSetupChecklist({ selectedDestinations, onDestination
                 }`}
               >
                 <Checkbox
-                  id={`carrier-${carrier.id}`}
-                  checked={isSelected}
-                  onCheckedChange={() => onDestinationChange(carrier.id)}
-                  className="mt-1 flex-shrink-0"
-                />
+                   id={`carrier-${carrier.id}`}
+                   checked={isSelected}
+                   onCheckedChange={() => onDestinationToggle(carrier.id)}
+                   className="mt-1 flex-shrink-0"
+                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <Label htmlFor={`carrier-${carrier.id}`} className="font-medium text-sm cursor-pointer">

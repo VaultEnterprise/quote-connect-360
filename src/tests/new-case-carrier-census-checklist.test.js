@@ -697,12 +697,131 @@ describe('New Case Carrier Census Checklist UI', () => {
     });
   });
 
+  describe('Callback Wiring Audit', () => {
+    test('Clicking AST checkbox does not throw', () => {
+      const mockToggle = vi.fn();
+      const { container } = render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      const astCheckbox = screen.getByRole('checkbox', { name: /send to ast/i });
+      expect(() => fireEvent.click(astCheckbox)).not.toThrow();
+      expect(mockToggle).toHaveBeenCalledWith('ast');
+    });
+
+    test('Clicking SUS checkbox does not throw', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      const susCheckbox = screen.getByRole('checkbox', { name: /send to sus/i });
+      expect(() => fireEvent.click(susCheckbox)).not.toThrow();
+      expect(mockToggle).toHaveBeenCalledWith('sus');
+    });
+
+    test('Clicking Triad checkbox does not throw', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      const triadCheckbox = screen.getByRole('checkbox', { name: /send to triad/i });
+      expect(() => fireEvent.click(triadCheckbox)).not.toThrow();
+      expect(mockToggle).toHaveBeenCalledWith('triad');
+    });
+
+    test('Clicking MEC / MVP checkbox does not throw', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      const mecMvpCheckbox = screen.getByRole('checkbox', { name: /send to mec \/ mvp/i });
+      expect(() => fireEvent.click(mecMvpCheckbox)).not.toThrow();
+      expect(mockToggle).toHaveBeenCalledWith('mecMvp');
+    });
+
+    test('onDestinationToggle callback is required', () => {
+      expect(() => 
+        render(
+          <CaseSetupChecklist
+            selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+            onDestinationToggle={undefined}
+          />
+        )
+      ).toThrow();
+    });
+
+    test('CarrierCensusImportCard onUpdate callback does not throw', () => {
+      const mockUpdate = vi.fn();
+      const mockRemove = vi.fn();
+      const workflow = {
+        activeTab: 'upload',
+        censusFile: null,
+        mapping: {},
+        validationStatus: 'not_validated',
+        daltonRules: false,
+        attachments: [],
+        requiredForms: {},
+      };
+
+      render(
+        <CarrierCensusImportCard
+          carrierId="ast"
+          workflow={workflow}
+          onUpdate={mockUpdate}
+          onRemove={mockRemove}
+        />
+      );
+
+      // Simulate Dalton Rules toggle
+      fireEvent.click(screen.getByRole('checkbox', { name: /dalton rules/i }));
+      expect(mockUpdate).toHaveBeenCalled();
+    });
+
+    test('CarrierCensusImportCard onRemove callback does not throw', () => {
+      const mockUpdate = vi.fn();
+      const mockRemove = vi.fn();
+      const workflow = {
+        activeTab: 'upload',
+        censusFile: null,
+        mapping: {},
+        validationStatus: 'not_validated',
+        daltonRules: false,
+        attachments: [],
+        requiredForms: {},
+      };
+
+      render(
+        <CarrierCensusImportCard
+          carrierId="ast"
+          workflow={workflow}
+          onUpdate={mockUpdate}
+          onRemove={mockRemove}
+        />
+      );
+
+      const removeButton = screen.getByRole('button', { name: /trash/i });
+      expect(() => fireEvent.click(removeButton)).not.toThrow();
+      expect(mockRemove).toHaveBeenCalledWith('ast');
+    });
+  });
+
   describe('Case Census Tab Visibility', () => {
     test('checklist renders on Case Census tab', () => {
       const mockSetupChecklist = vi.fn();
       const { container } = render(
         <CaseSetupChecklist
-          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
           onDestinationToggle={mockSetupChecklist}
         />
       );
@@ -713,7 +832,7 @@ describe('New Case Carrier Census Checklist UI', () => {
       const mockToggle = vi.fn();
       render(
         <CaseSetupChecklist
-          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
           onDestinationToggle={mockToggle}
         />
       );
@@ -724,7 +843,7 @@ describe('New Case Carrier Census Checklist UI', () => {
       const mockToggle = vi.fn();
       render(
         <CaseSetupChecklist
-          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
           onDestinationToggle={mockToggle}
         />
       );
@@ -735,7 +854,7 @@ describe('New Case Carrier Census Checklist UI', () => {
       const mockToggle = vi.fn();
       render(
         <CaseSetupChecklist
-          selectedDestinations={{ ast: false, sus: false, triad: false }}
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
           onDestinationToggle={mockToggle}
         />
       );
@@ -805,7 +924,7 @@ describe('New Case Carrier Census Checklist UI', () => {
       const { getByText } = render(
         <>
           <CaseSetupChecklist
-            selectedDestinations={{ ast: false, sus: false, triad: false }}
+            selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
             onDestinationToggle={vi.fn()}
           />
           <h3>Existing Census Versions</h3>
@@ -816,7 +935,7 @@ describe('New Case Carrier Census Checklist UI', () => {
   });
 
   describe('MEC / MVP Carrier Census Option', () => {
-    test('Send to MEC / MVP checkbox renders', () => {
+    test('Send to MEC / MVP checkbox renders and callback wires correctly', () => {
       const mockToggle = vi.fn();
       render(
         <CaseSetupChecklist
@@ -824,7 +943,10 @@ describe('New Case Carrier Census Checklist UI', () => {
           onDestinationToggle={mockToggle}
         />
       );
-      expect(screen.getByText('Send to MEC / MVP')).toBeDefined();
+      const mecMvpCheckbox = screen.getByRole('checkbox', { name: /send to mec \/ mvp/i });
+      expect(mecMvpCheckbox).toBeDefined();
+      fireEvent.click(mecMvpCheckbox);
+      expect(mockToggle).toHaveBeenCalledWith('mecMvp');
     });
 
     test('MEC / MVP description is correct', () => {
@@ -1034,7 +1156,7 @@ describe('New Case Carrier Census Checklist UI', () => {
       expect(screen.getByText('MEC / MVP')).toBeDefined();
     });
 
-    test('AST, SUS, Triad behavior remains unchanged', () => {
+    test('AST, SUS, Triad behavior remains unchanged and callback wires', () => {
       const mockToggle = vi.fn();
       render(
         <CaseSetupChecklist
@@ -1045,6 +1167,16 @@ describe('New Case Carrier Census Checklist UI', () => {
       expect(screen.getByText('Send to AST')).toBeDefined();
       expect(screen.getByText('Send to SUS')).toBeDefined();
       expect(screen.getByText('Send to Triad')).toBeDefined();
+      
+      // Verify callbacks wire correctly for all three
+      fireEvent.click(screen.getByRole('checkbox', { name: /send to ast/i }));
+      expect(mockToggle).toHaveBeenCalledWith('ast');
+      
+      fireEvent.click(screen.getByRole('checkbox', { name: /send to sus/i }));
+      expect(mockToggle).toHaveBeenCalledWith('sus');
+      
+      fireEvent.click(screen.getByRole('checkbox', { name: /send to triad/i }));
+      expect(mockToggle).toHaveBeenCalledWith('triad');
     });
 
     test('no backend submission occurs for MEC / MVP', () => {
