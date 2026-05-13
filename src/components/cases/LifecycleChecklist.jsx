@@ -27,7 +27,7 @@ export default function LifecycleChecklist({ caseData, censusCount, scenarioCoun
     { label: "Census validated", done: caseData.census_status === "validated" || stageIdx >= 3 },
     { label: "Run Dalton Rules", done: stageIdx >= 3 },
     { label: "TxQuote submission", done: !!txQuoteComplete },
-    { label: "Quote scenario created", done: scenarioCount > 0 || stageIdx >= 4 },
+    { label: "Quote Received", done: scenarioCount > 0 || stageIdx >= 4 },
     { label: "Proposal built", done: stageIdx >= 5 },
     { label: "Employer review done", done: stageIdx >= 7 },
     { label: "Enrollment opened", done: stageIdx >= 8 },
