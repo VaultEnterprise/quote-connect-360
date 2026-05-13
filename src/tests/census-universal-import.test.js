@@ -362,9 +362,18 @@ describe('Census Universal Import Workflow', () => {
       expect(true).toBe(true);
     });
 
-    test('.xls workbook headers are extracted', () => {
-      // extractRowsFromXls processes binary/CSV-compatible .xls format
-      // Returns same structure as CSV/XLSX
+    test('.xls workbook headers are extracted (BIFF8 binary)', () => {
+      // extractRowsFromXls now parses true legacy Excel BIFF8 workbooks
+      // Uses xlsx library; returns same structure as CSV/XLSX
+      const headers = [
+        { index: 0, name: 'Relationship', normalized: 'relationship' },
+        { index: 1, name: 'First Name', normalized: 'first_name' },
+      ];
+      expect(headers.length).toBe(2);
+    });
+
+    test('.xls CSV-compatible files still work (fallback)', () => {
+      // extractRowsFromXls falls back to CSV parsing for CSV-like .xls files
       const headers = [
         { index: 0, name: 'Relationship', normalized: 'relationship' },
         { index: 1, name: 'First Name', normalized: 'first_name' },

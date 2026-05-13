@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     let rawRows = [];
     if (fileType === 'xls') {
       const buffer = await fileResponse.arrayBuffer();
-      rawRows = extractRowsFromXls(buffer);
+      rawRows = await extractRowsFromXls(buffer);
     } else {
       const csvText = await fileResponse.text();
       rawRows = extractRowsFromCsv(csvText);
