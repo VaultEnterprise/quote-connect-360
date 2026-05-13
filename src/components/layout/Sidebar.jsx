@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import {
   AlertCircle,
   ChevronLeft,
@@ -14,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { navGroups, supportItems as bottomItems } from "@/components/layout/navigationConfig";
 
 export default function Sidebar({ collapsed, onToggle }) {
+  const { user } = useAuth();
   const location = useLocation();
   const { data: pendingTasks = [] } = useQuery({
     queryKey: ["tasks-pending"],
@@ -38,6 +40,11 @@ export default function Sidebar({ collapsed, onToggle }) {
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
+  };
+
+  const canViewItem = (item) => {
+    if (!item.roles) return true;
+    return item.roles.includes(user?.role);
   };
 
   const NavItem = ({ item }) => {
@@ -135,7 +142,7 @@ export default function Sidebar({ collapsed, onToggle }) {
               )}
               {collapsed && gi > 0 && <div className="border-t border-sidebar-border mb-2 mx-1" />}
               <div className="space-y-0.5">
-                {group.items.map((item) => (
+                {group.items.filter(canViewItem).map((item) => (
                   <NavItem key={item.path} item={item} />
                 ))}
               </div>
@@ -145,7 +152,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
         {/* Bottom */}
         <div className="px-3 pb-4 space-y-1 border-t border-sidebar-border pt-3">
-          {bottomItems.map((item) => (
+          {bottomItems.filter(canViewItem).map((item) => (
             <NavItem key={item.path} item={item} />
           ))}
           <Button
