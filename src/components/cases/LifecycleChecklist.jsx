@@ -25,6 +25,7 @@ export default function LifecycleChecklist({ caseData, censusCount, scenarioCoun
     { label: "Employer group linked", done: !!caseData.employer_group_id },
     { label: "Census uploaded", done: censusCount > 0 || caseData.census_status === "validated" },
     { label: "Census validated", done: caseData.census_status === "validated" || stageIdx >= 3 },
+    { label: "Attach SARA Forms", done: docCount > 0 && caseData.census_status === "validated" || stageIdx >= 3 },
     { label: "Run Dalton Rules", done: stageIdx >= 3 },
     { label: "TxQuote submission", done: !!txQuoteComplete },
     { label: "Quote Received", done: scenarioCount > 0 || stageIdx >= 4 },
