@@ -16,9 +16,10 @@ class TaskAccessService {
    * Get task with access control
    * @param {object} user
    * @param {string} taskId
+   * @param {object} options — { override_reason?: string }
    * @returns {object} { task: {...safe_fields}, allowed: boolean, reason?: string }
    */
-  async getTask(user, taskId) {
+  async getTask(user, taskId, options = {}) {
     const actionName = 'read_task';
 
     let taskRecord;
@@ -39,6 +40,25 @@ class TaskAccessService {
     );
 
     if (!permissionDecision.allowed) {
+      if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
+        const overrideReason = options.override_reason?.trim();
+        if (!overrideReason) {
+          await this._auditDenial(user, actionName, taskRecord, 'DENY_OVERRIDE_MISSING_REASON');
+          return {
+            allowed: false,
+            reason: 'DENY_OVERRIDE_MISSING_REASON',
+            task: null
+          };
+        }
+
+        await this._auditOverride(user, actionName, taskRecord, overrideReason);
+        return {
+          allowed: true,
+          task: this._safeTaskPayload(taskRecord),
+          override_applied: true
+        };
+      }
+
       await this._auditDenial(user, actionName, taskRecord, permissionDecision.reason);
       return {
         allowed: false,
@@ -221,10 +241,34 @@ class TaskAccessService {
         action,
         detail: `Task access denied: ${reason}`,
         outcome: 'blocked',
-        reason_code: reason
+        reason_code: reason,
+        timestamp: new Date().toISOString()
       });
     } catch (e) {
       console.error('Failed to audit task denial:', e.message);
+    }
+  }
+
+  /**
+   * Audit platform admin override
+   * @private
+   */
+  async _auditOverride(user, action, record, overrideReason) {
+    try {
+      await auditWriter.recordEvent({
+        event_type: 'task_access_override',
+        entity_id: record?.id || 'NEW_RECORD',
+        actor_email: user.email,
+        actor_role: user.role,
+        action,
+        detail: `Task access override by ${user.role}: ${overrideReason}`,
+        outcome: 'override',
+        reason_code: 'PLATFORM_ADMIN_OVERRIDE',
+        override_reason: overrideReason,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Failed to audit task override:', e.message);
     }
   }
 

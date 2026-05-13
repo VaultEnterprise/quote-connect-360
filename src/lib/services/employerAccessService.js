@@ -16,9 +16,10 @@ class EmployerAccessService {
    * Get employer with access control
    * @param {object} user
    * @param {string} employerId
+   * @param {object} options — { override_reason?: string }
    * @returns {object} { employer: {...safe_fields}, allowed: boolean, reason?: string }
    */
-  async getEmployer(user, employerId) {
+  async getEmployer(user, employerId, options = {}) {
     const actionName = 'read_employer';
 
     let employerRecord;
@@ -39,6 +40,25 @@ class EmployerAccessService {
     );
 
     if (!permissionDecision.allowed) {
+      if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
+        const overrideReason = options.override_reason?.trim();
+        if (!overrideReason) {
+          await this._auditDenial(user, actionName, employerRecord, 'DENY_OVERRIDE_MISSING_REASON');
+          return {
+            allowed: false,
+            reason: 'DENY_OVERRIDE_MISSING_REASON',
+            employer: null
+          };
+        }
+
+        await this._auditOverride(user, actionName, employerRecord, overrideReason);
+        return {
+          allowed: true,
+          employer: this._safeEmployerPayload(employerRecord),
+          override_applied: true
+        };
+      }
+
       await this._auditDenial(user, actionName, employerRecord, permissionDecision.reason);
       return {
         allowed: false,
@@ -110,10 +130,34 @@ class EmployerAccessService {
         action,
         detail: `Employer access denied: ${reason}`,
         outcome: 'blocked',
-        reason_code: reason
+        reason_code: reason,
+        timestamp: new Date().toISOString()
       });
     } catch (e) {
       console.error('Failed to audit employer denial:', e.message);
+    }
+  }
+
+  /**
+   * Audit platform admin override
+   * @private
+   */
+  async _auditOverride(user, action, record, overrideReason) {
+    try {
+      await auditWriter.recordEvent({
+        event_type: 'employer_access_override',
+        entity_id: record?.id || 'UNKNOWN',
+        actor_email: user.email,
+        actor_role: user.role,
+        action,
+        detail: `Employer access override by ${user.role}: ${overrideReason}`,
+        outcome: 'override',
+        reason_code: 'PLATFORM_ADMIN_OVERRIDE',
+        override_reason: overrideReason,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Failed to audit employer override:', e.message);
     }
   }
 

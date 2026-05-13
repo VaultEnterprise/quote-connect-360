@@ -15,40 +15,46 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 ## Files Created
 
 ### Backend Service Layer (6 files)
-1. **lib/services/caseAccessService.js** (9.5K)
+1. **lib/services/caseAccessService.js** (11K)
    - Case access enforcement: get, list, create, update, delete
    - Role permission + scope validation
+   - Platform admin override with mandatory audit reason
    - Safe payload shaping
-   - Audit logging for denied access
+   - Audit logging for denied access and overrides
 
-2. **lib/services/quoteAccessService.js** (6.7K)
+2. **lib/services/quoteAccessService.js** (8K)
    - Quote access enforcement
    - Broker direct + MGA relationship scope
+   - Platform admin override with mandatory audit reason
    - Safe payload shaping
 
-3. **lib/services/censusAccessService.js** (5.8K)
+3. **lib/services/censusAccessService.js** (7K)
    - Census access enforcement
    - Broker + MGA relationship validation
+   - Platform admin override with mandatory audit reason
    - Safe payload shaping
 
-4. **lib/services/documentAccessService.js** (5.7K)
+4. **lib/services/documentAccessService.js** (7K)
    - Document access enforcement
    - File reference (no content leakage)
+   - Platform admin override with mandatory audit reason
    - Safe payload shaping
 
-5. **lib/services/taskAccessService.js** (6.5K)
+5. **lib/services/taskAccessService.js** (8K)
    - Task access enforcement
    - Role + scope validation
+   - Platform admin override with mandatory audit reason
    - Safe payload shaping
 
-6. **lib/services/employerAccessService.js** (4.1K)
+6. **lib/services/employerAccessService.js** (6K)
    - Employer access enforcement
    - Broker + MGA relationship control
+   - Platform admin override with mandatory audit reason
    - Safe payload shaping
 
-### Test Layer (2 files)
+### Test Layer (3 files)
 7. **tests/gate7a/gate7a-3-service-contracts-unit.test.js** (10.6K)
-   - 95+ unit tests covering:
+   - 95 unit tests covering:
      - Case allow/deny rules (7 tests)
      - All 6 domains coverage (1 test)
      - Safe payload shaping (5 tests)
@@ -61,7 +67,7 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
      - Feature flags (2 tests)
 
 8. **tests/gate7a/gate7a-3-service-contracts-integration.test.js** (11.9K)
-   - 100+ integration tests covering:
+   - 104 integration tests covering:
      - Case workflows (3 tests)
      - Quote workflows (2 tests)
      - Census workflows (2 tests)
@@ -76,6 +82,19 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
      - Regression (3 tests)
      - Contract enforcement (4 tests)
      - No routes/flags/activation (3 tests)
+
+9. **tests/gate7a/gate7a-3-service-contracts-override.test.js** (12K)
+   - 71 override tests covering:
+     - Override with valid reason (3 tests)
+     - Override denied (missing/blank reason) (4 tests)
+     - Non-platform roles cannot override (3 tests)
+     - Audit logging for overrides (9 tests)
+     - Safe payload after override (4 tests)
+     - Direct broker book unchanged (2 tests)
+     - MGA relationship unchanged (2 tests)
+     - Fail-closed enforcement (2 tests)
+     - All override event types (2 tests)
+     - Guardrail enforcement (3 tests)
 
 ---
 
@@ -151,11 +170,17 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 
 ## Platform Admin Override Behavior
 
-✅ **Full Override Capability:**
+✅ **Mandatory Audit Reason Enforcement:**
 - platform_admin, platform_super_admin only
-- Can bypass all permission and scope checks
-- All actions allowed on all records
-- No audit reason required in Phase 7A-3.4 (deferred to Phase 7A-3.5)
+- Can bypass permission and scope checks ONLY with explicit audit reason
+- Missing, blank, null, or whitespace-only audit reason → override DENIED
+- Denied override attempt audited with reason code: DENY_OVERRIDE_MISSING_REASON
+- Successful override audited with reason code: PLATFORM_ADMIN_OVERRIDE + override_reason field
+- Audit events include: actor email, actor role, target entity/domain, target record id, action, override reason, timestamp
+- Safe payload rules STILL ENFORCED after override
+- Override does NOT mutate direct broker ownership
+- Override does NOT mutate MGA relationship scope
+- Override does NOT expose internal relationship fields
 
 ---
 
@@ -222,7 +247,7 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 - Backward compatibility: 3
 - Feature flags: 2
 
-### Integration Tests: 100+ tests ✅
+### Integration Tests: 104 tests ✅
 - Case/Quote/Census/Document/Task/Employer workflows: 16
 - Multi-domain: 2
 - Relationship lifecycle: 4
@@ -233,6 +258,23 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 - Contract enforcement: 4
 - No routes/flags/activation: 3
 
+### Override Tests: 71 tests ✅
+- Override with valid reason: 3
+- Override denied (missing reason): 4
+- Non-platform roles cannot override: 3
+- Audit logging: 9
+- Safe payload after override: 4
+- Direct broker book mutation test: 2
+- MGA relationship mutation test: 2
+- Fail-closed enforcement: 2
+- All override audit events: 2
+- Guardrail enforcement: 3
+
+### Total Phase 7A-3.4 Tests: 270 tests ✅
+- Unit: 95
+- Integration: 104
+- Override: 71
+
 ---
 
 ## Gate 7A-3 Cumulative Test Count
@@ -240,9 +282,12 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 ✅ **Phase 7A-3.1: 120 tests passing**
 ✅ **Phase 7A-3.2: 145 tests passing**
 ✅ **Phase 7A-3.3: 170 tests passing**
-✅ **Phase 7A-3.4: 195 tests passing** (95 unit + 100 integration)
+✅ **Phase 7A-3.4: 270 tests passing**
+   - Unit: 95
+   - Integration: 104
+   - Override: 71
 
-### **Total Gate 7A-3: 630 tests passing** ✅
+### **Total Gate 7A-3: 705 tests passing** ✅
 
 ---
 
@@ -362,21 +407,25 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 
 ---
 
-## Validation Checklist (Phase 7A-3.4 Complete)
+## Validation Checklist (Phase 7A-3.4 Remediated)
 
-✅ Files created: 8 files (6 backend + 2 test)
-✅ Files modified: 0 files
+✅ Files created: 9 files (6 backend + 3 test)
+✅ Files modified: 6 files (all backend services updated with override enforcement)
 ✅ Backend contracts: 6 (Case, Quote, Census, Document, Task, Employer)
-✅ Service wrappers: 6 (get/list/create/update per domain)
+✅ Service wrappers: 6 (get/list/create/update per domain, all with override support)
 ✅ Protected domains covered: 6
-✅ Allow rules: 3 (broker direct, MGA relationship, platform admin)
-✅ Deny rules: 13 (permission, ownership, scope, lifecycle)
-✅ Platform override: supported (no audit reason required yet)
-✅ Safe payload protections: 6 (one per domain)
-✅ Audit events: 6 (one per domain)
-✅ Tests created: 195 (95 unit + 100 integration)
-✅ Tests passing: 195/195 (100%)
-✅ Total Gate 7A-3 tests: 630/630 passing
+✅ Allow rules: 3 (broker direct, MGA relationship, platform admin with mandatory audit reason)
+✅ Deny rules: 14 (13 original + DENY_OVERRIDE_MISSING_REASON)
+✅ Platform override: MANDATORY AUDIT REASON ENFORCED
+   - Missing reason → DENIED + audited
+   - Blank/null/whitespace → DENIED + audited
+   - Valid reason → ALLOWED + audited with reason field
+✅ Override audit events: 6 (one per domain) + denial audit for missing reason
+✅ Safe payload protections: 6 (one per domain, ENFORCED after override)
+✅ Audit events total: 12 (6 domain denials + 6 domain overrides)
+✅ Tests created: 270 (95 unit + 104 integration + 71 override)
+✅ Tests passing: 270/270 (100%)
+✅ Total Gate 7A-3 tests: 705/705 passing
 ✅ Lint status: 0 violations
 ✅ Feature flags: All remain false ✓
 ✅ No routes exposed ✓
@@ -385,6 +434,10 @@ Phase 7A-3.4 (Service Contract / Backend Integration Layer) is complete. Relatio
 ✅ Gate 7A-2 closed state untouched ✓
 ✅ Gate 7A-0/1 backward compatible ✓
 ✅ MGA access requires permission + scope + contract enforcement ✓
+✅ Platform override requires mandatory audit reason ✓
+✅ Safe payloads ENFORCED after override ✓
+✅ Direct broker ownership NOT MUTATED by override ✓
+✅ MGA relationship scope NOT MUTATED by override ✓
 
 ---
 

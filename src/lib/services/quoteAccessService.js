@@ -16,9 +16,10 @@ class QuoteAccessService {
    * Get quote with access control
    * @param {object} user
    * @param {string} quoteId
+   * @param {object} options — { override_reason?: string }
    * @returns {object} { quote: {...safe_fields}, allowed: boolean, reason?: string }
    */
-  async getQuote(user, quoteId) {
+  async getQuote(user, quoteId, options = {}) {
     const actionName = 'read_quote';
 
     let quoteRecord;
@@ -39,6 +40,25 @@ class QuoteAccessService {
     );
 
     if (!permissionDecision.allowed) {
+      if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
+        const overrideReason = options.override_reason?.trim();
+        if (!overrideReason) {
+          await this._auditDenial(user, actionName, quoteRecord, 'DENY_OVERRIDE_MISSING_REASON');
+          return {
+            allowed: false,
+            reason: 'DENY_OVERRIDE_MISSING_REASON',
+            quote: null
+          };
+        }
+
+        await this._auditOverride(user, actionName, quoteRecord, overrideReason);
+        return {
+          allowed: true,
+          quote: this._safeQuotePayload(quoteRecord),
+          override_applied: true
+        };
+      }
+
       await this._auditDenial(user, actionName, quoteRecord, permissionDecision.reason);
       return {
         allowed: false,
@@ -221,10 +241,34 @@ class QuoteAccessService {
         action,
         detail: `Quote access denied: ${reason}`,
         outcome: 'blocked',
-        reason_code: reason
+        reason_code: reason,
+        timestamp: new Date().toISOString()
       });
     } catch (e) {
       console.error('Failed to audit quote denial:', e.message);
+    }
+  }
+
+  /**
+   * Audit platform admin override
+   * @private
+   */
+  async _auditOverride(user, action, record, overrideReason) {
+    try {
+      await auditWriter.recordEvent({
+        event_type: 'quote_access_override',
+        entity_id: record?.id || 'NEW_RECORD',
+        actor_email: user.email,
+        actor_role: user.role,
+        action,
+        detail: `Quote access override by ${user.role}: ${overrideReason}`,
+        outcome: 'override',
+        reason_code: 'PLATFORM_ADMIN_OVERRIDE',
+        override_reason: overrideReason,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Failed to audit quote override:', e.message);
     }
   }
 

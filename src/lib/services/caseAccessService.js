@@ -17,9 +17,10 @@ class CaseAccessService {
    * Get case with access control
    * @param {object} user — { email, role, broker_agency_id?, mga_id? }
    * @param {string} caseId
+   * @param {object} options — { override_reason?: string }
    * @returns {object} { case: {...safe_fields}, allowed: boolean, reason?: string }
    */
-  async getCase(user, caseId) {
+  async getCase(user, caseId, options = {}) {
     const actionName = 'read_case';
 
     // Step 1: Retrieve case
@@ -42,6 +43,27 @@ class CaseAccessService {
     );
 
     if (!permissionDecision.allowed) {
+      // Step 2a: Check for platform override
+      if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
+        const overrideReason = options.override_reason?.trim();
+        if (!overrideReason) {
+          await this._auditDenial(user, actionName, caseRecord, 'DENY_OVERRIDE_MISSING_REASON');
+          return {
+            allowed: false,
+            reason: 'DENY_OVERRIDE_MISSING_REASON',
+            case: null
+          };
+        }
+
+        // Override approved with audit reason
+        await this._auditOverride(user, actionName, caseRecord, overrideReason);
+        return {
+          allowed: true,
+          case: this._safeCasePayload(caseRecord),
+          override_applied: true
+        };
+      }
+
       await this._auditDenial(user, actionName, caseRecord, permissionDecision.reason);
       return {
         allowed: false,
@@ -318,10 +340,34 @@ class CaseAccessService {
         action,
         detail: `Case access denied: ${reason}`,
         outcome: 'blocked',
-        reason_code: reason
+        reason_code: reason,
+        timestamp: new Date().toISOString()
       });
     } catch (e) {
       console.error('Failed to audit case denial:', e.message);
+    }
+  }
+
+  /**
+   * Audit platform admin override
+   * @private
+   */
+  async _auditOverride(user, action, record, overrideReason) {
+    try {
+      await auditWriter.recordEvent({
+        event_type: 'case_access_override',
+        entity_id: record?.id || 'NEW_RECORD',
+        actor_email: user.email,
+        actor_role: user.role,
+        action,
+        detail: `Case access override by ${user.role}: ${overrideReason}`,
+        outcome: 'override',
+        reason_code: 'PLATFORM_ADMIN_OVERRIDE',
+        override_reason: overrideReason,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Failed to audit case override:', e.message);
     }
   }
 

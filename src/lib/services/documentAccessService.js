@@ -16,9 +16,10 @@ class DocumentAccessService {
    * Get document with access control
    * @param {object} user
    * @param {string} documentId
+   * @param {object} options — { override_reason?: string }
    * @returns {object} { document: {...safe_fields}, allowed: boolean, reason?: string }
    */
-  async getDocument(user, documentId) {
+  async getDocument(user, documentId, options = {}) {
     const actionName = 'read_document';
 
     let documentRecord;
@@ -39,6 +40,25 @@ class DocumentAccessService {
     );
 
     if (!permissionDecision.allowed) {
+      if (['platform_admin', 'platform_super_admin'].includes(user.role)) {
+        const overrideReason = options.override_reason?.trim();
+        if (!overrideReason) {
+          await this._auditDenial(user, actionName, documentRecord, 'DENY_OVERRIDE_MISSING_REASON');
+          return {
+            allowed: false,
+            reason: 'DENY_OVERRIDE_MISSING_REASON',
+            document: null
+          };
+        }
+
+        await this._auditOverride(user, actionName, documentRecord, overrideReason);
+        return {
+          allowed: true,
+          document: this._safeDocumentPayload(documentRecord),
+          override_applied: true
+        };
+      }
+
       await this._auditDenial(user, actionName, documentRecord, permissionDecision.reason);
       return {
         allowed: false,
@@ -178,10 +198,34 @@ class DocumentAccessService {
         action,
         detail: `Document access denied: ${reason}`,
         outcome: 'blocked',
-        reason_code: reason
+        reason_code: reason,
+        timestamp: new Date().toISOString()
       });
     } catch (e) {
       console.error('Failed to audit document denial:', e.message);
+    }
+  }
+
+  /**
+   * Audit platform admin override
+   * @private
+   */
+  async _auditOverride(user, action, record, overrideReason) {
+    try {
+      await auditWriter.recordEvent({
+        event_type: 'document_access_override',
+        entity_id: record?.id || 'NEW_RECORD',
+        actor_email: user.email,
+        actor_role: user.role,
+        action,
+        detail: `Document access override by ${user.role}: ${overrideReason}`,
+        outcome: 'override',
+        reason_code: 'PLATFORM_ADMIN_OVERRIDE',
+        override_reason: overrideReason,
+        timestamp: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error('Failed to audit document override:', e.message);
     }
   }
 
