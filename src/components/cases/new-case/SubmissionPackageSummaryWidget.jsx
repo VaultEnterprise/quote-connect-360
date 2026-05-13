@@ -12,7 +12,7 @@ export default function SubmissionPackageSummaryWidget({
   }
 
   const selectedDestinations = selectedWorkflowOrder.map((id) => {
-    const info = { ast: "AST", sus: "SUS", triad: "Triad" };
+    const info = { ast: "AST", sus: "SUS", triad: "Triad", mecMvp: "MEC / MVP" };
     return info[id];
   });
 

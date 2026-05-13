@@ -34,6 +34,7 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
     ast: false,
     sus: false,
     triad: false,
+    mecMvp: false,
   });
   const [selectedWorkflowOrder, setSelectedWorkflowOrder] = useState([]);
   const [importWorkflows, setImportWorkflows] = useState({
@@ -60,6 +61,15 @@ export default function CaseCensusTab({ caseId, censusVersions, onOpenTxQuote, t
       },
     },
     triad: {
+      activeTab: "upload",
+      censusFile: null,
+      mapping: {},
+      validationStatus: "not_validated",
+      daltonRules: false,
+      attachments: [],
+      requiredForms: {},
+    },
+    mecMvp: {
       activeTab: "upload",
       censusFile: null,
       mapping: {},

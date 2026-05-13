@@ -23,6 +23,12 @@ const CARRIERS = [
     label: "Send to Triad",
     description: "Prepare and validate census data for Triad submission.",
   },
+  {
+    id: "mecMvp",
+    name: "MEC / MVP",
+    label: "Send to MEC / MVP",
+    description: "Prepare and validate MEC / MVP census data and attach supporting documents for review.",
+  },
 ];
 
 export default function CaseSetupChecklist({ selectedDestinations, onDestinationChange }) {

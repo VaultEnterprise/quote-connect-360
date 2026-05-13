@@ -814,4 +814,266 @@ describe('New Case Carrier Census Checklist UI', () => {
       expect(getByText('Existing Census Versions')).toBeDefined();
     });
   });
+
+  describe('MEC / MVP Carrier Census Option', () => {
+    test('Send to MEC / MVP checkbox renders', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      expect(screen.getByText('Send to MEC / MVP')).toBeDefined();
+    });
+
+    test('MEC / MVP description is correct', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      expect(screen.getByText('Prepare and validate MEC / MVP census data and attach supporting documents for review.')).toBeDefined();
+    });
+
+    test('MEC / MVP Census Import card renders when selected', () => {
+      const mockWorkflow = {
+        activeTab: 'upload',
+        censusFile: null,
+        mapping: {},
+        validationStatus: 'not_validated',
+        daltonRules: false,
+        attachments: [],
+        requiredForms: {},
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CarrierCensusImportCard
+          carrierId="mecMvp"
+          workflow={mockWorkflow}
+          onUpdate={mockOnUpdate}
+          onRemove={mockOnRemove}
+        />
+      );
+
+      expect(screen.getByText('MEC / MVP Census Import')).toBeDefined();
+    });
+
+    test('MEC / MVP card appears in order selected', () => {
+      const mockWorkflows = {
+        ast: { activeTab: 'upload', attachments: [], censusFile: null },
+        sus: { activeTab: 'upload', attachments: [], censusFile: null },
+        mecMvp: { activeTab: 'upload', attachments: [], censusFile: null },
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+      const { container } = render(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['ast', 'sus', 'mecMvp']}
+          importWorkflows={mockWorkflows}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      const astIdx = container.textContent.indexOf('AST Census Import');
+      const susIdx = container.textContent.indexOf('SUS Census Import');
+      const mecMvpIdx = container.textContent.indexOf('MEC / MVP Census Import');
+      expect(astIdx < susIdx && susIdx < mecMvpIdx).toBe(true);
+    });
+
+    test('MEC / MVP unchecked removes only that card', () => {
+      const mockWorkflows = {
+        ast: { activeTab: 'upload', attachments: [], censusFile: null, validationStatus: 'not_validated', daltonRules: false },
+        sus: { activeTab: 'upload', attachments: [], censusFile: null, validationStatus: 'not_validated', daltonRules: false },
+        mecMvp: { activeTab: 'upload', attachments: [], censusFile: null, validationStatus: 'not_validated', daltonRules: false },
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      const { rerender } = render(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['ast', 'sus', 'mecMvp']}
+          importWorkflows={mockWorkflows}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      expect(screen.getByText('MEC / MVP Census Import')).toBeDefined();
+
+      // Simulate removal
+      rerender(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['ast', 'sus']}
+          importWorkflows={{ ast: mockWorkflows.ast, sus: mockWorkflows.sus }}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      expect(screen.queryByText('MEC / MVP Census Import')).not.toBeDefined();
+      expect(screen.getByText('AST Census Import')).toBeDefined();
+      expect(screen.getByText('SUS Census Import')).toBeDefined();
+    });
+
+    test('MEC / MVP card maintains independent state', () => {
+      const mockWorkflows = {
+        ast: { activeTab: 'upload', mapping: { 0: 'relationship' }, validationStatus: 'not_validated', daltonRules: false, attachments: [] },
+        mecMvp: { activeTab: 'mapping', mapping: { 0: 'first_name' }, validationStatus: 'validated', daltonRules: true, attachments: [] },
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['ast', 'mecMvp']}
+          importWorkflows={mockWorkflows}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      expect(screen.getByText('AST Census Import')).toBeDefined();
+      expect(screen.getByText('MEC / MVP Census Import')).toBeDefined();
+    });
+
+    test('MEC / MVP card shows Dalton Rules checkbox', () => {
+      const mockWorkflow = {
+        activeTab: 'upload',
+        censusFile: null,
+        mapping: {},
+        validationStatus: 'not_validated',
+        daltonRules: false,
+        attachments: [],
+        requiredForms: {},
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CarrierCensusImportCard
+          carrierId="mecMvp"
+          workflow={mockWorkflow}
+          onUpdate={mockOnUpdate}
+          onRemove={mockOnRemove}
+        />
+      );
+
+      expect(screen.getByText('Dalton Rules')).toBeDefined();
+    });
+
+    test('MEC / MVP Dalton Rules state is independent', () => {
+      const mockWorkflows = {
+        ast: { daltonRules: false, activeTab: 'upload', censusFile: null, mapping: {}, validationStatus: 'not_validated', attachments: [], requiredForms: {} },
+        mecMvp: { daltonRules: true, activeTab: 'upload', censusFile: null, mapping: {}, validationStatus: 'not_validated', attachments: [], requiredForms: {} },
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CensusImportWorkspace
+          selectedWorkflowOrder={['ast', 'mecMvp']}
+          importWorkflows={mockWorkflows}
+          onWorkflowUpdate={mockOnUpdate}
+          onRemoveWorkflow={mockOnRemove}
+          caseId="case-123"
+        />
+      );
+
+      expect(screen.getByText(/Dalton Rules selected/)).toBeDefined();
+    });
+
+    test('MEC / MVP card shows MEC / MVP Attachments section', () => {
+      const mockWorkflow = {
+        activeTab: 'documents',
+        censusFile: null,
+        mapping: {},
+        validationStatus: 'not_validated',
+        daltonRules: false,
+        attachments: [],
+        requiredForms: {},
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CarrierCensusImportCard
+          carrierId="mecMvp"
+          workflow={mockWorkflow}
+          onUpdate={mockOnUpdate}
+          onRemove={mockOnRemove}
+        />
+      );
+
+      fireEvent.click(screen.getByText('Required Documents'));
+      expect(screen.getByText('MEC / MVP Attachments')).toBeDefined();
+    });
+
+    test('Summary widget includes MEC / MVP when selected', () => {
+      const mockWorkflows = {
+        ast: { activeTab: 'upload', attachments: [], censusFile: null, validationStatus: 'not_validated', daltonRules: false },
+        mecMvp: { activeTab: 'upload', attachments: [], censusFile: null, validationStatus: 'not_validated', daltonRules: false },
+      };
+
+      render(
+        <SubmissionPackageSummaryWidget
+          selectedWorkflowOrder={['ast', 'mecMvp']}
+          importWorkflows={mockWorkflows}
+        />
+      );
+
+      expect(screen.getByText('MEC / MVP')).toBeDefined();
+    });
+
+    test('AST, SUS, Triad behavior remains unchanged', () => {
+      const mockToggle = vi.fn();
+      render(
+        <CaseSetupChecklist
+          selectedDestinations={{ ast: false, sus: false, triad: false, mecMvp: false }}
+          onDestinationToggle={mockToggle}
+        />
+      );
+      expect(screen.getByText('Send to AST')).toBeDefined();
+      expect(screen.getByText('Send to SUS')).toBeDefined();
+      expect(screen.getByText('Send to Triad')).toBeDefined();
+    });
+
+    test('no backend submission occurs for MEC / MVP', () => {
+      const mockWorkflow = {
+        activeTab: 'review',
+        censusFile: { name: 'test.csv' },
+        mapping: {},
+        validationStatus: 'validated',
+        daltonRules: false,
+        attachments: [],
+        requiredForms: {},
+      };
+      const mockOnUpdate = vi.fn();
+      const mockOnRemove = vi.fn();
+
+      render(
+        <CarrierCensusImportCard
+          carrierId="mecMvp"
+          workflow={mockWorkflow}
+          onUpdate={mockOnUpdate}
+          onRemove={mockOnRemove}
+        />
+      );
+
+      fireEvent.click(screen.getByText('Review & Submit'));
+
+      // Verify submit button is disabled
+      expect(screen.getByText(/Mark Ready for Review/).disabled).toBe(true);
+      expect(screen.getByText(/pending backend/)).toBeDefined();
+    });
+  });
 });

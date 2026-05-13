@@ -22,6 +22,7 @@ const CARRIER_INFO = {
   ast: { name: "AST", badge: "bg-purple-100 text-purple-700" },
   sus: { name: "SUS", badge: "bg-blue-100 text-blue-700" },
   triad: { name: "Triad", badge: "bg-green-100 text-green-700" },
+  mecMvp: { name: "MEC / MVP", badge: "bg-orange-100 text-orange-700" },
 };
 
 export default function CarrierCensusImportCard({

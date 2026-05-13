@@ -51,6 +51,20 @@ export default function CarrierRequiredDocumentsTab({
         </div>
       );
     }
+
+    if (carrierId === "mecMvp") {
+      return (
+        <div className="bg-muted/20 border border-muted-foreground/10 rounded-lg p-4">
+          <h4 className="font-semibold text-sm mb-1">MEC / MVP Attachments</h4>
+          <p className="text-xs text-muted-foreground mb-4">
+            Optional supporting documents for MEC / MVP review
+          </p>
+          <p className="text-xs text-muted-foreground italic">
+            No specific required documents at this time. You may attach optional supporting documentation below.
+          </p>
+        </div>
+      );
+    }
   };
 
   return (
