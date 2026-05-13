@@ -36,7 +36,12 @@ const REQUIRED_FIELDS = [
   "coverage_type",
 ];
 
-export default function CarrierColumnMappingTab({ mapping, onMappingChange, censusFile }) {
+export default function CarrierColumnMappingTab({
+  mapping,
+  onMappingChange,
+  censusFile,
+  analysisResult,
+}) {
   if (!censusFile) {
     return (
       <div className="text-sm text-muted-foreground p-4 text-center">
@@ -51,16 +56,8 @@ export default function CarrierColumnMappingTab({ mapping, onMappingChange, cens
   ).length;
   const mappingComplete = requiredFieldsMapped === REQUIRED_FIELDS.length;
 
-  // Mock columns for demo
-  const mockColumns = [
-    "Relationship",
-    "First Name",
-    "Last Name",
-    "Date of Birth",
-    "Gender",
-    "ZIP Code",
-    "Coverage Type",
-  ];
+  // Use real headers from analysisResult if available, otherwise show placeholder
+  const columns = analysisResult?.headers || [];
 
   return (
     <div className="space-y-4">
@@ -74,31 +71,37 @@ export default function CarrierColumnMappingTab({ mapping, onMappingChange, cens
         </p>
       </div>
 
-      <div className="space-y-2">
-        {mockColumns.map((col, idx) => {
-          const isRequired = REQUIRED_FIELDS.some(rf => col.toLowerCase().includes(rf.replace("_", " ")));
-          
-          return (
-            <div key={idx} className="flex items-center gap-2">
-              <div className="flex-shrink-0 w-24">
-                <span className={`text-xs font-medium ${isRequired ? "text-red-600" : ""}`}>
-                  {col} {isRequired && <span className="text-red-600">*</span>}
-                </span>
+      {!columns || columns.length === 0 ? (
+        <div className="text-sm text-muted-foreground p-4 text-center">
+          Click "Analyze Census" to detect columns from your file.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {columns.map((col, idx) => {
+            const isRequired = REQUIRED_FIELDS.some(rf => col.toLowerCase().includes(rf.replace("_", " ")));
+            
+            return (
+              <div key={idx} className="flex items-center gap-2">
+                <div className="flex-shrink-0 min-w-fit max-w-32">
+                  <span className={`text-xs font-medium truncate ${isRequired ? "text-red-600" : ""}`}>
+                    {col} {isRequired && <span className="text-red-600">*</span>}
+                  </span>
+                </div>
+                <Select value={mapping[idx] || ""} onValueChange={(val) => onMappingChange(idx, val)}>
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue placeholder="Select mapping..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AVAILABLE_SYSTEM_FIELDS.map(f => (
+                      <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={mapping[idx] || ""} onValueChange={(val) => onMappingChange(idx, val)}>
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="Select mapping..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {AVAILABLE_SYSTEM_FIELDS.map(f => (
-                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {!mappingComplete && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">

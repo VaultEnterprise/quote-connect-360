@@ -1,9 +1,21 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileX } from "lucide-react";
+import { Upload, AlertCircle, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { censusImportClient } from "@/components/census/CensusImportClient";
 
-export default function CarrierUploadCensusTab({ censusFile, onFileSelect, onFileReplace, carrierName }) {
+export default function CarrierUploadCensusTab({
+  censusFile,
+  onFileSelect,
+  onFileReplace,
+  carrierName,
+  onAnalyzeStart,
+  isAnalyzing = false,
+  analysisError = null,
+  onAnalysisError,
+  onAnalysisSuccess,
+}) {
   const fileInputRef = useRef(null);
 
   const handleDragDrop = (e) => {
@@ -20,6 +32,38 @@ export default function CarrierUploadCensusTab({ censusFile, onFileSelect, onFil
   const detectLayout = (filename) => {
     if (filename.toLowerCase().includes("vault")) return "VAULT";
     return "Standard";
+  };
+
+  const handleAnalyzeCensus = async () => {
+    if (!censusFile) return;
+
+    onAnalyzeStart();
+    try {
+      // First upload the file
+      const uploadResponse = await base44.integrations.Core.UploadFile({
+        file: censusFile,
+      });
+
+      if (!uploadResponse.data?.file_url) {
+        onAnalysisError("Failed to upload file");
+        return;
+      }
+
+      // Then analyze using the uploaded file URL
+      const analyzeResponse = await censusImportClient.analyzeWorkbook(
+        uploadResponse.data.file_url,
+        censusFile.name,
+        censusFile.type || ""
+      );
+
+      if (analyzeResponse.data) {
+        onAnalysisSuccess(analyzeResponse.data);
+      } else if (analyzeResponse.error) {
+        onAnalysisError(analyzeResponse.error);
+      }
+    } catch (error) {
+      onAnalysisError(error.message || "Failed to analyze census file");
+    }
   };
 
   return (
@@ -86,9 +130,31 @@ export default function CarrierUploadCensusTab({ censusFile, onFileSelect, onFil
         </div>
       )}
 
+      {analysisError && (
+        <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3">
+          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-red-900">
+            <p className="font-medium">Analysis Failed</p>
+            <p className="text-xs mt-1">{analysisError}</p>
+          </div>
+        </div>
+      )}
+
       {censusFile && (
-        <Button type="button" className="w-full bg-blue-600 hover:bg-blue-700" disabled>
-          Analyze Census (pending backend integration)
+        <Button
+          type="button"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          onClick={handleAnalyzeCensus}
+          disabled={isAnalyzing}
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Analyzing census...
+            </>
+          ) : (
+            "Analyze Census"
+          )}
         </Button>
       )}
     </div>

@@ -34,7 +34,17 @@ export default function CarrierCensusImportCard({
 }) {
   const [expanded, setExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState(workflow.activeTab || "upload");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
   const carrierInfo = CARRIER_INFO[carrierId];
+
+  const handleAnalyzeSuccess = (result) => {
+    // Store analysisResult and transition to mapping tab
+    handleUpdateWorkflow("analysisResult", result);
+    setIsAnalyzing(false);
+    setAnalysisError(null);
+    setActiveTab("mapping");
+  };
 
   const getStatusBadge = () => {
     switch (workflow.validationStatus) {
@@ -141,9 +151,27 @@ export default function CarrierCensusImportCard({
           {activeTab === "upload" && (
             <CarrierUploadCensusTab
               censusFile={workflow.censusFile}
-              onFileSelect={(file) => handleUpdateWorkflow("censusFile", file)}
-              onFileReplace={() => handleUpdateWorkflow("censusFile", null)}
+              onFileSelect={(file) => {
+                handleUpdateWorkflow("censusFile", file);
+                setAnalysisError(null); // Clear error when user selects new file
+              }}
+              onFileReplace={() => {
+                handleUpdateWorkflow("censusFile", null);
+                handleUpdateWorkflow("analysisResult", null);
+                setAnalysisError(null);
+              }}
               carrierName={carrierInfo.name}
+              onAnalyzeStart={() => {
+                setIsAnalyzing(true);
+                setAnalysisError(null);
+              }}
+              isAnalyzing={isAnalyzing}
+              analysisError={analysisError}
+              onAnalysisError={(error) => {
+                setIsAnalyzing(false);
+                setAnalysisError(error);
+              }}
+              onAnalysisSuccess={handleAnalyzeSuccess}
             />
           )}
 
@@ -151,6 +179,7 @@ export default function CarrierCensusImportCard({
             <CarrierColumnMappingTab
               censusFile={workflow.censusFile}
               mapping={workflow.mapping}
+              analysisResult={workflow.analysisResult}
               onMappingChange={(colIdx, fieldType) => {
                 const newMapping = { ...workflow.mapping, [colIdx]: fieldType };
                 handleUpdateWorkflow("mapping", newMapping);
