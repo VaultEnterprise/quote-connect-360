@@ -103,5 +103,14 @@ To proceed to the next P0 repair item, the following information is required:
 
 ---
 
+## First-Class Broker Agency Model Planning Status
+
+**Separate Artifact Status (Non-P0 Work Order):**
+- Status: PHASED_EXECUTION_PLAN_COMPLETE / IMPLEMENTATION_NOT_STARTED
+- Document: `docs/FIRST_CLASS_BROKER_AGENCY_MODEL_PHASED_EXECUTION_PLAN.md`
+- Gap-to-Implementation: `docs/FIRST_CLASS_BROKER_AGENCY_MODEL_GAP_TO_IMPLEMENTATION_WORK_ORDER.md`
+- Phase 1 (Data Model) identified as mandatory starting point
+- No P0 repair item assigned to this work; this is separate engineering initiative
+
 ## Last Updated
-2026-05-14 — Registry created; P0 Repair 2/4 locked and documented; awaiting operator identification of next P0 repair item
+2026-05-14 — Registry created; P0 Repair 2/4 locked and documented; First-Class Broker Agency Model phased plan complete; awaiting operator identification of next P0 repair item
