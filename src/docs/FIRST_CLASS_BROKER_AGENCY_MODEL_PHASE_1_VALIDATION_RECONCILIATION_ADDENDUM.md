@@ -530,6 +530,81 @@ Expected: 20/20 PASS
 
 ---
 
+## Phase 1 Validation Harness Post-Creation Fix
+
+**Status:** ✅ ERROR DETECTED / FIXED / AWAITING EXECUTION
+
+### Error Detected
+
+**Error Message:**
+```
+Lint failed: src/tests/phase1-broker-agency-model-validation-harness.test.js:9:35 - 'process' is not defined. (no-undef)
+```
+
+**File:** `tests/phase1-broker-agency-model-validation-harness.test.js`
+
+**Line:** 9
+
+**Triggered By:** Lint check (no-undef rule)
+
+### Root Cause
+
+The harness uses `process.cwd()` on line 9 to resolve the project root directory:
+```javascript
+const PROJECT_ROOT = path.resolve(process.cwd());
+```
+
+In Node.js/Vitest environments, the `process` global object is available but must be explicitly imported in ESM (ES module) contexts to satisfy linting rules. This is a harness environment/config issue, **not a production issue** — the harness is a test utility and does not affect runtime behavior, routes, feature flags, or permissions.
+
+### Fix Applied
+
+**File Changed:** `tests/phase1-broker-agency-model-validation-harness.test.js`
+
+**Lines 1-4 (Before):**
+```javascript
+import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+```
+
+**Lines 1-5 (After):**
+```javascript
+import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+import process from 'process';
+```
+
+**Summary:** Added explicit `process` import on line 4. No other changes to the harness logic, assertions, or functionality.
+
+### Scope Confirmation
+
+| Aspect | Changed? | Evidence |
+|---|---|---|
+| Production/runtime behavior | No | Import is test-only; no backend/frontend code touched |
+| Routes | No | App.jsx unchanged |
+| Feature flags | No | lib/featureFlags.js unchanged |
+| Permissions | No | lib/permissionResolver.js unchanged |
+| Entity schemas | No | No entity JSON files modified |
+| P0 Repair 2/4 | No | docs/P0_REPAIR_REGISTRY.md unchanged |
+| Gates 6I-B, 6J-B, 6J-C | No | docs/MGA_GATE_STATUS_LEDGER.md unchanged |
+
+### Updated Harness Execution Command
+
+After the fix, the harness is ready for execution:
+
+```bash
+npm test tests/phase1-broker-agency-model-validation-harness.test.js
+```
+
+or
+
+```bash
+npx vitest run tests/phase1-broker-agency-model-validation-harness.test.js
+```
+
+---
+
 ## Phase 1 Validation Harness
 
 **Status:** ✅ HARNESS CREATED / EXECUTION REQUIRED
