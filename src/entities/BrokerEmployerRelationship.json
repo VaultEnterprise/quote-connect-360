@@ -1,0 +1,72 @@
+{
+  "name": "BrokerEmployerRelationship",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID primary key"
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant scope"
+    },
+    "distribution_channel_context_id": {
+      "type": "string",
+      "description": "FK to DistributionChannelContext (identifies channel context)"
+    },
+    "broker_agency_id": {
+      "type": "string",
+      "description": "FK to BrokerAgencyProfile (the broker)"
+    },
+    "employer_group_id": {
+      "type": "string",
+      "description": "FK to Employer / EmployerGroup (the employer)"
+    },
+    "relationship_type": {
+      "type": "string",
+      "enum": ["direct_broker", "mga_affiliated_broker"],
+      "description": "Type of broker relationship"
+    },
+    "mga_agency_id": {
+      "type": "string",
+      "nullable": true,
+      "description": "FK to MasterGeneralAgent if mga_affiliated_broker"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "suspended", "terminated"],
+      "default": "active",
+      "description": "Relationship status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Relationship creation timestamp"
+    },
+    "terminated_at": {
+      "type": "string",
+      "format": "date-time",
+      "nullable": true,
+      "description": "Termination timestamp if status = terminated"
+    },
+    "visibility_scope": {
+      "type": "string",
+      "enum": ["owner_only", "owner_and_servicing", "owner_and_supervising", "owner_and_all_affiliates", "platform_wide"],
+      "description": "Access scope for this relationship"
+    },
+    "owner_org_type": {
+      "type": "string",
+      "enum": ["broker_standalone", "broker_mga_affiliated"],
+      "description": "Relationship owner type (always broker)"
+    },
+    "owner_org_id": {
+      "type": "string",
+      "description": "FK to broker_agency_id (broker owns relationship)"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["tenant_id", "distribution_channel_context_id", "broker_agency_id", "employer_group_id", "relationship_type", "status", "visibility_scope", "owner_org_type", "owner_org_id"]
+}
