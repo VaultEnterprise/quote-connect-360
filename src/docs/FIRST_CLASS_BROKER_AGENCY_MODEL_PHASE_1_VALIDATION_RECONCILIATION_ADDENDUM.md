@@ -527,3 +527,178 @@ Expected: 20/20 PASS
 **Path Forward:**
 1. **Operator executes tests locally** → provide results → Status: VALIDATED
 2. **Operator approves without test execution** → Status: VALIDATION DEFERRED BY OPERATOR APPROVAL
+
+---
+
+## Phase 1 Validation Harness
+
+**Status:** ✅ HARNESS CREATED / EXECUTION REQUIRED
+
+**Purpose:** Deterministic, filesystem-based validation to remove ambiguity and provide structured PASS/FAIL evidence.
+
+### Harness File
+
+**Path:** `tests/phase1-broker-agency-model-validation-harness.test.js`
+
+**Type:** Vitest test suite (deterministic, no live APIs, no database)
+
+### What the Harness Validates
+
+1. ✅ All 9 required entities exist (Employer, CensusVersion, QuoteScenario, Proposal, Task, EnrollmentWindow, RenewalCycle, Document, AuditEvent)
+2. ✅ BrokerEmployerRelationship entity exists and is valid
+3. ✅ Each required entity contains exactly 13 stamping fields (per Phase 1 work order)
+4. ✅ Stamping fields are present: distribution_channel_context_id, master_general_agent_id, broker_agency_id, owner_org_type, owner_org_id, servicing_org_type, servicing_org_id, supervising_org_type, supervising_org_id, created_by_user_id, created_by_role, visibility_scope, audit_trace_id
+5. ✅ Field count matches specification (fails if 13 ≠ 14)
+6. ✅ Nullability rules preserved (master_general_agent_id, broker_agency_id, distribution_channel_context_id are nullable)
+7. ✅ BrokerEmployerRelationship has required fields (tenant_id, distribution_channel_context_id, broker_agency_id, employer_group_id, relationship_type, status, visibility_scope, owner_org_type, owner_org_id)
+8. ✅ BrokerEmployerRelationship enums correct (relationship_type, status)
+9. ✅ Protected files exist (App.jsx, feature flag files, permission files)
+10. ✅ Phase 1 documentation exists (Implementation Report, Reconciliation Addendum, Registry)
+11. ✅ Phase 1 test files exist (phase1-schema-validation.test.js, this harness)
+
+### What the Harness Does NOT Validate
+
+- ❌ Runtime behavior (no live API calls, no database state)
+- ❌ Route activation (does not activate `/broker` or MGA workspaces)
+- ❌ Feature flag functionality (does not execute flag logic)
+- ❌ Permission enforcement (does not validate RLS or scoping)
+- ❌ Backend function execution (does not call any functions)
+- ❌ Browser/UI interaction (filesystem-only validation)
+
+### Exact Commands to Run
+
+**Using npm test:**
+```bash
+npm test tests/phase1-broker-agency-model-validation-harness.test.js
+```
+
+**Using Vitest directly:**
+```bash
+npx vitest run tests/phase1-broker-agency-model-validation-harness.test.js
+```
+
+### Expected Output Format
+
+```
+PASS  tests/phase1-broker-agency-model-validation-harness.test.js
+
+  Phase 1 Broker Agency Model — Validation Harness
+    Entity File Existence
+      ✓ Employer.json exists
+      ✓ CensusVersion.json exists
+      ...
+    Entity Schema Validity
+      ✓ Employer is valid JSON
+      ✓ Employer has properties object
+      ...
+    Stamping Fields Presence (13 required)
+      ✓ Employer has all stamping fields
+      ✓ CensusVersion has all stamping fields
+      ...
+    Field Count Reconciliation
+      ✓ All entities match Phase 1 spec field count (13)
+    Nullability Rules (Backward Compatibility)
+      ✓ Employer.master_general_agent_id is nullable
+      ...
+    BrokerEmployerRelationship Entity
+      ✓ BrokerEmployerRelationship is valid JSON
+      ✓ BrokerEmployerRelationship has required fields
+      ✓ BrokerEmployerRelationship has relationship_type enum
+      ✓ BrokerEmployerRelationship has status enum
+    Backward Compatibility — Required Fields
+      ✓ Employer required fields unchanged
+      ...
+    File Integrity — Protected Files
+      ✓ src/App.jsx exists (not modified)
+      ...
+    Phase 1 Registry Integrity
+      ✓ P0 Repair Registry exists
+      ✓ Phase 1 Implementation Report exists
+      ✓ Phase 1 Validation Reconciliation Addendum exists
+    Phase 1 Test Files
+      ✓ phase1-schema-validation.test.js exists
+      ✓ phase1-broker-agency-model-validation-harness.test.js exists (this file)
+
+========== PHASE 1 VALIDATION HARNESS SUMMARY ==========
+Total Assertions: ~50+
+Passed: ~50+
+Failed: 0
+
+✅ All Phase 1 validations PASSED
+
+Status: PHASE 1 IMPLEMENTED / VALIDATION HARNESS PASSED
+
+Test Files  1 passed (1)
+     Tests  25+ passed (25+)
+  Start at  [TIME]
+  Duration  [MS]
+```
+
+**If any assertion fails:**
+```
+❌ Phase 1 validation FAILED
+
+Status: PHASE 1 IMPLEMENTED / VALIDATION HARNESS FAILED
+
+[Failures listed]
+```
+
+### Critical Status Rule
+
+**Creating the harness does NOT unblock Phase 1.**
+
+Phase 1 status **remains BLOCKED** until the harness is **actually executed** by the operator.
+
+#### Status Progression
+
+| Status | Condition | Action Required |
+|---|---|---|
+| PHASE 1 IMPLEMENTED / VALIDATION BLOCKED | Before harness created | Create harness |
+| PHASE 1 IMPLEMENTED / VALIDATION HARNESS READY | Harness created | Execute harness |
+| PHASE 1 IMPLEMENTED / VALIDATION HARNESS PASSED | Harness executed with 0 failures | Operator review + approval |
+| PHASE 1 IMPLEMENTED / VALIDATION HARNESS FAILED | Harness executed with failures | Debug and fix |
+| PHASE 1 VALIDATED / READY FOR OPERATOR REVIEW | Harness passed + operator confirms | Proceed to Phase 2 (if approved) |
+
+**Current Status:** PHASE 1 IMPLEMENTED / VALIDATION HARNESS READY / EXECUTION REQUIRED
+
+### Next Operator Action
+
+Run the harness command and provide:
+- Exact command executed
+- Total assertions
+- Passed / Failed / Skipped count
+- Any failure messages
+- Console output (the SUMMARY REPORT section)
+
+Example response format:
+```
+Command executed: npm test tests/phase1-broker-agency-model-validation-harness.test.js
+Total assertions: 52
+Passed: 52
+Failed: 0
+Skipped: 0
+Runtime errors: None
+
+[SUMMARY REPORT output]
+```
+
+### Harness Does Not Fake Evidence
+
+**Important:** This harness is deterministic and filesystem-based only. It does NOT:
+- Mock test results
+- Fake passing assertions
+- Skip actual file checks
+- Depend on seeded state
+- Weaken existing test requirements
+
+If the harness fails, Phase 1 remains blocked. No manual override.
+
+---
+
+## Final Phase 1 Status
+
+**Current:** ⏳ PHASE 1 IMPLEMENTED / VALIDATION HARNESS READY / EXECUTION REQUIRED
+
+**Blocking Condition:** Harness must be executed and produce PASSED result
+
+**No Phase 2, indexes, broker workspace, onboarding, MGA affiliation, or Benefits Admin bridge activation until harness passes.**
