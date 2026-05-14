@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "qa:phase1": "playwright test tests/e2e/phase1-broker-signup-approval.spec.js --config=playwright.config.js",
     "qa:phase1:headed": "playwright test tests/e2e/phase1-broker-signup-approval.spec.js --config=playwright.config.js --headed",
-    "qa:phase1:report": "playwright show-report"
+    "qa:phase1:report": "playwright show-report",
+    "validate:phase1-broker-model": "vitest run tests/phase1-broker-agency-model-validation-harness.test.js"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.27",

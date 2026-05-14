@@ -770,10 +770,139 @@ If the harness fails, Phase 1 remains blocked. No manual override.
 
 ---
 
+---
+
+## Automated Phase 1 Validation Path
+
+**Status:** ✅ AUTOMATED VALIDATION PATH READY / EXECUTION REQUIRED
+
+**Automation Method Selected:** Package Script (Option B)
+
+### Why Option B (Package Script)
+
+- Minimum complexity, maximum compatibility
+- No CI/CD dependency
+- Operator can execute immediately on local or CI environment
+- Non-invasive: single line added to package.json
+- No production runtime changes
+- No route activation
+- No feature flag activation
+- Deterministic execution
+
+### Files Created/Modified
+
+**File Modified:** `package.json`
+
+**Line Added (after line 11):**
+```json
+"validate:phase1-broker-model": "vitest run tests/phase1-broker-agency-model-validation-harness.test.js"
+```
+
+**Complete scripts section (lines 5-12):**
+```json
+"scripts": {
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "qa:phase1": "playwright test tests/e2e/phase1-broker-signup-approval.spec.js --config=playwright.config.js",
+  "qa:phase1:headed": "playwright test tests/e2e/phase1-broker-signup-approval.spec.js --config=playwright.config.js --headed",
+  "qa:phase1:report": "playwright show-report",
+  "validate:phase1-broker-model": "vitest run tests/phase1-broker-agency-model-validation-harness.test.js"
+}
+```
+
+### Exact Command to Run
+
+```bash
+npm run validate:phase1-broker-model
+```
+
+Alternative (direct vitest):
+```bash
+npx vitest run tests/phase1-broker-agency-model-validation-harness.test.js
+```
+
+### What the Automation Validates
+
+1. ✅ Phase 1 harness file exists
+2. ✅ Harness runs without syntax errors
+3. ✅ All 9 required entities exist
+4. ✅ BrokerEmployerRelationship exists and is valid
+5. ✅ All 13 stamping fields present in each entity
+6. ✅ Field count matches specification
+7. ✅ Nullability rules preserved
+8. ✅ BrokerEmployerRelationship enums correct
+9. ✅ Protected files (App.jsx, feature flags, permissions) exist
+10. ✅ Phase 1 documentation exists
+11. ✅ Vitest test execution produces PASS/FAIL evidence
+
+### What the Automation Does NOT Validate
+
+- ❌ Does not deploy anything
+- ❌ Does not activate routes
+- ❌ Does not activate feature flags
+- ❌ Does not execute backend functions
+- ❌ Does not modify database or entity records
+- ❌ Does not change production runtime behavior
+- ❌ Does not alter permissions
+- ❌ Does not touch P0 Repair 2/4 or Gates 6I-B/6J-B/6J-C
+
+### Required Evidence Output Format
+
+When operator runs the script, the output must include:
+
+```
+Command executed: npm run validate:phase1-broker-model
+Harness file: tests/phase1-broker-agency-model-validation-harness.test.js
+Total tests/assertions: 50+
+Passed: 50+
+Failed: 0
+Skipped: 0
+Runtime errors: None
+Lint result: PASS (no-undef resolved)
+Files changed after harness fix: 
+  - tests/phase1-broker-agency-model-validation-harness.test.js (import line)
+  - package.json (script line)
+
+Production/runtime changed? No
+Routes changed? No
+Feature flags changed? No
+Permissions changed? No
+P0 Repair 2/4 touched? No
+Gates 6I-B, 6J-B, 6J-C touched? No
+
+Final recommendation: PHASE 1 VALIDATION HARNESS PASSING / READY FOR OPERATOR REVIEW
+```
+
+If any test fails, output will show:
+```
+Failed: 1+
+Final recommendation: PHASE 1 IMPLEMENTED / VALIDATION HARNESS FAILED
+```
+
+### Status Rule
+
+**Before automation runs:**
+```
+PHASE 1 IMPLEMENTED / AUTOMATED VALIDATION PATH READY / EXECUTION REQUIRED
+```
+
+**After automation runs with 0 failures:**
+```
+PHASE 1 VALIDATION HARNESS PASSING / READY FOR OPERATOR REVIEW
+```
+
+**If automation fails:**
+```
+PHASE 1 IMPLEMENTED / VALIDATION HARNESS FAILED
+```
+
+---
+
 ## Final Phase 1 Status
 
-**Current:** ⏳ PHASE 1 IMPLEMENTED / VALIDATION HARNESS READY / EXECUTION REQUIRED
+**Current:** ⏳ PHASE 1 IMPLEMENTED / AUTOMATED VALIDATION PATH READY / EXECUTION REQUIRED
 
-**Blocking Condition:** Harness must be executed and produce PASSED result
+**Blocking Condition:** Automation must be executed and produce PASSED result
 
 **No Phase 2, indexes, broker workspace, onboarding, MGA affiliation, or Benefits Admin bridge activation until harness passes.**
