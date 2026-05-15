@@ -1,0 +1,225 @@
+{
+  "registry_name": "Gate 7A-0 First-Class Broker Model Feature Flag Registry",
+  "registry_version": "1.0",
+  "registry_date": "2026-05-13",
+  "registry_status": "ACTIVE — Phase 7A-0.3 Complete",
+  "description": "Canonical feature flag registry for Gate 7A-0 implementation. All flags default to false (fail-closed). No flags are enabled during Gate 7A-0.",
+  "source_file": "src/lib/featureFlags.js",
+  "documentation_file": "docs/GATE_7A_0_FEATURE_FLAG_REGISTRY.json",
+  "fail_closed_guarantee": "All disabled flags return 403 Forbidden or fail-closed response when accessed. UI routes are hidden. Backend protected actions are blocked.",
+  "flags": {
+    "FIRST_CLASS_BROKER_MODEL_ENABLED": {
+      "category": "Gate 7A-0 Core",
+      "default_value": false,
+      "description": "Master enable flag for first-class broker agency model. Required parent for broker signup, workspace, MGA relationships, and quote channel features.",
+      "dependencies": [],
+      "fail_closed_behavior": "All broker agency model features are hidden and blocked when disabled.",
+      "ui_impact": "No broker agency features visible",
+      "backend_impact": "All broker model endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED": {
+      "category": "Gate 7A-0 Core",
+      "default_value": false,
+      "description": "Enable distribution channel context model and scope resolution. Required parent for workspace, MGA relationships, and benefits admin bridge.",
+      "dependencies": [],
+      "fail_closed_behavior": "Channel context features hidden and blocked when disabled.",
+      "ui_impact": "No channel context UI visible",
+      "backend_impact": "Channel context scope resolution returns 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BROKER_PLATFORM_RELATIONSHIP_ENABLED": {
+      "category": "Gate 7A-0 Core",
+      "default_value": false,
+      "description": "Enable broker-platform relationship model. Required parent for broker signup.",
+      "dependencies": [],
+      "fail_closed_behavior": "Broker-platform relationship features hidden and blocked when disabled.",
+      "ui_impact": "No broker-platform relationship UI visible",
+      "backend_impact": "Broker-platform relationship endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BROKER_MGA_RELATIONSHIP_ENABLED": {
+      "category": "Gate 7A-0 Core",
+      "default_value": false,
+      "description": "Enable broker-MGA relationship model and affiliations. Requires FIRST_CLASS_BROKER_MODEL_ENABLED and DISTRIBUTION_CHANNEL_CONTEXT_ENABLED.",
+      "dependencies": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "fail_closed_behavior": "Broker-MGA relationship features hidden and blocked when disabled.",
+      "ui_impact": "No broker-MGA affiliation UI visible",
+      "backend_impact": "Broker-MGA relationship endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BROKER_SCOPE_ACCESS_GRANT_ENABLED": {
+      "category": "Gate 7A-0 Core",
+      "default_value": false,
+      "description": "Enable cross-broker and broker-MGA scope access grants. Deferred to Phase 7A-0.5.",
+      "dependencies": [],
+      "fail_closed_behavior": "Scope access grant features hidden and blocked when disabled.",
+      "ui_impact": "No scope access grant UI visible",
+      "backend_impact": "Scope grant endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BROKER_SIGNUP_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable broker agency self-signup flow. Requires FIRST_CLASS_BROKER_MODEL_ENABLED and BROKER_PLATFORM_RELATIONSHIP_ENABLED.",
+      "dependencies": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "BROKER_PLATFORM_RELATIONSHIP_ENABLED"
+      ],
+      "fail_closed_behavior": "Broker signup route hidden, signup endpoint returns 403 Forbidden.",
+      "ui_impact": "Broker signup page not accessible",
+      "backend_impact": "Broker signup endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BROKER_ONBOARDING_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable broker agency onboarding workflow. Requires BROKER_SIGNUP_ENABLED.",
+      "dependencies": [
+        "BROKER_SIGNUP_ENABLED"
+      ],
+      "fail_closed_behavior": "Broker onboarding workflow hidden and blocked when disabled.",
+      "ui_impact": "Broker onboarding pages not accessible",
+      "backend_impact": "Broker onboarding endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BROKER_WORKSPACE_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable broker agency workspace and dashboard. Requires FIRST_CLASS_BROKER_MODEL_ENABLED and DISTRIBUTION_CHANNEL_CONTEXT_ENABLED.",
+      "dependencies": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "fail_closed_behavior": "Broker workspace UI hidden, endpoints return 403 Forbidden.",
+      "ui_impact": "Broker workspace pages not accessible",
+      "backend_impact": "Broker workspace endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "QUOTE_CHANNEL_WRAPPER_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable quote channel wrapper for broker/channel-aware quoting. Requires FIRST_CLASS_BROKER_MODEL_ENABLED and DISTRIBUTION_CHANNEL_CONTEXT_ENABLED.",
+      "dependencies": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "fail_closed_behavior": "Quote channel wrapper behavior hidden, quote engine operates as standalone.",
+      "ui_impact": "Channel-aware quote UI not visible",
+      "backend_impact": "Quote channel wrapper endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "QUOTE_DELEGATION_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable quote delegation to brokers/partners. Requires QUOTE_CHANNEL_WRAPPER_ENABLED.",
+      "dependencies": [
+        "QUOTE_CHANNEL_WRAPPER_ENABLED"
+      ],
+      "fail_closed_behavior": "Quote delegation features hidden and blocked when disabled.",
+      "ui_impact": "Quote delegation UI not visible",
+      "backend_impact": "Quote delegation endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BENEFITS_ADMIN_CHANNEL_BRIDGE_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable benefits admin channel bridge for employer-direct enrollment. Requires QUOTE_CHANNEL_WRAPPER_ENABLED and DISTRIBUTION_CHANNEL_CONTEXT_ENABLED.",
+      "dependencies": [
+        "QUOTE_CHANNEL_WRAPPER_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "fail_closed_behavior": "Benefits admin channel bridge hidden and blocked when disabled.",
+      "ui_impact": "Benefits admin bridge UI not visible",
+      "backend_impact": "Benefits admin bridge endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (disabled)"
+    },
+    "BENEFITS_ADMIN_CASE_SHELL_ENABLED": {
+      "category": "Program-Level",
+      "default_value": false,
+      "description": "Enable benefits admin case shell for case management. Permanently disabled during Gate 7A-0. No dependencies (remains inactive).",
+      "dependencies": [],
+      "fail_closed_behavior": "Benefits admin case shell features permanently hidden and blocked.",
+      "ui_impact": "Benefits admin case shell UI not visible",
+      "backend_impact": "Benefits admin case shell endpoints return 403 Forbidden",
+      "status_phase_7a0": "false (permanently disabled)"
+    }
+  },
+  "dependency_rules": {
+    "BROKER_SIGNUP_ENABLED": {
+      "requires": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "BROKER_PLATFORM_RELATIONSHIP_ENABLED"
+      ],
+      "rule": "Cannot enable broker signup unless both core model and platform relationship flags are true"
+    },
+    "BROKER_ONBOARDING_ENABLED": {
+      "requires": [
+        "BROKER_SIGNUP_ENABLED"
+      ],
+      "rule": "Cannot enable onboarding unless signup is enabled"
+    },
+    "BROKER_WORKSPACE_ENABLED": {
+      "requires": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "rule": "Cannot enable workspace unless core model and channel context are true"
+    },
+    "BROKER_MGA_RELATIONSHIP_ENABLED": {
+      "requires": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "rule": "Cannot enable MGA relationships unless core model and channel context are true"
+    },
+    "QUOTE_CHANNEL_WRAPPER_ENABLED": {
+      "requires": [
+        "FIRST_CLASS_BROKER_MODEL_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "rule": "Cannot enable quote channel wrapper unless core model and channel context are true"
+    },
+    "QUOTE_DELEGATION_ENABLED": {
+      "requires": [
+        "QUOTE_CHANNEL_WRAPPER_ENABLED"
+      ],
+      "rule": "Cannot enable delegation unless quote channel wrapper is true"
+    },
+    "BENEFITS_ADMIN_CHANNEL_BRIDGE_ENABLED": {
+      "requires": [
+        "QUOTE_CHANNEL_WRAPPER_ENABLED",
+        "DISTRIBUTION_CHANNEL_CONTEXT_ENABLED"
+      ],
+      "rule": "Cannot enable benefits admin bridge unless quote wrapper and channel context are true"
+    },
+    "BENEFITS_ADMIN_CASE_SHELL_ENABLED": {
+      "requires": [],
+      "rule": "Permanently disabled during Gate 7A-0; no dependencies"
+    }
+  },
+  "validation_rules": {
+    "no_flag_defaults_true": "All 12 flags default to false",
+    "fail_closed_guarantee": "All disabled flags return 403 Forbidden or fail-closed response",
+    "no_ui_activation": "No UI route becomes visible when flags are disabled",
+    "no_backend_activation": "No backend protected action becomes active when flags are disabled",
+    "dependency_enforcement": "Child flags cannot be true unless parent flags are true"
+  },
+  "phase_7a0_status": {
+    "total_flags_created": 12,
+    "flags_enabled": 0,
+    "flags_disabled": 12,
+    "ui_routes_activated": 0,
+    "backend_features_activated": 0,
+    "production_backfill": "none",
+    "destructive_migrations": "none",
+    "gate_6k_touched": false,
+    "gate_6l_a_touched": false,
+    "deferred_gates_touched": false
+  },
+  "approval_status": "Phase 7A-0.3 Complete — Ready for Phase 7A-0.4",
+  "next_phase": "Phase 7A-0.4 (pending operator approval)"
+}
