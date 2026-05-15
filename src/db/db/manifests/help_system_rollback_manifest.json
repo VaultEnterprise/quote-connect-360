@@ -1,0 +1,76 @@
+{
+  "manifest_code": "HELP_SYSTEM_V1_ROLLBACK",
+  "manifest_name": "Help System Schema Rollback",
+  "target_engine": "postgresql",
+  "target_schema": "public",
+  "run_mode": "ordered",
+  "stop_on_error": true,
+  "transaction_strategy": {
+    "mode": "per_file",
+    "reason": "Controlled reverse teardown"
+  },
+  "phases": [
+    {
+      "phase_code": "ROLLBACK_HELPERS",
+      "phase_name": "Rollback Views and Triggers",
+      "files": [
+        "012_views.rollback.sql",
+        "011_triggers.rollback.sql"
+      ]
+    },
+    {
+      "phase_code": "ROLLBACK_PERF",
+      "phase_name": "Rollback Indexes",
+      "files": [
+        "010_gin_and_fulltext_indexes.rollback.sql",
+        "009_partial_unique_indexes.rollback.sql",
+        "008_core_indexes.rollback.sql"
+      ]
+    },
+    {
+      "phase_code": "ROLLBACK_RUNTIME",
+      "phase_name": "Rollback Runtime Tables",
+      "files": [
+        "007_seed_runtime_tables.rollback.sql",
+        "006_logs_analytics_ai_queue.rollback.sql"
+      ]
+    },
+    {
+      "phase_code": "ROLLBACK_CORE",
+      "phase_name": "Rollback Core Tables",
+      "files": [
+        "005_manual_topics_and_maps.rollback.sql",
+        "004_core_tables_targets_contents.rollback.sql",
+        "003_core_tables_modules_pages_sections.rollback.sql"
+      ]
+    },
+    {
+      "phase_code": "ROLLBACK_ENUMS",
+      "phase_name": "Rollback Enums",
+      "files": [
+        "002_enums.rollback.sql"
+      ]
+    },
+    {
+      "phase_code": "ROLLBACK_EXTENSIONS",
+      "phase_name": "Rollback Extensions",
+      "files": [
+        "001_extensions.rollback.sql"
+      ]
+    }
+  ],
+  "rollback_inventory": [
+    { "rollback_code": "HELP-RB-012", "sequence": 10,  "file_name": "012_views.rollback.sql",                          "phase": "ROLLBACK_HELPERS" },
+    { "rollback_code": "HELP-RB-011", "sequence": 20,  "file_name": "011_triggers.rollback.sql",                       "phase": "ROLLBACK_HELPERS" },
+    { "rollback_code": "HELP-RB-010", "sequence": 30,  "file_name": "010_gin_and_fulltext_indexes.rollback.sql",       "phase": "ROLLBACK_PERF" },
+    { "rollback_code": "HELP-RB-009", "sequence": 40,  "file_name": "009_partial_unique_indexes.rollback.sql",         "phase": "ROLLBACK_PERF" },
+    { "rollback_code": "HELP-RB-008", "sequence": 50,  "file_name": "008_core_indexes.rollback.sql",                   "phase": "ROLLBACK_PERF" },
+    { "rollback_code": "HELP-RB-007", "sequence": 60,  "file_name": "007_seed_runtime_tables.rollback.sql",            "phase": "ROLLBACK_RUNTIME" },
+    { "rollback_code": "HELP-RB-006", "sequence": 70,  "file_name": "006_logs_analytics_ai_queue.rollback.sql",        "phase": "ROLLBACK_RUNTIME" },
+    { "rollback_code": "HELP-RB-005", "sequence": 80,  "file_name": "005_manual_topics_and_maps.rollback.sql",         "phase": "ROLLBACK_CORE" },
+    { "rollback_code": "HELP-RB-004", "sequence": 90,  "file_name": "004_core_tables_targets_contents.rollback.sql",   "phase": "ROLLBACK_CORE" },
+    { "rollback_code": "HELP-RB-003", "sequence": 100, "file_name": "003_core_tables_modules_pages_sections.rollback.sql", "phase": "ROLLBACK_CORE" },
+    { "rollback_code": "HELP-RB-002", "sequence": 110, "file_name": "002_enums.rollback.sql",                          "phase": "ROLLBACK_ENUMS" },
+    { "rollback_code": "HELP-RB-001", "sequence": 120, "file_name": "001_extensions.rollback.sql",                     "phase": "ROLLBACK_EXTENSIONS" }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "manifest_code": "HELP_SYSTEM_V1",
+  "manifest_name": "Help System Schema Deployment",
+  "target_engine": "postgresql",
+  "target_schema": "public",
+  "run_mode": "ordered",
+  "stop_on_error": true,
+  "transaction_strategy": {
+    "mode": "per_file",
+    "reason": "Large index creation and safer recovery visibility"
+  },
+  "phases": [
+    {
+      "phase_code": "PREP",
+      "phase_name": "Environment Preparation",
+      "files": [
+        "001_extensions.sql",
+        "002_enums.sql"
+      ]
+    },
+    {
+      "phase_code": "CORE",
+      "phase_name": "Core Schema",
+      "files": [
+        "003_core_tables_modules_pages_sections.sql",
+        "004_core_tables_targets_contents.sql",
+        "005_manual_topics_and_maps.sql"
+      ]
+    },
+    {
+      "phase_code": "RUNTIME",
+      "phase_name": "Runtime and Logging",
+      "files": [
+        "006_logs_analytics_ai_queue.sql",
+        "007_seed_runtime_tables.sql"
+      ]
+    },
+    {
+      "phase_code": "PERF",
+      "phase_name": "Indexes and Constraints",
+      "files": [
+        "008_core_indexes.sql",
+        "009_partial_unique_indexes.sql",
+        "010_gin_and_fulltext_indexes.sql"
+      ]
+    },
+    {
+      "phase_code": "HELPERS",
+      "phase_name": "Triggers and Views",
+      "files": [
+        "011_triggers.sql",
+        "012_views.sql"
+      ]
+    },
+    {
+      "phase_code": "VALIDATE",
+      "phase_name": "Validation",
+      "files": [
+        "013_validation_queries.sql"
+      ]
+    }
+  ],
+  "deployment_inventory": [
+    { "migration_code": "HELP-001", "sequence": 10,  "file_name": "001_extensions.sql",                          "phase": "PREP",     "transaction_mode": "per_file", "required": true,  "rollback_file": "001_extensions.rollback.sql" },
+    { "migration_code": "HELP-002", "sequence": 20,  "file_name": "002_enums.sql",                               "phase": "PREP",     "transaction_mode": "per_file", "required": true,  "rollback_file": "002_enums.rollback.sql" },
+    { "migration_code": "HELP-003", "sequence": 30,  "file_name": "003_core_tables_modules_pages_sections.sql",  "phase": "CORE",     "transaction_mode": "per_file", "required": true,  "rollback_file": "003_core_tables_modules_pages_sections.rollback.sql" },
+    { "migration_code": "HELP-004", "sequence": 40,  "file_name": "004_core_tables_targets_contents.sql",        "phase": "CORE",     "transaction_mode": "per_file", "required": true,  "rollback_file": "004_core_tables_targets_contents.rollback.sql" },
+    { "migration_code": "HELP-005", "sequence": 50,  "file_name": "005_manual_topics_and_maps.sql",              "phase": "CORE",     "transaction_mode": "per_file", "required": true,  "rollback_file": "005_manual_topics_and_maps.rollback.sql" },
+    { "migration_code": "HELP-006", "sequence": 60,  "file_name": "006_logs_analytics_ai_queue.sql",             "phase": "RUNTIME",  "transaction_mode": "per_file", "required": true,  "rollback_file": "006_logs_analytics_ai_queue.rollback.sql" },
+    { "migration_code": "HELP-007", "sequence": 70,  "file_name": "007_seed_runtime_tables.sql",                 "phase": "RUNTIME",  "transaction_mode": "per_file", "required": true,  "rollback_file": "007_seed_runtime_tables.rollback.sql" },
+    { "migration_code": "HELP-008", "sequence": 80,  "file_name": "008_core_indexes.sql",                        "phase": "PERF",     "transaction_mode": "per_file", "required": true,  "rollback_file": "008_core_indexes.rollback.sql" },
+    { "migration_code": "HELP-009", "sequence": 90,  "file_name": "009_partial_unique_indexes.sql",              "phase": "PERF",     "transaction_mode": "per_file", "required": true,  "rollback_file": "009_partial_unique_indexes.rollback.sql" },
+    { "migration_code": "HELP-010", "sequence": 100, "file_name": "010_gin_and_fulltext_indexes.sql",            "phase": "PERF",     "transaction_mode": "per_file", "required": true,  "rollback_file": "010_gin_and_fulltext_indexes.rollback.sql" },
+    { "migration_code": "HELP-011", "sequence": 110, "file_name": "011_triggers.sql",                            "phase": "HELPERS",  "transaction_mode": "per_file", "required": true,  "rollback_file": "011_triggers.rollback.sql" },
+    { "migration_code": "HELP-012", "sequence": 120, "file_name": "012_views.sql",                               "phase": "HELPERS",  "transaction_mode": "per_file", "required": true,  "rollback_file": "012_views.rollback.sql" },
+    { "migration_code": "HELP-013", "sequence": 130, "file_name": "013_validation_queries.sql",                  "phase": "VALIDATE", "transaction_mode": "per_file", "required": true,  "rollback_file": null }
+  ]
+}
