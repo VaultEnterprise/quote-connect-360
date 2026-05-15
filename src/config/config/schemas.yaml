@@ -1,0 +1,297 @@
+# PRODUCTION SCHEMA CONFIGURATION
+# Copy-paste ready YAML definitions
+# Version: 2.0 | Last Updated: 2026-03-21
+
+entities:
+  BenefitCase:
+    table: benefit_case
+    id_prefix: "cs"
+    description: "Master case records"
+    retention_years: 7
+    fields:
+      id:
+        type: VARCHAR(40)
+        constraints: PRIMARY KEY
+      case_number:
+        type: VARCHAR(12)
+        constraints: UNIQUE, NOT NULL
+        example: "CS202603001"
+      case_type:
+        type: ENUM
+        values: [new_business, renewal, mid_year_change, takeover]
+        default: new_business
+      case_status:
+        type: VARCHAR(30)
+        values:
+          - draft
+          - census_in_progress
+          - census_validated
+          - ready_for_quote
+          - quoting
+          - proposal_ready
+          - employer_review
+          - approved_for_enrollment
+          - enrollment_open
+          - enrollment_complete
+          - active
+          - renewal_pending
+          - closed
+        default: draft
+      effective_date:
+        type: DATE
+        constraints: NOT NULL
+        validation: effective_date >= CURDATE()
+      employee_count:
+        type: INT
+        constraints: NOT NULL, CHECK (>= 1 AND <= 500000)
+      created_at:
+        type: DATETIME
+        constraints: NOT NULL, DEFAULT CURRENT_TIMESTAMP
+      updated_at:
+        type: DATETIME
+        constraints: NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE
+
+  CensusMember:
+    table: census_member
+    id_prefix: "mbr"
+    description: "Employee census records"
+    retention_years: 7
+    partitioning: BY census_version_id
+    fields:
+      id:
+        type: VARCHAR(40)
+        constraints: PRIMARY KEY
+      census_version_id:
+        type: VARCHAR(40)
+        constraints: NOT NULL, FK census_version(id)
+      employee_id:
+        type: VARCHAR(50)
+        constraints: NOT NULL
+        validation: UNIQUE per census_version_id
+      first_name:
+        type: VARCHAR(50)
+        constraints: NOT NULL
+        validation: pattern="^[a-zA-Z\\-'\\s]+$"
+      last_name:
+        type: VARCHAR(50)
+        constraints: NOT NULL
+        validation: pattern="^[a-zA-Z\\-'\\s]+$"
+      date_of_birth:
+        type: DATE
+        constraints: NOT NULL
+        validation: age >= 18 AND age <= 120
+      email:
+        type: VARCHAR(255)
+        constraints: NULLABLE
+        validation: format=email
+      employment_status:
+        type: ENUM
+        values: [active, leave, terminated]
+        default: active
+      annual_salary:
+        type: DECIMAL(12,2)
+        constraints: CHECK (>= 0 AND <= 5000000)
+      gradient_ai_data:
+        type: JSON
+        structure:
+          risk_score:
+            type: DECIMAL(5,2)
+            range: [0, 100]
+          risk_tier:
+            type: ENUM
+            values: [preferred, standard, elevated, high]
+          predicted_annual_claims:
+            type: DECIMAL(12,2)
+          confidence_score:
+            type: DECIMAL(3,2)
+            range: [0, 1]
+
+  EnrollmentWindow:
+    table: enrollment_window
+    id_prefix: "ew"
+    fields:
+      start_date:
+        type: DATE
+        constraint: < end_date
+      end_date:
+        type: DATE
+        constraint: > start_date AND <= effective_date
+      effective_date:
+        type: DATE
+        constraint: >= end_date + INTERVAL 1 DAY
+      status:
+        type: ENUM
+        values: [scheduled, open, closing_soon, closed, finalized]
+        default: scheduled
+
+  EmployeeEnrollment:
+    table: employee_enrollment
+    id_prefix: "eem"
+    fields:
+      status:
+        type: ENUM
+        values: [invited, started, completed, waived]
+        default: invited
+      selected_plan_id:
+        type: VARCHAR(40)
+        constraint: REQUIRED if status=completed (unless waived)
+      waiver_reason:
+        type: VARCHAR(500)
+        constraint: REQUIRED if status=waived
+
+validation_rules:
+  enrollment_completion:
+    description: "Cannot mark enrollment complete without plan or waiver"
+    condition: "status = 'completed'"
+    requires_one_of:
+      - selected_plan_id IS NOT NULL
+      - waiver_reason IS NOT NULL AND waiver_reason != ''
+    enforcement: "DATABASE CHECK + APPLICATION"
+    severity: "ERROR"
+
+  dependent_count_alignment:
+    description: "Dependent count must align with coverage tier"
+    rules:
+      - tier: employee_only
+        max_dependents: 0
+      - tier: employee_spouse
+        max_dependents: 1
+      - tier: employee_children
+        max_dependents: 20
+      - tier: family
+        max_dependents: 20
+
+  date_sequencing:
+    description: "Date fields must be in logical order"
+    sequences:
+      enrollment_window:
+        - start_date
+        - end_date
+        - effective_date
+        rule: "Each strictly greater than previous"
+      case_lifecycle:
+        - created_at
+        - effective_date
+        - closed_date (optional)
+        rule: "Monotonically increasing"
+
+indexes:
+  benefit_case:
+    primary: [id]
+    composite:
+      - [agency_id, case_status]
+      - [created_at, case_status]
+      - [effective_date]
+      - [assigned_to]
+
+  census_member:
+    primary: [id]
+    unique: [[census_version_id, employee_id]]
+    composite:
+      - [case_id, employment_status]
+      - [created_at]
+      - [email]
+
+constraints:
+  benefit_case:
+    - type: CHECK
+      constraint: "case_status IN ('draft', 'census_in_progress', ...)"
+    - type: FK
+      constraint: "agency_id REFERENCES agency(id)"
+    - type: FK
+      constraint: "employer_group_id REFERENCES employer_group(id)"
+
+  census_member:
+    - type: CHECK
+      constraint: "YEAR(CURDATE()) - YEAR(date_of_birth) BETWEEN 18 AND 120"
+    - type: UNIQUE
+      constraint: "(census_version_id, employee_id)"
+    - type: FK
+      constraint: "census_version_id REFERENCES census_version(id)"
+
+enums:
+  case_status: &case_status_enum
+    - draft
+    - census_in_progress
+    - census_validated
+    - ready_for_quote
+    - quoting
+    - proposal_ready
+    - employer_review
+    - approved_for_enrollment
+    - enrollment_open
+    - enrollment_complete
+    - active
+    - renewal_pending
+    - closed
+
+  employment_status: &employment_status_enum
+    - active
+    - leave
+    - terminated
+
+  employment_type: &employment_type_enum
+    - full_time
+    - part_time
+    - contractor
+
+  risk_tier: &risk_tier_enum
+    - preferred
+    - standard
+    - elevated
+    - high
+
+  enrollment_status: &enrollment_status_enum
+    - invited
+    - started
+    - completed
+    - waived
+
+id_format:
+  pattern: "{prefix}_{uuid4}"
+  examples:
+    case: "cs_550e8400e29b41d4a716446655440000"
+    member: "mbr_550e8400e29b41d4a716446655440000"
+    window: "ew_550e8400e29b41d4a716446655440000"
+    plan: "pln_550e8400e29b41d4a716446655440000"
+
+timestamps:
+  format: ISO8601
+  timezone: UTC
+  fields:
+    - created_at: "immutable creation timestamp"
+    - updated_at: "mutable, updated on any change"
+    - created_by: "email of creator (audit)"
+    - deleted_at: "soft-delete timestamp (if applicable)"
+
+audit_requirements:
+  enabled: true
+  immutable: true
+  retention_years: 7
+  capture_events:
+    - case_created
+    - case_status_changed
+    - census_uploaded
+    - risk_analysis_completed
+    - quote_generated
+    - proposal_sent
+    - enrollment_started
+    - enrollment_completed
+    - renewal_initiated
+
+pii_fields:
+  - ssn_last4
+  - email
+  - phone
+  - date_of_birth
+  - full_name
+  encryption: AES-256-GCM
+  redact_in_logs: true
+  retention_after_delete: 30_days # For recovery
+
+backup_strategy:
+  frequency: "every 6 hours"
+  retention: "90 days"
+  restore_test: "weekly"
+  rto_minutes: 240 # 4 hours
+  rpo_minutes: 60 # 1 hour
