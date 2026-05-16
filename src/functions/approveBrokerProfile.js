@@ -20,24 +20,28 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { broker_agency_id, approver_email, notes } = payload;
+    const { broker_agency_id, notes } = payload;
 
     if (!broker_agency_id) {
       return Response.json({ error: 'Missing broker_agency_id' }, { status: 400 });
     }
 
-    // Update broker profile
-    const broker = await base44.asServiceRole.entities.BrokerAgencyProfile.update(broker_agency_id, {
+    // Use authenticated session email — never trust caller-supplied approver identity
+    const approverEmail = user.email;
+
+    // Update broker profile — schema-valid fields only (BAP has no top-level 'status' field)
+    await base44.asServiceRole.entities.BrokerAgencyProfile.update(broker_agency_id, {
       onboarding_status: 'active',
       relationship_status: 'active',
       compliance_status: 'compliant',
       portal_access_enabled: true,
-      approved_by_user_email: approver_email,
+      approved_by_user_email: approverEmail,
       approved_at: new Date().toISOString(),
       notes: notes || null
     });
 
-    // Get and update platform relationship (idempotent check)
+    // Get and update platform relationship — canonical FK: broker_agency_id (required per schema)
+    // BPR status enum: pending_approval | approved | suspended | inactive
     const relationships = await base44.asServiceRole.entities.BrokerPlatformRelationship.filter({
       broker_agency_id
     });
@@ -47,16 +51,15 @@ Deno.serve(async (req) => {
       // Only update if not already approved (idempotent)
       if (rel.approval_status !== 'approved') {
         await base44.asServiceRole.entities.BrokerPlatformRelationship.update(rel.id, {
-          status: 'active',
+          status: 'approved',
           approval_status: 'approved',
-          activated_at: new Date().toISOString(),
-          approved_by_user_email: approver_email,
+          approved_by_user_email: approverEmail,
           approved_at: new Date().toISOString()
         });
       }
     }
 
-    console.log(`[AUDIT] BROKER_AGENCY_APPROVED: ${broker_agency_id} by ${approver_email}`);
+    console.log(`[AUDIT] BROKER_AGENCY_APPROVED: ${broker_agency_id} by ${approverEmail}`);
 
     return Response.json({
       success: true,
