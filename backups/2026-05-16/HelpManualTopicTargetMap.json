@@ -1,0 +1,122 @@
+[
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a21",
+    "help_target_id": "69c08ef9b3e8db7d5d5c463d",
+    "target_code": "FLD-USR-HELP-MANUAL-SEARCH",
+    "topic_code": "TOP-HELP-PG-USR-HELP-MANUAL",
+    "id": "69c090a4c140fd4b1c76e3d9",
+    "created_date": "2026-03-23T01:00:20.291000",
+    "updated_date": "2026-03-23T01:00:20.291000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a23",
+    "help_target_id": "69c08efdc0ddaa324c26fde3",
+    "target_code": "CMP-GLOBAL-CONTEXT-HELP-MODAL",
+    "topic_code": "TOP-HELP-FAQ-CONTEXTUAL-HELP",
+    "id": "69c08fbac2fc6665140e3422",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a21",
+    "help_target_id": "69c08ef9e8ca9726336dea3d",
+    "target_code": "GRID-USR-HELP-MANUAL-NAV",
+    "topic_code": "TOP-HELP-PG-USR-HELP-MANUAL",
+    "id": "69c08fbac2fc6665140e341d",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a22",
+    "help_target_id": "69c08eefbaadf34aae23d11b",
+    "target_code": "FLD-ADM-HELP-CONTENT-HELP-TITLE",
+    "topic_code": "TOP-HELP-PG-ADM-HELP-CONTENT",
+    "id": "69c08fbac2fc6665140e341f",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a22",
+    "help_target_id": "69c08ef03a9ee8cc2b3a6697",
+    "target_code": "FLD-ADM-HELP-CONTENT-DETAILED-HELP",
+    "topic_code": "TOP-HELP-PG-ADM-HELP-CONTENT",
+    "id": "69c08fbac2fc6665140e3420",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a21",
+    "help_target_id": "69c08ef9ba32cbe387edf80e",
+    "target_code": "FLD-USR-HELP-MANUAL-TOPIC-TITLE",
+    "topic_code": "TOP-HELP-PG-USR-HELP-MANUAL",
+    "id": "69c08fbac2fc6665140e341e",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a22",
+    "help_target_id": "69c08ef1765d3299564ccaaf",
+    "target_code": "BTN-ADM-HELP-CONTENT-SAVE-DRAFT",
+    "topic_code": "TOP-HELP-PG-ADM-HELP-CONTENT",
+    "id": "69c08fbac2fc6665140e3421",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a1f",
+    "help_target_id": "69c08ef9b3e8db7d5d5c463d",
+    "target_code": "FLD-USR-HELP-MANUAL-SEARCH",
+    "topic_code": "TOP-HELP-MOD-HELP-OVERVIEW",
+    "id": "69c08fbac2fc6665140e341b",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a1f",
+    "help_target_id": "69c08ef9c140fd4b1c76e315",
+    "target_code": "BTN-USR-HELP-MANUAL-ASK-AI",
+    "topic_code": "TOP-HELP-MOD-HELP-OVERVIEW",
+    "id": "69c08fbac2fc6665140e341c",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "help_manual_topic_id": "69c08f927e7397f8d9d41a24",
+    "help_target_id": "69c08efd9beca7ba03b038ac",
+    "target_code": "CMP-GLOBAL-HELP-AI-LAUNCHER",
+    "topic_code": "TOP-HELP-FAQ-HELPAI",
+    "id": "69c08fbac2fc6665140e3423",
+    "created_date": "2026-03-23T00:56:26.744000",
+    "updated_date": "2026-03-23T00:56:26.744000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  }
+]
