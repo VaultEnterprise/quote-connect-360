@@ -1,0 +1,82 @@
+[
+  {
+    "before_after_count_snapshot": {
+      "MasterGeneralAgent": {
+        "before": 0,
+        "after": 2,
+        "seeded": 2
+      },
+      "MasterGroup": {
+        "before": 0,
+        "after": 2,
+        "seeded": 2
+      },
+      "EmployerGroup_migrated": {
+        "before": 0,
+        "after": 4
+      },
+      "BenefitCase_migrated": {
+        "before": 0,
+        "after": 4
+      },
+      "BenefitCase_quarantined": {
+        "before": 0,
+        "after": 3
+      },
+      "downstream_quarantined": {
+        "before": 0,
+        "after": 21
+      },
+      "MGAQuarantineRecord": {
+        "before": 0,
+        "after": 24
+      }
+    },
+    "notes": "Phase 4B complete 2026-05-05. 12 deterministic Phase 4B candidate records stamped with NBG scope (2 BenefitCase, 2 CensusVersion, 4 CensusMember, 4 ActivityLog). Total migrated across all phases: 24. Quarantined: 24 (unchanged). Blocked-parent: 2 (Proposal cda1, ActivityLog a287). P2 deferred: ~8 (Phase 5). Rollback markers: 70. Audit events: 57. P0 anomalies: 0. Phase 5 NOT started — requires separate explicit approval gate.",
+    "batch_id": "REMEDIATION-BATCH-4A-20260504",
+    "target_entity_types": [
+      "MasterGeneralAgent",
+      "MasterGroup",
+      "EmployerGroup",
+      "BenefitCase",
+      "CensusVersion",
+      "QuoteScenario",
+      "CaseTask",
+      "Proposal",
+      "EnrollmentWindow",
+      "RenewalCycle",
+      "ActivityLog",
+      "ExceptionItem"
+    ],
+    "total_records_evaluated": 52,
+    "reconciliation_variance_pct": 0,
+    "approved_at": "2026-05-05T00:00:00Z",
+    "rollback_triggered": false,
+    "batch_type": "production_backfill",
+    "dry_run_approval_status": "approved",
+    "initiated_by": "markjosip@outlook.com",
+    "total_quarantined": 24,
+    "total_records_failed": 0,
+    "anomaly_counts_by_class": {
+      "orphaned_record": 2,
+      "missing_upstream_owner_mapping": 22
+    },
+    "total_anomalies": 26,
+    "total_records_mapped": 24,
+    "completed_at": "2026-05-05T00:00:00Z",
+    "batch_name": "Phase 4A Controlled Remediation — MasterGroup MGA Mapping, BenefitCase Repair, RE-07 Rollback, RE-08 Quarantine/Block",
+    "financial_control_totals_match": true,
+    "approved_by": "markjosip@outlook.com",
+    "rollback_at": null,
+    "started_at": "2026-05-04T00:00:00Z",
+    "total_unresolved": 0,
+    "rollback_reason": null,
+    "status": "completed",
+    "id": "69f94a4655679c2ae25cbdee",
+    "created_date": "2026-05-05T01:39:18.523000",
+    "updated_date": "2026-05-05T18:03:10.629000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  }
+]
