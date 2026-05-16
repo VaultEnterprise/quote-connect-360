@@ -1,9 +1,9 @@
 {
   "backup_date": "2026-05-16",
   "initiated_by": "markjosip@outlook.com",
-  "initiated_at": "2026-05-16T00:20:42.897Z",
-  "entities_backed_up": 35,
-  "entities_failed": 9,
+  "initiated_at": "2026-05-16T01:05:55.453Z",
+  "entities_backed_up": 67,
+  "entities_failed": 10,
   "results": [
     {
       "entity": "BrokerAgencyProfile",
@@ -24,6 +24,26 @@
       "entity": "BenefitPlan",
       "records": 6,
       "path": "backups/2026-05-16/BenefitPlan.json"
+    },
+    {
+      "entity": "CaseTask",
+      "records": 4,
+      "path": "backups/2026-05-16/CaseTask.json"
+    },
+    {
+      "entity": "ExceptionItem",
+      "records": 2,
+      "path": "backups/2026-05-16/ExceptionItem.json"
+    },
+    {
+      "entity": "ActivityLog",
+      "records": 9,
+      "path": "backups/2026-05-16/ActivityLog.json"
+    },
+    {
+      "entity": "Document",
+      "records": 0,
+      "path": "backups/2026-05-16/Document.json"
     },
     {
       "entity": "CensusVersion",
@@ -66,6 +86,26 @@
       "path": "backups/2026-05-16/Proposal.json"
     },
     {
+      "entity": "QuoteTransmission",
+      "records": 0,
+      "path": "backups/2026-05-16/QuoteTransmission.json"
+    },
+    {
+      "entity": "ContributionModel",
+      "records": 2,
+      "path": "backups/2026-05-16/ContributionModel.json"
+    },
+    {
+      "entity": "PlanRateTable",
+      "records": 6,
+      "path": "backups/2026-05-16/PlanRateTable.json"
+    },
+    {
+      "entity": "RateSetAssignment",
+      "records": 0,
+      "path": "backups/2026-05-16/RateSetAssignment.json"
+    },
+    {
       "entity": "EmployerGroup",
       "records": 4,
       "path": "backups/2026-05-16/EmployerGroup.json"
@@ -96,6 +136,26 @@
       "path": "backups/2026-05-16/MasterGeneralAgent.json"
     },
     {
+      "entity": "MasterGeneralAgentUser",
+      "records": 0,
+      "path": "backups/2026-05-16/MasterGeneralAgentUser.json"
+    },
+    {
+      "entity": "MasterGeneralAgentCommissionProfile",
+      "records": 0,
+      "path": "backups/2026-05-16/MasterGeneralAgentCommissionProfile.json"
+    },
+    {
+      "entity": "MasterGeneralAgentAgreement",
+      "records": 0,
+      "path": "backups/2026-05-16/MasterGeneralAgentAgreement.json"
+    },
+    {
+      "entity": "MasterGeneralAgentActivityLog",
+      "records": 0,
+      "path": "backups/2026-05-16/MasterGeneralAgentActivityLog.json"
+    },
+    {
       "entity": "MasterGroup",
       "records": 2,
       "path": "backups/2026-05-16/MasterGroup.json"
@@ -111,49 +171,9 @@
       "path": "backups/2026-05-16/MGAQuarantineRecord.json"
     },
     {
-      "entity": "ActivityLog",
-      "records": 9,
-      "path": "backups/2026-05-16/ActivityLog.json"
-    },
-    {
-      "entity": "Document",
-      "records": 0,
-      "path": "backups/2026-05-16/Document.json"
-    },
-    {
-      "entity": "CaseTask",
-      "records": 4,
-      "path": "backups/2026-05-16/CaseTask.json"
-    },
-    {
-      "entity": "ExceptionItem",
-      "records": 2,
-      "path": "backups/2026-05-16/ExceptionItem.json"
-    },
-    {
       "entity": "Agency",
       "records": 2,
       "path": "backups/2026-05-16/Agency.json"
-    },
-    {
-      "entity": "ContributionModel",
-      "records": 2,
-      "path": "backups/2026-05-16/ContributionModel.json"
-    },
-    {
-      "entity": "PlanRateTable",
-      "records": 6,
-      "path": "backups/2026-05-16/PlanRateTable.json"
-    },
-    {
-      "entity": "QuoteTransmission",
-      "records": 0,
-      "path": "backups/2026-05-16/QuoteTransmission.json"
-    },
-    {
-      "entity": "RateSetAssignment",
-      "records": 0,
-      "path": "backups/2026-05-16/RateSetAssignment.json"
     },
     {
       "entity": "TxQuoteCase",
@@ -161,14 +181,139 @@
       "path": "backups/2026-05-16/TxQuoteCase.json"
     },
     {
+      "entity": "TxQuoteEmployerProfile",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteEmployerProfile.json"
+    },
+    {
+      "entity": "TxQuoteSupportingDocument",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteSupportingDocument.json"
+    },
+    {
+      "entity": "TxQuoteDestinationRule",
+      "records": 1,
+      "path": "backups/2026-05-16/TxQuoteDestinationRule.json"
+    },
+    {
+      "entity": "TxQuoteContributionStrategy",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteContributionStrategy.json"
+    },
+    {
+      "entity": "TxQuoteCurrentPlanInfo",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteCurrentPlanInfo.json"
+    },
+    {
+      "entity": "TxQuoteDestinationContact",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteDestinationContact.json"
+    },
+    {
+      "entity": "TxQuoteClaimsRequirement",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteClaimsRequirement.json"
+    },
+    {
+      "entity": "TxQuoteCensusOverride",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteCensusOverride.json"
+    },
+    {
+      "entity": "TxQuoteSubmissionLog",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteSubmissionLog.json"
+    },
+    {
+      "entity": "TxQuoteReadinessResult",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteReadinessResult.json"
+    },
+    {
+      "entity": "TxQuoteDestination",
+      "records": 0,
+      "path": "backups/2026-05-16/TxQuoteDestination.json"
+    },
+    {
+      "entity": "QuoteProviderRoute",
+      "records": 2,
+      "path": "backups/2026-05-16/QuoteProviderRoute.json"
+    },
+    {
       "entity": "PolicyMatchResult",
       "records": 1,
       "path": "backups/2026-05-16/PolicyMatchResult.json"
     },
     {
-      "entity": "MasterGeneralAgentUser",
-      "records": 0,
-      "path": "backups/2026-05-16/MasterGeneralAgentUser.json"
+      "entity": "HelpContent",
+      "records": 81,
+      "path": "backups/2026-05-16/HelpContent.json"
+    },
+    {
+      "entity": "HelpContentVersion",
+      "records": 153,
+      "path": "backups/2026-05-16/HelpContentVersion.json"
+    },
+    {
+      "entity": "HelpTarget",
+      "records": 89,
+      "path": "backups/2026-05-16/HelpTarget.json"
+    },
+    {
+      "entity": "HelpModule",
+      "records": 6,
+      "path": "backups/2026-05-16/HelpModule.json"
+    },
+    {
+      "entity": "HelpPage",
+      "records": 12,
+      "path": "backups/2026-05-16/HelpPage.json"
+    },
+    {
+      "entity": "HelpSection",
+      "records": 40,
+      "path": "backups/2026-05-16/HelpSection.json"
+    },
+    {
+      "entity": "HelpManualTopic",
+      "records": 67,
+      "path": "backups/2026-05-16/HelpManualTopic.json"
+    },
+    {
+      "entity": "HelpManualTopicTargetMap",
+      "records": 10,
+      "path": "backups/2026-05-16/HelpManualTopicTargetMap.json"
+    },
+    {
+      "entity": "HelpSearchLog",
+      "records": 3,
+      "path": "backups/2026-05-16/HelpSearchLog.json"
+    },
+    {
+      "entity": "HelpAuditLog",
+      "records": 27,
+      "path": "backups/2026-05-16/HelpAuditLog.json"
+    },
+    {
+      "entity": "HelpAIQuestionLog",
+      "records": 3,
+      "path": "backups/2026-05-16/HelpAIQuestionLog.json"
+    },
+    {
+      "entity": "HelpCoverageSnapshot",
+      "records": 2,
+      "path": "backups/2026-05-16/HelpCoverageSnapshot.json"
+    },
+    {
+      "entity": "HelpAITrainingQueue",
+      "records": 159,
+      "path": "backups/2026-05-16/HelpAITrainingQueue.json"
+    },
+    {
+      "entity": "UserManual",
+      "records": 1,
+      "path": "backups/2026-05-16/UserManual.json"
     },
     {
       "entity": "Tenant",
@@ -179,6 +324,21 @@
       "entity": "SeedRun",
       "records": 1,
       "path": "backups/2026-05-16/SeedRun.json"
+    },
+    {
+      "entity": "SeedRunStep",
+      "records": 9,
+      "path": "backups/2026-05-16/SeedRunStep.json"
+    },
+    {
+      "entity": "ViewPreset",
+      "records": 0,
+      "path": "backups/2026-05-16/ViewPreset.json"
+    },
+    {
+      "entity": "CaseFilterPreset",
+      "records": 0,
+      "path": "backups/2026-05-16/CaseFilterPreset.json"
     }
   ],
   "errors": [
@@ -215,7 +375,11 @@
       "error": "Entity not accessible or empty"
     },
     {
-      "entity": "EmployerCase",
+      "entity": "MGAReportSchedule",
+      "error": "Entity not accessible or empty"
+    },
+    {
+      "entity": "MGAReportTemplate",
       "error": "Entity not accessible or empty"
     }
   ]
