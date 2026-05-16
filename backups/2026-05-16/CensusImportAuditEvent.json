@@ -1,0 +1,23 @@
+[
+  {
+    "event_type": "upload",
+    "payload": {
+      "notes": "",
+      "source_file_name": "SUS_v2.xlsx"
+    },
+    "census_import_job_id": "6a04b387665cb0c242b59e5d",
+    "mga_migration_batch_id": null,
+    "case_id": "6a04b365748f3a9fdd7fbbd2",
+    "census_import_id": "0331c650-4f51-4370-abb1-8ede63368863",
+    "master_general_agent_id": null,
+    "master_group_id": null,
+    "actor_id": "markjosip@outlook.com",
+    "mga_migration_status": "not_migrated",
+    "id": "6a04b388772217e6199655fc",
+    "created_date": "2026-05-13T17:23:20.128000",
+    "updated_date": "2026-05-13T17:23:20.128000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  }
+]
