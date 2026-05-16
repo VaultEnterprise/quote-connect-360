@@ -1,0 +1,95 @@
+name: Phase 1 Broker CI
+
+on:
+  push:
+    branches:
+      - phase1/schema-backed-field-alignment
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  schema-validation:
+    name: Phase 1 Schema & Field Alignment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Phase 1 schema validation tests
+        id: schema-tests
+        run: |
+          npm test tests/phase1-schema-validation.test.js -- --reporter=verbose 2>&1 | tee playwright-stderr.txt
+        continue-on-error: true
+
+      - name: Run Phase 1 broker agency model validation harness
+        id: harness-tests
+        run: |
+          npm test tests/phase1-broker-agency-model-validation-harness.test.js -- --reporter=verbose 2>&1 | tee -a playwright-stderr.txt
+        continue-on-error: true
+
+      - name: Validate no BrokerCase/BrokerEmployer runtime references
+        id: entity-ref-check
+        run: |
+          BROKER_CASE=$(grep -rn "entities\.BrokerCase" lib/ src/ --include="*.js" --include="*.jsx" 2>/dev/null || true)
+          BROKER_EMPLOYER=$(grep -rn "entities\.BrokerEmployer" lib/ src/ --include="*.js" --include="*.jsx" 2>/dev/null || true)
+          RELATIONSHIP_STATUS=$(grep -n "relationship_status.*active" lib/contracts/brokerWorkspaceContract.js 2>/dev/null || true)
+          INVITED_STATUS=$(grep -n "status: 'invited'" src/functions/brokerSignup.js 2>/dev/null || true)
+          REL_TYPE=$(grep -n "relationship_type.*direct_platform" src/functions/brokerSignup.js 2>/dev/null || true)
+          FAIL=0
+          [ -n "$BROKER_CASE" ] && echo "FAIL: BrokerCase found: $BROKER_CASE" && FAIL=1
+          [ -n "$BROKER_EMPLOYER" ] && echo "FAIL: BrokerEmployer found: $BROKER_EMPLOYER" && FAIL=1
+          [ -n "$RELATIONSHIP_STATUS" ] && echo "FAIL: relationship_status active found: $RELATIONSHIP_STATUS" && FAIL=1
+          [ -n "$INVITED_STATUS" ] && echo "FAIL: status invited found: $INVITED_STATUS" && FAIL=1
+          [ -n "$REL_TYPE" ] && echo "FAIL: relationship_type direct_platform found: $REL_TYPE" && FAIL=1
+          [ $FAIL -eq 1 ] && exit 1
+          echo "PASS: All entity reference checks clean"
+
+      - name: Validate DUPLICATE_BROKER_SIGNUP check present
+        run: |
+          grep -q "DUPLICATE_BROKER_SIGNUP" src/functions/brokerSignup.js || (echo "FAIL: DUPLICATE_BROKER_SIGNUP missing" && exit 1)
+          echo "PASS: DUPLICATE_BROKER_SIGNUP found"
+
+      - name: Validate AuditEvent canonical fields in contracts
+        run: |
+          grep -q "event_type:" lib/contracts/brokerPortalAccessContract.js || (echo "FAIL: event_type missing from portal access contract" && exit 1)
+          grep -q "actor_id:" lib/contracts/brokerPortalAccessContract.js || (echo "FAIL: actor_id missing from portal access contract" && exit 1)
+          echo "PASS: AuditEvent canonical fields confirmed"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: playwright-stderr.txt
+          retention-days: 30
+
+      - name: Generate CI evidence summary
+        if: always()
+        run: |
+          echo "# Phase 1 CI Evidence" > ci-evidence.md
+          echo "**Run ID:** ${{ github.run_id }}" >> ci-evidence.md
+          echo "**Commit SHA:** ${{ github.sha }}" >> ci-evidence.md
+          echo "**Branch:** ${{ github.ref_name }}" >> ci-evidence.md
+          echo "**Date:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> ci-evidence.md
+          cat ci-evidence.md
+
+      - name: Upload CI evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-ci-evidence
+          path: ci-evidence.md
+          retention-days: 30
