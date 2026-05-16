@@ -1,0 +1,20 @@
+[
+  {
+    "rule_type": "document",
+    "is_active": true,
+    "rule_name": "Require large claimant report",
+    "rule_code": "require_large_claimant_report",
+    "rule_config": {
+      "required": true
+    },
+    "is_platform_global": true,
+    "master_general_agent_id": null,
+    "destination_code": "AST",
+    "id": "6a026a724d7d017b5301a6c6",
+    "created_date": "2026-05-11T23:46:58.213000",
+    "updated_date": "2026-05-11T23:46:58.213000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  }
+]
