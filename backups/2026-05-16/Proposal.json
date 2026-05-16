@@ -1,0 +1,83 @@
+[
+  {
+    "employer_monthly_cost": 44810,
+    "agency_name": "Northstar Benefits Group",
+    "notes": "",
+    "viewed_at": null,
+    "employee_avg_cost": 151,
+    "broker_name": "Mark Josip",
+    "employer_name": "New Client",
+    "contribution_summary": {
+      "employee_percent": 85,
+      "dependent_percent": 55
+    },
+    "title": "Pacific Harbor 2026 Renewal Proposal",
+    "version": 2,
+    "scenario_id": "",
+    "sent_at": "2026-04-15T17:30:00Z",
+    "broker_email": "markjosip@outlook.com",
+    "expires_at": "2026-05-10T00:00:00.000Z",
+    "cover_message": "Please review the recommended renewal package and pricing summary.",
+    "plan_summary": [],
+    "approved_at": null,
+    "case_id": "69efe258aac90f6694b1c19e",
+    "effective_date": "2026-04-27",
+    "total_monthly_premium": 61240,
+    "status": "sent",
+    "id": "69e16a3998a89c653c72cda1",
+    "created_date": "2026-04-16T23:01:13.699000",
+    "updated_date": "2026-04-27T22:51:54.662000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  },
+  {
+    "employer_monthly_cost": 68850,
+    "agency_name": "Summit Coverage Partners",
+    "notes": null,
+    "viewed_at": null,
+    "employee_avg_cost": 149,
+    "broker_name": "Mark Josip",
+    "employer_name": "Front Range Manufacturing",
+    "contribution_summary": {
+      "employee_percent": 82,
+      "dependent_percent": 45
+    },
+    "title": "Front Range 2026 Renewal Proposal",
+    "version": 2,
+    "scenario_id": "69e16af398a89c653c72cd81",
+    "sent_at": "2026-04-12T16:00:00Z",
+    "broker_email": "markjosip@outlook.com",
+    "expires_at": "2026-04-28T23:59:00Z",
+    "cover_message": "Approved renewal package moving into enrollment execution.",
+    "plan_summary": [
+      {
+        "plan_name": "UHC Choice Plus 3000",
+        "carrier": "UnitedHealthcare"
+      },
+      {
+        "plan_name": "Delta PPO Plus",
+        "carrier": "Delta Dental"
+      },
+      {
+        "plan_name": "VSP Choice",
+        "carrier": "VSP"
+      }
+    ],
+    "approved_at": "2026-04-15T10:00:00Z",
+    "case_id": "69e16af398a89c653c72cd7a",
+    "effective_date": "2026-05-01",
+    "total_monthly_premium": 94720,
+    "status": "approved",
+    "master_general_agent_id": null,
+    "master_group_id": null,
+    "mga_migration_batch_id": "REMEDIATION-BATCH-4A-20260504",
+    "mga_migration_status": "quarantined",
+    "id": "69e16a3998a89c653c72cda2",
+    "created_date": "2026-04-16T23:01:13.699000",
+    "updated_date": "2026-05-05T01:26:22.992000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  }
+]
