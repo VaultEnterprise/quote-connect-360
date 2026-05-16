@@ -1,0 +1,79 @@
+[
+  {
+    "declined_at": null,
+    "base_plan_id": null,
+    "gradient_ai_risk_tier": null,
+    "employer_name": "Pacific Harbor Tech",
+    "optimized_monthly_cost": 0,
+    "optimized_plan_id": null,
+    "accepted_at": null,
+    "scenario_id": "",
+    "mode": "full_auto",
+    "enhancements": [
+      {
+        "plan_type": "dental",
+        "plan_name": "Delta PPO Plus",
+        "rationale": "Essential for comprehensive health coverage and preventive care.",
+        "cost_delta_pmpm": 5,
+        "value_gain": "High perceived value due to preventive care offerings."
+      },
+      {
+        "plan_type": "vision",
+        "plan_name": "VSP Choice",
+        "rationale": "Enhances overall health coverage, ensuring members have access to vision care.",
+        "cost_delta_pmpm": 3,
+        "value_gain": "High perceived value as vision care is often overlooked."
+      }
+    ],
+    "optimization_rationale": "Given the group’s average member age of 38 and a 0% smoking rate, risk factors are favorable, leading to a low risk score of 30. This young age demographic generally indicates lower healthcare utilization and costs, allowing the recommendation of a comprehensive HMO plan that balances cost and benefits. Furthermore, enhancements in dental and vision coverage add considerable value for members, aligning with their overall health needs without excessively increasing costs.",
+    "trigger_stage": "pre_quote",
+    "base_plan_name": null,
+    "case_id": "69e16a3998a89c653c72cd9b",
+    "optimized_plan_name": "Kaiser HMO Gold",
+    "risk_tier": "preferred",
+    "member_count": 118,
+    "auto_bindable": true,
+    "member_id": "group",
+    "risk_adjusted_monthly_cost": null,
+    "avg_age": 38,
+    "risk_score": 30,
+    "gradient_ai_predicted_claims": null,
+    "cost_delta_pmpm": 10,
+    "risk_factors": [
+      {
+        "factor": "Employee Count",
+        "impact": "positive",
+        "weight": 0.3,
+        "detail": "Larger employee count spreads risk, leading to lower costs."
+      },
+      {
+        "factor": "Average Member Age",
+        "impact": "positive",
+        "weight": 0.2,
+        "detail": "Younger average age contributes to lower medical utilization."
+      },
+      {
+        "factor": "Smoker Percentage",
+        "impact": "positive",
+        "weight": 0.5,
+        "detail": "0% smoker rate significantly lowers expected health risks."
+      }
+    ],
+    "recommendation_summary": "Pacific Harbor Tech qualifies for a preferred risk tier due to favorable demographics, including a young workforce and a zero smoker rate. The recommended bundle, featuring the Kaiser HMO Gold plan, provides comprehensive care at an affordable price point.",
+    "member_name": "Group Analysis",
+    "base_monthly_cost": 0,
+    "broker_talking_points": [
+      "The group demonstrates a preferred risk profile, making them eligible for better plans.",
+      "The recommendation aligns with both cost efficiency and comprehensive coverage.",
+      "With a focus on preventive care, the enhancements ensure that employees remain healthy and productive."
+    ],
+    "value_score": 85,
+    "status": "optimized",
+    "id": "69e16f20df519ad202f17e9d",
+    "created_date": "2026-04-16T23:22:08.044000",
+    "updated_date": "2026-04-16T23:22:08.044000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  }
+]
