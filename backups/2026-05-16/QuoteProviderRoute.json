@@ -1,0 +1,38 @@
+[
+  {
+    "environment_restriction": "all",
+    "destination_email": "",
+    "active": false,
+    "subject_template": "",
+    "is_custom": false,
+    "provider_code": "TRIAD",
+    "provider_name": "Triad",
+    "body_template": "",
+    "default_cc": "",
+    "product_mapping": [],
+    "id": "6a045178700b214603d3f9be",
+    "created_date": "2026-05-13T10:24:56.339000",
+    "updated_date": "2026-05-13T10:24:59.295000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  },
+  {
+    "environment_restriction": "all",
+    "destination_email": "",
+    "active": false,
+    "subject_template": "",
+    "is_custom": false,
+    "provider_code": "SUS",
+    "provider_name": "SUS",
+    "body_template": "",
+    "default_cc": "",
+    "product_mapping": [],
+    "id": "6a029b5210729b8c5faafc77",
+    "created_date": "2026-05-12T03:15:30.429000",
+    "updated_date": "2026-05-12T03:15:30.429000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  }
+]
