@@ -1,0 +1,18 @@
+[
+  {
+    "error_message": null,
+    "finished_at": "2026-03-23T01:05:19.775Z",
+    "seed_name": "help_system_master_seed",
+    "started_at": "2026-03-23T01:05:11.963Z",
+    "status": "completed",
+    "steps_completed": 9,
+    "steps_failed": 0,
+    "total_duration_ms": 7811,
+    "id": "69c091c82a235b01a90ef81a",
+    "created_date": "2026-03-23T01:05:12.190000",
+    "updated_date": "2026-03-23T01:05:19.982000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  }
+]
