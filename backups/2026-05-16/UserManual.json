@@ -1,0 +1,25 @@
+[
+  {
+    "best_practices": [],
+    "category": "getting_started",
+    "common_issues": [],
+    "content": "# Product Manual: Dashboard \n\n## Introduction\nThe Dashboard is a central hub designed to provide users with a comprehensive view of their data and functionalities. This Getting Started page aims to guide you through the basic features and functionalities of the Dashboard.\n\n## Features Overview\n\n### 1. User Interface Components\nThe Dashboard is divided into the following main components:\n- **Header:** Contains navigation links and the user profile dropdown.\n- **Sidebar:** Provides quick links to different modules and functionalities available within the application.\n- **Main Content Area:** Displays the primary features in a modular format.\n\n### 2. Widgets\nWidgets are essential elements in the Dashboard that allow users to visualize data and monitor key performance indicators (KPIs).\n\n#### 2.1 Adding a Widget\nTo add a Widget to your Dashboard:\n1. Click on the **Add Widget** button located in the top right of the Main Content Area.\n2. Select the desired Widget type from the options provided (e.g., Chart, Table).\n3. Configure the Widget settings:\n   ```markdown\n   - **Data Source:** Select the data to populate the Widget.\n   - **Display Options:** Choose how the data should be displayed (e.g., line graph, pie chart).\n   ```\n4. Click **Save** to add the Widget to your Dashboard.\n\n### 3. Customization Options\nUsers can customize the Dashboard layout:  \n- Drag and drop Widgets to rearrange their position.\n- Click on the gear icon of a Widget to access settings and modifications.\n\n### 4. Data Filters\nUsers can apply filters to change the data shown in Widgets:\n- Locate the **Filters** area above the Widgets.\n- Select the desired criteria (e.g., date range, categories). \n- Apply filters to see real-time changes in Widget data.\n\n## Tips and Guidance\n- **Explore Different Widgets:** Experiment with various Widget types to find which best fit your data visualization needs.\n- **Save Your Layouts:** Ensure you save your layout changes to avoid losing your customized settings.\n- **Check for Updates:** Keep the Dashboard updated for the best functionality and new features.\n\n## Best Practices\n- Regularly monitor your Dashboard to stay updated on key metrics.\n- Use meaningful names for Widgets to make navigation easier for all team members.\n- Organize Widgets logically to streamline operational efficiency.\n\n## Common Issues\n- **Issue 1:** `Widgets are not displaying data as expected.`  \n  - **Solution:** Verify that the selected data sources are correctly configured and ensure that filters are not overly restrictive.\n- **Issue 2:** `I cannot rearrange my Widgets.`  \n  - **Solution:** Refresh the page or log out and log back in. Ensure you have the necessary permissions to edit the Dashboard layout.",
+    "description": "This manual provides a comprehensive guide to the Dashboard functionality for new users, helping them navigate and utilize the features effectively.",
+    "difficulty_level": "beginner",
+    "estimated_read_time": 5,
+    "last_updated": "2026-03-23T02:50:19.510Z",
+    "module": "Dashboard",
+    "published": false,
+    "related_manuals": [],
+    "screenshot_urls": [],
+    "setup_steps": [],
+    "title": "Product Manual",
+    "video_url": null,
+    "id": "69c0aa6cbe614c407dce0f77",
+    "created_date": "2026-03-23T02:50:20.255000",
+    "updated_date": "2026-03-23T02:50:20.255000",
+    "created_by_id": "69bde06e14187cf035c2bd97",
+    "created_by": "markjosip@outlook.com",
+    "is_sample": false
+  }
+]
