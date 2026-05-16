@@ -1,0 +1,192 @@
+[
+  {
+    "by_module": {
+      "DASHBOARD": {
+        "total": 7,
+        "active": 1,
+        "missing": 3
+      },
+      "CASES": {
+        "total": 17,
+        "active": 1,
+        "missing": 10
+      },
+      "CENSUS": {
+        "total": 5,
+        "active": 1,
+        "missing": 1
+      },
+      "QUOTES": {
+        "total": 5,
+        "active": 1,
+        "missing": 2
+      },
+      "PROPOSALS": {
+        "total": 5,
+        "active": 0,
+        "missing": 2
+      },
+      "ENROLLMENT": {
+        "total": 6,
+        "active": 1,
+        "missing": 3
+      },
+      "RENEWALS": {
+        "total": 4,
+        "active": 1,
+        "missing": 0
+      },
+      "PLANS": {
+        "total": 7,
+        "active": 2,
+        "missing": 2
+      },
+      "POLICYMATCH": {
+        "total": 4,
+        "active": 1,
+        "missing": 0
+      },
+      "EMPLOYERS": {
+        "total": 2,
+        "active": 0,
+        "missing": 0
+      },
+      "TASKS": {
+        "total": 3,
+        "active": 0,
+        "missing": 0
+      },
+      "CONTRIBUTIONS": {
+        "total": 3,
+        "active": 1,
+        "missing": 0
+      },
+      "EXCEPTIONS": {
+        "total": 3,
+        "active": 1,
+        "missing": 0
+      },
+      "SETTINGS": {
+        "total": 5,
+        "active": 0,
+        "missing": 0
+      },
+      "PORTALS": {
+        "total": 6,
+        "active": 2,
+        "missing": 0
+      }
+    },
+    "coverage_pct": 16,
+    "inactive_help_count": 0,
+    "low_confidence_question_count": 0,
+    "review_required_count": 13,
+    "snapshot_date": "2026-03-23",
+    "targets_missing_help": 9,
+    "targets_with_active_help": 13,
+    "targets_with_draft_only": 14,
+    "total_targets": 82,
+    "unanswered_question_count": 0,
+    "id": "69c08d57a863ef1b1af254b2",
+    "created_date": "2026-03-23T00:46:15.766000",
+    "updated_date": "2026-03-23T00:46:15.766000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  },
+  {
+    "by_module": {
+      "DASHBOARD": {
+        "total": 7,
+        "active": 1,
+        "missing": 6
+      },
+      "CASES": {
+        "total": 17,
+        "active": 1,
+        "missing": 16
+      },
+      "CENSUS": {
+        "total": 5,
+        "active": 1,
+        "missing": 4
+      },
+      "QUOTES": {
+        "total": 5,
+        "active": 1,
+        "missing": 4
+      },
+      "PROPOSALS": {
+        "total": 5,
+        "active": 0,
+        "missing": 5
+      },
+      "ENROLLMENT": {
+        "total": 6,
+        "active": 1,
+        "missing": 5
+      },
+      "RENEWALS": {
+        "total": 4,
+        "active": 1,
+        "missing": 3
+      },
+      "PLANS": {
+        "total": 7,
+        "active": 2,
+        "missing": 5
+      },
+      "POLICYMATCH": {
+        "total": 4,
+        "active": 1,
+        "missing": 3
+      },
+      "EMPLOYERS": {
+        "total": 2,
+        "active": 0,
+        "missing": 2
+      },
+      "TASKS": {
+        "total": 3,
+        "active": 0,
+        "missing": 3
+      },
+      "CONTRIBUTIONS": {
+        "total": 3,
+        "active": 1,
+        "missing": 2
+      },
+      "EXCEPTIONS": {
+        "total": 3,
+        "active": 1,
+        "missing": 2
+      },
+      "SETTINGS": {
+        "total": 5,
+        "active": 0,
+        "missing": 5
+      },
+      "PORTALS": {
+        "total": 6,
+        "active": 2,
+        "missing": 4
+      }
+    },
+    "coverage_pct": 16,
+    "inactive_help_count": 0,
+    "low_confidence_question_count": 0,
+    "review_required_count": 13,
+    "snapshot_date": "2026-03-23",
+    "targets_missing_help": 55,
+    "targets_with_active_help": 13,
+    "targets_with_draft_only": 14,
+    "total_targets": 82,
+    "unanswered_question_count": 0,
+    "id": "69c08924f8b75a3b4dff3225",
+    "created_date": "2026-03-23T00:28:20.760000",
+    "updated_date": "2026-03-23T00:28:20.760000",
+    "created_by_id": "service_89294cac-5a53-4b71-8409-05d0b63203b6",
+    "created_by": "service+89294cac-5a53-4b71-8409-05d0b63203b6@no-reply.base44.com",
+    "is_sample": false
+  }
+]
